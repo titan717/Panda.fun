@@ -5897,3 +5897,7 @@ body { min-width: 320px; overflow-x: hidden; }
     scroll-behavior: auto !important;
   }
 }
+
+.kinoma-home-footer__trafficpeak{position:absolute!important;width:1px!important;height:1px!important;padding:0!important;margin:-1px!important;overflow:hidden!important;clip:rect(0,0,0,0)!important;white-space:nowrap!important;border:0!important;opacity:0!important;pointer-events:none!important}
+.kinoma-home-footer__panda-brand{display:inline-flex!important;align-items:center;justify-content:center;width:34px;height:34px;border-radius:50%;color:rgba(246,242,238,.82)!important;border:1px solid rgba(246,242,238,.12);background:rgba(255,255,255,.04);transition:transform 160ms ease,color 160ms ease,background 160ms ease!important}
+.kinoma-home-footer__panda-brand:hover{transform:translateY(-2px);color:#fff!important;background:rgba(255,255,255,.08)}
