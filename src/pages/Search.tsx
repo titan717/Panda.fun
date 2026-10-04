@@ -70,9 +70,10 @@ export function Search() {
 
   useEffect(() => {
     let active = true;
+    const controller = new AbortController();
     setLoading(true);
     setError(null);
-    const request = isSearching ? api.search(submittedQuery) : api.getTrending();
+    const request = isSearching ? api.search(submittedQuery, controller.signal) : api.getTrending();
     request.then(data => active && setResults(data.results.map(mapItem)))
       .catch((err: unknown) => {
         if (!active) return;
@@ -80,7 +81,7 @@ export function Search() {
         setError(err instanceof MovieApiError ? err.message : 'MovieApi is unavailable right now.');
       })
       .finally(() => active && setLoading(false));
-    return () => { active = false; };
+    return () => { active = false; controller.abort(); };
   }, [isSearching, submittedQuery, retryNonce]);
 
   useEffect(() => { if (inputRef.current && submittedQuery) inputRef.current.focus(); }, [submittedQuery]);
