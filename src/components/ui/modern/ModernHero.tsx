@@ -5,6 +5,7 @@ import { motion, AnimatePresence } from 'motion/react';
 import { AnimeItem, DEFAULT_BANNER } from '../../../types';
 import { libraryManager } from '../../../lib/library';
 import { historyUtil, HistoryItem } from '../../../lib/history';
+import { slugifyTitle } from '../../../lib/slug';
 
 interface ModernHeroProps {
   items: AnimeItem[];
