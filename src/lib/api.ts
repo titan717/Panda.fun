@@ -239,10 +239,10 @@ function toEpisode(item: any): Episode {
   };
 }
 
-async function searchAll(query: string, page = 1) {
+async function searchAll(query: string, page = 1, signal?: AbortSignal) {
   const [movies, tv] = await Promise.allSettled([
-    request<any>('/api/v1/tmdb/search/movie', { q: query, page }),
-    request<any>('/api/v1/tmdb/search/tv', { q: query, page }),
+    request<any>('/api/v1/tmdb/search/movie', { q: query, page }, { signal }),
+    request<any>('/api/v1/tmdb/search/tv', { q: query, page }, { signal }),
   ]);
 
   const movieResults = movies.status === 'fulfilled'
@@ -382,8 +382,8 @@ export const api = {
     return { results: data.results.slice(0, limit ?? data.results.length).map(toAnimeItem) };
   },
 
-  async search(query: string) {
-    const data = await searchAll(query);
+  async search(query: string, signal?: AbortSignal) {
+    const data = await searchAll(query, 1, signal);
     return { results: data.results.map(toAnimeItem) };
   },
 
