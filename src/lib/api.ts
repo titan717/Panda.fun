@@ -83,6 +83,13 @@ export const MOVIE_API_BASE_URL = rawBase.replace(/\/+$/, '');
 const rawFallback = String(viteEnv.VITE_MOVIE_API_FALLBACK_URL || DEFAULT_FALLBACK_URL).trim();
 export const MOVIE_API_FALLBACK_URL = rawFallback.replace(/\/+$/, '');
 
+function reportApiFailure(error: unknown, path: string) {
+  try {
+    const detail = error instanceof MovieApiError ? { status: error.status, code: error.code } : { status: 0, code: 'NETWORK_ERROR' };
+    window.dispatchEvent(new CustomEvent('panda:api-failure', { detail: { path, ...detail } }));
+  } catch {}
+}
+
 const cache = new Map<string, { expires: number; value: unknown }>();
 const inflight = new Map<string, Promise<unknown>>();
 const CACHE_TTL = 120_000;
@@ -173,6 +180,7 @@ async function request<T>(
         lastError = error;
         const transient = (error instanceof DOMException && error.name === 'AbortError') || !(error instanceof MovieApiError);
         if (index < bases.length - 1 && transient) continue;
+        reportApiFailure(error, path);
         if (error instanceof MovieApiError) throw error;
         if (error instanceof DOMException && error.name === 'AbortError') throw new MovieApiError('MovieApi request timed out.', 504, 'PROVIDER_TIMEOUT');
         throw new MovieApiError(`Unable to connect to MovieApi: ${error instanceof Error ? error.message : String(error)}`, 503, 'API_UNAVAILABLE');
