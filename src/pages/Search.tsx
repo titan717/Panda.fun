@@ -1,5 +1,6 @@
 
 import React, { FormEvent, useEffect, useMemo, useRef, useState } from 'react';
+import { Footer } from '../components/ui/Footer';
 import { Clock3, Filter, Search as SearchIcon, Sparkles, X } from 'lucide-react';
 import { Link, useLocation } from 'wouter';
 import { updateSEO } from '../lib/seo';
@@ -151,7 +152,7 @@ export function Search() {
         : visibleResults.length ? <div className="kinoma-search-grid">{visibleResults.map(item => <ContentCard key={item.id} item={item} />)}</div>
         : <div className="kinoma-search-empty"><SearchIcon size={28} /><h3>{results.length ? 'No titles in this filter' : 'Nothing found yet'}</h3><p>{results.length ? 'Try another filter to see more matches.' : 'Try a different title, spelling, or a broader search.'}</p><button type="button" onClick={results.length ? () => setFilter('all') : clearSearch}>{results.length ? 'Show all results' : 'Back to trending'}</button></div>}
       </section>
-      <footer className="kinoma-search-foot"><span>Panda.fun</span><span>One simple search. Everything you want to watch.</span></footer>
+      <Footer />
     </div>
   </main>;
 }
