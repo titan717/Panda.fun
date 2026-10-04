@@ -3088,12 +3088,12 @@ p {
   display: block;
   min-width: 0;
   overflow: hidden;
-  border: 1px solid rgba(246,242,238,.07);
-  border-radius: 18px;
+  border: 1px solid rgba(255,255,255,.05);
+  border-radius: 16px;
   color: inherit;
   text-decoration: none;
-  background: rgba(24,21,21,.62);
-  box-shadow: 0 14px 36px rgba(0,0,0,.16);
+  background: transparent;
+  box-shadow: none;
   contain: layout paint;
   content-visibility: auto;
   contain-intrinsic-size: 230px 345px;
@@ -3101,9 +3101,14 @@ p {
 }
 
 .kinoma-search-card:hover {
-  transform: translateY(-5px);
-  border-color: rgba(232,208,192,.18);
-  box-shadow: 0 22px 48px rgba(0,0,0,.24);
+  transform: translateY(-4px);
+  border-color: rgba(232,208,192,.14);
+  box-shadow: 0 18px 40px rgba(0,0,0,.22);
+}
+
+.kinoma-search-card:focus-visible {
+  outline: 2px solid rgba(232,208,192,.65);
+  outline-offset: 3px;
 }
 
 .kinoma-search-card__art {
