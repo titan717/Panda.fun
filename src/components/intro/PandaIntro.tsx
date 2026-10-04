@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { KinomaLogo } from '../components/ui/KinomaLogo';
+import { KinomaLogo } from '../ui/KinomaLogo';
 
 const INTRO_KEY = 'mypanda_intro_seen';
 
