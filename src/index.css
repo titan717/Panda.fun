@@ -1209,9 +1209,9 @@ p {
 .kinoma-sidebar.is-collapsed .kinoma-sidebar__logo { transform: scale(.94); }
 
 .kinoma-sidebar__pin {
-  width: 32px;
-  height: 32px;
-  flex: 0 0 32px;
+  width: 40px;
+  height: 40px;
+  flex: 0 0 40px;
   display: inline-flex;
   align-items: center;
   justify-content: center;
