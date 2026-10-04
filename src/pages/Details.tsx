@@ -180,7 +180,7 @@ export function Details() {
           <div className="kinoma-season-tabs">{modelSeasons.map(season => <button type="button" key={season.number} className={selectedSeason === season.number ? 'is-selected' : ''} onClick={() => setSelectedSeason(season.number)}>Season {season.number}</button>)}</div>
           <div className="kinoma-episode-list">
             {(modelSeasons.find(s => s.number === selectedSeason)?.episodes || []).map(ep => (
-              <button type="button" key={ep.number} className="kinoma-episode-card" onClick={() => { trackGAEvent('episode_select', { content_type: 'series', season: selectedSeason, episode: ep.number, title }); setLocation('/watch/' + encodeURIComponent(id + '$season>
+              <button type="button" key={ep.number} className="kinoma-episode-card" onClick={() => { trackGAEvent('episode_select', { content_type: 'series', season: selectedSeason, episode: ep.number, title }); setLocation('/watch/' + encodeURIComponent(id + '$season$' + selectedSeason + '$episode$' + ep.number) + '?type=series'); }}>
                 <div className="kinoma-episode-art">{ep.image ? <img src={ep.image} alt="" loading={ep.number === (historyUtil.getAnimeProgress(id)?.episodeNumber || 0) ? 'eager' : 'lazy'} decoding="async" /> : <span><Play size={20} /></span>}<b>EP {ep.number}</b></div>
                 <div className="kinoma-episode-copy"><strong>{ep.title}</strong>{ep.synopsis && <p>{ep.synopsis}</p>}</div>
                 <ChevronRight className="kinoma-episode-arrow" size={18} />
