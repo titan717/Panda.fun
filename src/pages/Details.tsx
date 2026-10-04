@@ -8,6 +8,8 @@ import { libraryManager } from '../lib/library';
 import { historyUtil } from '../lib/history';
 import { updateSEO } from '../lib/seo';
 import { trackGAEvent } from '../lib/analytics';
+import { resolveMediaIdFromSlug } from '../lib/api';
+import { slugifyTitle } from '../lib/slug';
 
 function cleanText(value: unknown) { return typeof value === 'string' ? value.replace(/<[^>]*>/g, '').trim() : ''; }
 function titleOf(data: any, fallback: string) { return typeof data?.title === 'string' ? data.title : data?.title?.english || data?.title?.romaji || data?.title?.native || fallback; }
@@ -39,7 +41,8 @@ function formatDuration(value: unknown) { const n = Number(value); if (!Number.i
 export function Details() {
   const [, params] = useRoute<{ id: string }>('/details/:id');
   const [location, setLocation] = useLocation();
-  const id = params?.id ? decodeURIComponent(params.id) : '';
+  const routeSlug = params?.id ? decodeURIComponent(params.id) : '';
+  const [id, setId] = useState(routeSlug);
   const type = new URLSearchParams(location.split('?')[1] || '').get('type');
   const [data, setData] = useState<any>(null);
   const [trailer, setTrailer] = useState<any>(null);
@@ -55,19 +58,23 @@ export function Details() {
   useEffect(() => {
     let active = true;
     setLoading(true); setError(null); setData(null); setSeasonItems([]); setSeasonEpisodes([]); setRecommendations([]);
-    Promise.all([
+    resolveMediaIdFromSlug(routeSlug, type || undefined).then(resolvedId => {
+      if (!active) return;
+      setId(resolvedId);
+      return Promise.all([
       api.getDetails(id),
       api.getTrailer(id).catch(() => ({ available: false, trailer: null })),
       api.getRecommendations(id).catch(() => ({ results: [] as AnimeItem[] }))
-    ]).then(([details, trailerResult, recs]) => {
-      if (!active) return;
-      setData(details); setTrailer(trailerResult); setRecommendations(recs.results); setLoading(false);
+      ]).then(([details, trailerResult, recs]) => {
+        if (!active) return;
+        setData(details); setTrailer(trailerResult); setRecommendations(recs.results); setLoading(false);
+      });
     }).catch(err => {
       if (!active) return;
       setError(err instanceof Error ? err.message : 'Unable to load this title.'); setLoading(false);
     });
     return () => { active = false; };
-  }, [id]);
+  }, [routeSlug, type]);
 
   useEffect(() => {
     if (!data || kind !== 'series') return;
@@ -114,7 +121,7 @@ export function Details() {
   };
 
   useEffect(() => {
-    updateSEO({ title, description: `${title} — ${synopsis}`.slice(0, 160), image: poster, type: kind === 'movie' ? 'video.movie' : 'video.tv_show', keywords: [title, ...(data?.genres || []), kind === 'movie' ? 'movie' : 'TV series', 'Panda.fun', 'watch online'], schema: { '@context': 'https://schema.org', '@type': kind === 'movie' ? 'Movie' : 'TVSeries', name: title, description: synopsis, image: poster ? [poster] : undefined, url: window.location.href, datePublished: data?.releaseDate || undefined, aggregateRating: data?.rating != null ? { '@type': 'AggregateRating', ratingValue: data.rating, bestRating: 10 } : undefined, genre: data?.genres || undefined, isPartOf: { '@type': 'WebSite', name: 'Panda.fun', url: window.location.origin } } });
+    updateSEO({ title, description: `${title} — ${synopsis}`.slice(0, 160), image: poster, type: kind === 'movie' ? 'video.movie' : 'video.tv_show', keywords: [title, ...(data?.genres || []), kind === 'movie' ? 'movie' : 'TV series', 'Panda.fun', 'watch online'], schema: { '@context': 'https://schema.org', '@type': kind === 'movie' ? 'Movie' : 'TVSeries', name: title, description: synopsis, image: poster ? [poster] : undefined, url: window.location.origin + '/details/' + slugifyTitle(title) + '?type=' + kind, datePublished: data?.releaseDate || undefined, aggregateRating: data?.rating != null ? { '@type': 'AggregateRating', ratingValue: data.rating, bestRating: 10 } : undefined, genre: data?.genres || undefined, isPartOf: { '@type': 'WebSite', name: 'Panda.fun', url: window.location.origin } } });
     setIsInList(libraryManager.isInWatchlist(id));
   }, [title, synopsis, poster, id, kind]);
 
@@ -170,7 +177,7 @@ export function Details() {
         <section className="kinoma-details-section">
           <div className="kinoma-details-section__heading"><div><span>KEEP EXPLORING</span><h2>More like this</h2></div><small>Powered by MovieApi recommendations</small></div>
           <div className="kinoma-more-grid">
-            {recommendations.map((item, i) => <button type="button" key={item.id} className="kinoma-more-card" onClick={() => setLocation('/details/' + encodeURIComponent(item.id) + '?type=' + (item.contentType === 'movie' ? 'movie' : 'series'))}><div className={'kinoma-more-card__art tone-' + (i % 5)}>{item.image ? <img src={item.image} alt="" /> : <Film size={25} />}</div><strong>{typeof item.title === 'string' ? item.title : item.title.english || item.title.romaji || 'Untitled'}</strong><span>{item.genres?.[0] || 'Recommended'} • {item.contentType === 'movie' ? 'Movie' : 'Series'}</span></button>)}
+            {recommendations.map((item, i) => <button type="button" key={item.id} className="kinoma-more-card" onClick={() => setLocation('/details/' + slugifyTitle(typeof item.title === 'string' ? item.title : item.title.english || item.title.romaji || 'Untitled') + '?type=' + (item.contentType === 'movie' ? 'movie' : 'series'))}><div className={'kinoma-more-card__art tone-' + (i % 5)}>{item.image ? <img src={item.image} alt="" /> : <Film size={25} />}</div><strong>{typeof item.title === 'string' ? item.title : item.title.english || item.title.romaji || 'Untitled'}</strong><span>{item.genres?.[0] || 'Recommended'} • {item.contentType === 'movie' ? 'Movie' : 'Series'}</span></button>)}
             {!recommendations.length && !loading && <div className="kinoma-details-bottom">No recommendations are available right now.</div>}
           </div>
         </section>
