@@ -91,13 +91,15 @@ function AnimatedRoutes() {
 
 class AppErrorBoundary extends Component<{ children: React.ReactNode }, { hasError: boolean }> {
   state = { hasError: false };
+  private readonly children: React.ReactNode;
   constructor(props: { children: React.ReactNode }) {
     super(props);
+    this.children = props.children;
   }
   static getDerivedStateFromError() { return { hasError: true }; }
   componentDidCatch(error: unknown) { console.error('[Panda.fun] App render error:', error); }
   render() {
-    if (!this.state.hasError) return this.props.children;
+    if (!this.state.hasError) return this.children;
     return (
       <main className="min-h-screen flex items-center justify-center bg-[var(--kinoma-bg)] px-6 text-center">
         <div className="max-w-md">
