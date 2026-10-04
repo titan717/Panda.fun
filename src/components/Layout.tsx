@@ -14,14 +14,14 @@ import {
   X,
 } from 'lucide-react';
 
-const ITEMS = [
+export const ITEMS = [
   { href: '/home', label: 'Home', Icon: House },
   { href: '/search', label: 'Search', Icon: Search },
   { href: '/library', label: 'My List', Icon: Library },
   { href: '/settings', label: 'Settings', Icon: Settings },
 ];
 
-const ABOUT_ITEMS = [
+export const ABOUT_ITEMS = [
   { href: '/about', label: 'About Panda.fun' },
   { href: '/docs', label: 'API Docs' },
   { href: '/terms', label: 'Terms of Service' },
@@ -132,6 +132,20 @@ export function Layout({ children }: { children: React.ReactNode }) {
       <a className="panda-skip-link" href="#panda-main-content">
         Skip to main content
       </a>
+
+      <div className="panda-mobile-topbar" aria-label="Panda.fun mobile navigation">
+        <Link href="/home" className="panda-mobile-topbar__brand" aria-label="Panda.fun home">
+          <KinomaLogo size="sm" variant="mark" className="panda-mobile-topbar__logo" />
+        </Link>
+        <div className="panda-mobile-topbar__actions">
+          <Link href="/search" className={`panda-mobile-topbar__action ${location === '/search' ? 'is-active' : ''}`} aria-label="Search">
+            <Search size={18} strokeWidth={1.8} aria-hidden="true" />
+          </Link>
+          <Link href="/profile" className={`panda-mobile-topbar__action ${location === '/profile' ? 'is-active' : ''}`} aria-label="Profile">
+            <UserRound size={18} strokeWidth={1.8} aria-hidden="true" />
+          </Link>
+        </div>
+      </div>
 
       <aside
         className={`kinoma-sidebar ${expanded ? 'is-expanded' : 'is-collapsed'} ${pinned ? 'is-pinned' : ''}`}
