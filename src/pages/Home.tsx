@@ -326,15 +326,6 @@ export function Home() {
 
         <div className="panda-home-v2">
           <div className="panda-home-v2__inner">
-            <header className="panda-home-v2__welcome">
-              <div>
-                <span className="panda-home-v2__eyebrow"><Sparkles size={13} /> Your Panda shelf</span>
-                <h2>Stay a little. Find something good.</h2>
-                <p>Fresh releases, popular picks and stories you can keep close. Everything below the hero is designed to feel like a calm, personal shelf instead of a dashboard.</p>
-              </div>
-              <Link href="/search" className="panda-home-v2__shortcut"><Search size={14} /> Search the library <span>⌘K</span></Link>
-            </header>
-
             <ModernContinueWatching />
 
             <PandaRail kind="trending" title="Trending now" subtitle="The titles getting attention today." items={trending} onHover={showHoverTrailer} onLeave={hideHoverTrailer} />
