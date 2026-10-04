@@ -7,6 +7,7 @@ import { DEFAULT_POSTER, DEFAULT_BANNER } from '../types';
 import { libraryManager } from '../lib/library';
 import { historyUtil } from '../lib/history';
 import { updateSEO } from '../lib/seo';
+import { trackGAEvent } from '../lib/analytics';
 
 function cleanText(value: unknown) { return typeof value === 'string' ? value.replace(/<[^>]*>/g, '').trim() : ''; }
 function titleOf(data: any, fallback: string) { return typeof data?.title === 'string' ? data.title : data?.title?.english || data?.title?.romaji || data?.title?.native || fallback; }
@@ -101,6 +102,7 @@ export function Details() {
   })), [seasonItems, selectedSeason, seasonEpisodes]);
 
   const watch = () => {
+    trackGAEvent('select_content', { content_type: kind });
     if (kind === 'movie') {
       const suffix = resume?.playbackTimestamp ? '?type=movie&t=' + Math.floor(resume.playbackTimestamp) : '?type=movie';
       setLocation('/watch/' + encodeURIComponent(id) + suffix);
@@ -116,7 +118,11 @@ export function Details() {
     setIsInList(libraryManager.isInWatchlist(id));
   }, [title, synopsis, poster, id, kind]);
 
-  const toggleList = () => setIsInList(libraryManager.toggleWatchlist({ id, title, image: poster }));
+  const toggleList = () => {
+    const next = libraryManager.toggleWatchlist({ id, title, image: poster });
+    setIsInList(next);
+    trackGAEvent(next ? 'add_to_list' : 'remove_from_list', { content_type: kind });
+  };
 
   return (
     <main className="kinoma-details-page">
