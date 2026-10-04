@@ -58,14 +58,15 @@ export function Details() {
 
   useEffect(() => {
     let active = true;
+    const controller = new AbortController();
     setLoading(true); setError(null); setData(null); setSeasonItems([]); setSeasonEpisodes([]); setRecommendations([]);
     resolveMediaIdFromSlug(routeSlug, type || undefined).then(resolvedId => {
       if (!active) return;
       setId(resolvedId);
       return Promise.all([
-      api.getDetails(resolvedId),
-      api.getTrailer(resolvedId).catch(() => ({ available: false, trailer: null })),
-      api.getRecommendations(resolvedId).catch(() => ({ results: [] as AnimeItem[] }))
+      api.getDetails(resolvedId, controller.signal),
+      api.getTrailer(resolvedId, controller.signal).catch(() => ({ available: false, trailer: null })), 
+      api.getRecommendations(resolvedId, controller.signal).catch(() => ({ results: [] as AnimeItem[] }))
       ]).then(([details, trailerResult, recs]) => {
         if (!active) return;
         setData(details); setTrailer(trailerResult); setRecommendations(recs.results); setLoading(false);
@@ -74,26 +75,28 @@ export function Details() {
       if (!active) return;
       setError(err instanceof Error ? err.message : 'Unable to load this title.'); setLoading(false);
     });
-    return () => { active = false; };
+    return () => { active = false; controller.abort(); };
   }, [routeSlug, type, retryKey]);
 
   useEffect(() => {
     if (!data || kind !== 'series') return;
     let active = true;
-    api.getSeasons(id).then(result => {
+    const controller = new AbortController();
+    api.getSeasons(id, controller.signal).then(result => {
       if (!active) return;
       setSeasonItems(result.seasons);
       const saved = historyUtil.getAnimeProgress(id);
       setSelectedSeason(result.seasons.some(s => s.seasonNumber === saved?.seasonNumber) ? saved!.seasonNumber : (result.seasons[0]?.seasonNumber || 1));
     }).catch(() => active && setSeasonItems([]));
-    return () => { active = false; };
+    return () => { active = false; controller.abort(); };
   }, [data, id, kind]);
 
   useEffect(() => {
     if (!data || kind !== 'series' || !seasonItems.length) return;
     let active = true;
-    api.getSeasonEpisodes(id, selectedSeason).then(result => active && setSeasonEpisodes(result.episodes)).catch(() => active && setSeasonEpisodes([]));
-    return () => { active = false; };
+    const controller = new AbortController();
+    api.getSeasonEpisodes(id, selectedSeason, controller.signal).then(result => active && setSeasonEpisodes(result.episodes)).catch(() => active && setSeasonEpisodes([]));
+    return () => { active = false; controller.abort(); };
   }, [data, id, kind, selectedSeason, seasonItems.length]);
 
   useEffect(() => {
