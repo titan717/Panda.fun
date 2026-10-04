@@ -1,4 +1,5 @@
 import React, { useEffect, useRef, useState } from 'react';
+import { Footer } from '../components/ui/Footer';
 import { Link } from 'wouter';
 import { KinomaLogo } from '../components/ui/KinomaLogo';
 import { ArrowRight, Check, Film, Github, Play, Plus, Search, Sparkles, Tv } from 'lucide-react';
@@ -408,36 +409,7 @@ export function Home() {
               </div>
             )}
 
-            <footer className="kinoma-home-footer">
-              <div className="kinoma-home-footer__art" aria-hidden="true">
-                <div className="kinoma-home-footer__halo" />
-                <div className="kinoma-home-footer__orbit kinoma-home-footer__orbit--one" />
-                <div className="kinoma-home-footer__orbit kinoma-home-footer__orbit--two" />
-                <div className="kinoma-home-footer__orbit kinoma-home-footer__orbit--three" />
-                <div className="kinoma-home-footer__core">
-                  <span className="kinoma-home-footer__core-glow" />
-                  <button type="button" className="kinoma-home-footer__panda-button" onClick={wakePanda} aria-label="Wake the Panda">
-                    <KinomaLogo size="md" variant="mark" className="kinoma-home-footer__mark" />
-                  </button>
-                </div>
-              </div>
-              <div className="kinoma-home-footer__content">
-                <div className="kinoma-home-footer__brand">
-                  <div className="kinoma-home-footer__logo" aria-label="Panda.fun"><KinomaLogo size="lg" variant="full" /></div>
-                  <p>Stories, shelves and little moments worth pressing play for.</p>
-                </div>
-                <div className="kinoma-home-footer__links">
-                  <div className="kinoma-home-footer__promo" aria-label="Panda.fun partners">
-                    <a href="https://trafficpeak.io" target="_blank" rel="noopener noreferrer" aria-label="TrafficPeak website" className="kinoma-home-footer__trafficpeak">Boost Your Website Traffic with TrafficPeak</a>
-                    <Link href="/" aria-label="Panda.fun" className="kinoma-home-footer__panda-brand"><KinomaLogo size="sm" variant="mark" /><span className="sr-only">Panda.fun</span></Link>
-                  </div>
-                  <div><span>Explore</span><Link href="/home">Home</Link><Link href="/search">Search</Link><Link href="/library">My List</Link></div>
-                  <div><span>Panda.fun</span><Link href="/profile">Profile</Link><Link href="/about">About</Link><Link href="/terms">Terms</Link><Link href="/privacy">Privacy</Link></div>
-                  <div><span>Project</span><a href="https://github.com/titan717/Panda.fun" target="_blank" rel="noreferrer"><Github size={15} /> Source</a><Link href="/contact">Support</Link></div>
-                </div>
-              </div>
-              <div className="kinoma-home-footer__bottom"><span>© 2026 Panda.fun</span><span>Built for the next watch.</span><Link href="/contact">Contact / Support</Link></div>
-            </footer>
+            <Footer />
           </div>
         </div>
       </div>
