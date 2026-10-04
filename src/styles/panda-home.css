@@ -1531,3 +1531,55 @@
 @media(prefers-reduced-motion:reduce){
   .panda-watch-page *,.panda-watch-page *::before,.panda-watch-page *::after{transition:none!important;animation:none!important}
 }
+
+
+/* =========================================================
+   PANDA.FUN — Adsterra native banner
+   Lazy-mounted sponsored placement with a quiet glass shell.
+   ========================================================= */
+.panda-adsterra{
+  width:min(100%,1200px);
+  min-height:128px;
+  margin:8px auto 32px;
+  padding:11px;
+  box-sizing:border-box;
+  border:1px solid rgba(201,182,255,.10);
+  border-radius:16px;
+  background:rgba(17,17,24,.68);
+  box-shadow:0 18px 50px rgba(0,0,0,.20),inset 0 1px 0 rgba(255,255,255,.025);
+  overflow:hidden;
+}
+.panda-adsterra__label{
+  width:max-content;
+  margin:0 0 7px 2px;
+  color:rgba(235,235,245,.28);
+  font-size:7px;
+  font-weight:800;
+  letter-spacing:.16em;
+  line-height:1;
+}
+.panda-adsterra__surface{
+  min-height:96px;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  overflow:hidden;
+  border-radius:11px;
+}
+.panda-adsterra__unit{
+  width:100%;
+  max-width:100%;
+}
+@media(max-width:700px){
+  .panda-adsterra{
+    min-height:104px;
+    margin:4px auto 24px;
+    padding:9px;
+    border-radius:13px;
+  }
+  .panda-adsterra__surface{min-height:78px;border-radius:9px}
+  .panda-adsterra__label{font-size:6px;margin-bottom:6px}
+}
+@media(prefers-reduced-motion:reduce){
+  .panda-adsterra{scroll-behavior:auto}
+}
