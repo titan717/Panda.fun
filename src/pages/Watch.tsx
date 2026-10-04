@@ -229,10 +229,10 @@ export function Watch() {
 
       <section className="panda-watch-info">
         <div className="panda-watch-info__backdrop" aria-hidden="true">
-          <img src={data?.backdrop || poster} alt="" />
+          <img src={data?.backdrop || poster} alt="" loading="eager" fetchPriority="high" decoding="async" />
         </div>
         <div className="panda-watch-info__visual">
-          <img src={poster} alt="" loading="lazy" />
+          <img src={poster} alt="" loading="eager" fetchPriority="high" decoding="async" />
           <span>{type === 'movie' ? 'MOVIE' : 'SERIES'}</span>
         </div>
         <div className="panda-watch-info__copy">
@@ -298,7 +298,7 @@ export function Watch() {
                   }}
                 >
                   <div className="kinoma-episode-art">
-                    {item.image ? <img src={item.image} alt="" loading="lazy" /> : <span><Film size={20} /></span>}
+                    {item.image ? <img src={item.image} alt="" loading="lazy" decoding="async" /> : <span><Film size={20} /></span>}
                     <b>EP {item.number}</b>
                     {item.number === episode && <i className="panda-watch-current-indicator"><Play size={12} fill="currentColor" /></i>}
                   </div>
