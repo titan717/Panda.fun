@@ -5715,3 +5715,155 @@ body {
 .panda-app-content { min-width: 0; width: calc(100% - var(--sidebar-width)); margin-left: var(--sidebar-width); min-height: 100dvh; }
 .panda-app-content .kinoma-app-main { width: 100%; margin-left: 0; min-width: 0; }
 @media (max-width: 700px) { .panda-app-content { width: 100%; margin-left: 0; } }
+
+
+/* =========================================================
+   PANDA.FUN — responsive shell pass
+   Desktop sidebar becomes a compact bottom navigation on
+   touch devices so content never sits underneath a fixed rail.
+   ========================================================= */
+html { min-width: 320px; }
+body { min-width: 320px; overflow-x: hidden; }
+#root { min-height: 100dvh; }
+
+@media (max-width: 700px) {
+  .panda-app-shell.kinoma-app-shell {
+    --sidebar-width: 0px !important;
+    min-height: 100dvh;
+  }
+
+  .panda-app-content {
+    width: 100% !important;
+    margin-left: 0 !important;
+    padding-bottom: calc(72px + env(safe-area-inset-bottom));
+  }
+
+  .kinoma-sidebar {
+    position: fixed !important;
+    inset: auto 0 0 0 !important;
+    z-index: 120;
+    width: 100% !important;
+    height: calc(62px + env(safe-area-inset-bottom)) !important;
+    min-height: 62px;
+    max-height: 82px;
+    padding: 0 8px env(safe-area-inset-bottom) !important;
+    display: flex !important;
+    align-items: stretch;
+    border: 0 !important;
+    border-top: 1px solid rgba(255,255,255,.08) !important;
+    border-radius: 0 !important;
+    background: rgba(9,10,14,.90) !important;
+    box-shadow: 0 -14px 38px rgba(0,0,0,.30) !important;
+    backdrop-filter: blur(22px) saturate(1.05);
+    transform: none !important;
+  }
+
+  .kinoma-sidebar__top,
+  .kinoma-sidebar__profile-area,
+  .kinoma-sidebar__about,
+  .kinoma-sidebar__mobile-close,
+  .kinoma-sidebar__pin {
+    display: none !important;
+  }
+
+  .kinoma-sidebar__nav {
+    width: 100%;
+    display: flex;
+    align-items: stretch;
+    justify-content: center;
+  }
+
+  .kinoma-sidebar__nav-group {
+    width: min(100%, 520px);
+    display: grid !important;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    align-items: stretch;
+    gap: 2px;
+    margin: 0 !important;
+  }
+
+  .kinoma-sidebar__item {
+    min-width: 0;
+    min-height: 62px;
+    padding: 8px 4px !important;
+    gap: 5px !important;
+    display: flex !important;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    border-radius: 13px !important;
+    color: rgba(235,235,245,.48);
+    font-size: 9px !important;
+    font-weight: 750;
+    letter-spacing: .01em;
+    white-space: nowrap;
+  }
+
+  .kinoma-sidebar__item span {
+    width: auto !important;
+    opacity: 1 !important;
+    transform: none !important;
+  }
+
+  .kinoma-sidebar__item svg {
+    width: 19px;
+    height: 19px;
+  }
+
+  .kinoma-sidebar__item.is-active {
+    color: #fff;
+    background: rgba(201,182,255,.10);
+    box-shadow: inset 0 0 0 1px rgba(201,182,255,.09);
+  }
+
+  .kinoma-sidebar [data-tooltip]::after {
+    display: none !important;
+  }
+
+  .kinoma-sidebar__submenu {
+    display: none !important;
+  }
+
+  .kinoma-app-main {
+    width: 100%;
+    min-width: 0;
+  }
+
+  /* Keep touch targets usable without letting controls collide. */
+  button, a {
+    -webkit-tap-highlight-color: transparent;
+  }
+}
+
+@media (max-width: 420px) {
+  .panda-app-content {
+    padding-bottom: calc(68px + env(safe-area-inset-bottom));
+  }
+
+  .kinoma-sidebar__item {
+    min-height: 58px;
+    font-size: 8px !important;
+  }
+
+  .kinoma-sidebar__item svg {
+    width: 18px;
+    height: 18px;
+  }
+}
+
+@media (min-width: 701px) and (max-width: 1050px) {
+  .panda-app-content {
+    width: calc(100% - var(--sidebar-width));
+  }
+
+  .kinoma-sidebar {
+    max-width: min(var(--sidebar-width), 236px);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .kinoma-sidebar *,
+  .panda-app-content * {
+    scroll-behavior: auto !important;
+  }
+}
