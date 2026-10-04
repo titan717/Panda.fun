@@ -10,8 +10,9 @@ function initializeGoogleAnalytics() {
   const measurementId = 'G-9CEEHSHNHJ';
   const dataLayer = (window as Window & { dataLayer?: unknown[] }).dataLayer ||= [];
   const gtag = (...args: unknown[]) => dataLayer.push(args);
+  (window as Window & { gtag?: (...args: unknown[]) => void }).gtag = gtag;
   gtag('js', new Date());
-  gtag('config', measurementId);
+  gtag('config', measurementId, { send_page_view: false });
 
   if (document.querySelector('script[data-panda-google-analytics]')) return;
   const script = document.createElement('script');
