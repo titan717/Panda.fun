@@ -3,6 +3,7 @@ import { Link } from 'wouter';
 import { Play } from 'lucide-react';
 import { motion } from 'motion/react';
 import { AnimeItem, DEFAULT_POSTER } from '../../../types';
+import { slugifyTitle } from '../../../lib/slug';
 
 export interface ModernCardProps {
   key?: React.Key;
