@@ -149,8 +149,6 @@ export function Library() {
           )}
         </div>
 
-        <AdsterraNativeBanner />
-
         {active === 'continue' ? (
           filtered.length ? (
             <section className="kinoma-library-grid">
