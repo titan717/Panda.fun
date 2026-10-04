@@ -32,10 +32,18 @@ export function ModernCard({
   const defaultBadge = badgeText || (item.status === 'RELEASING' ? 'New Season' : undefined);
 
   return (
-    <Link
-      href={detailHref}
+    <div
+      role="link"
+      tabIndex={0}
       className="group relative flex w-full flex-col select-none rounded-2xl outline-none"
       aria-label={`Open ${title}`}
+      onClick={() => { window.location.href = detailHref; }}
+      onKeyDown={(event) => {
+        if (event.key === 'Enter' || event.key === ' ') {
+          event.preventDefault();
+          window.location.href = detailHref;
+        }
+      }}
     >
       <div className="relative aspect-[2/3] w-full overflow-hidden rounded-2xl border border-white/5 bg-[#0e1017] transition-[transform,border-color,box-shadow] duration-300 group-hover:-translate-y-1 group-hover:border-purple-500/40 group-hover:shadow-[0_12px_32px_rgba(0,0,0,0.6)]">
         <span className="kinoma-focus absolute inset-0 z-0 block rounded-2xl">
@@ -95,7 +103,6 @@ export function ModernCard({
           </p>
         )}
       </span>
-    </Link>
-  </div>
+    </div>
   );
 }
