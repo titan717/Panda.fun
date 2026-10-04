@@ -4,6 +4,7 @@ import { Play, X, Clock } from 'lucide-react';
 import { historyUtil, HistoryItem, formatPlaybackTimestamp } from '../../../lib/history';
 import { ModernCarousel, ModernCarouselSlot } from './ModernCarousel';
 import { DEFAULT_POSTER } from '../../../types';
+import { slugifyTitle } from '../../../lib/slug';
 
 export function ModernContinueWatching() {
   const [history, setHistory] = useState<HistoryItem[]>([]);
