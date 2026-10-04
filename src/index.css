@@ -6135,3 +6135,11 @@ body { min-width: 320px; overflow-x: hidden; }
 /* Sidebar expanded width/deeper contrast */
 .kinoma-sidebar--icons.is-expanded{width:260px!important;min-width:260px!important;max-width:260px!important;background:rgba(7,6,6,.94)!important}
 .kinoma-sidebar--icons.is-collapsed{background:rgba(7,6,6,.94)!important}
+
+/* About hover submenu */
+.kinoma-sidebar__about-group{position:relative;width:100%}
+.kinoma-sidebar--icons .kinoma-sidebar__about-submenu{display:none;position:absolute;left:100%;top:0;margin-left:8px;min-width:190px;padding:6px;background:rgba(7,6,6,.97);border:1px solid rgba(232,208,192,.09);border-radius:12px;box-shadow:12px 12px 34px rgba(0,0,0,.32);backdrop-filter:blur(18px);-webkit-backdrop-filter:blur(18px);z-index:50}
+.kinoma-sidebar--icons.is-expanded .kinoma-sidebar__about-group:hover .kinoma-sidebar__about-submenu{display:flex;flex-direction:column;gap:2px}
+.kinoma-sidebar--icons .kinoma-sidebar__about-subitem{display:flex;align-items:center;min-height:36px;padding:0 11px;border-radius:8px;color:rgba(246,242,238,.58);font-size:12px;text-decoration:none;white-space:nowrap}
+.kinoma-sidebar--icons .kinoma-sidebar__about-subitem:hover{color:#fffaf6;background:rgba(232,208,192,.055)}
+.kinoma-sidebar--icons .kinoma-sidebar__about-subitem.is-active{color:#fffaf6;background:rgba(184,77,65,.13)}
