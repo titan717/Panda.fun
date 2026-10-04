@@ -32,13 +32,13 @@ export function ModernCard({
   const defaultBadge = badgeText || (item.status === 'RELEASING' ? 'New Season' : undefined);
 
   return (
-    <div className="group relative flex w-full flex-col select-none">
+    <Link
+      href={detailHref}
+      className="group relative flex w-full flex-col select-none rounded-2xl outline-none"
+      aria-label={`Open ${title}`}
+    >
       <div className="relative aspect-[2/3] w-full overflow-hidden rounded-2xl border border-white/5 bg-[#0e1017] transition-[transform,border-color,box-shadow] duration-300 group-hover:-translate-y-1 group-hover:border-purple-500/40 group-hover:shadow-[0_12px_32px_rgba(0,0,0,0.6)]">
-        <Link
-          href={detailHref}
-          className="kinoma-focus absolute inset-0 z-0 block rounded-2xl outline-none"
-          aria-label={`Open ${title}`}
-        >
+        <span className="kinoma-focus absolute inset-0 z-0 block rounded-2xl">
           {!imageLoaded && (
             <div className="absolute inset-0 animate-pulse bg-[#12141c]" aria-hidden="true" />
           )}
@@ -58,7 +58,7 @@ export function ModernCard({
               <Play className="ml-0.5 h-5 w-5 fill-current" />
             </span>
           </div>
-        </Link>
+        </span>
 
         {onRemove && (
           <button
@@ -85,10 +85,7 @@ export function ModernCard({
         )}
       </div>
 
-      <Link
-        href={detailHref}
-        className="kinoma-focus mt-2 block rounded outline-none sm:mt-2.5"
-      >
+      <span className="kinoma-focus mt-2 block rounded sm:mt-2.5">
         <h3 className="line-clamp-2 text-xs font-semibold leading-snug text-white transition-colors duration-200 group-hover:text-purple-300 sm:text-sm">
           {title}
         </h3>
@@ -97,7 +94,8 @@ export function ModernCard({
             {subText}
           </p>
         )}
-      </Link>
-    </div>
+      </span>
+    </Link>
+  </div>
   );
 }
