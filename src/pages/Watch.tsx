@@ -244,7 +244,7 @@ export function Watch() {
               <iframe
                 key={source}
                 src={source}
-                title={'Watch ' + title}
+                title={'Watch ' + title + ' on Panda.fun'}
                 allow="autoplay; fullscreen; picture-in-picture; encrypted-media"
                 allowFullScreen
                 referrerPolicy="no-referrer"
