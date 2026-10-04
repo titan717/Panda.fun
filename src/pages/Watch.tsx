@@ -232,7 +232,7 @@ export function Watch() {
           <img src={data?.backdrop || poster} alt="" srcSet={data?.backdrop?.includes("/w1280/") ? (data.backdrop.replace("/w1280/", "/w780/") + " 780w, " + data.backdrop + " 1280w") : undefined} sizes="100vw" loading="eager" fetchPriority="high" decoding="async" />
         </div>
         <div className="panda-watch-info__visual">
-          <img src={poster} alt="" loading="eager" fetchPriority="high" decoding="async" />
+          <img src={poster} alt="" srcSet={poster.includes("/w500/") ? (poster.replace("/w500/", "/w342/") + " 342w, " + poster + " 500w") : undefined} sizes="(max-width: 700px) 34vw, 220px" loading="eager" fetchPriority="high" decoding="async" />
           <span>{type === 'movie' ? 'MOVIE' : 'SERIES'}</span>
         </div>
         <div className="panda-watch-info__copy">
