@@ -158,7 +158,6 @@ export function Details() {
           {trailer?.trailer?.embedUrl ? <iframe src={trailerSrc(trailer.trailer.embedUrl)} title={title + ' trailer'} className="kinoma-details-hero__trailer-video" allow="autoplay; encrypted-media; picture-in-picture" allowFullScreen /> : (
             <div className="kinoma-details-hero__trailer-placeholder"><div><Film size={42} /></div><span>TRAILER PREVIEW</span><strong>Trailer preview unavailable</strong><small>MovieApi did not return a trailer for this title.</small></div>
           )}
-          <div className="kinoma-details-hero__trailer-shade" />
         </div>
         <div className="kinoma-details-hero__content">
           <div className="kinoma-details-copy">
