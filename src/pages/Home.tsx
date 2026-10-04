@@ -106,7 +106,7 @@ function PandaContentCard({
 
   return (
     <Link
-      href={`/details/${encodeURIComponent(item.id)}?type=${type}`}
+      href={`/details/${slugifyTitle(item.title)}?type=${type}`}
       className="panda-content-card"
       aria-label={`Open ${item.title}`}
       onMouseEnter={() => onHover(item)}
@@ -403,8 +403,8 @@ export function Home() {
                 </div>
                 <div className="kinoma-home-footer__links">
                   <div className="kinoma-home-footer__promo" aria-label="Panda.fun partners">
-                    <a href="https://trafficpeak.io" target="_blank" rel="noopener noreferrer">Boost Your Website Traffic with TrafficPeak</a>
-                    <a href="/" aria-label="Panda.fun">Watch movies, series and more on Panda.fun</a>
+                    <a href="https://trafficpeak.io" target="_blank" rel="noopener noreferrer" aria-label="TrafficPeak website" className="kinoma-home-footer__trafficpeak">Boost Your Website Traffic with TrafficPeak</a>
+                    <Link href="/" aria-label="Panda.fun" className="kinoma-home-footer__panda-brand"><KinomaLogo size="sm" variant="mark" /><span className="sr-only">Panda.fun</span></Link>
                   </div>
                   <div><span>Explore</span><Link href="/home">Home</Link><Link href="/search">Search</Link><Link href="/library">My List</Link></div>
                   <div><span>Panda.fun</span><Link href="/profile">Profile</Link><Link href="/about">About</Link><Link href="/terms">Terms</Link><Link href="/privacy">Privacy</Link></div>
