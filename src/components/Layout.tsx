@@ -52,6 +52,7 @@ export function Layout({ children }: { children: React.ReactNode }) {
   const collapseTimer = useRef<number | null>(null);
   const expandTimer = useRef<number | null>(null);
   const aboutTriggerRef = useRef<HTMLButtonElement | null>(null);
+  const mainRef = useRef<HTMLElement | null>(null);
 
   const clearTimers = () => {
     if (collapseTimer.current !== null) window.clearTimeout(collapseTimer.current);
@@ -71,6 +72,10 @@ export function Layout({ children }: { children: React.ReactNode }) {
     if (!['/about', '/terms', '/privacy', '/contact'].includes(location)) {
       setAboutOpen(false);
     }
+  }, [location]);
+
+  useEffect(() => {
+    mainRef.current?.focus({ preventScroll: true });
   }, [location]);
 
   useEffect(() => () => clearTimers(), []);
@@ -121,8 +126,13 @@ export function Layout({ children }: { children: React.ReactNode }) {
   return (
     <div
       className="panda-app-shell kinoma-app-shell"
+      aria-label="Panda.fun application"
       style={{ '--sidebar-width': expanded ? '236px' : '72px' } as React.CSSProperties}
     >
+      <a className="panda-skip-link" href="#panda-main-content">
+        Skip to main content
+      </a>
+
       <aside
         className={`kinoma-sidebar ${expanded ? 'is-expanded' : 'is-collapsed'} ${pinned ? 'is-pinned' : ''}`}
         aria-label="Panda.fun primary navigation"
@@ -253,7 +263,15 @@ export function Layout({ children }: { children: React.ReactNode }) {
       </aside>
 
       <div className="panda-app-content">
-        <main className="kinoma-app-main">{children}</main>
+        <main
+          id="panda-main-content"
+          ref={mainRef}
+          className="kinoma-app-main"
+          tabIndex={-1}
+          aria-label="Main content"
+        >
+          {children}
+        </main>
       </div>
     </div>
   );
