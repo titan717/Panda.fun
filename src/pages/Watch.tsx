@@ -229,7 +229,7 @@ export function Watch() {
 
       <section className="panda-watch-info">
         <div className="panda-watch-info__backdrop" aria-hidden="true">
-          <img src={data?.backdrop || poster} alt="" loading="eager" fetchPriority="high" decoding="async" />
+          <img src={data?.backdrop || poster} alt="" srcSet={data?.backdrop?.includes("/w1280/") ? (data.backdrop.replace("/w1280/", "/w780/") + " 780w, " + data.backdrop + " 1280w") : undefined} sizes="100vw" loading="eager" fetchPriority="high" decoding="async" />
         </div>
         <div className="panda-watch-info__visual">
           <img src={poster} alt="" loading="eager" fetchPriority="high" decoding="async" />
