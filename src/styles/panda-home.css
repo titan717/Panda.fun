@@ -146,6 +146,15 @@
 .panda-content-card:hover img,
 .panda-content-card:focus-visible img { transform: scale(1.055); filter: saturate(1.04) brightness(.9); }
 
+@media (prefers-reduced-motion: reduce) {
+  .panda-content-card,
+  .panda-content-card img { transition: none; }
+  .panda-content-card:hover,
+  .panda-content-card:focus-visible { transform: none; }
+  .panda-content-card:hover img,
+  .panda-content-card:focus-visible img { transform: none; filter: none; }
+}
+
 .panda-content-card__top {
   position: absolute;
   z-index: 2;
