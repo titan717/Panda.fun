@@ -1836,3 +1836,49 @@
   .panda-state-card{width:calc(100% - 24px);margin-top:8px;padding:11px 12px}
 }
 @media(prefers-reduced-motion:reduce){.panda-state-card__spinner{animation:none}}
+
+
+/* Panda micro-interactions */
+.panda-content-card,
+.panda-surprise__button,
+.panda-pulse__item,
+.panda-watch-back,
+.panda-watch-error button{
+  -webkit-tap-highlight-color:transparent;
+}
+.panda-content-card:active,
+.panda-surprise__button:active,
+.panda-watch-back:active,
+.panda-watch-error button:active{
+  transform:translateY(1px) scale(.985);
+}
+.panda-content-card:focus-visible,
+.panda-surprise__button:focus-visible,
+.panda-pulse__item:focus-visible{
+  outline:2px solid rgba(242,198,169,.42);
+  outline-offset:3px;
+}
+.panda-content-card__image-wrap img{
+  transition:filter 180ms ease,transform 220ms ease;
+}
+.panda-content-card:hover .panda-content-card__image-wrap img,
+.panda-content-card:focus-visible .panda-content-card__image-wrap img{
+  filter:saturate(1.04) brightness(1.04);
+}
+.panda-surprise__button,
+.panda-watch-error button{
+  transition:transform 140ms ease,background-color 160ms ease,border-color 160ms ease,box-shadow 160ms ease;
+}
+.panda-surprise__button:hover,
+.panda-watch-error button:hover{
+  box-shadow:0 8px 22px rgba(0,0,0,.16);
+}
+@media (prefers-reduced-motion:reduce){
+  .panda-content-card__image-wrap img,
+  .panda-surprise__button,
+  .panda-watch-error button{transition:none}
+  .panda-content-card:active,
+  .panda-surprise__button:active,
+  .panda-watch-back:active,
+  .panda-watch-error button:active{transform:none}
+}
