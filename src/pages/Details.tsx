@@ -1,14 +1,13 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import { useLocation, useRoute } from 'wouter';
 import { Play, Plus, Check, ChevronRight, Film, Tv, Clock3 } from 'lucide-react';
-import { api } from '../lib/api';
+import { api, resolveMediaIdFromSlug } from '../lib/api';
 import type { AnimeItem, Episode, AnimeSeasonItem } from '../types';
 import { DEFAULT_POSTER, DEFAULT_BANNER } from '../types';
 import { libraryManager } from '../lib/library';
 import { historyUtil } from '../lib/history';
 import { updateSEO } from '../lib/seo';
 import { trackGAEvent } from '../lib/analytics';
-import { resolveMediaIdFromSlug } from '../lib/api';
 import { slugifyTitle } from '../lib/slug';
 
 function cleanText(value: unknown) { return typeof value === 'string' ? value.replace(/<[^>]*>/g, '').trim() : ''; }
