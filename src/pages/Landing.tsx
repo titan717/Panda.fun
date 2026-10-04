@@ -4,6 +4,7 @@ import { ChevronDown, Play, Sparkles } from 'lucide-react';
 import { motion } from 'motion/react';
 import { KinomaLogo } from '../components/ui/KinomaLogo';
 import { updateSEO } from '../lib/seo';
+import { AdsterraNativeBanner } from '../components/ui/AdsterraNativeBanner';
 
 const BACKDROP_URL = 'https://aniwaves.ru/assets/images/bg-index2.jpg';
 const REFERENCE_TEXTURE_URL = 'https://cdn.dribbble.com/userupload/14005335/file/original-d6adb157992d0492ed2fc3b2ab46cef9.jpg?resize=1200x1200&vertical=center';
@@ -68,6 +69,10 @@ export function Landing() {
               <a href="#questions" className="kinoma-welcome__scroll-link">Common questions<ChevronDown className="h-3.5 w-3.5" /></a>
             </div>
           </motion.div>
+        </section>
+
+        <section className="panda-landing-ad-slot" aria-label="Sponsored placement">
+          <AdsterraNativeBanner />
         </section>
 
         <section id="questions" className="kinoma-welcome__faq" aria-labelledby="questions-title">
