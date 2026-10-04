@@ -5,7 +5,6 @@ import { ArrowRight, Check, Film, Github, Play, Plus, Search, Sparkles, Tv } fro
 import { api, MovieApiError, MovieApiMedia } from '../lib/api';
 import { libraryManager } from '../lib/library';
 import { updateSEO } from '../lib/seo';
-import { AdsterraNativeBanner } from '../components/ui/AdsterraNativeBanner';
 import { slugifyTitle } from '../lib/slug';
 import { ModernContinueWatching } from '../components/ui/modern/ModernContinueWatching';
 import '../styles/panda-home.css';
@@ -351,10 +350,6 @@ export function Home() {
         <div className="panda-home-v2">
           <div className="panda-home-v2__inner">
             <ModernContinueWatching />
-
-            <section className="panda-home-ad-slot" aria-label="Sponsored placement">
-              <AdsterraNativeBanner />
-            </section>
 
             <PandaRail kind="trending" title="Trending now" subtitle="The titles getting attention today." items={trending} onHover={showHoverTrailer} onLeave={hideHoverTrailer} />
             <PandaRail kind="streamingNetflix" title="New on Netflix" subtitle="Freshly released movies now showing on the service." items={newOnNetflix} onHover={showHoverTrailer} onLeave={hideHoverTrailer} badge="NETFLIX" />
