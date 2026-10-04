@@ -136,12 +136,14 @@ export function Watch() {
     const index = episodes.findIndex(item => item.number === episode);
     const next = episodes[index + direction];
     if (next) {
+      trackGAEvent('episode_navigate', { content_type: type, direction: direction > 0 ? 'next' : 'previous', episode: next.number, title });
       setEpisode(next.number);
       setLocation('/watch/' + encodeURIComponent(id + '$season$' + season + '$episode$' + next.number) + '?type=series');
     }
   };
 
   const chooseSeason = (next: number) => {
+    trackGAEvent('season_select', { content_type: type, season: next, title });
     setSeason(next);
   };
 
@@ -221,12 +223,12 @@ export function Watch() {
   return (
     <main className="panda-watch-page">
       <div className="panda-watch-topbar">
-        <button className="panda-watch-back" type="button" onClick={() => window.history.length > 1 ? window.history.back() : setLocation('/home')}><ArrowLeft size={17} /><span>Back</span></button>
+        <button className="panda-watch-back" type="button" onClick={() => { trackGAEvent('watch_back', { content_type: type, title }); window.history.length > 1 ? window.history.back() : setLocation('/home'); }}><ArrowLeft size={17} /><span>Back</span></button>
         <div className="panda-watch-brand"><span className="panda-watch-brand__mark">🐼</span><strong>Panda.fun</strong><span className="panda-watch-brand__status">NOW PLAYING</span></div>
         <button className="panda-watch-list-btn" type="button" onClick={toggleList}>{inList ? <Check size={16} /> : <Plus size={16} />}<span>{inList ? 'My List' : 'Add to My List'}</span></button>
       </div>
 
-      {error && <div className="panda-watch-error" role="alert"><span>{error}</span><button type="button" onClick={() => setPlaybackRetry(value => value + 1)}>Retry</button></div>}
+      {error && <div className="panda-watch-error" role="alert"><span>{error}</span><button type="button" onClick={() => { trackGAEvent('playback_retry', { content_type: type, title, season, episode }); setPlaybackRetry(value => value + 1); }}>Retry</button></div>}
 
       <section className={'panda-watch-stage ' + (type === 'series' ? 'is-series' : 'is-movie')}>
         <div className="panda-watch-player">
