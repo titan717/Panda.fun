@@ -6,6 +6,7 @@ import { historyUtil } from '../lib/history';
 import { libraryManager } from '../lib/library';
 import type { AnimeItem, Episode, AnimeSeasonItem } from '../types';
 import { DEFAULT_POSTER } from '../types';
+import { updateSEO } from '../lib/seo';
 
 function clean(value: unknown) {
   return typeof value === 'string' ? value.replace(/<[^>]*>/g, '').trim() : '';
@@ -129,7 +130,7 @@ export function Watch() {
 
   const similar = useMemo(() => recommendations.slice(0, 5), [recommendations]);
 
-  const shareTitle = title || 'Panda.fun';
+  useEffect(() => {\n    if (!data) return;\n    const episodeLabel = type === 'series' && currentEpisode ? ` — Season ${season}, Episode ${episode}${currentEpisode.title ? `: ${clean(currentEpisode.title)}` : ''}` : '';\n    const watchDescription = `${title}${episodeLabel} on Panda.fun. ${clean(data?.description) || 'Watch this title on Panda.fun.'}`.slice(0, 160);\n    updateSEO({\n      title: `Watch ${title}${episodeLabel}`,\n      description: watchDescription,\n      image: poster,\n      type: type === 'movie' ? 'video.movie' : 'video.episode',\n      keywords: [title, ...(data?.genres || []), type === 'movie' ? 'movie' : 'TV series', 'watch online', 'Panda.fun'],\n      schema: {\n        '@context': 'https://schema.org',\n        '@type': type === 'movie' ? 'Movie' : 'TVEpisode',\n        name: type === 'series' && currentEpisode?.title ? `${title} — ${currentEpisode.title}` : title,\n        description: watchDescription,\n        image: poster ? [poster] : undefined,\n        url: window.location.href,\n        episodeNumber: type === 'series' ? episode : undefined,\n        partOfSeason: type === 'series' ? { '@type': 'TVSeason', seasonNumber: season, name: `Season ${season}` } : undefined,\n        partOfSeries: type === 'series' ? { '@type': 'TVSeries', name: title } : undefined,\n        datePublished: data?.releaseDate || undefined,\n        isPartOf: { '@type': 'WebSite', name: 'Panda.fun', url: window.location.origin }\n      }\n    });\n  }, [data, title, poster, type, season, episode, currentEpisode?.title]);\n\n  const shareTitle = title || 'Panda.fun';
   const shareText = type === 'movie'
     ? `Watch ${shareTitle} on Panda.fun 🐼\\n\\n${window.location.href}`
     : `Watch ${shareTitle} on Panda.fun 🐼\\nSeason ${season} • Episode ${episode}${currentEpisode?.title ? ` — ${currentEpisode.title}` : ''}\\n\\n${window.location.href}`;
