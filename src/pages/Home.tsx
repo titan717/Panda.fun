@@ -267,6 +267,8 @@ export function Home() {
 
   useEffect(() => {
     const onKeyDown = (event: KeyboardEvent) => {
+      const target = event.target as HTMLElement | null;
+      if (target?.closest('input, textarea, select, [contenteditable="true"]')) return;
       if (event.key.length !== 1) return;
       pandaSecretBuffer.current = (pandaSecretBuffer.current + event.key.toLowerCase()).slice(-12);
       if (pandaSecretBuffer.current.endsWith('panda')) {
