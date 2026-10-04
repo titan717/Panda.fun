@@ -1882,3 +1882,11 @@
   .panda-watch-back:active,
   .panda-watch-error button:active{transform:none}
 }
+
+
+.panda-shared-footer__bottom{position:relative}
+.panda-shared-footer__top{display:inline-flex;align-items:center;gap:5px;margin-left:auto;border:1px solid rgba(255,255,255,.07);border-radius:8px;background:rgba(255,255,255,.025);padding:6px 9px;color:rgba(255,255,255,.45);font:inherit;font-size:8px;font-weight:800;cursor:pointer;transition:background .16s ease,color .16s ease,border-color .16s ease}
+.panda-shared-footer__top:hover,.panda-shared-footer__top:focus-visible{color:#fff4eb;background:rgba(242,198,169,.08);border-color:rgba(242,198,169,.18)}
+.panda-shared-footer__top:focus-visible{outline:2px solid rgba(242,198,169,.35);outline-offset:2px}
+@media(max-width:620px){.panda-shared-footer__bottom{display:flex;flex-wrap:wrap;gap:8px}.panda-shared-footer__top{margin-left:0}}
+@media(prefers-reduced-motion:reduce){.panda-shared-footer__top{scroll-behavior:auto}}
