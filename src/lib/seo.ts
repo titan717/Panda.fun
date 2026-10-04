@@ -6,12 +6,37 @@ export interface SEOProps {
   type?: 'website' | 'video.other' | 'video.movie' | 'video.episode' | 'video.tv_show';
   canonicalUrl?: string;
   schema?: Record<string, any>;
+  keywords?: string[];
+  noindex?: boolean;
 }
 
-export function updateSEO({ title, description, image, type = 'website', canonicalUrl, schema }: SEOProps) {
-  const fullTitle = title ? (title.toLowerCase().includes('panda') ? title : `${title} — Panda.fun`) : 'Panda.fun — Anime, Movies & Series';
-  const defaultDesc = description || 'Discover anime, movies and series on Panda.fun. Find something worth watching and keep your viewing experience simple.';
-  const defaultImage = image || '/icon.svg';
+const SITE_NAME = 'Panda.fun';
+const DEFAULT_DESCRIPTION = 'Watch anime, movies and TV series on Panda.fun. Discover trending titles, new releases, popular shows and stories worth watching.';
+const DEFAULT_IMAGE = '/icon.svg';
+
+function absoluteUrl(value: string) {
+  if (!value) return '';
+  try {
+    return new URL(value, window.location.origin).toString();
+  } catch {
+    return value;
+  }
+}
+
+export function updateSEO({
+  title,
+  description,
+  image,
+  type = 'website',
+  canonicalUrl,
+  schema,
+  keywords,
+  noindex = false,
+}: SEOProps) {
+  const cleanTitle = title?.trim() || SITE_NAME;
+  const fullTitle = cleanTitle === SITE_NAME ? SITE_NAME : `${cleanTitle} — ${SITE_NAME}`;
+  const defaultDesc = description?.trim() || DEFAULT_DESCRIPTION;
+  const defaultImage = absoluteUrl(image || DEFAULT_IMAGE);
   const url = canonicalUrl || (typeof window !== 'undefined' ? window.location.href : '/');
 
   document.title = fullTitle;
@@ -27,20 +52,24 @@ export function updateSEO({ title, description, image, type = 'website', canonic
   };
 
   setMetaTag('name', 'description', defaultDesc);
-  setMetaTag('name', 'robots', 'index, follow, max-image-preview:large');
-  setMetaTag('name', 'theme-color', '#0f0d0d');
+  setMetaTag('name', 'robots', noindex ? 'noindex, nofollow' : 'index, follow, max-image-preview:large, max-snippet:-1, max-video-preview:-1');
+  setMetaTag('name', 'theme-color', '#0b0c10');
+  if (keywords?.length) setMetaTag('name', 'keywords', keywords.join(', '));
 
   setMetaTag('property', 'og:title', fullTitle);
   setMetaTag('property', 'og:description', defaultDesc);
   setMetaTag('property', 'og:image', defaultImage);
+  setMetaTag('og:image:alt', 'content', `${cleanTitle} on ${SITE_NAME}`);
   setMetaTag('property', 'og:type', type);
   setMetaTag('property', 'og:url', url);
-  setMetaTag('property', 'og:site_name', 'Panda.fun');
+  setMetaTag('property', 'og:site_name', SITE_NAME);
+  setMetaTag('property', 'og:locale', 'en_US');
 
   setMetaTag('name', 'twitter:card', 'summary_large_image');
   setMetaTag('name', 'twitter:title', fullTitle);
   setMetaTag('name', 'twitter:description', defaultDesc);
   setMetaTag('name', 'twitter:image', defaultImage);
+  setMetaTag('name', 'twitter:image:alt', `${cleanTitle} on ${SITE_NAME}`);
 
   let canonicalEl = document.querySelector('link[rel="canonical"]') as HTMLLinkElement | null;
   if (!canonicalEl) {
@@ -62,16 +91,27 @@ export function updateSEO({ title, description, image, type = 'website', canonic
   const origin = typeof window !== 'undefined' ? window.location.origin : '';
   const defaultSchema = {
     '@context': 'https://schema.org',
-    '@type': 'WebSite',
-    name: 'Panda.fun',
-    url: origin || '/',
-    logo: origin ? `${origin}/icon.svg` : '/icon.svg',
-    description: defaultDesc,
-    potentialAction: {
-      '@type': 'SearchAction',
-      target: { '@type': 'EntryPoint', urlTemplate: `${origin || ''}/search?keyword={search_term_string}` },
-      'query-input': 'required name=search_term_string'
-    }
+    '@graph': [
+      {
+        '@type': 'WebSite',
+        '@id': `${origin || '/'}/#website`,
+        name: SITE_NAME,
+        url: origin || '/',
+        description: DEFAULT_DESCRIPTION,
+        potentialAction: {
+          '@type': 'SearchAction',
+          target: { '@type': 'EntryPoint', urlTemplate: `${origin || ''}/search?keyword={search_term_string}` },
+          'query-input': 'required name=search_term_string'
+        }
+      },
+      {
+        '@type': 'Organization',
+        '@id': `${origin || '/'}/#organization`,
+        name: SITE_NAME,
+        url: origin || '/',
+        logo: { '@type': 'ImageObject', url: origin ? `${origin}/icon.svg` : DEFAULT_IMAGE }
+      }
+    ]
   };
 
   scriptEl.textContent = JSON.stringify(schema || defaultSchema);
