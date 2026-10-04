@@ -16,6 +16,10 @@ function unwrapApiPayload(payload: any) {
   return payload?.success === true && payload.data ? payload.data : payload;
 }
 
+function slugifyTitle(title: string) {
+  return String(title || "").normalize("NFKD").replace(/[\\u0300-\\u036f]/g, "").toLowerCase().replace(/&/g, " and ").replace(/[^a-z0-9]+/g, "-").replace(/^-+|-+$/g, "").slice(0, 90) || "title";
+}
+
 function mediaRouteId(raw: string) {
   const id = decodeURIComponent(raw || "");
   const tmdb = id.match(/^kinoma_tmdb_(movie|tv)_(\d+)$/);
@@ -27,14 +31,24 @@ function mediaRouteId(raw: string) {
 
 async function fetchSeoMedia(rawId: string) {
   const media = mediaRouteId(rawId);
-  if (!media) return null;
-  const endpoint = media.provider === "tvmaze"
-    ? "/api/v1/tv/" + media.providerId
-    : "/api/v1/tmdb/" + (media.type === "movie" ? "movie/" : "tv/") + media.providerId;
   try {
-    const response = await fetch(MOVIE_API + endpoint, { headers: { Accept: "application/json" } });
-    if (!response.ok) return null;
-    return unwrapApiPayload(await response.json());
+    if (media) {
+      const endpoint = media.provider === "tvmaze"
+        ? "/api/v1/tv/" + media.providerId
+        : "/api/v1/tmdb/" + (media.type === "movie" ? "movie/" : "tv/") + media.providerId;
+      const response = await fetch(MOVIE_API + endpoint, { headers: { Accept: "application/json" } });
+      if (!response.ok) return null;
+      return unwrapApiPayload(await response.json());
+    }
+    const query = decodeURIComponent(rawId).replace(/-/g, " ");
+    const [movieResponse, tvResponse] = await Promise.all([
+      fetch(MOVIE_API + "/api/v1/tmdb/search/movie?q=" + encodeURIComponent(query) + "&page=1", { headers: { Accept: "application/json" } }),
+      fetch(MOVIE_API + "/api/v1/tmdb/search/tv?q=" + encodeURIComponent(query) + "&page=1", { headers: { Accept: "application/json" } })
+    ]);
+    const movie = movieResponse.ok ? unwrapApiPayload(await movieResponse.json()) : {};
+    const tv = tvResponse.ok ? unwrapApiPayload(await tvResponse.json()) : {};
+    const results = [...(movie?.results || []), ...(tv?.results || [])];
+    return results.find((item: any) => slugifyTitle(item.title || item.name || "") === rawId) || results[0] || null;
   } catch {
     return null;
   }
@@ -118,7 +132,7 @@ async function buildSitemap(origin: string) {
     }
   }));
   for (const item of batches.flat()) {
-    if (typeof item?.id === "string" && item.id.startsWith("kinoma_")) urls.add(origin + "/details/" + encodeURIComponent(item.id));
+    if (typeof item?.id === "string" && item.id.startsWith("kinoma_")) urls.add(origin + "/details/" + encodeURIComponent(slugifyTitle(item.title || item.name || item.original_title || item.original_name || item.id)) + "?type=" + (item.type === "movie" ? "movie" : "series"));
   }
   const body = Array.from(urls).map((url) => "  <url><loc>" + htmlEscape(url) + "</loc></url>").join("\n");
   return "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n<urlset xmlns=\"http://www.sitemaps.org/schemas/sitemap/0.9\">\n" + body + "\n</urlset>";
