@@ -10,7 +10,8 @@ export type AnalyticsEventType =
   | 'anime_open'
   | 'episode_start'
   | 'library_action'
-  | 'error';
+  | 'error'
+  | 'api_failure';
 
 interface AnalyticsEvent {
   type: AnalyticsEventType;
@@ -63,6 +64,11 @@ export function trackPageView(path: string): void {
     page_path: path,
     page_title: document.title
   });
+}
+
+export function trackApiFailure(path: string, status?: number, code?: string): void {
+  trackGAEvent('api_failure', { path, status, code });
+  void trackEvent({ type: 'api_failure', path, metadata: { status, code } });
 }
 
 export function getSessionId(): string {
