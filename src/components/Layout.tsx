@@ -126,7 +126,7 @@ export function Layout({ children }: { children: React.ReactNode }) {
     <div
       className="panda-app-shell kinoma-app-shell"
       aria-label="Panda.fun application"
-      style={{ '--sidebar-width': expanded ? '236px' : '72px' } as React.CSSProperties}
+      style={{ '--sidebar-width': expanded ? '240px' : '76px' } as React.CSSProperties}
     >
       <a className="panda-skip-link" href="#panda-main-content">
         Skip to main content
