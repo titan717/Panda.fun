@@ -6307,3 +6307,29 @@ body { min-width: 320px; overflow-x: hidden; }
     padding-top: 22px !important;
   }
 }
+
+
+/* Keep the homepage trailer frame equally stable on narrow screens. */
+@media (max-width: 800px) {
+  .kinoma-home-hero--trailer {
+    min-height: 0 !important;
+    height: auto !important;
+  }
+
+  .kinoma-home-hero--trailer .kinoma-home-hero__trailer-bg {
+    position: relative !important;
+    width: 100% !important;
+    height: auto !important;
+    min-height: 0 !important;
+    max-height: none !important;
+    aspect-ratio: 16 / 9;
+    overflow: hidden;
+  }
+
+  .kinoma-home-hero--trailer .kinoma-home-hero__trailer-video {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+  }
+}
