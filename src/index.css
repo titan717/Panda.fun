@@ -3490,7 +3490,6 @@ p {
 .kinoma-details-hero__trailer-placeholder span{font-size:8px;letter-spacing:.2em;font-weight:900;color:rgba(232,208,192,.55)}
 .kinoma-details-hero__trailer-placeholder strong{font-size:clamp(1.2rem,2.5vw,2rem);color:#fff}
 .kinoma-details-hero__trailer-placeholder small{font-size:9px;color:rgba(246,242,238,.3)}
-.kinoma-details-hero__trailer-shade{position:absolute;inset:0;background:linear-gradient(90deg,rgba(7,6,6,.98) 0%,rgba(7,6,6,.78) 27%,rgba(7,6,6,.28) 62%,rgba(7,6,6,.5) 100%),linear-gradient(0deg,rgba(7,6,6,.98) 0%,rgba(7,6,6,.2) 48%,rgba(7,6,6,.42) 100%);pointer-events:none}
 .kinoma-details-hero--trailer .kinoma-details-hero__content{position:relative;z-index:1;width:min(100%,1500px);min-height:inherit;margin:0 auto;display:flex;align-items:flex-end;padding:clamp(90px,12vw,150px) var(--spacing-page) clamp(64px,9vw,110px)}
 .kinoma-details-hero--trailer .kinoma-details-copy{max-width:680px}
 .kinoma-details-hero--trailer .kinoma-details-copy h1{font-size:clamp(3.6rem,7.2vw,8rem);text-shadow:0 12px 40px rgba(0,0,0,.4)}
@@ -3512,7 +3511,6 @@ p {
  .kinoma-details-hero--trailer{min-height:auto;display:block}
  .kinoma-details-hero--trailer .kinoma-details-hero__trailer-bg{position:relative;height:58vw;min-height:230px;max-height:480px}
  .kinoma-details-hero__trailer-video{transform:none}
- .kinoma-details-hero__trailer-shade{background:linear-gradient(0deg,rgba(7,6,6,.98) 0%,rgba(7,6,6,.12) 80%),linear-gradient(90deg,rgba(7,6,6,.5),transparent)}
  .kinoma-details-hero--trailer .kinoma-details-hero__content{min-height:auto;padding:0 20px 52px;display:block}
  .kinoma-details-hero--trailer .kinoma-details-copy{max-width:none;margin-top:-1px}
  .kinoma-details-hero--trailer .kinoma-details-copy h1{font-size:clamp(2.8rem,12vw,5rem)}
