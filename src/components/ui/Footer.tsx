@@ -30,12 +30,12 @@ export function Footer() {
           <a href="https://github.com/titan717/Panda.fun" target="_blank" rel="noreferrer" aria-label="Source on GitHub">
             <Github size={14} aria-hidden="true" /><span>Source</span>
           </a>
-          <a href="#" aria-label="Panda.fun on YouTube">
+          <span className="panda-shared-footer__social-link is-disabled" aria-label="YouTube coming soon">
             <Youtube size={14} aria-hidden="true" /><span>YouTube</span>
-          </a>
-          <a href="#" aria-label="Panda.fun on Instagram">
+          </span>
+          <span className="panda-shared-footer__social-link is-disabled" aria-label="Instagram coming soon">
             <Instagram size={14} aria-hidden="true" /><span>Instagram</span>
-          </a>
+          </span>
         </div>
       </div>
       <div className="panda-shared-footer__bottom">
