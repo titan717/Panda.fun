@@ -86,6 +86,8 @@ export const MOVIE_API_FALLBACK_URL = rawFallback.replace(/\/+$/, '');
 
 function reportApiFailure(error: unknown, path: string) {
   try {
+    if (error instanceof DOMException && error.name === 'AbortError') return;
+    if (error instanceof Error && error.name === 'AbortError') return;
     const detail = error instanceof MovieApiError ? { status: error.status, code: error.code } : { status: 0, code: 'NETWORK_ERROR' };
     trackApiFailure(path, detail.status, detail.code);
     window.dispatchEvent(new CustomEvent('panda:api-failure', { detail: { path, ...detail } }));
@@ -521,8 +523,6 @@ export const api = {
       const details = await request<MovieApiMedia>(`/api/v1/tv/${media.id}`, undefined, { signal }, 300_000);
       tmdbId = Number(details.ids?.tmdb || 0);
       if (!tmdbId) throw new MovieApiError('Unable to resolve this title to a TMDB ID for EmbedWave playback.', 503, 'TMDB_ID_UNAVAILABLE');
-    } else {
-      const details = await request<MovieApiMedia>(`/api/v1/tmdb/${media.type === 'movie' ? 'movie' : 'tv'}/${media.id}`, undefined, undefined, 300_000);
     }
 
     const base = media.type === 'movie'
