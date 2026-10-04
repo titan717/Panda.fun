@@ -57,14 +57,15 @@ export function Watch() {
 
   useEffect(() => {
     let active = true;
+    const controller = new AbortController();
     setLoading(true); setError(''); setSource('');
-    api.getDetails(id).then(details => {
+    api.getDetails(id, controller.signal).then(details => {
       if (!active) return;
       setData(details);
       setInList(libraryManager.isInWatchlist(id));
       setLoading(false);
 
-      api.getRecommendations(id)
+      api.getRecommendations(id, controller.signal)
         .then(recs => active && setRecommendations(recs.results))
         .catch(() => undefined);
     }).catch(err => {
@@ -72,43 +73,46 @@ export function Watch() {
       setError(err instanceof Error ? err.message : 'Unable to load this title.');
       setLoading(false);
     });
-    return () => { active = false; };
+    return () => { active = false; controller.abort(); };
   }, [id]);
 
   useEffect(() => {
     if (!data || type !== 'series') return;
     let active = true;
-    api.getSeasons(id).then(result => {
+    const controller = new AbortController();
+    api.getSeasons(id, controller.signal).then(result => {
       if (!active) return;
       setSeasons(result.seasons);
       if (result.seasons.length && !result.seasons.some(s => s.seasonNumber === season)) {
         setSeason(result.seasons[0].seasonNumber);
       }
     }).catch(() => active && setSeasons([]));
-    return () => { active = false; };
+    return () => { active = false; controller.abort(); };
   }, [data, id, type]);
 
   useEffect(() => {
     if (!data || type !== 'series') return;
     let active = true;
-    api.getSeasonEpisodes(id, season).then(result => {
+    const controller = new AbortController();
+    api.getSeasonEpisodes(id, season, controller.signal).then(result => {
       if (!active) return;
       setEpisodes(result.episodes);
       if (result.episodes.length && !result.episodes.some(ep => ep.number === episode)) setEpisode(result.episodes[0].number);
     }).catch(() => active && setEpisodes([]));
-    return () => { active = false; };
+    return () => { active = false; controller.abort(); };
   }, [data, id, season, type]);
 
   useEffect(() => {
     if (!data) return;
     let active = true;
+    const controller = new AbortController();
     setSourceLoading(true);
     setSource('');
     setError('');
-    api.getWatchLink(id, type === 'series' ? season : 1, type === 'series' ? episode : 1)
+    api.getWatchLink(id, type === 'series' ? season : 1, type === 'series' ? episode : 1, controller.signal)
       .then(result => { if (!active) return; setSource(result.url); trackGAEvent('watch_start', { content_type: type, title }); })
       .catch(err => { if (!active) return; setSourceLoading(false); setError(err instanceof Error ? err.message : 'Playback source unavailable.'); });
-    return () => { active = false; };
+    return () => { active = false; controller.abort(); };
   }, [data, id, type, season, episode, playbackRetry]);
 
   useEffect(() => {
