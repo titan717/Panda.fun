@@ -370,7 +370,37 @@ export function Home() {
 
         <div className="panda-home-v2">
           <div className="panda-home-v2__inner">
-            <ModernContinueWatching />
+            {trending.length > 0 && (
+              <section className="panda-pulse" aria-labelledby="panda-pulse-heading">
+                <div className="panda-pulse__head">
+                  <div>
+                    <span className="panda-home-v2__eyebrow"><Sparkles size={13} /> Live discovery</span>
+                    <h2 id="panda-pulse-heading">Panda Pulse</h2>
+                  </div>
+                  <span className="panda-pulse__signal"><i aria-hidden="true" /> Updating from today's picks</span>
+                </div>
+                <div className="panda-pulse__items">
+                  {trending.slice(0, 3).map((item, index) => (
+                    <Link
+                      key={item.id}
+                      href={`/details/${slugifyTitle(item.title)}?type=${item.type === 'movie' ? 'movie' : 'series'}`}
+                      className="panda-pulse__item"
+                      aria-label={`Open ${item.title}, Panda Pulse rank ${index + 1}`}
+                    >
+                      <span className="panda-pulse__rank">{String(index + 1).padStart(2, '0')}</span>
+                      <span className="panda-pulse__poster">
+                        <PandaPoster item={item} priority={index === 0} />
+                      </span>
+                      <span className="panda-pulse__copy">
+                        <strong>{item.title}</strong>
+                        <small>{[item.year, item.rating ? `★ ${Number(item.rating).toFixed(1)}` : null, item.type === 'movie' ? 'Movie' : 'Series'].filter(Boolean).join(' · ')}</small>
+                      </span>
+                      <ArrowRight size={14} aria-hidden="true" />
+                    </Link>
+                  ))}
+                </div>
+              </section>
+            )}
 
             <PandaRail priority kind="trending" title="Trending now" subtitle="The titles getting attention today." items={trending} onHover={showHoverTrailer} onLeave={hideHoverTrailer} />
             <PandaRail kind="streamingNetflix" title="New on Netflix" subtitle="Freshly released movies now showing on the service." items={newOnNetflix} onHover={showHoverTrailer} onLeave={hideHoverTrailer} badge="NETFLIX" />
