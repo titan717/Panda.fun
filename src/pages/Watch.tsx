@@ -7,6 +7,7 @@ import { libraryManager } from '../lib/library';
 import type { AnimeItem, Episode, AnimeSeasonItem } from '../types';
 import { DEFAULT_POSTER } from '../types';
 import { updateSEO } from '../lib/seo';
+import { trackGAEvent } from '../lib/analytics';
 
 function clean(value: unknown) {
   return typeof value === 'string' ? value.replace(/<[^>]*>/g, '').trim() : '';
@@ -91,7 +92,7 @@ export function Watch() {
     if (!data) return;
     let active = true;
     api.getWatchLink(id, type === 'series' ? season : 1, type === 'series' ? episode : 1)
-      .then(result => active && setSource(result.url))
+      .then(result => { if (!active) return; setSource(result.url); trackGAEvent('watch_start', { content_type: type, title }); })
       .catch(err => active && setError(err instanceof Error ? err.message : 'Playback source unavailable.'));
     return () => { active = false; };
   }, [data, id, type, season, episode]);
@@ -126,7 +127,11 @@ export function Watch() {
     setSeason(next);
   };
 
-  const toggleList = () => setInList(libraryManager.toggleWatchlist({ id, title, image: poster }));
+  const toggleList = () => {
+    const next = libraryManager.toggleWatchlist({ id, title, image: poster });
+    setInList(next);
+    trackGAEvent(next ? 'add_to_list' : 'remove_from_list', { content_type: type });
+  };
 
   const similar = useMemo(() => recommendations.slice(0, 5), [recommendations]);
 
@@ -169,6 +174,7 @@ export function Watch() {
 
     try {
       if (typeof navigator.share === 'function') {
+        trackGAEvent('share', { content_type: type, method: 'native' });
         await navigator.share({
           title: shareTitle,
           text: shareText,
@@ -176,6 +182,7 @@ export function Watch() {
         });
         return;
       }
+      trackGAEvent('share', { content_type: type, method: 'clipboard' });
       await navigator.clipboard?.writeText(copyText);
       setShareMessage('Share text copied');
       window.setTimeout(() => setShareMessage(''), 1800);
