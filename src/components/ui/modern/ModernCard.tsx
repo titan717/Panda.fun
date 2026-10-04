@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Link } from 'wouter';
+import { useLocation } from 'wouter';
 import { Play, X } from 'lucide-react';
 import { AnimeItem, DEFAULT_POSTER } from '../../../types';
 import { slugifyTitle } from '../../../lib/slug';
@@ -22,6 +22,7 @@ export function ModernCard({
   href,
   onRemove
 }: ModernCardProps) {
+  const [, setLocation] = useLocation();
   const [imageLoaded, setImageLoaded] = useState(false);
 
   const title = typeof item.title === 'string'
@@ -37,11 +38,11 @@ export function ModernCard({
       tabIndex={0}
       className="group relative flex w-full flex-col select-none rounded-2xl outline-none"
       aria-label={`Open ${title}`}
-      onClick={() => { window.location.href = detailHref; }}
+      onClick={() => setLocation(detailHref)}
       onKeyDown={(event) => {
         if (event.key === 'Enter' || event.key === ' ') {
           event.preventDefault();
-          window.location.href = detailHref;
+          setLocation(detailHref)
         }
       }}
     >
