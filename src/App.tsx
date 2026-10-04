@@ -1,4 +1,4 @@
-import React, { lazy, Suspense, useEffect, Component } from 'react';
+import React, { lazy, Suspense, useEffect, useState, Component } from 'react';
 import { Route, Switch, useLocation } from 'wouter';
 import { AnimatePresence, motion } from 'motion/react';
 import { SWRConfig } from 'swr';
@@ -27,6 +27,8 @@ import { PWAInstallPrompt } from './components/ui/PWAInstallPrompt';
 import { PWAUpdatePrompt } from './components/ui/PWAUpdatePrompt';
 import { trackPageView } from './lib/analytics';
 import { usePWAUpdate } from './lib/usePWAUpdate';
+import { PandaIntro, shouldShowPandaIntro } from './components/intro/PandaIntro';
+import './components/intro/panda-intro.css';
 
 function AnimatedRoutes() {
   const [location] = useLocation();
@@ -107,7 +109,20 @@ class AppErrorBoundary extends Component<{ children: React.ReactNode }, { hasErr
 }
 
 function PWAUpdateBridge() { usePWAUpdate(); return null; }
-function MainAppShell() { return <AnimatedRoutes />; }
+function MainAppShell() {
+  const [location] = useLocation();
+  const [showIntro, setShowIntro] = useState(() => location === '/' && shouldShowPandaIntro());
+
+  useEffect(() => {
+    if (location !== '/') setShowIntro(false);
+  }, [location]);
+
+  if (showIntro) {
+    return <PandaIntro onComplete={() => setShowIntro(false)} />;
+  }
+
+  return <AnimatedRoutes />;
+}
 
 export default function App() {
   return (
