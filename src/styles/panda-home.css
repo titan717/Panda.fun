@@ -100,6 +100,12 @@
   white-space: nowrap;
 }
 .panda-home-v2__see-all:hover { color: #fff; }
+.panda-home-v2__see-all:focus-visible {
+  color: #fff;
+  outline: 2px solid rgba(255,255,255,.55);
+  outline-offset: 4px;
+  border-radius: 6px;
+}
 
 .panda-home-v2__rail {
   display: grid;
