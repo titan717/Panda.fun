@@ -5,7 +5,7 @@ import { motion, AnimatePresence } from 'motion/react';
 import { AnimeItem, DEFAULT_BANNER } from '../../../types';
 import { libraryManager } from '../../../lib/library';
 import { historyUtil, HistoryItem } from '../../../lib/history';
-import { slugifyTitle } from '../../../lib/slug';
+import { buildDetailsHref } from '../../../lib/mediaRoute';
 
 interface ModernHeroProps {
   items: AnimeItem[];
@@ -209,7 +209,7 @@ export function ModernHero({ items }: ModernHeroProps) {
               </motion.button>
 
               {/* Tertiary CTA: More Info */}
-              <Link href={`/details/${slugifyTitle(typeof currentItem.title === 'string' ? currentItem.title : (currentItem.title?.english || currentItem.title?.romaji || 'Untitled'))}?type=${currentItem.type === 'movie' ? 'movie' : 'series'}`}>
+              <Link href={buildDetailsHref(currentItem.id, currentItem.type === 'movie' ? 'movie' : 'series')}>
                 <motion.button
                   whileHover={{ scale: 1.03 }}
                   whileTap={{ scale: 0.97 }}
