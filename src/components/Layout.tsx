@@ -3,6 +3,14 @@ import { Link, useLocation } from 'wouter';
 import { House, Search, Library, Settings, Info, UserRound, FileText, Shield } from 'lucide-react';
 import { KinomaLogo } from './ui/KinomaLogo';
 
+export const ABOUT_ITEMS = [
+  { href: '/about', label: 'About' },
+  { href: '/docs', label: 'Documentation' },
+  { href: '/terms', label: 'Terms of Service' },
+  { href: '/privacy', label: 'Privacy Policy' },
+  { href: '/contact', label: 'Contact' },
+];
+
 export const ITEMS = [
   { href: '/home', label: 'Home', Icon: House },
   { href: '/search', label: 'Search', Icon: Search },
