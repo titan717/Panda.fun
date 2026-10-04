@@ -94,13 +94,15 @@ export function Search() {
     setSubmittedQuery(clean);
     setLocation('/search?keyword=' + encodeURIComponent(clean));
   };
-  const clearSearch = () => { setQuery(''); setSubmittedQuery(''); setError(null); setFilter('all'); setLocation('/search'); };
+  const clearSearch = () => { setQuery(''); setSubmittedQuery(''); setError(null); setFilter('all'); inputRef.current?.focus(); setLocation('/search'); };
+  const clearQueryInput = () => { setQuery(''); inputRef.current?.focus(); };
   const clearRecent = () => { preferencesUtil.clearRecentSearches(); setRecentSearches([]); };
+
   const handleInputKeyDown = (event: React.KeyboardEvent<HTMLInputElement>) => {
     if (event.key === 'Escape' && query) { setQuery(''); return; }
     if (event.key === 'Escape' && !query) inputRef.current?.blur();
   };
-  const chooseRecent = (value: string) => { setQuery(value); setSubmittedQuery(value); setLocation('/search?keyword=' + encodeURIComponent(value)); };
+  const chooseRecent = (value: string) => { setQuery(value); setSubmittedQuery(value); setFilter('all'); trackGAEvent('search', { content_type: 'catalog', has_query: true, source: 'recent_search' }); setLocation('/search?keyword=' + encodeURIComponent(value)); };
 
   return <main className="kinoma-search-page">
     <div className="kinoma-search-page__ambient" aria-hidden="true" />
@@ -136,7 +138,7 @@ export function Search() {
         )}
         <form className="kinoma-search-control is-open" onSubmit={submitSearch}>
           <SearchIcon size={18} /><input ref={inputRef} value={query} onChange={e => setQuery(e.target.value)} onKeyDown={handleInputKeyDown} placeholder="Search movies, series or anime" aria-label="Search movies, series or anime" autoComplete="off" />
-          {query && <button type="button" className="kinoma-search-control__clear" onClick={() => setQuery('')} aria-label="Clear search"><X size={16} /></button>}
+          {query && <button type="button" className="kinoma-search-control__clear" onClick={clearQueryInput} aria-label="Clear search"><X size={16} /></button>}
           <button type="submit" className="kinoma-search-control__submit">Search</button>
         </form>
       </header>
