@@ -4,6 +4,7 @@ import { KinomaLogo } from '../components/ui/KinomaLogo';
 import { ArrowRight, Check, Film, Github, Play, Plus, Search, Sparkles, Tv } from 'lucide-react';
 import { api, MovieApiError, MovieApiMedia } from '../lib/api';
 import { libraryManager } from '../lib/library';
+import { updateSEO } from '../lib/seo';
 import { ModernContinueWatching } from '../components/ui/modern/ModernContinueWatching';
 import { PandaStreamNotice } from '../components/ui/PandaStreamNotice';
 import '../styles/panda-home.css';
