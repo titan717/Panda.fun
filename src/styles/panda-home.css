@@ -353,99 +353,6 @@
 @media(max-width:620px){.panda-home-hover-trailer{right:10px;bottom:10px;width:calc(100vw - 20px);}}
 
 
-/* =========================================================
-   PANDA.FUN — cinematic header / media grid / footer refresh
-   ========================================================= */
-.panda-global-header {
-  position: sticky;
-  top: 0;
-  z-index: 19;
-  margin: 0;
-  padding: 10px clamp(14px, 2.4vw, 34px);
-  background: rgba(5, 6, 9, .78);
-  border-bottom: 1px solid rgba(255,255,255,.07);
-  backdrop-filter: blur(22px) saturate(.8);
-}
-.panda-global-header__inner {
-  width: min(100%, 1560px);
-  margin: 0 auto;
-  min-height: 42px;
-  display: grid;
-  grid-template-columns: auto auto minmax(260px, 1fr) auto;
-  align-items: center;
-  gap: 18px;
-}
-.panda-global-header__brand {
-  display: inline-flex;
-  align-items: center;
-  gap: 9px;
-  color: #fff;
-  text-decoration: none;
-  font-size: 13px;
-  font-weight: 850;
-  letter-spacing: -.02em;
-}
-.panda-global-header__brand .kinoma-logo { width: 27px; height: 27px; }
-.panda-global-header__status {
-  display: inline-flex;
-  align-items: center;
-  gap: 7px;
-  color: rgba(255,255,255,.38);
-  font-size: 9px;
-  font-weight: 800;
-  letter-spacing: .12em;
-  text-transform: uppercase;
-  white-space: nowrap;
-}
-.panda-global-header__dot {
-  width: 6px; height: 6px; border-radius: 50%;
-  background: #a5d6a7; box-shadow: 0 0 12px rgba(165,214,167,.65);
-}
-.panda-global-header__search {
-  justify-self: center;
-  width: min(100%, 560px);
-  display: flex;
-  align-items: center;
-  gap: 9px;
-  min-height: 36px;
-  padding: 0 11px;
-  border: 1px solid rgba(255,255,255,.075);
-  border-radius: 11px;
-  background: rgba(255,255,255,.035);
-  color: rgba(255,255,255,.43);
-  text-decoration: none;
-  font-size: 11px;
-  transition: border-color .2s ease, background .2s ease, color .2s ease;
-}
-.panda-global-header__search:hover {
-  border-color: rgba(255,255,255,.13);
-  background: rgba(255,255,255,.055);
-  color: rgba(255,255,255,.78);
-}
-.panda-global-header__search kbd {
-  margin-left: auto;
-  padding: 4px 6px;
-  border: 1px solid rgba(255,255,255,.08);
-  border-radius: 6px;
-  background: rgba(0,0,0,.22);
-  color: rgba(255,255,255,.32);
-  font: 800 8px/1 inherit;
-}
-.panda-global-header__profile {
-  width: 34px; height: 34px;
-  display: grid; place-items: center;
-  border: 1px solid rgba(255,255,255,.08);
-  border-radius: 50%;
-  color: rgba(255,255,255,.68);
-  background: rgba(255,255,255,.035);
-  transition: transform .2s ease, background .2s ease;
-}
-.panda-global-header__profile:hover { transform: translateY(-1px); background: rgba(255,255,255,.08); color:#fff; }
-
-.panda-stream-notice__caution p { font-size: 10px; color: rgba(255,255,255,.45); }
-.panda-stream-notice__caution strong { color: rgba(255,255,255,.86); margin-right: 2px; }
-.panda-stream-notice__share-copy p { font-size: 10px; }
-
 .panda-content-card__image-wrap { position:absolute; inset:0; overflow:hidden; }
 .panda-content-card__image-wrap img { position:relative; z-index:1; opacity:1; }
 .panda-content-card__image-skeleton {
@@ -506,16 +413,8 @@
 .kinoma-home-footer__art { opacity:.42 !important; transform:scale(.9); transform-origin:right center; }
 
 @media (max-width: 900px) {
-  .panda-global-header__inner { grid-template-columns:auto 1fr auto; }
-  .panda-global-header__status { display:none; }
-  .panda-global-header__search { justify-self:stretch; width:100%; }
 }
 @media (max-width: 620px) {
-  .panda-global-header { padding: 8px 10px; }
-  .panda-global-header__inner { gap:8px; min-height:38px; }
-  .panda-global-header__brand span { display:none; }
-  .panda-global-header__search span { overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
-  .panda-global-header__search kbd { display:none; }
     .panda-stream-notice__caution p span { display:none; }
     .panda-content-card { flex:0 0 calc((100vw - 44px) / 2.25); }
 }
