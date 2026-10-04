@@ -1,0 +1,8 @@
+/* Panda.fun accessibility foundation */
+.panda-skip-link{position:fixed;top:12px;left:12px;z-index:2000;transform:translateY(-160%);padding:10px 14px;border:2px solid rgba(232,208,192,.88);border-radius:10px;background:#10110f;color:#fff;font-size:12px;font-weight:800;line-height:1.2;text-decoration:none;box-shadow:0 12px 32px rgba(0,0,0,.35);transition:transform 140ms ease}
+.panda-skip-link:focus{transform:translateY(0)}
+#panda-main-content:focus{outline:none}
+:where(a,button,input,select,textarea,summary):focus-visible{outline:3px solid rgba(232,208,192,.9);outline-offset:3px}
+@media(prefers-contrast:more){:where(a,button,input,select,textarea,summary):focus-visible{outline:3px solid currentColor;outline-offset:4px}.kinoma-sidebar__item,.kinoma-sidebar__submenu-item{border:1px solid rgba(255,255,255,.22)}}
+@media(forced-colors:active){:where(a,button,input,select,textarea,summary):focus-visible{outline:3px solid Highlight;outline-offset:3px}.panda-skip-link{border-color:ButtonText;background:Canvas;color:CanvasText}}
+@media(prefers-reduced-motion:reduce){*,*::before,*::after{scroll-behavior:auto!important;animation-duration:.01ms!important;animation-iteration-count:1!important;transition-duration:.01ms!important}}
