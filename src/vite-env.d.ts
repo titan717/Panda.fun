@@ -10,3 +10,12 @@ declare module 'virtual:pwa-register' {
 
   export function registerSW(options?: RegisterSWOptions): (reloadPage?: boolean) => Promise<void>;
 }
+
+interface ImportMetaEnv {
+  readonly VITE_MOVIE_API_URL?: string;
+  readonly VITE_MOVIE_API_FALLBACK_URL?: string;
+}
+
+interface ImportMeta {
+  readonly env: ImportMetaEnv;
+}
