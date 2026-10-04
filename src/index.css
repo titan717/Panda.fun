@@ -6118,7 +6118,7 @@ body { min-width: 320px; overflow-x: hidden; }
 
 
 /* Hover-expand Panda navigation rail */
-.kinoma-sidebar--icons{width:var(--sidebar-width)!important;min-width:var(--sidebar-width)!important;max-width:var(--sidebar-width)!important;overflow:hidden!important;transition:width 180ms cubic-bezier(.2,.8,.2,1),background-color 180ms ease!important;background:rgba(15,11,10,.76)!important;border-right:1px solid rgba(232,208,192,.08)!important;box-shadow:8px 0 30px rgba(0,0,0,.12)!important;backdrop-filter:blur(18px) saturate(.92)!important;-webkit-backdrop-filter:blur(18px) saturate(.92)!important;padding:12px 8px!important}
+.kinoma-sidebar--icons{width:var(--sidebar-width)!important;min-width:var(--sidebar-width)!important;max-width:var(--sidebar-width)!important;overflow:hidden!important;transition:width 180ms cubic-bezier(.2,.8,.2,1),background-color 180ms ease!important;background:rgba(7,6,6,.92)!important;border-right:1px solid rgba(232,208,192,.075)!important;box-shadow:10px 0 34px rgba(0,0,0,.2)!important;backdrop-filter:blur(18px) saturate(.92)!important;-webkit-backdrop-filter:blur(18px) saturate(.92)!important;padding:12px 8px!important}
 .kinoma-sidebar--icons .kinoma-sidebar__top{min-height:54px!important;display:flex!important;align-items:center!important;justify-content:center!important;padding:4px 0 12px!important;border-bottom:1px solid rgba(246,242,238,.055)!important}
 .kinoma-sidebar--icons .kinoma-sidebar__brand{display:flex!important;align-items:center!important;justify-content:center!important;width:100%!important;min-width:0!important;border-radius:12px!important}
 .kinoma-sidebar--icons .kinoma-sidebar__logo{max-width:100%!important}
@@ -6131,3 +6131,7 @@ body { min-width: 320px; overflow-x: hidden; }
 .kinoma-sidebar--icons .kinoma-sidebar__item.is-active{color:#fffaf6!important;background:linear-gradient(90deg,rgba(184,77,65,.16),rgba(184,77,65,.055))!important;border-color:rgba(193,147,95,.12)!important;box-shadow:inset 2px 0 0 rgba(193,147,95,.72)!important}
 .kinoma-sidebar--icons .kinoma-sidebar__item.is-active svg{color:#e8d0c0!important}
 @media(max-width:700px){.kinoma-sidebar--icons{display:none!important}}
+
+/* Sidebar expanded width/deeper contrast */
+.kinoma-sidebar--icons.is-expanded{width:260px!important;min-width:260px!important;max-width:260px!important;background:rgba(7,6,6,.94)!important}
+.kinoma-sidebar--icons.is-collapsed{background:rgba(7,6,6,.94)!important}
