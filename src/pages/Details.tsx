@@ -180,8 +180,56 @@ export function Details() {
           <div className="kinoma-season-tabs">{modelSeasons.map(season => <button type="button" key={season.number} className={selectedSeason === season.number ? 'is-selected' : ''} onClick={() => setSelectedSeason(season.number)}>Season {season.number}</button>)}</div>
           <div className="kinoma-episode-list">
             {(modelSeasons.find(s => s.number === selectedSeason)?.episodes || []).map(ep => (
-              <button type="button" key={ep.number} className="kinoma-episode-card" onClick={() => setLocation('/watch/' + encodeURIComponent(id + '$season$' + selectedSeason + '$episode$' + ep.number) + '?type=series')}>
-                <div className="kinoma-episode-art">{ep.image ? <img src={ep.image} alt="" loading="lazy" decoding="async" /> : <span><Play size={20} /></span>}<b>EP {ep.number}</b></div>
+              <button type="button" key={ep.number} className="kinoma-episode-card" onClick={() => { trackGAEvent('episode_select', { content_type: 'series', season: selectedSeason, episode: ep.number, title }); setLocation('/watch/' + encodeURIComponent(id + '$season>
+                <div className="kinoma-episode-art">{ep.image ? <img src={ep.image} alt="" loading={ep.number === (historyUtil.getAnimeProgress(id)?.episodeNumber || 0) ? 'eager' : 'lazy'} decoding="async" /> : <span><Play size={20} /></span>}<b>EP {ep.number}</b></div>
+                <div className="kinoma-episode-copy"><strong>{ep.title}</strong>{ep.synopsis && <p>{ep.synopsis}</p>}</div>
+                <ChevronRight className="kinoma-episode-arrow" size={18} />
+              </button>
+            ))}
+            {!loading && !(modelSeasons.find(s => s.number === selectedSeason)?.episodes.length) && <div className="kinoma-details-bottom">No episodes were returned for this season.</div>}
+          </div>
+        </section>
+      )}
+
+      {kind === 'movie' && (
+        <section className="kinoma-details-section">
+          <div className="kinoma-details-section__heading"><div><span>KEEP EXPLORING</span><h2>More like this</h2></div><small>Powered by MovieApi recommendations</small></div>
+          <div className="kinoma-more-grid">
+            {recommendations.map((item, i) => <button type="button" key={item.id} className="kinoma-more-card" onClick={() => setLocation('/details/' + slugifyTitle(typeof item.title === 'string' ? item.title : item.title.english || item.title.romaji || 'Untitled') + '?type=' + (item.contentType === 'movie' ? 'movie' : 'series'))}><div className={'kinoma-more-card__art tone-' + (i % 5)}>{item.image ? <img src={item.image} alt="" loading="lazy" decoding="async" /> : <Film size={25} />}</div><strong>{typeof item.title === 'string' ? item.title : item.title.english || item.title.romaji || 'Untitled'}</strong><span>{item.genres?.[0] || 'Recommended'} • {item.contentType === 'movie' ? 'Movie' : 'Series'}</span></button>)}
+            {!recommendations.length && !loading && <div className="kinoma-details-bottom">No recommendations are available right now.</div>}
+          </div>
+        </section>
+      )}
+      <div className="kinoma-details-bottom"><Clock3 size={14} /> Metadata and playback are powered by MovieApi.</div>
+    </main>
+  );
+}
+ + selectedSeason + '$episode>
+                <div className="kinoma-episode-art">{ep.image ? <img src={ep.image} alt="" loading={ep.number === (historyUtil.getAnimeProgress(id)?.episodeNumber || 0) ? 'eager' : 'lazy'} decoding="async" /> : <span><Play size={20} /></span>}<b>EP {ep.number}</b></div>
+                <div className="kinoma-episode-copy"><strong>{ep.title}</strong>{ep.synopsis && <p>{ep.synopsis}</p>}</div>
+                <ChevronRight className="kinoma-episode-arrow" size={18} />
+              </button>
+            ))}
+            {!loading && !(modelSeasons.find(s => s.number === selectedSeason)?.episodes.length) && <div className="kinoma-details-bottom">No episodes were returned for this season.</div>}
+          </div>
+        </section>
+      )}
+
+      {kind === 'movie' && (
+        <section className="kinoma-details-section">
+          <div className="kinoma-details-section__heading"><div><span>KEEP EXPLORING</span><h2>More like this</h2></div><small>Powered by MovieApi recommendations</small></div>
+          <div className="kinoma-more-grid">
+            {recommendations.map((item, i) => <button type="button" key={item.id} className="kinoma-more-card" onClick={() => setLocation('/details/' + slugifyTitle(typeof item.title === 'string' ? item.title : item.title.english || item.title.romaji || 'Untitled') + '?type=' + (item.contentType === 'movie' ? 'movie' : 'series'))}><div className={'kinoma-more-card__art tone-' + (i % 5)}>{item.image ? <img src={item.image} alt="" loading="lazy" decoding="async" /> : <Film size={25} />}</div><strong>{typeof item.title === 'string' ? item.title : item.title.english || item.title.romaji || 'Untitled'}</strong><span>{item.genres?.[0] || 'Recommended'} • {item.contentType === 'movie' ? 'Movie' : 'Series'}</span></button>)}
+            {!recommendations.length && !loading && <div className="kinoma-details-bottom">No recommendations are available right now.</div>}
+          </div>
+        </section>
+      )}
+      <div className="kinoma-details-bottom"><Clock3 size={14} /> Metadata and playback are powered by MovieApi.</div>
+    </main>
+  );
+}
+ + ep.number) + '?type=series'); }}>
+                <div className="kinoma-episode-art">{ep.image ? <img src={ep.image} alt="" loading={ep.number === (historyUtil.getAnimeProgress(id)?.episodeNumber || 0) ? 'eager' : 'lazy'} decoding="async" /> : <span><Play size={20} /></span>}<b>EP {ep.number}</b></div>
                 <div className="kinoma-episode-copy"><strong>{ep.title}</strong>{ep.synopsis && <p>{ep.synopsis}</p>}</div>
                 <ChevronRight className="kinoma-episode-arrow" size={18} />
               </button>
