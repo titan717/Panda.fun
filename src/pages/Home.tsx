@@ -5,6 +5,7 @@ import { ArrowRight, Check, Film, Github, Play, Plus, Search, Sparkles, Tv } fro
 import { api, MovieApiError, MovieApiMedia } from '../lib/api';
 import { libraryManager } from '../lib/library';
 import { updateSEO } from '../lib/seo';
+import { slugifyTitle } from '../lib/slug';
 import { ModernContinueWatching } from '../components/ui/modern/ModernContinueWatching';
 import '../styles/panda-home.css';
 
