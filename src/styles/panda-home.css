@@ -1634,3 +1634,130 @@
     scroll-snap-align: start;
   }
 }
+
+/* =========================================================
+   PANDA.FUN — Panda Pulse
+   Compact live-discovery signal using the already-loaded trending rail.
+   ========================================================= */
+.panda-pulse{
+  margin:30px 0 34px;
+  padding:18px;
+  border:1px solid rgba(255,255,255,.075);
+  border-radius:18px;
+  background:linear-gradient(145deg,rgba(255,255,255,.035),rgba(255,255,255,.012));
+  box-shadow:0 18px 40px rgba(0,0,0,.16);
+}
+.panda-pulse__head{
+  display:flex;
+  align-items:flex-end;
+  justify-content:space-between;
+  gap:16px;
+  margin-bottom:14px;
+}
+.panda-pulse__head h2{
+  margin:4px 0 0;
+  color:#fff;
+  font-size:22px;
+  line-height:1.1;
+  letter-spacing:-.035em;
+}
+.panda-pulse__signal{
+  display:inline-flex;
+  align-items:center;
+  gap:7px;
+  color:rgba(255,255,255,.34);
+  font-size:9px;
+  font-weight:800;
+  letter-spacing:.08em;
+  text-transform:uppercase;
+}
+.panda-pulse__signal i{
+  width:6px;
+  height:6px;
+  border-radius:50%;
+  background:#f2c6a9;
+  box-shadow:0 0 0 3px rgba(242,198,169,.08),0 0 10px rgba(242,198,169,.25);
+  animation:pandaPulseSignal 2s ease-in-out infinite;
+}
+.panda-pulse__items{
+  display:grid;
+  grid-template-columns:repeat(3,minmax(0,1fr));
+  gap:10px;
+}
+.panda-pulse__item{
+  display:grid;
+  grid-template-columns:28px 46px minmax(0,1fr) 14px;
+  align-items:center;
+  gap:10px;
+  min-width:0;
+  padding:9px;
+  border:1px solid rgba(255,255,255,.055);
+  border-radius:13px;
+  color:#fff;
+  text-decoration:none;
+  background:rgba(0,0,0,.16);
+  transition:transform .2s ease,border-color .2s ease,background .2s ease;
+}
+.panda-pulse__item:hover,
+.panda-pulse__item:focus-visible{
+  transform:translateY(-2px);
+  border-color:rgba(255,255,255,.13);
+  background:rgba(255,255,255,.035);
+}
+.panda-pulse__item:focus-visible{
+  outline:2px solid rgba(255,255,255,.5);
+  outline-offset:3px;
+}
+.panda-pulse__rank{
+  color:rgba(242,198,169,.72);
+  font-size:10px;
+  font-weight:900;
+  letter-spacing:.08em;
+  text-align:center;
+}
+.panda-pulse__poster{
+  position:relative;
+  display:block;
+  width:46px;
+  height:58px;
+  overflow:hidden;
+  border-radius:8px;
+  background:#101216;
+}
+.panda-pulse__poster .panda-content-card__image-wrap{
+  position:absolute;
+}
+.panda-pulse__poster .panda-content-card__image-fallback{
+  padding:4px;
+  font-size:7px;
+}
+.panda-pulse__copy{
+  display:flex;
+  min-width:0;
+  flex-direction:column;
+  gap:4px;
+}
+.panda-pulse__copy strong,
+.panda-pulse__copy small{
+  overflow:hidden;
+  text-overflow:ellipsis;
+  white-space:nowrap;
+}
+.panda-pulse__copy strong{font-size:11px;}
+.panda-pulse__copy small{color:rgba(255,255,255,.38);font-size:8px;}
+.panda-pulse__item > svg{color:rgba(255,255,255,.28);transition:transform .2s ease;}
+.panda-pulse__item:hover > svg{transform:translateX(2px);color:rgba(255,255,255,.7);}
+@keyframes pandaPulseSignal{
+  0%,100%{opacity:.55;transform:scale(.88)}
+  50%{opacity:1;transform:scale(1)}
+}
+@media(max-width:760px){
+  .panda-pulse{padding:15px;margin:26px 0 30px;}
+  .panda-pulse__items{grid-template-columns:1fr;}
+}
+@media(prefers-reduced-motion:reduce){
+  .panda-pulse__signal i{animation:none;}
+  .panda-pulse__item{transition:none;}
+  .panda-pulse__item:hover,
+  .panda-pulse__item:focus-visible{transform:none;}
+}
