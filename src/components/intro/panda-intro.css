@@ -85,3 +85,45 @@
     opacity: 1;
   }
 }
+
+
+.panda-intro__sound {
+  position: fixed;
+  left: 50%;
+  bottom: max(28px, env(safe-area-inset-bottom));
+  transform: translateX(-50%);
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  min-height: 40px;
+  padding: 0 15px;
+  border: 1px solid rgba(255,255,255,.12);
+  border-radius: 999px;
+  background: rgba(20,18,18,.72);
+  color: rgba(246,242,238,.82);
+  box-shadow: 0 12px 36px rgba(0,0,0,.28);
+  backdrop-filter: blur(16px);
+  font: 750 11px/1 'Plus Jakarta Sans', system-ui, sans-serif;
+  cursor: pointer;
+  z-index: 2;
+  transition: transform .2s ease, background .2s ease, border-color .2s ease;
+}
+.panda-intro__sound:hover {
+  transform: translateX(-50%) translateY(-2px);
+  background: rgba(30,27,27,.88);
+  border-color: rgba(255,255,255,.20);
+}
+.panda-intro__sound:focus-visible {
+  outline: 2px solid rgba(201,182,255,.8);
+  outline-offset: 3px;
+}
+
+@media (max-width: 520px) {
+  .panda-intro__content { gap: 13px; }
+  .panda-intro__wordmark { font-size: clamp(1.85rem, 10vw, 2.8rem); }
+  .panda-intro__sound { bottom: max(20px, env(safe-area-inset-bottom)); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .panda-intro__sound { transition: none; }
+}
