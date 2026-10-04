@@ -3,6 +3,7 @@ import React, { FormEvent, useEffect, useMemo, useRef, useState } from 'react';
 import { Clock3, Filter, Search as SearchIcon, Sparkles, X } from 'lucide-react';
 import { Link, useLocation } from 'wouter';
 import { updateSEO } from '../lib/seo';
+import { trackGAEvent } from '../lib/analytics';
 import { AdsterraNativeBanner } from '../components/ui/AdsterraNativeBanner';
 import { preferencesUtil } from '../lib/preferences';
 import { api, MovieApiError } from '../lib/api';
@@ -87,6 +88,7 @@ export function Search() {
     const clean = query.trim();
     if (!clean) { setSubmittedQuery(''); setLocation('/search'); return; }
     preferencesUtil.addRecentSearch(clean);
+    trackGAEvent('search', { content_type: 'catalog', has_query: true });
     setRecentSearches(preferencesUtil.getRecentSearches());
     setSubmittedQuery(clean);
     setLocation('/search?keyword=' + encodeURIComponent(clean));
