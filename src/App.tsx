@@ -23,7 +23,6 @@ import { AuthProvider } from './lib/AuthContext';
 import { AuthModal } from './components/ui/AuthModal';
 import { AppearanceProvider } from './lib/AppearanceContext';
 import { SettingsModal } from './components/ui/SettingsModal';
-import { PandaIntro } from './components/intro/PandaIntro';
 import { PWAInstallPrompt } from './components/ui/PWAInstallPrompt';
 import { PWAUpdatePrompt } from './components/ui/PWAUpdatePrompt';
 import { trackPageView } from './lib/analytics';
@@ -116,7 +115,6 @@ export default function App() {
       <SWRConfig value={{ provider: localCache.getSwrStorageProvider(), revalidateOnFocus: false, revalidateIfStale: false, dedupingInterval: 30000 }}>
         <AuthProvider>
           <AppearanceProvider>
-            <PandaIntro />
             <PWAUpdateBridge />
             <MainAppShell />
             <PWAInstallPrompt />
