@@ -31,12 +31,23 @@ export function Layout({ children }: { children: React.ReactNode }) {
   return (
     <div className="panda-app-shell kinoma-app-shell" style={{ '--sidebar-width': expanded ? '260px' : '64px' } as React.CSSProperties}>
       <a className="panda-skip-link" href="#panda-main-content">Skip to main content</a>
-      <div className="panda-mobile-topbar" aria-label="Panda.fun mobile navigation">
-        <div className="panda-mobile-topbar__actions">
-          <Link href="/search" className={`panda-mobile-topbar__action ${location === '/search' ? 'is-active' : ''}`} aria-label="Search"><Search size={18} strokeWidth={1.8} /></Link>
-          <Link href="/profile" className={`panda-mobile-topbar__action ${location === '/profile' ? 'is-active' : ''}`} aria-label="Profile"><UserRound size={18} strokeWidth={1.8} /></Link>
-        </div>
-      </div>
+      <nav className="panda-mobile-bottom-nav" aria-label="Panda.fun mobile navigation">
+        {ITEMS.map(({ href, label, Icon }) => {
+          const active = location === href || (href === '/search' && (location === '/explore' || location === '/whats-new'));
+          return (
+            <Link
+              key={href}
+              href={href}
+              className={`panda-mobile-bottom-nav__item ${active ? 'is-active' : ''}`}
+              aria-label={label}
+              aria-current={active ? 'page' : undefined}
+            >
+              <span className="panda-mobile-bottom-nav__icon"><Icon size={21} strokeWidth={1.9} /></span>
+              <span className="panda-mobile-bottom-nav__label">{label}</span>
+            </Link>
+          );
+        })}
+      </nav>
       <aside className={`kinoma-sidebar kinoma-sidebar--icons ${expanded ? 'is-expanded' : 'is-collapsed'}`} aria-label="Panda.fun navigation" onPointerEnter={expand} onPointerLeave={collapse}>
         <div className="kinoma-sidebar__top">
           <Link href="/home" className="kinoma-sidebar__brand" aria-label="Panda.fun home">
