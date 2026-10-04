@@ -1604,6 +1604,18 @@
   .panda-adsterra{scroll-behavior:auto}
 }
 
+.panda-watch-ad-slot{
+  width:min(100%,980px);
+  margin:8px auto 28px;
+  padding:0;
+}
+.panda-watch-ad-slot .panda-adsterra{
+  margin:0 auto;
+}
+@media(max-width:700px){
+  .panda-watch-ad-slot{margin:4px auto 20px}
+}
+
 /* Final cross-device content polish */
 .panda-home-v2,
 .panda-home-v2__inner,
