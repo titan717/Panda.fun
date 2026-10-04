@@ -62,9 +62,9 @@ export function Details() {
       if (!active) return;
       setId(resolvedId);
       return Promise.all([
-      api.getDetails(id),
-      api.getTrailer(id).catch(() => ({ available: false, trailer: null })),
-      api.getRecommendations(id).catch(() => ({ results: [] as AnimeItem[] }))
+      api.getDetails(resolvedId),
+      api.getTrailer(resolvedId).catch(() => ({ available: false, trailer: null })),
+      api.getRecommendations(resolvedId).catch(() => ({ results: [] as AnimeItem[] }))
       ]).then(([details, trailerResult, recs]) => {
         if (!active) return;
         setData(details); setTrailer(trailerResult); setRecommendations(recs.results); setLoading(false);
