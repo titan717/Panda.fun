@@ -115,29 +115,33 @@ function PandaContentCard({
   ].filter(Boolean).join(' · ');
 
   return (
-    <Link
-      href={`/details/${slugifyTitle(item.title)}?type=${type}`}
+    <div
       className="panda-content-card"
-      aria-label={`Open ${item.title}`}
       onMouseEnter={() => onHover(item)}
       onMouseLeave={onLeave}
-      onFocus={() => onHover(item)}
-      onBlur={onLeave}
-      onClick={() => trackGAEvent('select_content', { content_type: item.type === 'movie' ? 'movie' : 'series', item_id: item.id, section: analyticsSection, title: item.title })}
     >
-      <div className="panda-content-card__media">
-        <PandaPoster item={item} priority={priority} />
-        <div className="panda-content-card__top">
-          <span className="panda-content-card__badge">{badge || (item.type === 'movie' ? 'Movie' : 'Series')}</span>
-          <button type="button" className={`panda-content-card__quick${inList ? " is-added" : ""}`} onClick={toggleList} aria-label={inList ? `Remove ${item.title} from My List` : `Add ${item.title} to My List`} title={inList ? "Remove from My List" : "Add to My List"}>{inList ? <Check size={15} /> : <Plus size={15} />}</button>
+      <Link
+        href={`/details/${slugifyTitle(item.title)}?type=${type}`}
+        className="panda-content-card__link"
+        aria-label={`Open ${item.title}`}
+        onFocus={() => onHover(item)}
+        onBlur={onLeave}
+        onClick={() => trackGAEvent('select_content', { content_type: item.type === 'movie' ? 'movie' : 'series', item_id: item.id, section: analyticsSection, title: item.title })}
+      >
+        <div className="panda-content-card__media">
+          <PandaPoster item={item} priority={priority} />
+          <div className="panda-content-card__top">
+            <span className="panda-content-card__badge">{badge || (item.type === 'movie' ? 'Movie' : 'Series')}</span>
+          </div>
+          <span className="panda-content-card__play" aria-hidden="true"><Play size={17} fill="currentColor" /></span>
         </div>
-        <span className="panda-content-card__play" aria-hidden="true"><Play size={17} fill="currentColor" /></span>
-      </div>
-      <div className="panda-content-card__copy">
-        <strong title={item.title}>{item.title}</strong>
-        <span>{metadata || 'Panda.fun'}</span>
-      </div>
-    </Link>
+        <div className="panda-content-card__copy">
+          <strong title={item.title}>{item.title}</strong>
+          <span>{metadata || 'Panda.fun'}</span>
+        </div>
+      </Link>
+      <button type="button" className={`panda-content-card__quick${inList ? " is-added" : ""}`} onClick={toggleList} aria-label={inList ? `Remove ${item.title} from My List` : `Add ${item.title} to My List`} title={inList ? "Remove from My List" : "Add to My List"}>{inList ? <Check size={15} /> : <Plus size={15} />}</button>
+    </div>
   );
 }
 
