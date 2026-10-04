@@ -298,7 +298,17 @@ export function Watch() {
                   }}
                 >
                   <div className="kinoma-episode-art">
-                    {item.image ? <img src={item.image} alt="" loading="lazy" decoding="async" /> : <span><Film size={20} /></span>}
+                    {item.image ? (
+                      <img
+                        src={item.image}
+                        alt=""
+                        loading={item.number === episode ? 'eager' : 'lazy'}
+                        fetchPriority={item.number === episode ? 'high' : 'auto'}
+                        decoding="async"
+                        srcSet={item.image.includes('/w500/') ? `${item.image.replace('/w500/', '/w342/')} 342w, ${item.image} 500w` : undefined}
+                        sizes="(max-width: 620px) 34vw, 108px"
+                      />
+                    ) : <span><Film size={20} /></span>}
                     <b>EP {item.number}</b>
                     {item.number === episode && <i className="panda-watch-current-indicator"><Play size={12} fill="currentColor" /></i>}
                   </div>
