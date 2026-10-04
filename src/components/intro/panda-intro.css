@@ -1,0 +1,87 @@
+.panda-intro {
+  position: fixed;
+  inset: 0;
+  z-index: 1000;
+  display: grid;
+  place-items: center;
+  overflow: hidden;
+  background: #0f0d0d;
+  color: #f6f2ee;
+  opacity: 1;
+  transition: opacity 420ms cubic-bezier(.16,1,.3,1);
+}
+
+.panda-intro.is-leaving {
+  opacity: 0;
+  pointer-events: none;
+}
+
+.panda-intro__content {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 18px;
+  transform: translateY(10px);
+  animation: panda-intro-rise 700ms cubic-bezier(.16,1,.3,1) forwards;
+}
+
+.panda-intro__mascot {
+  display: grid;
+  place-items: center;
+  opacity: 0;
+  transform: translateY(8px) scale(.94);
+  animation: panda-intro-mascot 700ms cubic-bezier(.16,1,.3,1) 80ms forwards;
+}
+
+.panda-intro__mark {
+  display: inline-flex;
+}
+
+.panda-intro__wordmark {
+  font-family: 'Plus Jakarta Sans', system-ui, sans-serif;
+  font-size: clamp(2rem, 5vw, 3.7rem);
+  line-height: 1;
+  font-weight: 800;
+  letter-spacing: -.055em;
+  opacity: 0;
+  transform: translateY(7px);
+  animation: panda-intro-wordmark 620ms cubic-bezier(.16,1,.3,1) 520ms forwards;
+}
+
+.panda-intro__wordmark span {
+  color: #b8a99f;
+}
+
+@keyframes panda-intro-rise {
+  to { transform: translateY(0); }
+}
+
+@keyframes panda-intro-mascot {
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+@keyframes panda-intro-wordmark {
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .panda-intro,
+  .panda-intro__content,
+  .panda-intro__mascot,
+  .panda-intro__wordmark {
+    animation: none;
+    transition: none;
+    transform: none;
+  }
+
+  .panda-intro__mascot,
+  .panda-intro__wordmark {
+    opacity: 1;
+  }
+}
