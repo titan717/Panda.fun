@@ -1,6 +1,6 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { Link, useLocation } from 'wouter';
-import { House, Search, Library, Settings, Info, UserRound, FileText, ShieldCheck } from 'lucide-react';
+import { House, Search, Library, Settings, Info, UserRound } from 'lucide-react';
 import { KinomaLogo } from './ui/KinomaLogo';
 
 export const ITEMS = [
@@ -49,9 +49,13 @@ export function Layout({ children }: { children: React.ReactNode }) {
             return <Link key={href} href={href} className={`kinoma-sidebar__item ${active ? 'is-active' : ''}`} aria-label={label} aria-current={active ? 'page' : undefined} data-tooltip={label}><Icon size={20} strokeWidth={1.8} /><span>{label}</span></Link>;
           })}
           <Link href="/profile" className={`kinoma-sidebar__item ${location === '/profile' ? 'is-active' : ''}`} aria-label="Profile" data-tooltip="My Panda"><UserRound size={20} strokeWidth={1.8} /><span>My Panda</span></Link>
-          <Link href="/about" className={`kinoma-sidebar__item ${location === '/about' ? 'is-active' : ''}`} aria-label="About" data-tooltip="About"><Info size={20} strokeWidth={1.8} /><span>About</span></Link>
-          <Link href="/terms" className={`kinoma-sidebar__item ${location === '/terms' ? 'is-active' : ''}`} aria-label="Terms of Service" data-tooltip="Terms of Service"><FileText size={20} strokeWidth={1.8} /><span>Terms of Service</span></Link>
-          <Link href="/privacy" className={`kinoma-sidebar__item ${location === '/privacy' ? 'is-active' : ''}`} aria-label="Privacy Policy" data-tooltip="Privacy Policy"><ShieldCheck size={20} strokeWidth={1.8} /><span>Privacy Policy</span></Link>
+          <div className="kinoma-sidebar__about-group">
+            <Link href="/about" className={`kinoma-sidebar__item ${location === '/about' || location === '/terms' || location === '/privacy' ? 'is-active' : ''}`} aria-label="About" data-tooltip="About"><Info size={20} strokeWidth={1.8} /><span>About</span></Link>
+            <div className="kinoma-sidebar__about-submenu" aria-label="About links">
+              <Link href="/terms" className={`kinoma-sidebar__about-subitem ${location === '/terms' ? 'is-active' : ''}`}><span>Terms of Service</span></Link>
+              <Link href="/privacy" className={`kinoma-sidebar__about-subitem ${location === '/privacy' ? 'is-active' : ''}`}><span>Privacy Policy</span></Link>
+            </div>
+          </div>
         </nav>
       </aside>
       <div className="panda-app-content"><main id="panda-main-content" ref={mainRef} className="kinoma-app-main" tabIndex={-1} aria-label="Main content">{children}</main></div>
