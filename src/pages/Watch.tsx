@@ -1,4 +1,5 @@
 import React, { useEffect, useMemo, useState } from 'react';
+import { Footer } from '../components/ui/Footer';
 import { useLocation, useRoute } from 'wouter';
 import { ArrowLeft, ChevronLeft, ChevronRight, Film, Play, Plus, Check, Share2, Tv } from 'lucide-react';
 import { api } from '../lib/api';
