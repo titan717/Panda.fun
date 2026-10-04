@@ -362,7 +362,7 @@ export function Home() {
             <p>{featured?.overview || error || 'Movies, series and stories worth pressing play for. Discover something, save it, and come back whenever you like.'}</p>
             <div className="kinoma-home-hero__actions">
               <Link href={featuredWatchUrl} className="kinoma-3d-button"><span className="kinoma-3d-button__face"><Play size={16} fill="currentColor" /> Watch Now</span><span className="kinoma-3d-button__depth" aria-hidden="true" /></Link>
-              <button type="button" onClick={toggleFeaturedList} className={`kinoma-3d-button kinoma-3d-button--secondary${isInList ? ' is-added' : ''}`}><span className="kinoma-3d-button__face">{isInList ? <><span>✓</span> In My List</> : <><Plus size={16} /> Add to My List</>}</span><span className="kinoma-3d-button__depth" aria-hidden="true" /></button>
+              <button type="button" onClick={toggleFeaturedList} aria-pressed={isInList} className={`kinoma-3d-button kinoma-3d-button--secondary${isInList ? ' is-added' : ''}`}><span className="kinoma-3d-button__face">{isInList ? <><span>✓</span> In My List</> : <><Plus size={16} /> Add to My List</>}</span><span className="kinoma-3d-button__depth" aria-hidden="true" /></button>
             </div>
           </div>
         </section>
