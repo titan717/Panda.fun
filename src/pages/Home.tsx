@@ -370,7 +370,6 @@ export function Home() {
             ) : (
               <div className="kinoma-home-hero__banner-grid" />
             )}
-            <div className="kinoma-home-hero__trailer-shade" />
           </div>
           <div className="kinoma-home-hero__copy">
             <button type="button" className="kinoma-home-hero__eyebrow panda-secret-trigger" onClick={wakePanda}><Sparkles size={14} /> YOUR NEXT WATCH</button>
