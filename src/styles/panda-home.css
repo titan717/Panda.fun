@@ -107,11 +107,6 @@
   border-radius: 6px;
 }
 
-.panda-home-v2__rail {
-  display: grid;
-  grid-template-columns: repeat(5, minmax(0, 1fr));
-  gap: 15px;
-}
 
 .panda-content-card {
   position: relative;
@@ -333,12 +328,9 @@
   font-size: 13px;
 }
 
-@media (max-width: 1180px) {
-  .panda-home-v2__rail { grid-template-columns: repeat(5, minmax(0, 1fr)); }
-}
+
 @media (max-width: 900px) {
   .panda-home-v2__inner { width: min(100% - 28px, 760px); }
-  .panda-home-v2__rail { grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 12px; }
   .panda-home-v2__featured-grid { grid-template-columns: 1fr; }
 }
 @media (max-width: 620px) {
@@ -348,16 +340,6 @@
   .panda-home-v2__welcome h2 { font-size: 29px; }
   .panda-home-v2__shortcut { display: none; }
   .panda-home-v2__section { margin: 32px 0; }
-  .panda-home-v2__rail {
-    display: flex;
-    overflow-x: auto;
-    gap: 11px;
-    padding: 2px 1px 8px;
-    scrollbar-width: none;
-    scroll-snap-type: x mandatory;
-  }
-  .panda-home-v2__rail::-webkit-scrollbar { display: none; }
-  .panda-content-card { flex: 0 0 142px; scroll-snap-align: start; }
   .panda-content-card__quick { opacity: 1; transform: scale(1); }
   .panda-discovery-panel__content { padding: 22px; }
   .panda-discovery-panel--large { min-height: 245px; }
@@ -522,10 +504,6 @@
 .panda-content-card__image-fallback .kinoma-logo { opacity:.65; }
 @keyframes panda-card-shimmer { to { background-position: -220% 0, 0 0; } }
 
-.panda-home-v2__rail {
-  grid-template-columns: repeat(5, minmax(0, 1fr));
-  gap: 17px;
-}
 .panda-content-card__media {
   aspect-ratio: 2 / 2.92;
   border-radius: 14px;
@@ -562,14 +540,11 @@
   color: rgba(255,255,255,.25) !important;
 }
 .kinoma-home-footer__art { opacity:.42 !important; transform:scale(.9); transform-origin:right center; }
-@media (max-width: 1180px) {
-  .panda-home-v2__rail { grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 13px; }
-}
+
 @media (max-width: 900px) {
   .panda-global-header__inner { grid-template-columns:auto 1fr auto; }
   .panda-global-header__status { display:none; }
   .panda-global-header__search { justify-self:stretch; width:100%; }
-  .panda-home-v2__rail { grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 10px; }
 }
 @media (max-width: 620px) {
   .panda-global-header { padding: 8px 10px; }
@@ -580,7 +555,6 @@
   .panda-stream-notice { width: calc(100% - 22px); margin-top:10px; }
   .panda-stream-notice__caution p span { display:none; }
   .panda-stream-notice__share { display:none; }
-  .panda-home-v2__rail { display:flex; overflow-x:auto; grid-template-columns:none; gap:10px; padding-bottom:8px; }
   .panda-content-card { flex:0 0 calc((100vw - 44px) / 2.25); }
 }
 @media (prefers-reduced-motion: reduce) {
@@ -649,15 +623,11 @@
 .panda-home-v2 { display: block !important; overflow: visible; }
 .panda-home-v2__inner { box-sizing: border-box; }
 .panda-home-v2__section { min-width: 0; }
-.panda-home-v2__rail { display: grid; width: 100%; align-items: start; }
 .panda-content-card { min-width: 0; width: 100%; }
 .panda-content-card__media { width: 100%; overflow: hidden; }
 .panda-content-card__media img { display: block; width: 100%; height: 100%; object-fit: cover; }
-@media (max-width: 900px) {
-  .panda-home-v2__rail { grid-template-columns: repeat(3,minmax(0,1fr)); }
-}
+
 @media (max-width: 620px) {
-  .panda-home-v2__rail { grid-template-columns: repeat(2,minmax(0,1fr)); gap: 12px; }
   .panda-content-card__media { border-radius: 12px; }
 }
 
@@ -1645,11 +1615,7 @@
   white-space: nowrap;
 }
 
-@media (max-width: 1050px) {
-  .panda-home-v2__rail {
-    grid-template-columns: repeat(4, minmax(0, 1fr));
-  }
-}
+
 
 @media (max-width: 760px) {
   .panda-home-v2__section-head {
@@ -1686,14 +1652,7 @@
     margin: 28px 0;
   }
 
-  .panda-home-v2__rail {
-    gap: 9px;
-    padding-bottom: 7px;
-  }
 
-  .panda-content-card {
-    flex-basis: clamp(128px, 39vw, 150px);
-  }
 
   .panda-content-card__media {
     border-radius: 14px;
@@ -1761,12 +1720,56 @@
   contain-intrinsic-size:0 420px;
 }
 
-.panda-home-v2__rail{
-  contain:layout paint;
-}
 
 @media (prefers-reduced-motion: reduce){
   .panda-home-v2__section{
     content-visibility:visible;
+  }
+}
+
+/* =========================================================
+   PANDA.FUN — authoritative responsive content rail
+   One layout contract keeps desktop, tablet, and mobile rails predictable.
+   ========================================================= */
+.panda-home-v2__rail {
+  display: grid;
+  grid-template-columns: repeat(5, minmax(0, 1fr));
+  gap: 17px;
+  width: 100%;
+  align-items: start;
+}
+
+@media (max-width: 1050px) {
+  .panda-home-v2__rail {
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: 13px;
+  }
+}
+
+@media (max-width: 760px) {
+  .panda-home-v2__rail {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 10px;
+  }
+}
+
+@media (max-width: 620px) {
+  .panda-home-v2__rail {
+    display: flex;
+    grid-template-columns: none;
+    gap: 10px;
+    overflow-x: auto;
+    padding: 2px 1px 8px;
+    scrollbar-width: none;
+    scroll-snap-type: x mandatory;
+  }
+
+  .panda-home-v2__rail::-webkit-scrollbar {
+    display: none;
+  }
+
+  .panda-content-card {
+    flex: 0 0 clamp(128px, 39vw, 150px);
+    scroll-snap-align: start;
   }
 }
