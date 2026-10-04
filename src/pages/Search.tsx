@@ -28,7 +28,7 @@ const mapItem = (item: AnimeItem): SearchItem => {
 function ContentCard({ item }: { item: SearchItem }) {
   return <Link href={item.href} className="kinoma-search-card kinoma-focus">
     <div className="kinoma-search-card__art" aria-hidden="true">
-      {item.image ? <img src={item.image} alt="" loading="lazy" /> : <><span className="kinoma-search-card__orb kinoma-search-card__orb--one" /><span className="kinoma-search-card__orb kinoma-search-card__orb--two" /></>}
+      {item.image ? <img src={item.image} alt="" loading="eager" decoding="async" referrerPolicy="no-referrer" /> : <><span className="kinoma-search-card__orb kinoma-search-card__orb--one" /><span className="kinoma-search-card__orb kinoma-search-card__orb--two" /></>}
       <span className="kinoma-search-card__shine" /><span className="kinoma-search-card__type">{item.type.toUpperCase()}</span>
     </div>
     <div className="kinoma-search-card__copy"><h3>{item.title}</h3><p>{item.meta}</p></div>
