@@ -368,6 +368,9 @@ export function createPandaSceneRuntime(options: PandaSceneRuntimeOptions): Pand
         rig.rightArm.rotation.z = THREE.MathUtils.lerp(rig.rightArm.rotation.z, -0.92, 0.08);
         rig.rightArm.rotation.x = THREE.MathUtils.lerp(rig.rightArm.rotation.x, -0.12, 0.08);
         rig.bamboo.rotation.z = Math.sin(t * 2.2) * 0.045;
+        rig.bamboo.children.forEach((part, index) => {
+          part.rotation.y = Math.sin(t * 2.4 + index * 0.7) * 0.045;
+        });
         rig.bamboo.position.set(0.02, 2.0 + Math.sin(t * 2.1) * 0.025, 0.82);
         rig.head.rotation.x = THREE.MathUtils.lerp(rig.head.rotation.x, -0.07 + Math.sin(t * 2.1) * 0.035, 0.08);
       } else if (state === 'face-cover') {
@@ -392,9 +395,17 @@ export function createPandaSceneRuntime(options: PandaSceneRuntimeOptions): Pand
       const eyeScale = blinking ? 0.08 : 1;
       rig.leftEye.scale.y = THREE.MathUtils.lerp(rig.leftEye.scale.y, eyeScale, 0.55);
       rig.rightEye.scale.y = THREE.MathUtils.lerp(rig.rightEye.scale.y, eyeScale, 0.55);
-      const pupilX = pointer.x * 0.035;
-      rig.leftEye.position.x = -0.34 + pupilX;
-      rig.rightEye.position.x = 0.34 + pupilX;
+      const blinkPhase = elapsed % 4.7;
+      const blinkOne = blinkPhase > 3.95 && blinkPhase < 4.08;
+      const blinkTwo = blinkPhase > 1.05 && blinkPhase < 1.16;
+      const blinking = state === 'sleep' || blinkOne || blinkTwo;
+      const eyeScale = blinking ? 0.08 : 1;
+      rig.leftEye.scale.y = THREE.MathUtils.lerp(rig.leftEye.scale.y, eyeScale, 0.55);
+      rig.rightEye.scale.y = THREE.MathUtils.lerp(rig.rightEye.scale.y, eyeScale, 0.55);
+      const pupilX = THREE.MathUtils.clamp(pointer.x * 0.035 + Math.sin(elapsed * 0.55) * 0.008, -0.045, 0.045);
+      const pupilY = THREE.MathUtils.clamp(pointer.y * -0.018 + Math.sin(elapsed * 0.72) * 0.006, -0.025, 0.025);
+      rig.leftEye.position.set(-0.34 + pupilX, 0.16 + pupilY, 1.075);
+      rig.rightEye.position.set(0.34 + pupilX, 0.16 + pupilY, 1.075);
 
       if (state !== 'eat-bamboo') rig.bamboo.visible = false;
 
