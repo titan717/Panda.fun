@@ -1155,11 +1155,11 @@ p {
   display: flex;
   flex-direction: column;
   min-width: 0;
-  padding: 16px 10px 14px;
+  padding: 18px 11px 15px;
   overflow: visible;
-  background: linear-gradient(180deg, rgba(21,18,18,.76), rgba(12,10,10,.68));
-  border-right: 1px solid rgba(246,242,238,.075);
-  box-shadow: 16px 0 54px rgba(0,0,0,.18);
+  background: linear-gradient(180deg, rgba(24,20,20,.84), rgba(11,9,9,.78));
+  border-right: 1px solid rgba(246,242,238,.09);
+  box-shadow: 18px 0 58px rgba(0,0,0,.24), inset -1px 0 rgba(232,208,192,.025);
   backdrop-filter: blur(16px) saturate(110%);
   -webkit-backdrop-filter: blur(16px) saturate(110%);
   contain: layout paint;
@@ -1170,10 +1170,11 @@ p {
 .kinoma-sidebar::before {
   content: '';
   position: absolute;
-  inset: 12px 8px;
+  inset: 10px 7px;
   z-index: -1;
-  border: 1px solid rgba(232,208,192,.045);
-  border-radius: 18px;
+  border: 1px solid rgba(232,208,192,.055);
+  border-radius: 20px;
+  background: linear-gradient(180deg, rgba(255,255,255,.018), rgba(255,255,255,.006));
   pointer-events: none;
 }
 
@@ -1246,15 +1247,15 @@ p {
 .kinoma-sidebar__item {
   position: relative;
   width: 100%;
-  min-height: 46px;
+  min-height: 48px;
   display: flex;
   align-items: center;
-  gap: 13px;
-  padding: 0 12px;
+  gap: 12px;
+  padding: 0 13px;
   border: 1px solid transparent;
   border-radius: 13px;
-  color: rgba(246,242,238,.46);
-  background: transparent;
+  color: rgba(246,242,238,.54);
+  background: rgba(255,255,255,.008);
   text-decoration: none;
   white-space: nowrap;
   overflow: hidden;
@@ -1275,15 +1276,15 @@ p {
 
 .kinoma-sidebar__item:hover {
   color: rgba(255,255,255,.88);
-  background: rgba(255,255,255,.035);
-  border-color: rgba(246,242,238,.035);
+  background: rgba(255,255,255,.045);
+  border-color: rgba(232,208,192,.065);
 }
 
 .kinoma-sidebar__item.is-active {
   color: #fff;
-  background: linear-gradient(100deg, rgba(184,77,65,.13), rgba(255,255,255,.035));
-  border-color: rgba(232,208,192,.08);
-  box-shadow: inset 2px 0 0 rgba(232,208,192,.72);
+  background: linear-gradient(100deg, rgba(184,77,65,.18), rgba(255,255,255,.035));
+  border-color: rgba(232,208,192,.12);
+  box-shadow: inset 2px 0 0 rgba(232,208,192,.86), 0 8px 22px rgba(0,0,0,.10);
 }
 
 .kinoma-sidebar__item.is-active svg {
