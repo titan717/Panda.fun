@@ -5,7 +5,6 @@ import { Link, useLocation } from 'wouter';
 import { updateSEO } from '../lib/seo';
 import { trackGAEvent } from '../lib/analytics';
 import { slugifyTitle } from '../lib/slug';
-import { AdsterraNativeBanner } from '../components/ui/AdsterraNativeBanner';
 import { preferencesUtil } from '../lib/preferences';
 import { api, MovieApiError } from '../lib/api';
 import type { AnimeItem } from '../types';
