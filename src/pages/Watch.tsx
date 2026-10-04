@@ -37,6 +37,7 @@ export function Watch() {
   const [episode, setEpisode] = useState(Number(parsed?.[3] || 1));
   const [source, setSource] = useState<string>('');
   const [sourceLoading, setSourceLoading] = useState(false);
+  const [playbackRetry, setPlaybackRetry] = useState(0);
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(true);
   const [inList, setInList] = useState(false);
@@ -96,11 +97,12 @@ export function Watch() {
     let active = true;
     setSourceLoading(true);
     setSource('');
+    setError('');
     api.getWatchLink(id, type === 'series' ? season : 1, type === 'series' ? episode : 1)
-      .then(result => { if (!active) return; setSource(result.url); setSourceLoading(false); trackGAEvent('watch_start', { content_type: type, title }); })
+      .then(result => { if (!active) return; setSource(result.url); trackGAEvent('watch_start', { content_type: type, title }); })
       .catch(err => { if (!active) return; setSourceLoading(false); setError(err instanceof Error ? err.message : 'Playback source unavailable.'); });
     return () => { active = false; };
-  }, [data, id, type, season, episode]);
+  }, [data, id, type, season, episode, playbackRetry]);
 
   useEffect(() => {
     if (!data) return;
@@ -213,7 +215,7 @@ export function Watch() {
         <button className="panda-watch-list-btn" type="button" onClick={toggleList}>{inList ? <Check size={16} /> : <Plus size={16} />}<span>{inList ? 'My List' : 'Add to My List'}</span></button>
       </div>
 
-      {error && <div className="panda-watch-error" role="alert">{error}</div>}
+      {error && <div className="panda-watch-error" role="alert"><span>{error}</span><button type="button" onClick={() => setPlaybackRetry(value => value + 1)}>Retry</button></div>}
 
       <section className={'panda-watch-stage ' + (type === 'series' ? 'is-series' : 'is-movie')}>
         <div className="panda-watch-player">
