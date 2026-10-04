@@ -156,6 +156,7 @@ function PandaRail({
   onLeave: () => void;
   action?: boolean;
   badge?: string;
+  priority?: boolean;
 }) {
   if (!items.length) return null;
   return (
