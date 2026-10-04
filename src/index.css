@@ -3347,6 +3347,10 @@ p {
 .kinoma-home-format-card span{font-size:17px;font-weight:800;letter-spacing:-.03em}
 .kinoma-home-format-card small{margin-top:4px;color:rgba(246,242,238,.35);font-size:9px}
 .kinoma-home-footer{margin-top:clamp(62px,9vw,110px)}
+.kinoma-home-footer__promo{display:flex;flex-direction:column;gap:8px;min-width:180px}
+.kinoma-home-footer__promo a{display:inline-flex;align-items:center;width:fit-content;max-width:240px;color:rgba(246,242,238,.48);text-decoration:none;font-size:9px;line-height:1.45;transition:color 160ms ease,transform 160ms ease}
+.kinoma-home-footer__promo a:hover{color:rgba(246,242,238,.9);transform:translateX(2px)}
+@media(max-width:620px){.kinoma-home-footer__promo{min-width:0}.kinoma-home-footer__promo a{max-width:none}}
 @media(max-width:1050px){
   .kinoma-home-hero{grid-template-columns:1fr 1fr;gap:28px}
   .kinoma-home-hero__copy h1{font-size:clamp(3rem,6.8vw,5.6rem)}
