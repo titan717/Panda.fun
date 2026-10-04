@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { useLocation } from 'wouter';
 import { Play, X } from 'lucide-react';
 import { AnimeItem, DEFAULT_POSTER } from '../../../types';
-import { slugifyTitle } from '../../../lib/slug';
+import { buildDetailsHref } from '../../../lib/mediaRoute';
 
 export interface ModernCardProps {
   key?: React.Key;
@@ -29,7 +29,7 @@ export function ModernCard({
     ? item.title
     : item.title?.english || item.title?.romaji || 'Unknown Anime';
 
-  const detailHref = href || `/details/${slugifyTitle(title)}?type=${item.type === 'movie' ? 'movie' : 'series'}`;
+  const detailHref = href || buildDetailsHref(item.id, item.type === 'movie' ? 'movie' : 'series');
   const defaultBadge = badgeText || (item.status === 'RELEASING' ? 'New Season' : undefined);
 
   return (
