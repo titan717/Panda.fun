@@ -1810,3 +1810,29 @@
   .panda-surprise__button{width:100%}
 }
 @media(prefers-reduced-motion:reduce){.panda-surprise__button{transition:none}}
+
+/* Shared detail-page state treatment */
+.panda-state-card{
+  position:relative;z-index:20;display:flex;align-items:center;justify-content:center;gap:12px;
+  width:min(760px,calc(100% - 32px));box-sizing:border-box;margin:12px auto -48px;padding:13px 15px;
+  border:1px solid rgba(255,255,255,.08);border-radius:12px;background:rgba(14,11,10,.82);
+  box-shadow:0 14px 36px rgba(0,0,0,.24);backdrop-filter:blur(14px);color:#ebe1d3;
+}
+.panda-state-card>div{display:flex;flex-direction:column;gap:3px;min-width:0}
+.panda-state-card strong{font-size:10px;font-weight:850}
+.panda-state-card small{color:rgba(235,225,211,.4);font-size:9px}
+.panda-state-card__spinner{
+  width:17px;height:17px;flex:0 0 17px;border:2px solid rgba(235,225,211,.1);
+  border-top-color:rgba(235,225,211,.72);border-radius:50%;animation:panda-watch-spin .8s linear infinite;
+}
+.panda-state-card.is-error{justify-content:space-between;border-color:rgba(226,155,133,.15);background:rgba(47,27,23,.72)}
+.panda-state-card.is-error button{
+  flex:0 0 auto;border:1px solid rgba(255,210,195,.16);border-radius:8px;background:rgba(255,255,255,.04);
+  padding:7px 10px;color:#ffe9dd;font:inherit;font-size:9px;font-weight:800;cursor:pointer;
+}
+.panda-state-card.is-error button:hover,.panda-state-card.is-error button:focus-visible{background:rgba(255,255,255,.08);border-color:rgba(255,210,195,.3)}
+.panda-state-card.is-error button:focus-visible{outline:2px solid rgba(255,255,255,.4);outline-offset:2px}
+@media(max-width:620px){
+  .panda-state-card{width:calc(100% - 24px);margin-top:8px;padding:11px 12px}
+}
+@media(prefers-reduced-motion:reduce){.panda-state-card__spinner{animation:none}}
