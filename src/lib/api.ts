@@ -1,4 +1,5 @@
 import type { AnimeDetails, AnimeItem, Episode, AnimeSeasonItem } from '../types';
+import { slugifyTitle } from './slug';
 
 export type MovieApiMedia = {
   id: string;
@@ -295,6 +296,33 @@ async function searchAll(query: string, page = 1) {
       results.length
     )
   };
+}
+
+export async function resolveMediaIdFromSlug(slug: string, type?: string) {
+  const normalized = slugifyTitle(decodeURIComponent(slug));
+  if (!normalized) throw new MovieApiError('Invalid title slug.', 400, 'INVALID_TITLE_SLUG');
+  const candidates = type === 'movie' ? ['movie'] : type === 'series' ? ['tv'] : ['movie', 'tv'];
+  const matches = await Promise.all(candidates.map(async (kind) => {
+    try {
+      const data = await request<any>('/api/v1/tmdb/search/' + kind, { q: decodeURIComponent(slug), page: 1 }, undefined, 60_000);
+      return (data.results || []).map((item: any): MovieApiMedia => ({
+        id: 'kinoma_tmdb_' + kind + '_' + item.id,
+        type: kind === 'movie' ? 'movie' : 'tv',
+        title: item.title || item.name || item.original_title || item.original_name || 'Untitled',
+        poster: item.poster_path ? 'https://image.tmdb.org/t/p/w500' + item.poster_path : null,
+        backdrop: item.backdrop_path ? 'https://image.tmdb.org/t/p/w1280' + item.backdrop_path : null,
+        releaseDate: item.release_date || item.first_air_date || null,
+        overview: item.overview || null,
+        rating: Number.isFinite(Number(item.vote_average)) ? Number(item.vote_average) : null,
+        ids: { tmdb: Number(item.id) },
+        source: 'tmdb'
+      }));
+    } catch { return [] as MovieApiMedia[]; }
+  }));
+  const exact = matches.flat().find(item => slugifyTitle(item.title) === normalized);
+  const fallback = matches.flat()[0];
+  if (!exact && !fallback) throw new MovieApiError('Unable to resolve this title.', 404, 'TITLE_NOT_FOUND');
+  return (exact || fallback)!.id;
 }
 
 export const api = {
