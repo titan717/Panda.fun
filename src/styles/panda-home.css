@@ -185,8 +185,8 @@
   text-transform: uppercase;
 }
 .panda-content-card__quick {
-  width: 30px;
-  height: 30px;
+  width: 40px;
+  height: 40px;
   display: grid;
   place-items: center;
   border: 1px solid rgba(255,255,255,.11);
