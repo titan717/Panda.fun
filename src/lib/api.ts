@@ -165,8 +165,14 @@ async function request<T>(
         : `${base}${path.startsWith('/') ? path : `/${path}`}${new URL(url).search}`;
       const controller = new AbortController();
       const timer = window.setTimeout(() => controller.abort(), 8_000);
+      const externalSignal = options.signal;
+      const abortFromExternal = () => controller.abort();
+      if (externalSignal) {
+        if (externalSignal.aborted) controller.abort();
+        else externalSignal.addEventListener('abort', abortFromExternal, { once: true });
+      }
       try {
-        const response = await fetch(targetUrl, { ...options, signal: options.signal || controller.signal, headers: { Accept: 'application/json', ...(options.headers || {}) } });
+        const response = await fetch(targetUrl, { ...options, signal: controller.signal, headers: { Accept: 'application/json', ...(options.headers || {}) } });
         let payload: unknown = null;
         try { payload = await response.json(); } catch { /* handled below */ }
         if (!response.ok) {
@@ -188,7 +194,10 @@ async function request<T>(
         if (error instanceof MovieApiError) throw error;
         if (error instanceof DOMException && error.name === 'AbortError') throw new MovieApiError('MovieApi request timed out.', 504, 'PROVIDER_TIMEOUT');
         throw new MovieApiError(`Unable to connect to MovieApi: ${error instanceof Error ? error.message : String(error)}`, 503, 'API_UNAVAILABLE');
-      } finally { window.clearTimeout(timer); }
+      } finally {
+        window.clearTimeout(timer);
+        externalSignal?.removeEventListener('abort', abortFromExternal);
+      }
     }
     throw lastError instanceof Error ? lastError : new MovieApiError('MovieApi unavailable.', 503, 'API_UNAVAILABLE');
   })();
