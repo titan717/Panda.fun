@@ -191,6 +191,7 @@ export function Home() {
   const pandaSecretTimer = useRef<number | null>(null);
   const pandaTapCount = useRef(0);
   const [pandaSecret, setPandaSecret] = useState<string | null>(null);
+  const [surprisePick, setSurprisePick] = useState<MovieApiMedia | null>(null);
   const [hoverTrailer, setHoverTrailer] = useState<MovieApiMedia | null>(null);
   const [hoverTrailerUrl, setHoverTrailerUrl] = useState('');
   const hoverTrailerTimer = useRef<number | null>(null);
@@ -250,6 +251,12 @@ export function Home() {
   const popularTv = (sections?.popularTv || []) as MovieApiMedia[];
   const featuredType = featured?.type === 'movie' ? 'movie' : 'series';
   const featuredWatchUrl = featured?.id ? '/watch/' + encodeURIComponent(featured.id) + '?type=' + featuredType : '/search';
+  const surprisePool = [...trending, ...popularMovies, ...popularTv].filter((item, index, list) => item?.id && list.findIndex(candidate => candidate.id === item.id) === index);
+  const pickSurprise = () => {
+    if (!surprisePool.length) return;
+    const candidates = surprisePool.filter(item => item.id !== surprisePick?.id);
+    setSurprisePick((candidates.length ? candidates : surprisePool)[Math.floor(Math.random() * (candidates.length || surprisePool.length))]);
+  };
 
   const toggleFeaturedList = () => {
     if (featured) {
@@ -370,6 +377,24 @@ export function Home() {
 
         <div className="panda-home-v2">
           <div className="panda-home-v2__inner">
+            <section className="panda-surprise" aria-labelledby="panda-surprise-heading">
+              <div className="panda-surprise__copy">
+                <span className="panda-home-v2__eyebrow"><Sparkles size={13} /> Can't decide?</span>
+                <h2 id="panda-surprise-heading">Let Panda pick.</h2>
+                <p>One tap. One title. No scrolling required.</p>
+              </div>
+              {surprisePick ? (
+                <Link href={`/details/${slugifyTitle(surprisePick.title)}?type=${surprisePick.type === 'movie' ? 'movie' : 'series'}`} className="panda-surprise__pick">
+                  <PandaPoster item={surprisePick} priority />
+                  <span><strong>{surprisePick.title}</strong><small>{[surprisePick.year, surprisePick.rating ? `★ ${Number(surprisePick.rating).toFixed(1)}` : null].filter(Boolean).join(' · ')}</small></span>
+                  <ArrowRight size={14} aria-hidden="true" />
+                </Link>
+              ) : <span className="panda-surprise__hint">Your next watch is hiding in the library.</span>}
+              <button type="button" className="panda-surprise__button" onClick={pickSurprise} disabled={!surprisePool.length} aria-label="Pick a surprise title">
+                <Sparkles size={15} /> Surprise Me
+              </button>
+            </section>
+
             {trending.length > 0 && (
               <section className="panda-pulse" aria-labelledby="panda-pulse-heading">
                 <div className="panda-pulse__head">
