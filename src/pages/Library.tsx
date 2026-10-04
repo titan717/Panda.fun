@@ -1,5 +1,6 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import { Bookmark, CheckCircle2, Clock3, Heart, Play, Search, Trash2, X, Sparkles } from 'lucide-react';
+import { slugifyTitle } from '../lib/slug';
 import { ModernCard } from '../components/ui/modern/ModernCard';
 import { Link, useLocation } from 'wouter';
 import { historyUtil, HistoryItem, formatPlaybackTimestamp } from '../lib/history';
@@ -53,7 +54,7 @@ function LibraryPosterCard({ item, onRemove }: { item: LibraryItem; onRemove: ()
     <ModernCard
       item={{ id: item.id, title: item.title, image: item.image, type: mediaType }}
       subText={item.type === 'watchlist' ? 'My List' : item.type === 'favorites' ? 'Favourite' : 'Completed'}
-      href={`/details/${encodeURIComponent(item.title)}?type=${mediaType}`}
+      href={`/details/${slugifyTitle(item.title)}?type=${mediaType}`}
       onRemove={onRemove}
     />
   );
