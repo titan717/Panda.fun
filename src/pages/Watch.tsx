@@ -9,6 +9,7 @@ import { DEFAULT_POSTER } from '../types';
 import { updateSEO } from '../lib/seo';
 import { trackGAEvent } from '../lib/analytics';
 import { slugifyTitle } from '../lib/slug';
+import { AdsterraNativeBanner } from '../components/ui/AdsterraNativeBanner';
 
 function clean(value: unknown) {
   return typeof value === 'string' ? value.replace(/<[^>]*>/g, '').trim() : '';
@@ -322,6 +323,10 @@ export function Watch() {
             </div>
           </section>
         )}
+      </section>
+
+      <section className="panda-watch-ad-slot" aria-label="Sponsored placement">
+        <AdsterraNativeBanner />
       </section>
 
       <section className="panda-watch-similar">
