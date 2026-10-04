@@ -1464,13 +1464,14 @@ p {
 .kinoma-empty-home { min-height: 100dvh; width: 100%; }
 
 @media (max-width: 700px) {
+  /* Compact mobile header: navigation lives in the top chrome, not a bottom dock. */
   .kinoma-app-shell { --sidebar-width: 0px !important; }
   .kinoma-sidebar {
     width: 100% !important;
-    height: 100dvh;
-    inset: 0;
+    height: 62px;
+    inset: 0 0 auto 0;
     padding: 0;
-    border-right: 0;
+    border: 0;
     border-radius: 0;
     background: transparent;
     box-shadow: none;
@@ -1479,49 +1480,66 @@ p {
     pointer-events: none;
   }
   .kinoma-sidebar::before { display: none; }
+
   .kinoma-sidebar__top {
     position: fixed;
-    top: 0;
-    left: 0;
-    right: 0;
+    inset: 0 0 auto 0;
     z-index: 320;
     min-height: 62px;
-    padding: 9px 14px;
-    justify-content: space-between !important;
+    height: 62px;
+    padding: 8px 12px;
+    justify-content: flex-start !important;
     border-bottom: 1px solid rgba(246,242,238,.065);
-    background: rgba(12,11,12,.78);
-    backdrop-filter: blur(14px);
-    -webkit-backdrop-filter: blur(14px);
+    background: rgba(12,11,12,.84);
+    backdrop-filter: blur(16px) saturate(120%);
+    -webkit-backdrop-filter: blur(16px) saturate(120%);
     pointer-events: auto;
   }
-  .kinoma-sidebar__brand { min-width: 40px; min-height: 40px; }
+  .kinoma-sidebar__brand { min-width: 40px; min-height: 40px; flex: 0 0 40px; }
+  .kinoma-sidebar__logo { max-height: 34px; }
   .kinoma-sidebar__pin { display: none; }
+
   .kinoma-sidebar__nav {
     position: fixed;
-    left: 10px;
-    right: 10px;
-    bottom: max(10px, env(safe-area-inset-bottom));
-    z-index: 320;
-    width: auto;
-    min-height: 62px;
-    padding: 6px;
-    border: 1px solid rgba(246,242,238,.08);
-    border-radius: 19px;
-    background: rgba(18,16,17,.88);
-    box-shadow: 0 18px 50px rgba(0,0,0,.28);
-    backdrop-filter: blur(16px);
-    -webkit-backdrop-filter: blur(16px);
+    top: 7px;
+    left: 50%;
+    right: auto;
+    bottom: auto;
+    z-index: 321;
+    width: min(calc(100% - 150px), 340px);
+    min-height: 48px;
+    height: 48px;
+    padding: 3px;
+    border: 1px solid rgba(246,242,238,.075);
+    border-radius: 15px;
+    background: rgba(18,16,17,.72);
+    box-shadow: 0 10px 28px rgba(0,0,0,.20);
+    backdrop-filter: blur(14px);
+    -webkit-backdrop-filter: blur(14px);
+    transform: translateX(-50%);
     pointer-events: auto;
   }
-  .kinoma-sidebar__nav-group { display: grid; grid-template-columns: repeat(4,minmax(0,1fr)); gap: 4px; }
-  .kinoma-sidebar__item { justify-content: center; min-height: 49px; padding: 0 !important; border-radius: 13px; }
-  .kinoma-sidebar__item span, .kinoma-sidebar__profile span { display: none; }
+  .kinoma-sidebar__nav-group {
+    display: grid;
+    grid-template-columns: repeat(4,minmax(0,1fr));
+    gap: 2px;
+    height: 100%;
+  }
+  .kinoma-sidebar__item {
+    justify-content: center;
+    min-height: 40px;
+    padding: 0 !important;
+    border-radius: 11px;
+  }
+  .kinoma-sidebar__item span,
+  .kinoma-sidebar__profile span { display: none; }
   .kinoma-sidebar__about { display: none; }
+
   .kinoma-sidebar__profile-area {
     position: fixed;
-    top: 70px;
+    top: 8px;
     right: 12px;
-    z-index: 321;
+    z-index: 322;
     padding: 0;
     border: 0;
     pointer-events: auto;
@@ -1532,12 +1550,20 @@ p {
     justify-content: center;
     padding: 0;
     border: 1px solid rgba(246,242,238,.08);
-    background: rgba(18,16,17,.76);
+    background: rgba(18,16,17,.72);
     backdrop-filter: blur(12px);
     -webkit-backdrop-filter: blur(12px);
   }
   .kinoma-sidebar__avatar { width: 30px; height: 30px; }
-  .kinoma-app-main { width: 100%; margin-left: 0; min-height: 100dvh; padding-top: 62px; padding-bottom: calc(84px + env(safe-area-inset-bottom)); }
+
+  .kinoma-sidebar__mobile-close { display: none; }
+  .kinoma-app-main {
+    width: 100%;
+    margin-left: 0;
+    min-height: 100dvh;
+    padding-top: 62px;
+    padding-bottom: env(safe-area-inset-bottom);
+  }
   .kinoma-sidebar [data-tooltip]::after { display: none; }
 }
 
