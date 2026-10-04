@@ -208,7 +208,7 @@ export function ModernHero({ items }: ModernHeroProps) {
               </motion.button>
 
               {/* Tertiary CTA: More Info */}
-              <Link href={`/details/${currentItem.id}`}>
+              <Link href={`/details/${slugifyTitle(typeof currentItem.title === 'string' ? currentItem.title : (currentItem.title?.english || currentItem.title?.romaji || 'Untitled'))}?type=${currentItem.type === 'movie' ? 'movie' : 'series'}`}>
                 <motion.button
                   whileHover={{ scale: 1.03 }}
                   whileTap={{ scale: 0.97 }}
