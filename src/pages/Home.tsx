@@ -1,4 +1,4 @@
-import React, { useEffect, useRef, useState } from 'react';
+import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { Footer } from '../components/ui/Footer';
 import { Link } from 'wouter';
 import { KinomaLogo } from '../components/ui/KinomaLogo';
