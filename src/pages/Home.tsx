@@ -187,6 +187,8 @@ export function Home() {
   const [hoverTrailer, setHoverTrailer] = useState<MovieApiMedia | null>(null);
   const [hoverTrailerUrl, setHoverTrailerUrl] = useState('');
   const hoverTrailerTimer = useRef<number | null>(null);
+  const hoverTrailerRequest = useRef(0);
+  const trailerCache = useRef(new Map<string, string>());
 
   useEffect(() => {
     let active = true;
@@ -206,18 +208,27 @@ export function Home() {
         if (active) setError(err instanceof MovieApiError ? err.message : 'MovieApi is unavailable right now.');
       });
 
-    Promise.allSettled([
-      api.getNewOnNetflix(),
-      api.getNewOnDisneyPlus(),
-      api.getAiringToday()
-    ]).then(([netflix, disney, today]) => {
-      if (!active) return;
-      if (netflix.status === 'fulfilled') setNewOnNetflix((netflix.value.results || []) as unknown as MovieApiMedia[]);
-      if (disney.status === 'fulfilled') setNewOnDisneyPlus((disney.value.results || []) as unknown as MovieApiMedia[]);
-      if (today.status === 'fulfilled') setAiring((today.value.results || []) as unknown as MovieApiMedia[]);
-    });
+    const loadSecondaryRails = () => {
+      Promise.allSettled([
+        api.getNewOnNetflix(),
+        api.getNewOnDisneyPlus(),
+        api.getAiringToday()
+      ]).then(([netflix, disney, today]) => {
+        if (!active) return;
+        if (netflix.status === 'fulfilled') setNewOnNetflix((netflix.value.results || []) as unknown as MovieApiMedia[]);
+        if (disney.status === 'fulfilled') setNewOnDisneyPlus((disney.value.results || []) as unknown as MovieApiMedia[]);
+        if (today.status === 'fulfilled') setAiring((today.value.results || []) as unknown as MovieApiMedia[]);
+      });
+    };
+    const idle = window.requestIdleCallback
+      ? window.requestIdleCallback(loadSecondaryRails, { timeout: 1200 })
+      : window.setTimeout(loadSecondaryRails, 350);
 
-    return () => { active = false; };
+    return () => {
+      active = false;
+      if (window.cancelIdleCallback && typeof idle === 'number') window.cancelIdleCallback(idle);
+      else window.clearTimeout(idle as number);
+    };
   }, []);
 
   const featured = home?.featured as MovieApiMedia | null | undefined;
@@ -263,16 +274,29 @@ export function Home() {
 
   const showHoverTrailer = (item: MovieApiMedia) => {
     if (hoverTrailerTimer.current) window.clearTimeout(hoverTrailerTimer.current);
+    const requestId = ++hoverTrailerRequest.current;
     setHoverTrailer(item);
+    const cached = trailerCache.current.get(item.id);
+    if (cached) {
+      setHoverTrailerUrl(cached);
+      return;
+    }
     setHoverTrailerUrl('');
     hoverTrailerTimer.current = window.setTimeout(async () => {
       const result = await api.getTrailer(item.id).catch(() => ({ available: false, trailer: null }));
-      if (result?.trailer?.embedUrl) setHoverTrailerUrl(trailerSrc(result.trailer.embedUrl, true));
+      if (requestId !== hoverTrailerRequest.current) return;
+      const embedUrl = result?.trailer?.embedUrl;
+      if (embedUrl) {
+        const url = trailerSrc(embedUrl, true);
+        trailerCache.current.set(item.id, url);
+        setHoverTrailerUrl(url);
+      }
     }, 650);
   };
 
   const hideHoverTrailer = () => {
     if (hoverTrailerTimer.current) window.clearTimeout(hoverTrailerTimer.current);
+    ++hoverTrailerRequest.current;
     hoverTrailerTimer.current = window.setTimeout(() => {
       setHoverTrailer(null);
       setHoverTrailerUrl('');
@@ -378,7 +402,7 @@ export function Home() {
                 aria-label={hoverTrailer.title + ' trailer preview'}
               >
                 <div className="panda-home-hover-trailer__media">
-                  {hoverTrailerUrl ? <iframe src={hoverTrailerUrl} title={hoverTrailer.title + ' trailer preview'} allow="autoplay; encrypted-media; picture-in-picture" /> : <img src={(hoverTrailer.backdrop || hoverTrailer.poster || '') as string} alt="" />}
+                  {hoverTrailerUrl ? <iframe src={hoverTrailerUrl} title={hoverTrailer.title + ' trailer preview'} loading="lazy" allow="autoplay; encrypted-media; picture-in-picture" /> : <img src={(hoverTrailer.backdrop || hoverTrailer.poster || '') as string} alt="" />}
                 </div>
                 <div className="panda-home-hover-trailer__copy">
                   <span>🐼 QUICK LOOK</span>
