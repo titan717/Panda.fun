@@ -31,7 +31,7 @@ export function ModernCard({
 
   return (
     <Link 
-      href={`/details/${item.id}`}
+      href={`/details/${slugifyTitle(typeof item.title === 'string' ? item.title : (item.title?.english || item.title?.romaji || 'Untitled'))}?type=${item.type === 'movie' ? 'movie' : 'series'}`}
       className="group cursor-pointer flex flex-col w-full select-none outline-none kinoma-focus rounded-2xl"
     >
       <motion.div
