@@ -130,16 +130,52 @@ export function Watch() {
 
   const similar = useMemo(() => recommendations.slice(0, 5), [recommendations]);
 
-  useEffect(() => {\n    if (!data) return;\n    const episodeLabel = type === 'series' && currentEpisode ? ` — Season ${season}, Episode ${episode}${currentEpisode.title ? `: ${clean(currentEpisode.title)}` : ''}` : '';\n    const watchDescription = `${title}${episodeLabel} on Panda.fun. ${clean(data?.description) || 'Watch this title on Panda.fun.'}`.slice(0, 160);\n    updateSEO({\n      title: `Watch ${title}${episodeLabel}`,\n      description: watchDescription,\n      image: poster,\n      type: type === 'movie' ? 'video.movie' : 'video.episode',\n      keywords: [title, ...(data?.genres || []), type === 'movie' ? 'movie' : 'TV series', 'watch online', 'Panda.fun'],\n      schema: {\n        '@context': 'https://schema.org',\n        '@type': type === 'movie' ? 'Movie' : 'TVEpisode',\n        name: type === 'series' && currentEpisode?.title ? `${title} — ${currentEpisode.title}` : title,\n        description: watchDescription,\n        image: poster ? [poster] : undefined,\n        url: window.location.href,\n        episodeNumber: type === 'series' ? episode : undefined,\n        partOfSeason: type === 'series' ? { '@type': 'TVSeason', seasonNumber: season, name: `Season ${season}` } : undefined,\n        partOfSeries: type === 'series' ? { '@type': 'TVSeries', name: title } : undefined,\n        datePublished: data?.releaseDate || undefined,\n        isPartOf: { '@type': 'WebSite', name: 'Panda.fun', url: window.location.origin }\n      }\n    });\n  }, [data, title, poster, type, season, episode, currentEpisode?.title]);\n\n  const shareTitle = title || 'Panda.fun';
+  useEffect(() => {
+    if (!data) return;
+    const episodeLabel = type === 'series' && currentEpisode ? ` — Season ${season}, Episode ${episode}${currentEpisode.title ? `: ${clean(currentEpisode.title)}` : ''}` : '';
+    const watchDescription = `${title}${episodeLabel} on Panda.fun. ${clean(data?.description) || 'Watch this title on Panda.fun.'}`.slice(0, 160);
+    updateSEO({
+      title: `Watch ${title}${episodeLabel}`,
+      description: watchDescription,
+      image: poster,
+      type: type === 'movie' ? 'video.movie' : 'video.episode',
+      keywords: [title, ...(data?.genres || []), type === 'movie' ? 'movie' : 'TV series', 'watch online', 'Panda.fun'],
+      schema: {
+        '@context': 'https://schema.org',
+        '@type': type === 'movie' ? 'Movie' : 'TVEpisode',
+        name: type === 'series' && currentEpisode?.title ? `${title} — ${currentEpisode.title}` : title,
+        description: watchDescription,
+        image: poster ? [poster] : undefined,
+        url: window.location.href,
+        episodeNumber: type === 'series' ? episode : undefined,
+        partOfSeason: type === 'series' ? { '@type': 'TVSeason', seasonNumber: season, name: `Season ${season}` } : undefined,
+        partOfSeries: type === 'series' ? { '@type': 'TVSeries', name: title } : undefined,
+        datePublished: data?.releaseDate || undefined,
+        isPartOf: { '@type': 'WebSite', name: 'Panda.fun', url: window.location.origin }
+      }
+    });
+  }, [data, title, poster, type, season, episode, currentEpisode?.title]);
+
+  const shareTitle = title || 'Panda.fun';
   const shareText = type === 'movie'
-    ? `Watch ${shareTitle} on Panda.fun 🐼\\n\\n${window.location.href}`
-    : `Watch ${shareTitle} on Panda.fun 🐼\\nSeason ${season} • Episode ${episode}${currentEpisode?.title ? ` — ${currentEpisode.title}` : ''}\\n\\n${window.location.href}`;
+    ? `Watch ${shareTitle} on Panda.fun 🐼\
+\
+${window.location.href}`
+    : `Watch ${shareTitle} on Panda.fun 🐼\
+Season ${season} • Episode ${episode}${currentEpisode?.title ? ` — ${currentEpisode.title}` : ''}\
+\
+${window.location.href}`;
 
   const shareCurrentPage = async () => {
     const url = window.location.href;
     const copyText = type === 'movie'
-      ? `Watch ${shareTitle} on Panda.fun 🐼\\n\\n${url}`
-      : `Watch ${shareTitle} on Panda.fun 🐼\\nSeason ${season} • Episode ${episode}${currentEpisode?.title ? ` — ${currentEpisode.title}` : ''}\\n\\n${url}`;
+      ? `Watch ${shareTitle} on Panda.fun 🐼\
+\
+${url}`
+      : `Watch ${shareTitle} on Panda.fun 🐼\
+Season ${season} • Episode ${episode}${currentEpisode?.title ? ` — ${currentEpisode.title}` : ''}\
+\
+${url}`;
 
     try {
       if (typeof navigator.share === 'function') {
