@@ -59,7 +59,7 @@ export function updateSEO({
   setMetaTag('property', 'og:title', fullTitle);
   setMetaTag('property', 'og:description', defaultDesc);
   setMetaTag('property', 'og:image', defaultImage);
-  setMetaTag('og:image:alt', 'content', `${cleanTitle} on ${SITE_NAME}`);
+  setMetaTag('property', 'og:image:alt', `${cleanTitle} on ${SITE_NAME}`);
   setMetaTag('property', 'og:type', type);
   setMetaTag('property', 'og:url', url);
   setMetaTag('property', 'og:site_name', SITE_NAME);
