@@ -55,6 +55,8 @@ export function ModernCard({
           <img
             src={item.image || DEFAULT_POSTER}
             alt={title}
+            srcSet={item.image?.includes("/w500/") ? (item.image.replace("/w500/", "/w342/") + " 342w, " + item.image + " 500w") : undefined}
+            sizes="(max-width: 540px) 44vw, (max-width: 900px) 30vw, (max-width: 1200px) 20vw, 18vw"
             loading="lazy"
             decoding="async"
             referrerPolicy="no-referrer"
