@@ -1,4 +1,5 @@
 import React, { useEffect, useMemo, useState } from 'react';
+import { Footer } from '../components/ui/Footer';
 import { Bookmark, CheckCircle2, Clock3, Heart, Play, Search, Trash2, X, Sparkles } from 'lucide-react';
 import { slugifyTitle } from '../lib/slug';
 import { ModernCard } from '../components/ui/modern/ModernCard';
@@ -200,10 +201,7 @@ export function Library() {
 
 
 
-        <footer className="kinoma-library-foot">
-          <span>Panda.fun</span>
-          <span>Keep it. Find it. Watch it.</span>
-        </footer>
+        <Footer />
       </div>
     </main>
   );
