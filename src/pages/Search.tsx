@@ -26,10 +26,10 @@ const mapItem = (item: AnimeItem): SearchItem => {
   };
 };
 
-function ContentCard({ item }: { item: SearchItem }) {
+function ContentCard({ item, priority = false }: { item: SearchItem; priority?: boolean }) {
   return <Link href={item.href} className="kinoma-search-card kinoma-focus" onClick={() => trackGAEvent('search_result_select', { content_type: item.type, title: item.title })}>
     <div className="kinoma-search-card__art" aria-hidden="true">
-      {item.image ? <img src={item.image} alt="" srcSet={item.image.includes("/w500/") ? `${item.image.replace("/w500/", "/w342/")} 342w, ${item.image} 500w` : undefined} sizes="(max-width: 700px) 42vw, (max-width: 1100px) 24vw, 18vw" loading="lazy" decoding="async" referrerPolicy="no-referrer" /> : <><span className="kinoma-search-card__orb kinoma-search-card__orb--one" /><span className="kinoma-search-card__orb kinoma-search-card__orb--two" /></>}
+      {item.image ? <img src={item.image} alt="" srcSet={item.image.includes("/w500/") ? `${item.image.replace("/w500/", "/w342/")} 342w, ${item.image} 500w` : undefined} sizes="(max-width: 700px) 42vw, (max-width: 1100px) 24vw, 18vw" loading={priority ? "eager" : "lazy"} fetchPriority={priority ? "high" : "auto"} decoding="async" referrerPolicy="no-referrer" /> : <><span className="kinoma-search-card__orb kinoma-search-card__orb--one" /><span className="kinoma-search-card__orb kinoma-search-card__orb--two" /></>}
       <span className="kinoma-search-card__shine" /><span className="kinoma-search-card__type">{item.type.toUpperCase()}</span>
     </div>
     <div className="kinoma-search-card__copy"><h3>{item.title}</h3><p>{item.meta}</p></div>
@@ -150,7 +150,7 @@ export function Search() {
         {!loading && !error && results.length > 0 && <div className="kinoma-search-toolbar"><div className="kinoma-search-filters" role="tablist" aria-label="Filter search results"><button type="button" role="tab" aria-selected={filter === 'all'} className={filter === 'all' ? 'is-active' : ''} onClick={() => setFilter('all')}><Filter size={13} /> All <span>{results.length}</span></button><button type="button" role="tab" aria-selected={filter === 'movie'} className={filter === 'movie' ? 'is-active' : ''} onClick={() => setFilter('movie')}>Movies <span>{results.filter(item => item.type === 'movie').length}</span></button><button type="button" role="tab" aria-selected={filter === 'series'} className={filter === 'series' ? 'is-active' : ''} onClick={() => setFilter('series')}>Series <span>{results.filter(item => item.type === 'series').length}</span></button></div><span className="kinoma-search-toolbar__count">{visibleResults.length} {visibleResults.length === 1 ? 'title' : 'titles'}</span></div>}
         {loading ? <div className="kinoma-search-empty"><SearchIcon size={28} /><h3>Searching…</h3><p>Finding movies and series from MovieApi.</p></div>
         : error ? <div className="kinoma-search-empty"><SearchIcon size={28} /><h3>Search unavailable</h3><p>{error}</p><button type="button" onClick={() => setRetryNonce(value => value + 1)}>Try again</button></div>
-        : visibleResults.length ? <div className="kinoma-search-grid">{visibleResults.map(item => <ContentCard key={item.id} item={item} />)}</div>
+        : visibleResults.length ? <div className="kinoma-search-grid">{visibleResults.map((item, index) => <ContentCard key={item.id} item={item} priority={index < 5} />)}</div>
         : <div className="kinoma-search-empty"><SearchIcon size={28} /><h3>{results.length ? 'No titles in this filter' : 'Nothing found yet'}</h3><p>{results.length ? 'Try another filter to see more matches.' : 'Try a different title, spelling, or a broader search.'}</p><button type="button" onClick={results.length ? () => setFilter('all') : clearSearch}>{results.length ? 'Show all results' : 'Back to trending'}</button></div>}
       </section>
       <Footer />
