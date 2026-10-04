@@ -6257,3 +6257,94 @@ body { min-width: 320px; overflow-x: hidden; }
 @media (prefers-reduced-motion: reduce) {
   .panda-mobile-bottom-nav__item, .panda-mobile-bottom-nav__icon { transition: none; }
 }
+
+
+/* Panda.fun identity layer: darker cinematic base + restrained ambient light. */
+:root {
+  --panda-bg: #080707;
+  --panda-surface: #100e0d;
+  --panda-surface-2: #151211;
+  --panda-border: rgba(255, 244, 232, 0.075);
+  --panda-text: #f5eee8;
+  --panda-muted: #a89e96;
+  --panda-accent: #a8443a;
+  --panda-warm: #b78655;
+}
+
+html, body {
+  background: var(--panda-bg) !important;
+  color: var(--panda-text);
+}
+
+body {
+  background-image:
+    radial-gradient(900px 520px at 12% 18%, rgba(130, 53, 44, 0.075), transparent 68%),
+    radial-gradient(760px 500px at 88% 76%, rgba(160, 111, 62, 0.045), transparent 70%) !important;
+  background-attachment: fixed;
+}
+
+.kinoma-search-page,
+.kinoma-library-page,
+.kinoma-home-page,
+.kinoma-details-page,
+.kinoma-watch-page,
+.kinoma-settings-page {
+  background: transparent !important;
+}
+
+.kinoma-search-page__ambient,
+.kinoma-library-page__ambient {
+  opacity: 0.72 !important;
+  background:
+    radial-gradient(520px 360px at 18% 14%, rgba(132, 55, 45, 0.09), transparent 72%),
+    radial-gradient(640px 420px at 82% 62%, rgba(164, 116, 67, 0.055), transparent 74%) !important;
+}
+
+.kinoma-sidebar {
+  background: rgba(8, 7, 7, 0.94) !important;
+  border-right-color: rgba(255, 244, 232, 0.07) !important;
+  box-shadow: 18px 0 60px rgba(0, 0, 0, 0.3);
+}
+
+.kinoma-search-card,
+.kinoma-library-grid > *,
+.kinoma-library-discovery,
+.kinoma-library-tabs,
+.kinoma-library-toolbar {
+  border-color: var(--panda-border);
+}
+
+.panda-search-companion,
+.panda-library-scene {
+  filter: drop-shadow(0 18px 38px rgba(0, 0, 0, 0.38));
+}
+
+.panda-search-eye {
+  animation: panda-search-blink 4.7s infinite;
+  transform-origin: center;
+}
+
+.panda-search-bamboo .panda-search-leaf {
+  transform-origin: 15% 85%;
+  animation: panda-search-bamboo-sway 2.8s ease-in-out infinite;
+}
+
+.panda-search-bamboo .panda-search-leaf--two { animation-delay: -0.8s; }
+.panda-search-bamboo .panda-search-leaf--three { animation-delay: -1.5s; }
+
+@keyframes panda-search-blink {
+  0%, 92%, 100% { transform: scaleY(1); }
+  94%, 96% { transform: scaleY(0.08); }
+}
+
+@keyframes panda-search-bamboo-sway {
+  0%, 100% { transform: rotate(-2deg) translateY(0); }
+  50% { transform: rotate(5deg) translateY(-2px); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .panda-search-eye,
+  .panda-search-bamboo .panda-search-leaf {
+    animation: none !important;
+  }
+}
