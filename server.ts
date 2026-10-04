@@ -18,9 +18,9 @@ function unwrapApiPayload(payload: any) {
 
 function mediaRouteId(raw: string) {
   const id = decodeURIComponent(raw || "");
-  const tmdb = id.match(/^kinoma_tmdb_(movie|tv)_(\\d+)$/);
+  const tmdb = id.match(/^kinoma_tmdb_(movie|tv)_(\d+)$/);
   if (tmdb) return { id, type: tmdb[1] as "movie" | "tv", provider: "tmdb", providerId: Number(tmdb[2]) };
-  const tvmaze = id.match(/^kinoma_tvmaze_(\\d+)$/);
+  const tvmaze = id.match(/^kinoma_tvmaze_(\d+)$/);
   if (tvmaze) return { id, type: "tv" as const, provider: "tvmaze", providerId: Number(tvmaze[1]) };
   return null;
 }
@@ -46,7 +46,7 @@ function seoTitle(data: any, fallback: string) {
 
 function seoDescription(data: any, title: string) {
   const overview = typeof data?.overview === "string" ? data.overview : typeof data?.description === "string" ? data.description : "";
-  const clean = overview.replace(/<[^>]*>/g, "").replace(/\\s+/g, " ").trim();
+  const clean = overview.replace(/<[^>]*>/g, "").replace(/\s+/g, " ").trim();
   return (clean || "Watch " + title + " on Panda.fun. Discover details, episodes, recommendations and more.").slice(0, 160);
 }
 
@@ -93,8 +93,15 @@ async function renderSeoHtml(distPath: string, req: express.Request) {
     "<meta name=\"twitter:description\" content=\"" + htmlEscape(description) + "\">",
     "<meta name=\"twitter:image\" content=\"" + htmlEscape(absoluteImage) + "\">",
     "<script id=\"panda-ssr-schema\" type=\"application/ld+json\">" + JSON.stringify(schema).replace(/</g, "\\u003c") + "</script>"
-  ].join("\\n");
-  const cleaned = html\n    .replace(/<title>[\\s\\S]*?<\\/title>/i, "")\n    .replace(/<meta\\s+name="description"[^>]*>/i, "")\n    .replace(/<meta\\s+name="robots"[^>]*>/i, "")\n    .replace(/<link\\s+rel="canonical"[^>]*>/i, "")\n    .replace(/<meta\\s+property="og:[^"]+"[^>]*>/gi, "")\n    .replace(/<meta\\s+name="twitter:[^"]+"[^>]*>/gi, "");\n  return cleaned.replace("</head>", tags + "\\n</head>");
+  ].join("\n");
+  const cleaned = html
+    .replace(/<title>[\s\S]*?<\/title>/i, "")
+    .replace(/<meta\s+name="description"[^>]*>/i, "")
+    .replace(/<meta\s+name="robots"[^>]*>/i, "")
+    .replace(/<link\s+rel="canonical"[^>]*>/i, "")
+    .replace(/<meta\s+property="og:[^"]+"[^>]*>/gi, "")
+    .replace(/<meta\s+name="twitter:[^"]+"[^>]*>/gi, "");
+  return cleaned.replace("</head>", tags + "\n</head>");
 }
 
 async function buildSitemap(origin: string) {
@@ -113,17 +120,14 @@ async function buildSitemap(origin: string) {
   for (const item of batches.flat()) {
     if (typeof item?.id === "string" && item.id.startsWith("kinoma_")) urls.add(origin + "/details/" + encodeURIComponent(item.id));
   }
-  const body = Array.from(urls).map((url) => "  <url><loc>" + htmlEscape(url) + "</loc></url>").join("\\n");
-  return "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\\n<urlset xmlns=\"http://www.sitemaps.org/schemas/sitemap/0.9\">\\n" + body + "\\n</urlset>";
+  const body = Array.from(urls).map((url) => "  <url><loc>" + htmlEscape(url) + "</loc></url>").join("\n");
+  return "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n<urlset xmlns=\"http://www.sitemaps.org/schemas/sitemap/0.9\">\n" + body + "\n</urlset>";
 }
-
-
 
 async function startServer() {
   const app = express();
   const PORT = Number(process.env.PORT) || 3000;
 
-  // Helper proxy handler
   async function proxyHandler(targetPath: string, req: express.Request, res: express.Response) {
     try {
       const queryString = new URLSearchParams(req.query as any).toString();
@@ -146,7 +150,6 @@ async function startServer() {
     }
   }
 
-  // Search-engine discovery
   app.get("/robots.txt", (req, res) => {
     const origin = req.protocol + "://" + req.get("host");
     res.type("text/plain").send("User-agent: *\nAllow: /\nDisallow: /admin\nDisallow: /settings\nDisallow: /profile\nDisallow: /library\nSitemap: " + origin + "/sitemap.xml\n");
@@ -161,35 +164,20 @@ async function startServer() {
     }
   });
 
-  // Health
   app.get(['/api/health', '/health'], (req, res) => proxyHandler('/api/v1/health', req, res));
-
-  // Search
   app.get(['/api/search', '/api/anime/search', '/search'], (req, res) => proxyHandler('/api/v1/search', req, res));
   app.get(['/api/search/:query', '/api/anime/search/:query'], (req, res) => {
     req.query.q = req.params.query;
     proxyHandler('/api/v1/search', req, res);
   });
-
-  // Trending & Popular
   app.get(['/api/trending', '/api/anime/trending', '/trending'], (req, res) => proxyHandler('/api/v1/trending', req, res));
   app.get(['/api/popular', '/api/anime/popular', '/popular'], (req, res) => proxyHandler('/api/v1/popular/tv', req, res));
-  // Info
   app.get(['/api/info/:id', '/info/:id'], (req, res) => proxyHandler(`/api/v1/tv/${req.params.id}`, req, res));
-
-  // Episodes
   app.get(['/api/episodes/:id', '/episodes/:id'], (req, res) => proxyHandler(`/api/v1/tv/${req.params.id}/episodes`, req, res));
-
-  // Servers
   app.get(['/api/servers/:id/:ep', '/servers/:id/:ep'], (req, res) => proxyHandler(`/api/v1/tv/${req.params.id}/season/1/episode/${req.params.ep}/sources`, req, res));
-
-  // Stream
   app.get(['/api/stream/:id/:ep', '/stream/:id/:ep'], (req, res) => proxyHandler(`/api/v1/tv/${req.params.id}/season/1/episode/${req.params.ep}/play`, req, res));
-
-  // Schedule
   app.get(['/api/schedule', '/schedule'], (req, res) => proxyHandler('/api/v1/airing/today', req, res));
 
-  // Android TV Self-Update JSON endpoint (maps to latest.json)
   app.get(['/tv/update.json', '/update/latest.json'], (req, res) => {
     const latestJsonPath = path.join(process.cwd(), 'update', 'latest.json');
     if (fs.existsSync(latestJsonPath)) {
@@ -206,10 +194,8 @@ async function startServer() {
     });
   });
 
-  // Serve downloads statically and via custom handler BEFORE vite middleware
   app.use('/downloads', express.static(path.join(process.cwd(), 'public', 'downloads')));
 
-  // Explicit Android TV APK download endpoint (supports GitHub Releases proxy or local binary)
   app.get('/downloads/Panda.fun.apk', async (req, res) => {
     const filePath = path.join(process.cwd(), 'public', 'downloads', 'Panda.fun.apk');
     if (fs.existsSync(filePath)) {
@@ -219,20 +205,14 @@ async function startServer() {
           'Cache-Control': 'no-store, no-cache, must-revalidate, proxy-revalidate'
         }
       }, (err) => {
-        if (err && !res.headersSent) {
-          res.status(404).send('APK file not found');
-        }
+        if (err && !res.headersSent) res.status(404).send('APK file not found');
       });
     }
     res.redirect('https://github.com/titan717/Panda.fun/releases/latest/download/Panda.fun.apk');
   });
 
-  // Vite middleware for development
   if (process.env.NODE_ENV !== 'production') {
-    const vite = await createViteServer({
-      server: { middlewareMode: true },
-      appType: 'spa',
-    });
+    const vite = await createViteServer({ server: { middlewareMode: true }, appType: 'spa' });
     app.use(vite.middlewares);
   } else {
     const distPath = path.join(process.cwd(), 'dist');
