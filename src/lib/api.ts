@@ -321,7 +321,7 @@ async function searchAll(query: string, page = 1, signal?: AbortSignal) {
 
 export async function resolveMediaIdFromSlug(slug: string, type?: string) {
   const legacy = mediaFromId(decodeURIComponent(slug));
-  if (legacy) return legacy.id;
+  if (legacy) return decodeURIComponent(slug);
   const normalized = slugifyTitle(decodeURIComponent(slug));
   if (!normalized) throw new MovieApiError('Invalid title slug.', 400, 'INVALID_TITLE_SLUG');
   const candidates = type === 'movie' ? ['movie'] : type === 'series' ? ['tv'] : ['movie', 'tv'];
