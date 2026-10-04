@@ -115,8 +115,7 @@ export function Layout({ children }: { children: React.ReactNode }) {
     clearTimers();
     setPinned(value => {
       const next = !value;
-      setExpanded(next || expanded);
-      if (!next) setExpanded(false);
+      setExpanded(next);
       return next;
     });
   };
