@@ -9,7 +9,7 @@ import type { AnimeItem, Episode, AnimeSeasonItem } from '../types';
 import { DEFAULT_POSTER } from '../types';
 import { updateSEO } from '../lib/seo';
 import { trackGAEvent } from '../lib/analytics';
-import { slugifyTitle } from '../lib/slug';
+import { buildDetailsHref } from '../lib/mediaRoute';
 
 function clean(value: unknown) {
   return typeof value === 'string' ? value.replace(/<[^>]*>/g, '').trim() : '';
@@ -374,7 +374,7 @@ export function Watch() {
       <section className="panda-watch-similar">
         <div className="panda-watch-section-head"><div><span>KEEP EXPLORING</span><h2>More like this</h2></div><small>{similar.length} titles</small></div>
         <div className="panda-watch-similar-grid">
-          {similar.map(item => <button type="button" key={item.id} onClick={() => setLocation('/details/' + slugifyTitle(titleOf(item, 'Untitled')) + '?type=' + (item.contentType === 'movie' ? 'movie' : 'series'))}>
+          {similar.map(item => <button type="button" key={item.id} onClick={() => setLocation(buildDetailsHref(item.id, item.contentType === 'movie' ? 'movie' : 'series'))}>
             <div>{item.image ? <img src={item.image} alt="" loading="lazy" decoding="async" /> : <Film size={25} />}</div>
             <strong>{titleOf(item, 'Untitled')}</strong>
             <span>{item.contentType === 'movie' ? 'Movie' : 'Series'}{item.genres?.[0] ? ' · ' + item.genres[0] : ''}</span>

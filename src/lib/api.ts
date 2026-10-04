@@ -78,7 +78,7 @@ export class MovieApiError extends Error {
 
 const DEFAULT_BASE_URL = 'https://movieapi-3d0v.onrender.com';
 const DEFAULT_FALLBACK_URL = '';
-const viteEnv = (import.meta as ImportMeta & { env?: Record<string, string | undefined> }).env || {};
+const viteEnv = (import.meta as unknown as { env?: Record<string, string | undefined> }).env || {};
 const rawBase = String(viteEnv.VITE_MOVIE_API_URL || DEFAULT_BASE_URL).trim();
 export const MOVIE_API_BASE_URL = rawBase.replace(/\/+$/, '');
 const rawFallback = String(viteEnv.VITE_MOVIE_API_FALLBACK_URL || DEFAULT_FALLBACK_URL).trim();
@@ -100,7 +100,12 @@ const CACHE_TTL = 120_000;
 const PLAYBACK_PREFERENCES_KEY = 'panda_playback_preferences';
 const DEFAULT_PLAYBACK_PREFERENCES = { videoProvider: 'nxsha', audioLanguage: 'en', subtitleLanguage: 'en', subtitleProvider: 'nitro' } as const;
 
-type PlaybackPreferences = typeof DEFAULT_PLAYBACK_PREFERENCES;
+type PlaybackPreferences = {
+  videoProvider: 'nxsha' | 'cinesrc' | 'videasy';
+  audioLanguage: 'en' | 'auto';
+  subtitleLanguage: 'en' | 'auto' | 'off';
+  subtitleProvider: 'nitro';
+};
 
 function getPlaybackPreferences(): PlaybackPreferences {
   try {
@@ -321,7 +326,7 @@ async function searchAll(query: string, page = 1, signal?: AbortSignal) {
 
 export async function resolveMediaIdFromSlug(slug: string, type?: string) {
   const legacy = mediaFromId(decodeURIComponent(slug));
-  if (legacy) return legacy.id;
+  if (legacy) return decodeURIComponent(slug);
   const normalized = slugifyTitle(decodeURIComponent(slug));
   if (!normalized) throw new MovieApiError('Invalid title slug.', 400, 'INVALID_TITLE_SLUG');
   const candidates = type === 'movie' ? ['movie'] : type === 'series' ? ['tv'] : ['movie', 'tv'];

@@ -16,6 +16,8 @@ import {
   Trash2,
   Download,
   RefreshCw,
+  Server,
+  Captions,
 } from 'lucide-react';
 import { useAppearance } from '../../lib/AppearanceContext';
 import { usePWAInstall } from '../../lib/usePWAInstall';

@@ -6257,3 +6257,79 @@ body { min-width: 320px; overflow-x: hidden; }
 @media (prefers-reduced-motion: reduce) {
   .panda-mobile-bottom-nav__item, .panda-mobile-bottom-nav__icon { transition: none; }
 }
+
+
+/* Mobile trailer: use the media's natural 16:9 frame instead of inheriting the desktop hero height. */
+@media (max-width: 800px) {
+  .kinoma-details-hero--trailer {
+    min-height: 0 !important;
+    height: auto !important;
+    display: block !important;
+    overflow: visible;
+  }
+
+  .kinoma-details-hero--trailer .kinoma-details-hero__trailer-bg {
+    position: relative !important;
+    inset: auto !important;
+    width: 100% !important;
+    height: auto !important;
+    min-height: 0 !important;
+    max-height: none !important;
+    aspect-ratio: 16 / 9;
+    margin: 0 !important;
+    overflow: hidden;
+    background: #080707;
+  }
+
+  .kinoma-details-hero--trailer .kinoma-details-hero__trailer-video,
+  .kinoma-details-hero--trailer .kinoma-details-hero__trailer-placeholder {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    min-height: 0;
+    display: block;
+  }
+
+  .kinoma-details-hero--trailer .kinoma-details-hero__content {
+    min-height: 0 !important;
+    height: auto !important;
+    padding-top: 28px !important;
+  }
+}
+
+@media (max-width: 520px) {
+  .kinoma-details-hero--trailer .kinoma-details-hero__trailer-bg {
+    aspect-ratio: 16 / 9;
+  }
+
+  .kinoma-details-hero--trailer .kinoma-details-hero__content {
+    padding-top: 22px !important;
+  }
+}
+
+
+/* Keep the homepage trailer frame equally stable on narrow screens. */
+@media (max-width: 800px) {
+  .kinoma-home-hero--trailer {
+    min-height: 0 !important;
+    height: auto !important;
+  }
+
+  .kinoma-home-hero--trailer .kinoma-home-hero__trailer-bg {
+    position: relative !important;
+    width: 100% !important;
+    height: auto !important;
+    min-height: 0 !important;
+    max-height: none !important;
+    aspect-ratio: 16 / 9;
+    overflow: hidden;
+  }
+
+  .kinoma-home-hero--trailer .kinoma-home-hero__trailer-video {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+  }
+}

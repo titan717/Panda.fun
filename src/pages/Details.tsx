@@ -9,7 +9,7 @@ import { libraryManager } from '../lib/library';
 import { historyUtil } from '../lib/history';
 import { updateSEO } from '../lib/seo';
 import { trackGAEvent } from '../lib/analytics';
-import { slugifyTitle } from '../lib/slug';
+import { buildDetailsHref, resolveRouteMediaId } from '../lib/mediaRoute';
 
 function cleanText(value: unknown) { return typeof value === 'string' ? value.replace(/<[^>]*>/g, '').trim() : ''; }
 function titleOf(data: any, fallback: string) { return typeof data?.title === 'string' ? data.title : data?.title?.english || data?.title?.romaji || data?.title?.native || fallback; }
@@ -60,7 +60,9 @@ export function Details() {
     let active = true;
     const controller = new AbortController();
     setLoading(true); setError(null); setData(null); setSeasonItems([]); setSeasonEpisodes([]); setRecommendations([]);
-    resolveMediaIdFromSlug(routeSlug, type || undefined).then(resolvedId => {
+    const canonicalId = resolveRouteMediaId(routeSlug);
+    const resolution = canonicalId ? Promise.resolve(canonicalId) : resolveMediaIdFromSlug(routeSlug, type || undefined);
+    resolution.then(resolvedId => {
       if (!active) return;
       setId(resolvedId);
       return Promise.all([
@@ -135,11 +137,11 @@ export function Details() {
   };
 
   useEffect(() => {
-    const canonicalPath = '/details/' + slugifyTitle(title) + '?type=' + kind;
-    if (data && routeSlug !== slugifyTitle(title)) {
+    const canonicalPath = buildDetailsHref(id, kind);
+    if (data && routeSlug !== id) {
       window.history.replaceState(window.history.state, '', canonicalPath);
     }
-    updateSEO({ title, description: `${title} — ${synopsis}`.slice(0, 160), image: poster, type: kind === 'movie' ? 'video.movie' : 'video.tv_show', keywords: [title, ...(data?.genres || []), kind === 'movie' ? 'movie' : 'TV series', 'Panda.fun', 'watch online'], schema: { '@context': 'https://schema.org', '@type': kind === 'movie' ? 'Movie' : 'TVSeries', name: title, description: synopsis, image: poster ? [poster] : undefined, url: window.location.origin + '/details/' + slugifyTitle(title) + '?type=' + kind, datePublished: data?.releaseDate || undefined, aggregateRating: data?.rating != null ? { '@type': 'AggregateRating', ratingValue: data.rating, bestRating: 10 } : undefined, genre: data?.genres || undefined, isPartOf: { '@type': 'WebSite', name: 'Panda.fun', url: window.location.origin } } });
+    updateSEO({ title, description: `${title} — ${synopsis}`.slice(0, 160), image: poster, type: kind === 'movie' ? 'video.movie' : 'video.tv_show', keywords: [title, ...(data?.genres || []), kind === 'movie' ? 'movie' : 'TV series', 'Panda.fun', 'watch online'], schema: { '@context': 'https://schema.org', '@type': kind === 'movie' ? 'Movie' : 'TVSeries', name: title, description: synopsis, image: poster ? [poster] : undefined, url: window.location.origin + canonicalPath, datePublished: data?.releaseDate || undefined, aggregateRating: data?.rating != null ? { '@type': 'AggregateRating', ratingValue: data.rating, bestRating: 10 } : undefined, genre: data?.genres || undefined, isPartOf: { '@type': 'WebSite', name: 'Panda.fun', url: window.location.origin } } });
     setIsInList(libraryManager.isInWatchlist(id));
   }, [title, synopsis, poster, id, kind]);
 
@@ -194,7 +196,7 @@ export function Details() {
         <section className="kinoma-details-section">
           <div className="kinoma-details-section__heading"><div><span>KEEP EXPLORING</span><h2>More like this</h2></div><small>Powered by MovieApi recommendations</small></div>
           <div className="kinoma-more-grid">
-            {recommendations.map((item, i) => <button type="button" key={item.id} className="kinoma-more-card" onClick={() => setLocation('/details/' + slugifyTitle(typeof item.title === 'string' ? item.title : item.title.english || item.title.romaji || 'Untitled') + '?type=' + (item.contentType === 'movie' ? 'movie' : 'series'))}><div className={'kinoma-more-card__art tone-' + (i % 5)}>{item.image ? <img src={item.image} alt="" loading="lazy" decoding="async" /> : <Film size={25} />}</div><strong>{typeof item.title === 'string' ? item.title : item.title.english || item.title.romaji || 'Untitled'}</strong><span>{item.genres?.[0] || 'Recommended'} • {item.contentType === 'movie' ? 'Movie' : 'Series'}</span></button>)}
+            {recommendations.map((item, i) => <button type="button" key={item.id} className="kinoma-more-card" onClick={() => setLocation(buildDetailsHref(item.id, item.contentType === 'movie' ? 'movie' : 'series'))}><div className={'kinoma-more-card__art tone-' + (i % 5)}>{item.image ? <img src={item.image} alt="" loading="lazy" decoding="async" /> : <Film size={25} />}</div><strong>{typeof item.title === 'string' ? item.title : item.title.english || item.title.romaji || 'Untitled'}</strong><span>{item.genres?.[0] || 'Recommended'} • {item.contentType === 'movie' ? 'Movie' : 'Series'}</span></button>)}
             {!recommendations.length && !loading && <div className="kinoma-details-bottom">No recommendations are available right now.</div>}
           </div>
         </section>
