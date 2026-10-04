@@ -4,6 +4,7 @@ import { Clock3, Filter, Search as SearchIcon, Sparkles, X } from 'lucide-react'
 import { Link, useLocation } from 'wouter';
 import { updateSEO } from '../lib/seo';
 import { trackGAEvent } from '../lib/analytics';
+import { slugifyTitle } from '../lib/slug';
 import { AdsterraNativeBanner } from '../components/ui/AdsterraNativeBanner';
 import { preferencesUtil } from '../lib/preferences';
 import { api, MovieApiError } from '../lib/api';
@@ -21,7 +22,7 @@ const mapItem = (item: AnimeItem): SearchItem => {
     image: item.image,
     rating: Number(item.rating || 0) || 0,
     year: item.releaseDate ? Number(String(item.releaseDate).slice(0, 4)) || undefined : undefined,
-    href: '/details/' + encodeURIComponent(item.id) + '?type=' + type,
+    href: '/details/' + slugifyTitle(item.title) + '?type=' + type,
   };
 };
 
