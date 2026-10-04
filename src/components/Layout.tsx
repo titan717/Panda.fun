@@ -1,6 +1,6 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { Link, useLocation } from 'wouter';
-import { House, Search, Library, Settings, Info, UserRound } from 'lucide-react';
+import { House, Search, Library, Settings, Info, UserRound, FileText, Shield } from 'lucide-react';
 import { KinomaLogo } from './ui/KinomaLogo';
 
 export const ITEMS = [
