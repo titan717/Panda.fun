@@ -5366,7 +5366,7 @@ body {
 .panda-stream-notice__paw--left::after,.panda-stream-notice__paw--right::after { content:''; position:absolute; width:7px; height:7px; border-radius:50%; background:#3b3b3b; box-shadow:11px 3px #3b3b3b,22px 1px #3b3b3b; left:14px; top:9px; opacity:.8; }
 @keyframes panda-notice-shadow { 0%,100%{transform:scale(1);opacity:.7} 50%{transform:scale(.84);opacity:.42} }
 @keyframes panda-notice-bamboo-wave { 0%,100%{transform:rotate(22deg) translateZ(28px) translateY(0)} 50%{transform:rotate(34deg) translateZ(28px) translateY(-5px)} }
-@media (prefers-reduced-motion:reduce){.panda-stream-notice__panda::after,}
+@media (prefers-reduced-motion: reduce){ .panda-stream-notice__panda::after{ animation:none; } }
 
 /* Search is a centered Panda stage — the companion lives below the copy instead of competing with the search field. */
 .kinoma-search-head { position:relative; display:flex; flex-direction:column; align-items:center; text-align:center; gap:18px; min-height:520px; padding-top:30px; }
