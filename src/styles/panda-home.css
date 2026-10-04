@@ -1751,3 +1751,20 @@
 }
 .panda-home-ad-slot .panda-adsterra{margin:0 auto;}
 @media(max-width:700px){.panda-home-ad-slot{margin:0 auto 22px;}}
+
+
+/* Performance: keep below-the-fold discovery rails out of the initial render cost. */
+.panda-home-v2__section{
+  content-visibility:auto;
+  contain-intrinsic-size:0 420px;
+}
+
+.panda-home-v2__rail{
+  contain:layout paint;
+}
+
+@media (prefers-reduced-motion: reduce){
+  .panda-home-v2__section{
+    content-visibility:visible;
+  }
+}
