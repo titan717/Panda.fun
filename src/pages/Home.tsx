@@ -68,6 +68,8 @@ function PandaPoster({ item, priority = false }: { item: MovieApiMedia; priority
       <div className="panda-content-card__image-skeleton" aria-hidden="true" />
       <img
         src={src}
+        srcSet={src.includes('/w500/') ? `${src.replace('/w500/', '/w342/')} 342w, ${src} 500w` : undefined}
+        sizes="(max-width: 700px) 42vw, (max-width: 1100px) 24vw, 18vw"
         alt=""
         loading={priority ? "eager" : "lazy"}
         fetchPriority={priority ? "high" : "auto"}
