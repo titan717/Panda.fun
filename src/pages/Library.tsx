@@ -1,6 +1,6 @@
 import React, { useEffect, useMemo, useState } from 'react';
-import { slugifyTitle } from '../lib/slug';
 import { Bookmark, CheckCircle2, Clock3, Heart, Play, Search, Trash2, X, Sparkles } from 'lucide-react';
+import { ModernCard } from '../components/ui/modern/ModernCard';
 import { Link, useLocation } from 'wouter';
 import { historyUtil, HistoryItem, formatPlaybackTimestamp } from '../lib/history';
 import { libraryManager, LibraryItem } from '../lib/library';
@@ -46,21 +46,16 @@ function EmptyState({ tab, onBrowse }: { tab: Tab; onBrowse: () => void }) {
   );
 }
 
-function PosterCard({ item, action }: { item: LibraryItem; action?: React.ReactNode }) {
+function LibraryPosterCard({ item, onRemove }: { item: LibraryItem; onRemove: () => void }) {
+  const mediaType = item.id.startsWith('kinoma_tmdb_movie_') ? 'movie' : 'series';
+
   return (
-    <article className="kinoma-library-card">
-      <Link href={`/details/${slugifyTitle(item.title)}`} className="kinoma-library-card__art">
-        {item.image ? <img src={item.image} alt="" loading="lazy" /> : <div className="kinoma-library-card__placeholder"><Sparkles size={20} /></div>}
-        <div className="kinoma-library-card__veil" />
-        <span className="kinoma-library-card__badge">{item.title ? 'SAVED' : 'TITLE'}</span>
-        <span className="kinoma-library-card__play"><Play size={15} fill="currentColor" /></span>
-      </Link>
-      <div className="kinoma-library-card__copy">
-        <h3>{item.title}</h3>
-        <p>Saved to your Kinoma library</p>
-        {action}
-      </div>
-    </article>
+    <ModernCard
+      item={{ id: item.id, title: item.title, image: item.image, type: mediaType }}
+      subText={item.type === 'watchlist' ? 'My List' : item.type === 'favorites' ? 'Favourite' : 'Completed'}
+      href={`/details/${encodeURIComponent(item.title)}?type=${mediaType}`}
+      onRemove={onRemove}
+    />
   );
 }
 
@@ -203,22 +198,13 @@ export function Library() {
         ) : filtered.length ? (
           <section className="kinoma-library-grid">
             {(filtered as LibraryItem[]).map(item => (
-              <PosterCard
+              <LibraryPosterCard
                 key={item.id}
                 item={item}
-                action={
-                  <button
-                    type="button"
-                    className="kinoma-library-card__remove"
-                    onClick={() => removeLibrary(
-                      item.id,
-                      active === 'watchlist' ? 'watchlist' : active === 'favorites' ? 'favorites' : 'completed'
-                    )}
-                    aria-label={`Remove ${item.title}`}
-                  >
-                    <Trash2 size={13} />
-                  </button>
-                }
+                onRemove={() => removeLibrary(
+                  item.id,
+                  active === 'watchlist' ? 'watchlist' : active === 'favorites' ? 'favorites' : 'completed'
+                )}
               />
             ))}
           </section>
