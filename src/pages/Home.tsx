@@ -6,7 +6,6 @@ import { api, MovieApiError, MovieApiMedia } from '../lib/api';
 import { libraryManager } from '../lib/library';
 import { updateSEO } from '../lib/seo';
 import { ModernContinueWatching } from '../components/ui/modern/ModernContinueWatching';
-import { AdsterraNativeBanner } from '../components/ui/AdsterraNativeBanner';
 import '../styles/panda-home.css';
 
 type RailKind = 'trending' | 'streamingNetflix' | 'streamingDisney' | 'popular' | 'tv' | 'movie' | 'airing';
