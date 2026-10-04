@@ -1,4 +1,5 @@
 import React, { useEffect, useMemo, useState } from 'react';
+import { slugifyTitle } from '../lib/slug';
 import { Bookmark, CheckCircle2, Clock3, Heart, Play, Search, Trash2, X, Sparkles } from 'lucide-react';
 import { Link, useLocation } from 'wouter';
 import { historyUtil, HistoryItem, formatPlaybackTimestamp } from '../lib/history';
@@ -49,7 +50,7 @@ function EmptyState({ tab, onBrowse }: { tab: Tab; onBrowse: () => void }) {
 function PosterCard({ item, action }: { item: LibraryItem; action?: React.ReactNode }) {
   return (
     <article className="kinoma-library-card">
-      <Link href={`/details/${encodeURIComponent(item.id)}`} className="kinoma-library-card__art">
+      <Link href={`/details/${slugifyTitle(item.title)}`} className="kinoma-library-card__art">
         {item.image ? <img src={item.image} alt="" loading="lazy" /> : <div className="kinoma-library-card__placeholder"><Sparkles size={20} /></div>}
         <div className="kinoma-library-card__veil" />
         <span className="kinoma-library-card__badge">{item.title ? 'SAVED' : 'TITLE'}</span>
