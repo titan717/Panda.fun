@@ -100,7 +100,12 @@ const CACHE_TTL = 120_000;
 const PLAYBACK_PREFERENCES_KEY = 'panda_playback_preferences';
 const DEFAULT_PLAYBACK_PREFERENCES = { videoProvider: 'nxsha', audioLanguage: 'en', subtitleLanguage: 'en', subtitleProvider: 'nitro' } as const;
 
-type PlaybackPreferences = typeof DEFAULT_PLAYBACK_PREFERENCES;
+type PlaybackPreferences = {
+  videoProvider: 'nxsha' | 'cinesrc' | 'videasy';
+  audioLanguage: 'en' | 'auto';
+  subtitleLanguage: 'en' | 'auto' | 'off';
+  subtitleProvider: 'nitro';
+};
 
 function getPlaybackPreferences(): PlaybackPreferences {
   try {
