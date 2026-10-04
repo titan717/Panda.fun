@@ -5,7 +5,6 @@ import { Link, useLocation } from 'wouter';
 import { historyUtil, HistoryItem, formatPlaybackTimestamp } from '../lib/history';
 import { libraryManager, LibraryItem } from '../lib/library';
 import { preferencesUtil } from '../lib/preferences';
-import { AdsterraNativeBanner } from '../components/ui/AdsterraNativeBanner';
 
 type Tab = 'continue' | 'watchlist' | 'favorites' | 'completed';
 
