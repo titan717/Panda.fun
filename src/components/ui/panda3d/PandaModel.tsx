@@ -20,6 +20,8 @@ export interface PandaRig {
   rightEyePatch: THREE.Mesh;
   remote: THREE.Group;
   bamboo: THREE.Group;
+  leftPupil: THREE.Mesh;
+  rightPupil: THREE.Mesh;
 }
 
 const sphere = (geometry: THREE.BufferGeometry, material: THREE.Material) => new THREE.Mesh(geometry, material);
@@ -88,6 +90,7 @@ export function createPandaModel(): PandaRig {
     head.add(eyeWhite);
 
     const pupil = sphere(new THREE.SphereGeometry(0.095, 18, 14), eye);
+    pupil.name = x < 0 ? 'leftPupil' : 'rightPupil';
     pupil.position.set(x, 0.16, 1.075);
     head.add(pupil);
     eyes.push(pupil);
@@ -156,10 +159,17 @@ export function createPandaModel(): PandaRig {
   root.add(tail);
 
   const bamboo = new THREE.Group();
-  const bambooStem = new THREE.Mesh(new THREE.CylinderGeometry(0.035, 0.045, 0.85, 10), accent);
+  const bambooStem = new THREE.Mesh(new THREE.CylinderGeometry(0.035, 0.045, 0.95, 10), accent);
   bambooStem.rotation.z = -0.48;
   bambooStem.position.set(0.24, 0.1, 0.5);
   bamboo.add(bambooStem);
+  for (let i = 0; i < 3; i += 1) {
+    const leaf = new THREE.Mesh(new THREE.SphereGeometry(0.10, 12, 8), accent);
+    leaf.scale.set(1.8, 0.42, 0.7);
+    leaf.rotation.z = i % 2 ? 0.45 : -0.45;
+    leaf.position.set(0.24 + (i - 1) * 0.16, 0.28 + i * 0.15, 0.5);
+    bamboo.add(leaf);
+  }
   bamboo.visible = false;
   root.add(bamboo);
 
@@ -181,5 +191,7 @@ export function createPandaModel(): PandaRig {
     leftEyePatch: eyePatches[0], rightEyePatch: eyePatches[1],
     remote,
     bamboo,
+    leftPupil: eyes[0],
+    rightPupil: eyes[1],
   };
 }
