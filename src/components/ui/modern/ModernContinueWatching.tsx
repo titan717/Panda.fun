@@ -103,7 +103,7 @@ export function ModernContinueWatching() {
 
               {/* Title */}
               <div className="mt-2.5 px-0.5 flex flex-col">
-                <Link href={`/details/${item.slug || item.animeId}`}>
+                <Link href={`/details/${slugifyTitle(item.title)}?type=${item.type === 'movie' ? 'movie' : 'series'}`}>
                   <h3 className="text-xs sm:text-sm font-semibold text-white group-hover:text-[#a5d6a7] transition-colors duration-200 line-clamp-1 leading-snug cursor-pointer">
                     {item.title}
                   </h3>
