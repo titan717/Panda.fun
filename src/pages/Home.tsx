@@ -42,7 +42,7 @@ function trailerSrc(url: unknown, soundEnabled = true) {
   }
 }
 
-function PandaPoster({ item }: { item: MovieApiMedia }) {
+function PandaPoster({ item, priority = false }: { item: MovieApiMedia; priority?: boolean }) {
   const candidates = [item.poster, item.backdrop].filter((value): value is string => typeof value === 'string' && value.length > 0);
   const [sourceIndex, setSourceIndex] = useState(0);
   const [failed, setFailed] = useState(false);
@@ -69,7 +69,8 @@ function PandaPoster({ item }: { item: MovieApiMedia }) {
       <img
         src={src}
         alt=""
-        loading="lazy"
+        loading={priority ? "eager" : "lazy"}
+        fetchPriority={priority ? "high" : "auto"}
         decoding="async"
         referrerPolicy="no-referrer"
         onError={() => {
@@ -86,12 +87,14 @@ function PandaContentCard({
   item,
   onHover,
   onLeave,
-  badge
+  badge,
+  priority = false
 }: {
   item: MovieApiMedia;
   onHover: (item: MovieApiMedia) => void;
   onLeave: () => void;
   badge?: string;
+  priority?: boolean;
 }) {
   const [inList, setInList] = useState(() => libraryManager.isInWatchlist(item.id));
   const toggleList = (event: React.MouseEvent<HTMLButtonElement>) => {
@@ -117,7 +120,7 @@ function PandaContentCard({
       onBlur={onLeave}
     >
       <div className="panda-content-card__media">
-        <PandaPoster item={item} />
+        <PandaPoster item={item} priority={priority} />
         <div className="panda-content-card__top">
           <span className="panda-content-card__badge">{badge || (item.type === 'movie' ? 'Movie' : 'Series')}</span>
           <button type="button" className={`panda-content-card__quick${inList ? " is-added" : ""}`} onClick={toggleList} aria-label={inList ? `Remove ${item.title} from My List` : `Add ${item.title} to My List`} title={inList ? "Remove from My List" : "Add to My List"}>{inList ? <Check size={15} /> : <Plus size={15} />}</button>
@@ -140,7 +143,8 @@ function PandaRail({
   onHover,
   onLeave,
   action = true,
-  badge
+  badge,
+  priority = false
 }: {
   kind: RailKind;
   title: string;
@@ -163,7 +167,7 @@ function PandaRail({
         {action && <Link href="/search" className="panda-home-v2__see-all">Explore <ArrowRight size={13} /></Link>}
       </div>
       <div className="panda-home-v2__rail">
-        {items.slice(0, 5).map((item, index) => React.createElement(PandaContentCard, { key: `${kind}-${item.id}-${index}`, item, onHover, onLeave, badge }))}
+        {items.slice(0, 5).map((item, index) => React.createElement(PandaContentCard, { key: `${kind}-${item.id}-${index}`, item, onHover, onLeave, badge, priority }))}
       </div>
     </section>
   );
@@ -352,7 +356,7 @@ export function Home() {
           <div className="panda-home-v2__inner">
             <ModernContinueWatching />
 
-            <PandaRail kind="trending" title="Trending now" subtitle="The titles getting attention today." items={trending} onHover={showHoverTrailer} onLeave={hideHoverTrailer} />
+            <PandaRail priority kind="trending" title="Trending now" subtitle="The titles getting attention today." items={trending} onHover={showHoverTrailer} onLeave={hideHoverTrailer} />
             <PandaRail kind="streamingNetflix" title="New on Netflix" subtitle="Freshly released movies now showing on the service." items={newOnNetflix} onHover={showHoverTrailer} onLeave={hideHoverTrailer} badge="NETFLIX" />
             <PandaRail kind="streamingDisney" title="New on Disney+" subtitle="Recently added titles surfaced from TMDB." items={newOnDisneyPlus} onHover={showHoverTrailer} onLeave={hideHoverTrailer} badge="DISNEY+" />
             <PandaRail kind="movie" title="Popular movies" items={popularMovies} onHover={showHoverTrailer} onLeave={hideHoverTrailer} />
