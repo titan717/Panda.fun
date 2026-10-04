@@ -1,6 +1,6 @@
 import React from 'react';
 import { Link } from 'wouter';
-import { Github, Instagram, Youtube } from 'lucide-react';
+import { Github, Instagram, Youtube, ArrowUp } from 'lucide-react';
 
 const links = [
   { href: '/about', label: 'About' },
@@ -38,7 +38,7 @@ export function Footer() {
           </span>
         </div>
       </div>
-      <div className="panda-shared-footer__bottom">
+      <div className="panda-shared-footer__bottom"><button type="button" className="panda-shared-footer__top" onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })} aria-label="Back to top"><ArrowUp size={13} /> Top</button>
         <span>© {new Date().getFullYear()} Panda.fun</span>
         <span>Built for the next thing you want to watch.</span>
       </div>
