@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { Link } from 'wouter';
-import { Play } from 'lucide-react';
+import { Play, X } from 'lucide-react';
 import { motion } from 'motion/react';
 import { AnimeItem, DEFAULT_POSTER } from '../../../types';
 import { slugifyTitle } from '../../../lib/slug';
@@ -13,6 +13,8 @@ export interface ModernCardProps {
   progress?: number; // 0-100 percentage for Continue Watching
   currentEpisode?: number;
   layout?: 'standard' | 'wide';
+  href?: string;
+  onRemove?: () => void;
 }
 
 export function ModernCard({ 
@@ -20,7 +22,9 @@ export function ModernCard({
   badgeText, 
   subText, 
   progress,
-  currentEpisode
+  currentEpisode,
+  href,
+  onRemove
 }: ModernCardProps) {
   const [imageLoaded, setImageLoaded] = useState(false);
 
@@ -32,7 +36,7 @@ export function ModernCard({
 
   return (
     <Link 
-      href={`/details/${slugifyTitle(typeof item.title === 'string' ? item.title : (item.title?.english || item.title?.romaji || 'Untitled'))}?type=${item.type === 'movie' ? 'movie' : 'series'}`}
+      href={href || `/details/${slugifyTitle(typeof item.title === 'string' ? item.title : (item.title?.english || item.title?.romaji || 'Untitled'))}?type=${item.type === 'movie' ? 'movie' : 'series'}`}
       className="group cursor-pointer flex flex-col w-full select-none outline-none kinoma-focus rounded-2xl"
     >
       <motion.div
@@ -69,7 +73,27 @@ export function ModernCard({
             </div>
           )}
 
-          {/* Smooth Play Overlay on Hover */}
+          {onRemove && (
+            <button
+              type="button"
+              onClick={(event) => { event.preventDefault(); event.stopPropagation(); onRemove(); }}
+              title="Remove from Continue Watching"
+              aria-label="Remove from Continue Watching"
+              className="absolute top-2 right-2 z-20 w-7 h-7 rounded-full bg-black/70 hover:bg-black/90 border border-white/15 text-gray-300 hover:text-white flex items-center justify-center transition-all opacity-0 group-hover:opacity-100 hover:scale-110 shadow-md cursor-pointer kinoma-focus"
+            >
+              <X className="w-3.5 h-3.5" />
+            </button>
+          )}
+
+          {defaultBadge && (
+            <div className="absolute top-2 left-2 z-10">
+              <span className="px-2.5 py-0.5 bg-black/65 backdrop-blur-md text-white border border-white/10 rounded-full text-[10px] font-bold">
+                {defaultBadge}
+              </span>
+            </div>
+          )}
+
+          {/* Smooth Play Overlay on Hover */
           <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-center justify-center pointer-events-none">
             <div className="w-11 h-11 sm:w-12 sm:h-12 rounded-full bg-white text-black flex items-center justify-center shadow-[0_4px_20px_rgba(0,0,0,0.6)] transform scale-80 group-hover:scale-100 transition-transform duration-300">
               <Play className="w-5 h-5 fill-current ml-0.5" />
