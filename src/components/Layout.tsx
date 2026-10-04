@@ -1,6 +1,6 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { Link, useLocation } from 'wouter';
-import { House, Search, Library, Settings, Info, UserRound } from 'lucide-react';
+import { House, Search, Library, Settings, Info, UserRound, FileText, ShieldCheck } from 'lucide-react';
 import { KinomaLogo } from './ui/KinomaLogo';
 
 export const ITEMS = [
@@ -29,7 +29,7 @@ export function Layout({ children }: { children: React.ReactNode }) {
   };
 
   return (
-    <div className="panda-app-shell kinoma-app-shell" style={{ '--sidebar-width': expanded ? '228px' : '64px' } as React.CSSProperties}>
+    <div className="panda-app-shell kinoma-app-shell" style={{ '--sidebar-width': expanded ? '260px' : '64px' } as React.CSSProperties}>
       <a className="panda-skip-link" href="#panda-main-content">Skip to main content</a>
       <div className="panda-mobile-topbar" aria-label="Panda.fun mobile navigation">
         <div className="panda-mobile-topbar__actions">
@@ -50,6 +50,8 @@ export function Layout({ children }: { children: React.ReactNode }) {
           })}
           <Link href="/profile" className={`kinoma-sidebar__item ${location === '/profile' ? 'is-active' : ''}`} aria-label="Profile" data-tooltip="My Panda"><UserRound size={20} strokeWidth={1.8} /><span>My Panda</span></Link>
           <Link href="/about" className={`kinoma-sidebar__item ${location === '/about' ? 'is-active' : ''}`} aria-label="About" data-tooltip="About"><Info size={20} strokeWidth={1.8} /><span>About</span></Link>
+          <Link href="/terms" className={`kinoma-sidebar__item ${location === '/terms' ? 'is-active' : ''}`} aria-label="Terms of Service" data-tooltip="Terms of Service"><FileText size={20} strokeWidth={1.8} /><span>Terms of Service</span></Link>
+          <Link href="/privacy" className={`kinoma-sidebar__item ${location === '/privacy' ? 'is-active' : ''}`} aria-label="Privacy Policy" data-tooltip="Privacy Policy"><ShieldCheck size={20} strokeWidth={1.8} /><span>Privacy Policy</span></Link>
         </nav>
       </aside>
       <div className="panda-app-content"><main id="panda-main-content" ref={mainRef} className="kinoma-app-main" tabIndex={-1} aria-label="Main content">{children}</main></div>
