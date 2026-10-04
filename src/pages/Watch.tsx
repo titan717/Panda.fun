@@ -329,7 +329,7 @@ export function Watch() {
         <div className="panda-watch-section-head"><div><span>KEEP EXPLORING</span><h2>More like this</h2></div><small>{similar.length} titles</small></div>
         <div className="panda-watch-similar-grid">
           {similar.map(item => <button type="button" key={item.id} onClick={() => setLocation('/details/' + slugifyTitle(titleOf(item, 'Untitled')) + '?type=' + (item.contentType === 'movie' ? 'movie' : 'series'))}>
-            <div>{item.image ? <img src={item.image} alt="" loading="lazy" /> : <Film size={25} />}</div>
+            <div>{item.image ? <img src={item.image} alt="" loading="lazy" decoding="async" /> : <Film size={25} />}</div>
             <strong>{titleOf(item, 'Untitled')}</strong>
             <span>{item.contentType === 'movie' ? 'Movie' : 'Series'}{item.genres?.[0] ? ' · ' + item.genres[0] : ''}</span>
           </button>)}
