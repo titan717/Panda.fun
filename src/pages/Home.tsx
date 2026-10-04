@@ -255,7 +255,7 @@ export function Home() {
   const popularTv = (sections?.popularTv || []) as MovieApiMedia[];
   const featuredType = featured?.type === 'movie' ? 'movie' : 'series';
   const featuredWatchUrl = featured?.id ? '/watch/' + encodeURIComponent(featured.id) + '?type=' + featuredType : '/search';
-  const surprisePool = [...trending, ...popularMovies, ...popularTv].filter((item, index, list) => item?.id && list.findIndex(candidate => candidate.id === item.id) === index);
+  const surprisePool = useMemo(() => [...trending, ...popularMovies, ...popularTv].filter((item, index, list) => item?.id && list.findIndex(candidate => candidate.id === item.id) === index), [trending, popularMovies, popularTv]);
   const pickSurprise = () => {
     if (!surprisePool.length) return;
     const candidates = surprisePool.filter(item => item.id !== surprisePick?.id);
