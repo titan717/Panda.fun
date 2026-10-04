@@ -402,7 +402,7 @@ export const api = {
     return { results: data.results.map(toAnimeItem) };
   },
 
-  async getTrailer(id: string) {
+  async getTrailer(id: string, signal?: AbortSignal) {
     const media = mediaFromId(id);
     if (!media) return { available: false, trailer: null };
 
@@ -411,7 +411,7 @@ export const api = {
     let videoType: 'movie' | 'tv' = media.type;
     let videoId = media.id;
     if (media.provider === 'tvmaze') {
-      const details = await request<MovieApiMedia>(`/api/v1/tv/${media.id}`, undefined, undefined, 300_000);
+      const details = await request<MovieApiMedia>(`/api/v1/tv/${media.id}`, undefined, { signal }, 300_000);
       const resolvedTmdbId = Number(details.ids?.tmdb || 0);
       if (!resolvedTmdbId) return { available: false, trailer: null };
       videoId = resolvedTmdbId;
@@ -421,7 +421,7 @@ export const api = {
     const data = await request<{ videos: MovieApiVideo[] }>(
       `/api/v1/${videoType}/${videoId}/videos`,
       undefined,
-      undefined,
+      { signal },
       300_000
     );
     const videos = Array.isArray(data.videos) ? data.videos : [];
