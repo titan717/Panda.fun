@@ -6,7 +6,6 @@ import { api, MovieApiError, MovieApiMedia } from '../lib/api';
 import { libraryManager } from '../lib/library';
 import { updateSEO } from '../lib/seo';
 import { ModernContinueWatching } from '../components/ui/modern/ModernContinueWatching';
-import { PandaStreamNotice } from '../components/ui/PandaStreamNotice';
 import '../styles/panda-home.css';
 
 type RailKind = 'trending' | 'streamingNetflix' | 'streamingDisney' | 'popular' | 'tv' | 'movie' | 'airing';
@@ -322,8 +321,6 @@ export function Home() {
             </div>
           </div>
         </section>
-
-        <PandaStreamNotice />
 
         <div className="panda-home-v2">
           <div className="panda-home-v2__inner">
