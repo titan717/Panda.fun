@@ -199,17 +199,20 @@ export function Home() {
 
   useEffect(() => {
     let active = true;
+    const featuredTrailerController = new AbortController();
+
     api.getHome()
-      .then(async data => {
+      .then(data => {
         if (!active) return;
         setHome(data);
+
         if (data?.featured?.id) {
-          const [trailerResult] = await Promise.allSettled([
-            api.getTrailer(data.featured.id)
-          ]);
-          if (!active) return;
-          if (trailerResult.status === 'fulfilled') setTrailer(trailerResult.value);
-         }
+          api.getTrailer(data.featured.id, featuredTrailerController.signal)
+            .then(result => {
+              if (active) setTrailer(result);
+            })
+            .catch(() => undefined);
+        }
       })
       .catch((err: unknown) => {
         if (active) setError(err instanceof MovieApiError ? err.message : 'MovieApi is unavailable right now.');
@@ -233,6 +236,7 @@ export function Home() {
 
     return () => {
       active = false;
+      featuredTrailerController.abort();
       if (window.cancelIdleCallback && typeof idle === 'number') window.cancelIdleCallback(idle);
       else window.clearTimeout(idle as number);
     };
