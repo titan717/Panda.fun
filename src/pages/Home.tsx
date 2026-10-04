@@ -4,6 +4,7 @@ import { Link } from 'wouter';
 import { KinomaLogo } from '../components/ui/KinomaLogo';
 import { ArrowRight, Check, Film, Github, Play, Plus, Search, Sparkles, Tv } from 'lucide-react';
 import { api, MovieApiError, MovieApiMedia } from '../lib/api';
+import { trackGAEvent } from '../lib/analytics';
 import { libraryManager } from '../lib/library';
 import { updateSEO } from '../lib/seo';
 import { slugifyTitle } from '../lib/slug';
@@ -90,13 +91,15 @@ function PandaContentCard({
   onHover,
   onLeave,
   badge,
-  priority = false
+  priority = false,
+  analyticsSection
 }: {
   item: MovieApiMedia;
   onHover: (item: MovieApiMedia) => void;
   onLeave: () => void;
   badge?: string;
   priority?: boolean;
+  analyticsSection?: string;
 }) {
   const [inList, setInList] = useState(() => libraryManager.isInWatchlist(item.id));
   const toggleList = (event: React.MouseEvent<HTMLButtonElement>) => {
@@ -120,6 +123,7 @@ function PandaContentCard({
       onMouseLeave={onLeave}
       onFocus={() => onHover(item)}
       onBlur={onLeave}
+      onClick={() => trackGAEvent('select_content', { content_type: item.type === 'movie' ? 'movie' : 'series', item_id: item.id, section: analyticsSection, title: item.title })}
     >
       <div className="panda-content-card__media">
         <PandaPoster item={item} priority={priority} />
@@ -170,7 +174,7 @@ function PandaRail({
         {action && <Link href="/search" className="panda-home-v2__see-all">Explore <ArrowRight size={13} /></Link>}
       </div>
       <div className="panda-home-v2__rail">
-        {items.slice(0, 5).map((item, index) => React.createElement(PandaContentCard, { key: `${kind}-${item.id}-${index}`, item, onHover, onLeave, badge, priority: priority && index === 0 }))}
+        {items.slice(0, 5).map((item, index) => React.createElement(PandaContentCard, { key: `${kind}-${item.id}-${index}`, item, onHover, onLeave, badge, priority: priority && index === 0, analyticsSection: kind }))}
       </div>
     </section>
   );
@@ -384,13 +388,14 @@ export function Home() {
                 <p>One tap. One title. No scrolling required.</p>
               </div>
               {surprisePick ? (
-                <Link href={`/details/${slugifyTitle(surprisePick.title)}?type=${surprisePick.type === 'movie' ? 'movie' : 'series'}`} className="panda-surprise__pick">
+                <Link href={`/details/${slugifyTitle(surprisePick.title)}?type=${surprisePick.type === 'movie' ? 'movie' : 'series'}`} className="panda-surprise__pick"
+                  onClick={() => trackGAEvent('surprise_select', { content_type: surprisePick.type === 'movie' ? 'movie' : 'series', title: surprisePick.title })}>
                   <PandaPoster item={surprisePick} priority />
                   <span><strong>{surprisePick.title}</strong><small>{[surprisePick.year, surprisePick.rating ? `★ ${Number(surprisePick.rating).toFixed(1)}` : null].filter(Boolean).join(' · ')}</small></span>
                   <ArrowRight size={14} aria-hidden="true" />
                 </Link>
               ) : <span className="panda-surprise__hint">Your next watch is hiding in the library.</span>}
-              <button type="button" className="panda-surprise__button" onClick={pickSurprise} disabled={!surprisePool.length} aria-label="Pick a surprise title">
+              <button type="button" className="panda-surprise__button" onClick={() => { trackGAEvent('surprise_me', { source: 'home' }); pickSurprise(); }} disabled={!surprisePool.length} aria-label="Pick a surprise title">
                 <Sparkles size={15} /> Surprise Me
               </button>
             </section>
@@ -410,6 +415,7 @@ export function Home() {
                       key={item.id}
                       href={`/details/${slugifyTitle(item.title)}?type=${item.type === 'movie' ? 'movie' : 'series'}`}
                       className="panda-pulse__item"
+                      onClick={() => trackGAEvent('panda_pulse_select', { content_type: item.type === 'movie' ? 'movie' : 'series', rank: index + 1, title: item.title })}
                       aria-label={`Open ${item.title}, Panda Pulse rank ${index + 1}`}
                     >
                       <span className="panda-pulse__rank">{String(index + 1).padStart(2, '0')}</span>
