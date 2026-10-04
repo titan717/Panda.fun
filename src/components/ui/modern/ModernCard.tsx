@@ -9,7 +9,6 @@ export interface ModernCardProps {
   item: AnimeItem;
   badgeText?: string;
   subText?: string;
-  progress?: number;
   currentEpisode?: number;
   layout?: 'standard' | 'wide';
   href?: string;
@@ -20,7 +19,6 @@ export function ModernCard({
   item,
   badgeText,
   subText,
-  progress,
   href,
   onRemove
 }: ModernCardProps) {
@@ -54,15 +52,6 @@ export function ModernCard({
             onLoad={() => setImageLoaded(true)}
             className={`h-full w-full object-cover object-center transition-opacity duration-300 group-hover:scale-105 ${imageLoaded ? 'opacity-100' : 'opacity-0'}`}
           />
-
-          {typeof progress === 'number' && progress > 0 && (
-            <div className="absolute bottom-0 left-0 right-0 z-10 h-1.5 overflow-hidden bg-black/60" aria-label={`${Math.round(progress)} percent watched`}>
-              <div
-                className="h-full bg-gradient-to-r from-purple-600 to-purple-400"
-                style={{ width: `${Math.min(100, Math.max(5, progress))}%` }}
-              />
-            </div>
-          )}
 
           <div className="pointer-events-none absolute inset-0 flex items-center justify-center bg-gradient-to-t from-black/80 via-black/20 to-transparent opacity-0 transition-opacity duration-300 group-hover:opacity-100">
             <span className="flex h-11 w-11 items-center justify-center rounded-full bg-white text-black shadow-[0_4px_20px_rgba(0,0,0,0.6)] sm:h-12 sm:w-12">
