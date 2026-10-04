@@ -26,21 +26,18 @@ export function ModernContinueWatching() {
     <ModernCarousel title="Continue Watching" subtitle="Resume right where you left off">
       {history.map((item) => {
         const curTime = item.playbackTimestamp ?? item.progress ?? 0;
-        const dur = item.duration || 1440;
-        const progressPercent = Math.min(100, Math.max(5, (curTime / dur) * 100));
         const mediaId = item.animeId || item.slug;
         const isMovie = item.episodeNumber === '1' && item.seasonNumber === 1 && item.episodeId === mediaId;
         const watchPath = isMovie ? mediaId : `${mediaId}$season${Math.max(1, item.seasonNumber || 1)}$episode${Math.max(1, Number(item.episodeNumber) || 1)}`;
         const watchUrl = `/watch/${encodeURIComponent(watchPath)}?type=${isMovie ? 'movie' : 'series'}&t=${Math.floor(curTime)}`;
         const title = item.title || 'Untitled';
-        const subtitle = isMovie ? formatPlaybackTimestamp(curTime) : `Episode ${item.episodeNumber || 1} • ${formatPlaybackTimestamp(curTime)} left`;
+        const subtitle = isMovie ? `Resume · ${formatPlaybackTimestamp(curTime)}` : `S${item.seasonNumber || 1} E${item.episodeNumber || 1} · Resume`;
 
         return (
           <ModernCarouselSlot key={'cw-' + (item.animeId || item.slug) + '-' + item.episodeNumber}>
             <ModernCard
               item={{ id: mediaId, title, image: item.image, type: isMovie ? 'movie' : 'series' }}
               href={watchUrl}
-              progress={progressPercent}
               subText={subtitle}
               onRemove={() => handleRemove(item)}
             />
