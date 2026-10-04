@@ -1742,3 +1742,12 @@
     transition: none !important;
   }
 }
+
+
+/* Home sponsored placement — between Continue Watching and discovery rails. */
+.panda-home-ad-slot{
+  width:min(100%,980px);
+  margin:4px auto 30px;
+}
+.panda-home-ad-slot .panda-adsterra{margin:0 auto;}
+@media(max-width:700px){.panda-home-ad-slot{margin:0 auto 22px;}}
