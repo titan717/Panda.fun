@@ -402,6 +402,10 @@ export function Home() {
                   <p>Stories, shelves and little moments worth pressing play for.</p>
                 </div>
                 <div className="kinoma-home-footer__links">
+                  <div className="kinoma-home-footer__promo" aria-label="Panda.fun partners">
+                    <a href="https://trafficpeak.io" target="_blank" rel="noopener noreferrer">Boost Your Website Traffic with TrafficPeak</a>
+                    <a href="/" aria-label="Panda.fun">Watch movies, series and more on Panda.fun</a>
+                  </div>
                   <div><span>Explore</span><Link href="/home">Home</Link><Link href="/search">Search</Link><Link href="/library">My List</Link></div>
                   <div><span>Panda.fun</span><Link href="/profile">Profile</Link><Link href="/about">About</Link><Link href="/terms">Terms</Link><Link href="/privacy">Privacy</Link></div>
                   <div><span>Project</span><a href="https://github.com/titan717/Panda.fun" target="_blank" rel="noreferrer"><Github size={15} /> Source</a><Link href="/contact">Support</Link></div>
