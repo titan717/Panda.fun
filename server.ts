@@ -94,7 +94,7 @@ async function renderSeoHtml(distPath: string, req: express.Request) {
     "<meta name=\"twitter:image\" content=\"" + htmlEscape(absoluteImage) + "\">",
     "<script id=\"panda-ssr-schema\" type=\"application/ld+json\">" + JSON.stringify(schema).replace(/</g, "\\u003c") + "</script>"
   ].join("\\n");
-  return html.replace("</head>", tags + "\\n</head>");
+  const cleaned = html\n    .replace(/<title>[\\s\\S]*?<\\/title>/i, "")\n    .replace(/<meta\\s+name="description"[^>]*>/i, "")\n    .replace(/<meta\\s+name="robots"[^>]*>/i, "")\n    .replace(/<link\\s+rel="canonical"[^>]*>/i, "")\n    .replace(/<meta\\s+property="og:[^"]+"[^>]*>/gi, "")\n    .replace(/<meta\\s+name="twitter:[^"]+"[^>]*>/gi, "");\n  return cleaned.replace("</head>", tags + "\\n</head>");
 }
 
 async function buildSitemap(origin: string) {
