@@ -11,39 +11,23 @@ export function AdsterraNativeBanner() {
     const root = rootRef.current;
     if (!root || loadedRef.current) return;
 
-    const loadAd = () => {
-      if (loadedRef.current || !root.isConnected) return;
-      loadedRef.current = true;
+    loadedRef.current = true;
+    const container = document.createElement('div');
+    container.id = AD_CONTAINER_ID;
+    container.className = 'panda-adsterra__unit';
+    root.appendChild(container);
 
-      const container = document.createElement('div');
-      container.id = AD_CONTAINER_ID;
-      container.className = 'panda-adsterra__unit';
-      root.appendChild(container);
+    const script = document.createElement('script');
+    script.async = true;
+    script.src = AD_SCRIPT_SRC;
+    script.setAttribute('data-cfasync', 'false');
+    root.insertBefore(script, container);
 
-      const script = document.createElement('script');
-      script.async = true;
-      script.src = AD_SCRIPT_SRC;
-      script.setAttribute('data-cfasync', 'false');
-      root.insertBefore(script, container);
+    return () => {
+      script.remove();
+      container.remove();
+      loadedRef.current = false;
     };
-
-    if (!('IntersectionObserver' in window)) {
-      loadAd();
-      return;
-    }
-
-    const observer = new IntersectionObserver(
-      entries => {
-        if (entries.some(entry => entry.isIntersecting)) {
-          observer.disconnect();
-          loadAd();
-        }
-      },
-      { rootMargin: '700px 0px' }
-    );
-
-    observer.observe(root);
-    return () => observer.disconnect();
   }, []);
 
   return (
