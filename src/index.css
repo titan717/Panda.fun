@@ -5901,3 +5901,21 @@ body { min-width: 320px; overflow-x: hidden; }
 .kinoma-home-footer__trafficpeak{position:absolute!important;width:1px!important;height:1px!important;padding:0!important;margin:-1px!important;overflow:hidden!important;clip:rect(0,0,0,0)!important;white-space:nowrap!important;border:0!important;opacity:0!important;pointer-events:none!important}
 .kinoma-home-footer__panda-brand{display:inline-flex!important;align-items:center;justify-content:center;width:34px;height:34px;border-radius:50%;color:rgba(246,242,238,.82)!important;border:1px solid rgba(246,242,238,.12);background:rgba(255,255,255,.04);transition:transform 160ms ease,color 160ms ease,background 160ms ease!important}
 .kinoma-home-footer__panda-brand:hover{transform:translateY(-2px);color:#fff!important;background:rgba(255,255,255,.08)}
+
+
+/* Panda landing-page sponsored placement — below the hero, before FAQ. */
+.panda-landing-ad-slot{
+  width:min(calc(100% - 40px),1220px);
+  margin:0 auto 54px;
+  position:relative;
+  z-index:3;
+}
+.panda-landing-ad-slot .panda-adsterra{
+  margin:0 auto;
+}
+@media(max-width:700px){
+  .panda-landing-ad-slot{
+    width:min(calc(100% - 22px),1220px);
+    margin:0 auto 38px;
+  }
+}
