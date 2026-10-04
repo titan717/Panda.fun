@@ -192,6 +192,7 @@ export function Home() {
   const [hoverTrailerUrl, setHoverTrailerUrl] = useState('');
   const hoverTrailerTimer = useRef<number | null>(null);
   const hoverTrailerRequest = useRef(0);
+  const hoverTrailerController = useRef<AbortController | null>(null);
   const trailerCache = useRef(new Map<string, string>());
 
   useEffect(() => {
@@ -279,6 +280,8 @@ export function Home() {
   const showHoverTrailer = (item: MovieApiMedia) => {
     if (hoverTrailerTimer.current) window.clearTimeout(hoverTrailerTimer.current);
     const requestId = ++hoverTrailerRequest.current;
+    hoverTrailerController.current?.abort();
+    hoverTrailerController.current = new AbortController();
     setHoverTrailer(item);
     const cached = trailerCache.current.get(item.id);
     if (cached) {
@@ -287,7 +290,7 @@ export function Home() {
     }
     setHoverTrailerUrl('');
     hoverTrailerTimer.current = window.setTimeout(async () => {
-      const result = await api.getTrailer(item.id).catch(() => ({ available: false, trailer: null }));
+      const result = await api.getTrailer(item.id, hoverTrailerController.current?.signal).catch(() => ({ available: false, trailer: null }));
       if (requestId !== hoverTrailerRequest.current) return;
       const embedUrl = result?.trailer?.embedUrl;
       if (embedUrl) {
@@ -301,6 +304,8 @@ export function Home() {
   const hideHoverTrailer = () => {
     if (hoverTrailerTimer.current) window.clearTimeout(hoverTrailerTimer.current);
     ++hoverTrailerRequest.current;
+    hoverTrailerController.current?.abort();
+    hoverTrailerController.current = null;
     hoverTrailerTimer.current = window.setTimeout(() => {
       setHoverTrailer(null);
       setHoverTrailerUrl('');
@@ -309,6 +314,8 @@ export function Home() {
 
   useEffect(() => () => {
     if (hoverTrailerTimer.current) window.clearTimeout(hoverTrailerTimer.current);
+    hoverTrailerController.current?.abort();
+    hoverTrailerController.current = null;
   }, []);
 
   const wakePanda = () => {
