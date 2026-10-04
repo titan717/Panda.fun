@@ -2,8 +2,8 @@ import React, { useEffect, useMemo, useState } from 'react';
 import { Bookmark, CheckCircle2, Clock3, Heart, Play, Search, Trash2, X, Sparkles } from 'lucide-react';
 import { slugifyTitle } from '../lib/slug';
 import { ModernCard } from '../components/ui/modern/ModernCard';
-import { Link, useLocation } from 'wouter';
-import { historyUtil, HistoryItem, formatPlaybackTimestamp } from '../lib/history';
+import { Link } from 'wouter';
+import { historyUtil, HistoryItem } from '../lib/history';
 import { libraryManager, LibraryItem } from '../lib/library';
 import { preferencesUtil } from '../lib/preferences';
 
@@ -60,41 +60,6 @@ function LibraryPosterCard({ item, onRemove }: { item: LibraryItem; onRemove: ()
   );
 }
 
-function ContinueCard({ item, onRemove, onWatch }: { item: HistoryItem; onRemove: () => void; onWatch: (title: string) => void }) {
-  const [, setLocation] = useLocation();
-  const pct = Math.min(100, Math.max(3, Math.round(item.completionPercentage || 0)));
-  const mediaId = item.animeId || item.slug;
-  const type = mediaId.startsWith('kinoma_tmdb_movie_') ? 'movie' : 'series';
-  const season = Math.max(1, Number(item.seasonNumber) || 1);
-  const episode = Math.max(1, Number(item.episodeNumber) || 1);
-  const watchId = type === 'movie'
-    ? mediaId
-    : `${mediaId}$season${season}$episode${episode}`;
-  const watchUrl = '/watch/' + encodeURIComponent(watchId) + '?type=' + type + (item.playbackTimestamp > 0 ? '&t=' + Math.floor(item.playbackTimestamp) : '');
-
-  return (
-    <article className="kinoma-library-continue">
-      <Link href={watchUrl} onClick={event => { event.preventDefault(); onWatch(item.title); window.setTimeout(() => setLocation(watchUrl), 560); }} className="kinoma-library-continue__art">
-        {item.image ? <img src={item.image} alt="" loading="lazy" /> : <div className="kinoma-library-card__placeholder"><Play size={22} /></div>}
-        <div className="kinoma-library-card__veil" />
-        <span className="kinoma-library-continue__progress">{pct}%</span>
-        <span className="kinoma-library-card__play"><Play size={16} fill="currentColor" /></span>
-        <div className="kinoma-library-progress"><span style={{ width: `${pct}%` }} /></div>
-      </Link>
-      <div className="kinoma-library-continue__copy">
-        <div>
-          <span>{formatPlaybackTimestamp(item.playbackTimestamp || 0)}</span>
-          <h3>{item.title}</h3>
-          <p>{type === 'movie' ? 'Movie' : 'S' + (item.seasonNumber || 1) + ' · E' + (item.episodeNumber || 1)}</p>
-        </div>
-        <div className="kinoma-library-continue__actions">
-          <Link href={watchUrl}>Resume <Play size={12} fill="currentColor" /></Link>
-          <button type="button" onClick={onRemove} aria-label="Remove from continue watching"><Trash2 size={14} /></button>
-        </div>
-      </div>
-    </article>
-  );
-}
 
 export function Library() {
   const [active, setActive] = useState<Tab>('continue');
@@ -103,7 +68,6 @@ export function Library() {
   const [watchlist, setWatchlist] = useState<LibraryItem[]>(() => libraryManager.getWatchlist());
   const [favorites, setFavorites] = useState<LibraryItem[]>(() => libraryManager.getFavorites());
   const [completed, setCompleted] = useState<LibraryItem[]>(() => libraryManager.getCompleted());
-  const [watchPanda, setWatchPanda] = useState<string | null>(null);
 
   const refresh = () => {
     setHistory(historyUtil.getHistory());
@@ -144,10 +108,7 @@ export function Library() {
   };
 
   const browse = () => { window.location.href = '/home'; };
-  const celebrateWatch = (title: string) => {
-    setWatchPanda(title);
-    window.setTimeout(() => setWatchPanda(current => current === title ? null : current), 2200);
-  };
+
 
   return (
     <main className="kinoma-library-page">
@@ -192,8 +153,24 @@ export function Library() {
 
         {active === 'continue' ? (
           filtered.length ? (
-            <section className="kinoma-library-continue-grid">
-              {(filtered as HistoryItem[]).map(item => React.createElement(ContinueCard, { key: item.episodeId || item.slug, item, onRemove: () => removeHistory(item.slug), onWatch: celebrateWatch }))}
+            <section className="kinoma-library-grid">
+              {(filtered as HistoryItem[]).map(item => {
+                const mediaId = item.animeId || item.slug;
+                const type = mediaId.startsWith('kinoma_tmdb_movie_') ? 'movie' : 'series';
+                const season = Math.max(1, Number(item.seasonNumber) || 1);
+                const episode = Math.max(1, Number(item.episodeNumber) || 1);
+                const watchId = type === 'movie' ? mediaId : `${mediaId}$season${season}$episode${episode}`;
+                const watchUrl = '/watch/' + encodeURIComponent(watchId) + '?type=' + type + (item.playbackTimestamp > 0 ? '&t=' + Math.floor(item.playbackTimestamp) : '');
+                return (
+                  <ModernCard
+                    key={item.episodeId || item.slug}
+                    item={{ id: mediaId, title: item.title || 'Untitled', image: item.image, type }}
+                    href={watchUrl}
+                    subText={type === 'movie' ? 'Resume' : `S${season} E${episode} · Resume`}
+                    onRemove={() => removeHistory(item.slug)}
+                  />
+                );
+              })}
             </section>
           ) : <EmptyState tab="continue" onBrowse={browse} />
         ) : filtered.length ? (
@@ -222,10 +199,7 @@ export function Library() {
           </div>
         </section>
 
-        {watchPanda && <div className="kinoma-library-watch-pop" role="status" aria-live="polite">
-          <div className="kinoma-library-watch-pop__panda"><span /></div>
-          <div className="kinoma-library-watch-pop__copy"><strong>🐼 Enjoying the watch!</strong><span>{watchPanda}</span></div>
-        </div>}
+
 
         <footer className="kinoma-library-foot">
           <span>Panda.fun</span>
