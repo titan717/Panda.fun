@@ -53,6 +53,7 @@ export function Details() {
   const [isInList, setIsInList] = useState(false);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [retryKey, setRetryKey] = useState(0);
   const kind = kindOf(type, data);
 
   useEffect(() => {
@@ -74,7 +75,7 @@ export function Details() {
       setError(err instanceof Error ? err.message : 'Unable to load this title.'); setLoading(false);
     });
     return () => { active = false; };
-  }, [routeSlug, type]);
+  }, [routeSlug, type, retryKey]);
 
   useEffect(() => {
     if (!data || kind !== 'series') return;
@@ -137,8 +138,8 @@ export function Details() {
 
   return (
     <main className="kinoma-details-page">
-      {loading && <div className="kinoma-details-bottom">Loading metadata from MovieApi…</div>}
-      {error && <div className="kinoma-details-bottom" role="alert">{error}</div>}
+      {loading && <div className="panda-state-card" role="status"><span className="panda-state-card__spinner" aria-hidden="true" /><div><strong>Loading title</strong><small>Fetching the latest details…</small></div></div>}
+      {error && !loading && <div className="panda-state-card is-error" role="alert"><div><strong>We couldn't load this title.</strong><small>{error}</small></div><button type="button" onClick={() => setRetryKey(value => value + 1)}>Retry</button></div>}
       <section className="kinoma-details-hero kinoma-details-hero--trailer">
         <div className="kinoma-details-hero__trailer-bg" aria-label={title + ' trailer preview'}>
           {trailer?.trailer?.embedUrl ? <iframe src={trailerSrc(trailer.trailer.embedUrl)} title={title + ' trailer'} className="kinoma-details-hero__trailer-video" allow="autoplay; encrypted-media; picture-in-picture" allowFullScreen /> : (
