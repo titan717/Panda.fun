@@ -161,13 +161,12 @@ export function Library() {
                 const watchId = type === 'movie' ? mediaId : `${mediaId}$season${season}$episode${episode}`;
                 const watchUrl = '/watch/' + encodeURIComponent(watchId) + '?type=' + type + (item.playbackTimestamp > 0 ? '&t=' + Math.floor(item.playbackTimestamp) : '');
                 return (
-                  <ModernCard
-                    key={item.episodeId || item.slug}
+                  <React.Fragment key={item.episodeId || item.slug}><ModernCard
                     item={{ id: mediaId, title: item.title || 'Untitled', image: item.image, type }}
                     href={watchUrl}
                     subText={type === 'movie' ? 'Resume' : `S${season} E${episode} · Resume`}
                     onRemove={() => removeHistory(item.slug)}
-                  />
+                  /></React.Fragment>
                 );
               })}
             </section>
@@ -175,14 +174,13 @@ export function Library() {
         ) : filtered.length ? (
           <section className="kinoma-library-grid">
             {(filtered as LibraryItem[]).map(item => (
-              <LibraryPosterCard
-                key={item.id}
+              <React.Fragment key={item.id}><LibraryPosterCard
                 item={item}
                 onRemove={() => removeLibrary(
                   item.id,
                   active === 'watchlist' ? 'watchlist' : active === 'favorites' ? 'favorites' : 'completed'
                 )}
-              />
+              /></React.Fragment>
             ))}
           </section>
         ) : <EmptyState tab={active} onBrowse={browse} />}
