@@ -157,18 +157,6 @@ export function SettingsModal() {
                 </div>
               </div>
 
-              <div className="p-4 bg-[#13141c] border border-[#222230] rounded-xl flex items-center justify-between gap-4">
-                <div>
-                  <h4 className="text-xs font-bold text-white flex items-center gap-1.5">
-                    <Sparkles className="w-3.5 h-3.5 text-[#c1935f]" />
-                    <span>Kinoma Signature Intro</span>
-                  </h4>
-                  <p className="text-[11px] text-gray-400 mt-0.5">Experience the cinematic opening animation.</p>
-                </div>
-                <button onClick={() => { closeSettingsModal(); setTimeout(() => window.dispatchEvent(new CustomEvent('panda_replay_intro')), 200); }} className="px-3.5 py-1.5 rounded-full bg-white text-black font-bold text-xs hover:bg-gray-200 transition-all shrink-0 cursor-pointer shadow-md">
-                  Play Intro
-                </button>
-              </div>
             </div>
           )}
           {/* PLAYER PREFERENCES TAB */}
