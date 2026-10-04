@@ -25,15 +25,26 @@ interface AnalyticsEvent {
 
 let lastPageKey = '';
 
+export function trackGAEvent(name: string, params: Record<string, string | number | boolean | undefined> = {}): void {
+  if (typeof window === 'undefined') return;
+  try {
+    const gtag = (window as Window & { gtag?: (...args: unknown[]) => void }).gtag;
+    if (!gtag) return;
+    const cleanParams = Object.fromEntries(
+      Object.entries(params).filter(([, value]) => value !== undefined)
+    );
+    gtag('event', name, cleanParams);
+  } catch {
+    // GA must never affect the application.
+  }
+}
+
 export async function trackEvent(event: AnalyticsEvent): Promise<void> {
   if (typeof window === 'undefined') return;
   try {
     await addDoc(collection(db, 'analytics_events'), {
       ...event,
-      uid: auth.currentUser?.uid || 'anonymous',
-      userEmail: auth.currentUser?.email || null,
       sessionId: getSessionId(),
-      userAgent: navigator.userAgent.slice(0, 500),
       createdAt: serverTimestamp(),
       clientTimestamp: Date.now()
     });
@@ -47,6 +58,11 @@ export function trackPageView(path: string): void {
   if (!path || path === lastPageKey) return;
   lastPageKey = path;
   void trackEvent({ type: 'page_view', path });
+  trackGAEvent('page_view', {
+    page_location: window.location.href,
+    page_path: path,
+    page_title: document.title
+  });
 }
 
 export function getSessionId(): string {
