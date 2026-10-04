@@ -1383,8 +1383,8 @@
    Match the homepage's cool midnight + soft lavender glass language.
    ========================================================= */
 .panda-watch-page{
-  --watch-bg:#08080d;
-  --watch-panel:rgba(17,17,24,.78);
+  --watch-bg:#0b0c10;
+  --watch-panel:rgba(17,17,24,.72);
   --watch-ink:#f7f7fb;
   --watch-muted:rgba(235,235,245,.58);
   --watch-faint:rgba(235,235,245,.34);
@@ -1394,15 +1394,15 @@
   --watch-accent-border:rgba(201,182,255,.24);
   --watch-red:#c9b6ff;
   background:
-    radial-gradient(circle at 16% 0%,rgba(201,182,255,.10),transparent 28%),
-    radial-gradient(circle at 88% 20%,rgba(137,112,202,.08),transparent 25%),
-    #08080d;
+    radial-gradient(circle at 15% 0%,rgba(201,182,255,.08),transparent 28%),
+    radial-gradient(circle at 88% 18%,rgba(137,112,202,.06),transparent 24%),
+    #0b0c10;
 }
 .panda-watch-page::before{
   background:
-    linear-gradient(90deg,rgba(8,8,13,.28),transparent 45%,rgba(27,21,43,.16)),
-    repeating-linear-gradient(0deg,rgba(255,255,255,.012) 0 1px,transparent 1px 5px);
-  opacity:.65;
+    linear-gradient(90deg,rgba(11,12,16,.30),transparent 45%,rgba(27,21,43,.12)),
+    repeating-linear-gradient(0deg,rgba(255,255,255,.01) 0 1px,transparent 1px 5px);
+  opacity:.55;
 }
 .panda-watch-topbar button{color:rgba(235,235,245,.58)}
 .panda-watch-topbar button:hover{color:#fff}
@@ -1416,7 +1416,7 @@
 }
 .panda-watch-brand__status::before{
   background:#c9b6ff;
-  box-shadow:0 0 0 3px rgba(201,182,255,.10),0 0 12px rgba(201,182,255,.38);
+  box-shadow:0 0 0 3px rgba(201,182,255,.08);
 }
 .panda-watch-list-btn{
   border-color:var(--watch-line)!important;
