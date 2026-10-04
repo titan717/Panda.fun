@@ -146,6 +146,21 @@ async function startServer() {
     }
   }
 
+  // Search-engine discovery
+  app.get("/robots.txt", (req, res) => {
+    const origin = req.protocol + "://" + req.get("host");
+    res.type("text/plain").send("User-agent: *\nAllow: /\nDisallow: /admin\nDisallow: /settings\nDisallow: /profile\nDisallow: /library\nSitemap: " + origin + "/sitemap.xml\n");
+  });
+
+  app.get("/sitemap.xml", async (req, res) => {
+    const origin = req.protocol + "://" + req.get("host");
+    try {
+      res.type("application/xml").send(await buildSitemap(origin));
+    } catch {
+      res.status(503).type("application/xml").send("<?xml version=\"1.0\" encoding=\"UTF-8\"?><urlset xmlns=\"http://www.sitemaps.org/schemas/sitemap/0.9\"></urlset>");
+    }
+  });
+
   // Health
   app.get(['/api/health', '/health'], (req, res) => proxyHandler('/api/v1/health', req, res));
 
@@ -223,7 +238,7 @@ async function startServer() {
     const distPath = path.join(process.cwd(), 'dist');
     app.use(express.static(distPath));
     app.get('*', (req, res) => {
-      res.sendFile(path.join(distPath, 'index.html'));
+      renderSeoHtml(distPath, req).then(html => res.type("html").send(html)).catch(() => res.sendFile(path.join(distPath, "index.html")));
     });
   }
 
