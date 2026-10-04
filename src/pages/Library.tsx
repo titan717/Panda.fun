@@ -31,10 +31,10 @@ function LibraryPandaScene({ savedMoments }: { savedMoments: number }) {
 
 function EmptyState({ tab, onBrowse }: { tab: Tab; onBrowse: () => void }) {
   const copy = {
-    continue: ['Nothing to continue', 'Start watching something and your progress will appear here.'],
-    watchlist: ['Your watchlist is empty', 'Save movies and series you want to watch later.'],
-    favorites: ['No favourites yet', 'Keep the titles you love in one simple place.'],
-    completed: ['Nothing completed yet', 'Finished titles will be collected here.'],
+    continue: ['Nothing to continue', 'Start watching something and your progress will appear here.', 'Find something to watch'],
+    watchlist: ['Your watchlist is empty', 'Save movies and series you want to watch later.', 'Browse titles'],
+    favorites: ['No favourites yet', 'Keep the titles you love in one simple place.', 'Find favourites'],
+    completed: ['Nothing completed yet', 'Finished titles will be collected here.', 'Start watching'],
   }[tab];
 
   return (
@@ -42,7 +42,7 @@ function EmptyState({ tab, onBrowse }: { tab: Tab; onBrowse: () => void }) {
       <div className="kinoma-library-empty__icon"><Sparkles size={22} /></div>
       <h3>{copy[0]}</h3>
       <p>{copy[1]}</p>
-      <button type="button" onClick={onBrowse}>Discover something</button>
+      <button type="button" onClick={onBrowse}>{copy[2]}</button>
     </div>
   );
 }
@@ -188,9 +188,10 @@ export function Library() {
 
         <section className="kinoma-library-discovery">
           <div>
-            <span className="kinoma-eyebrow">Built for what comes next</span>
-            <h2>Keep your little collection close.</h2>
-            <p>Save something you like. Panda will keep it here.</p>
+            <span className="kinoma-eyebrow">A little nudge from Panda</span>
+            <h2>Find your next favourite.</h2>
+            <p>Browse something new, then save it here when you find a title worth keeping.</p>
+            <button type="button" className="kinoma-library-discovery__cta" onClick={browse}>Browse titles</button>
           </div>
           <div className="kinoma-library-discovery__art" aria-hidden="true">
             <span /><span /><span />
