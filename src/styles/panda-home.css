@@ -103,7 +103,7 @@
 
 .panda-home-v2__rail {
   display: grid;
-  grid-template-columns: repeat(6, minmax(0, 1fr));
+  grid-template-columns: repeat(5, minmax(0, 1fr));
   gap: 15px;
 }
 
@@ -1582,4 +1582,132 @@
 }
 @media(prefers-reduced-motion:reduce){
   .panda-adsterra{scroll-behavior:auto}
+}
+
+
+/* Final cross-device content polish */
+.panda-home-v2,
+.panda-home-v2__inner,
+.panda-home-v2__section,
+.panda-home-v2__section-head,
+.panda-home-v2__section-title,
+.panda-content-card,
+.panda-discovery-panel {
+  min-width: 0;
+}
+
+.panda-home-v2__section-title p {
+  overflow-wrap: anywhere;
+}
+
+.panda-content-card__copy strong {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.panda-content-card__copy span {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+@media (max-width: 1050px) {
+  .panda-home-v2__rail {
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 760px) {
+  .panda-home-v2__section-head {
+    align-items: flex-start;
+    gap: 10px;
+  }
+
+  .panda-home-v2__see-all {
+    flex: 0 0 auto;
+    padding-top: 3px;
+  }
+
+  .panda-home-v2__section-title h3 {
+    font-size: clamp(18px, 5vw, 22px);
+  }
+
+  .panda-home-v2__section-title p {
+    font-size: 11px;
+    line-height: 1.5;
+  }
+
+  .panda-home-hover-trailer {
+    z-index: 110;
+    bottom: calc(74px + env(safe-area-inset-bottom));
+  }
+}
+
+@media (max-width: 520px) {
+  .panda-home-v2__inner {
+    width: min(100% - 18px, 560px);
+  }
+
+  .panda-home-v2__section {
+    margin: 28px 0;
+  }
+
+  .panda-home-v2__rail {
+    gap: 9px;
+    padding-bottom: 7px;
+  }
+
+  .panda-content-card {
+    flex-basis: clamp(128px, 39vw, 150px);
+  }
+
+  .panda-content-card__media {
+    border-radius: 14px;
+  }
+
+  .panda-content-card__top {
+    inset: 8px 8px auto;
+  }
+
+  .panda-content-card__badge {
+    max-width: calc(100% - 38px);
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    font-size: 8px;
+    padding: 4px 7px;
+  }
+
+  .panda-content-card__quick {
+    width: 28px;
+    height: 28px;
+  }
+
+  .panda-content-card__copy {
+    padding-top: 8px;
+  }
+
+  .panda-content-card__copy strong {
+    font-size: 11px;
+  }
+
+  .panda-content-card__copy span {
+    font-size: 8px;
+  }
+
+  .panda-home-hover-trailer {
+    right: 8px;
+    width: calc(100vw - 16px);
+    border-radius: 14px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .panda-content-card,
+  .panda-content-card img,
+  .panda-content-card__quick,
+  .panda-content-card__play {
+    transition: none !important;
+  }
 }
