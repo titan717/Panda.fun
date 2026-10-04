@@ -96,6 +96,16 @@ export function Details() {
     return () => { active = false; };
   }, [data, id, kind, selectedSeason, seasonItems.length]);
 
+  useEffect(() => {
+    if (!data || !id) return;
+    historyUtil.saveMeta(id, {
+      title: titleOf(data, id),
+      image: data?.image || DEFAULT_POSTER,
+      animeId: id,
+      seasonNumber: selectedSeason
+    });
+  }, [data, id, selectedSeason]);
+
   const title = titleOf(data, id || 'Untitled');
   const synopsis = cleanText(data?.description) || 'No synopsis is available for this title yet.';
   const poster = data?.image || DEFAULT_POSTER;
