@@ -17,8 +17,8 @@ const FALLBACK = [
 ];
 
 function LibraryPandaScene({ savedMoments }: { savedMoments: number }) {
-  return <div className="panda-library-scene" aria-hidden="true">
-    <div className="panda-library-tv"><span className="panda-library-tv__saved"><b>{savedMoments}</b><small>saved moments</small></span></div>
+  return <div className="panda-library-scene" aria-label={`${savedMoments} saved moments in Panda Library`} role="img">
+    <div className="panda-library-tv"><div className="panda-library-tv__screen"><span className="panda-library-tv__screen-glow" /><span className="panda-library-tv__saved"><b>{savedMoments}</b><small>saved moments</small></span></div></div>
     <div className="panda-library-panda">
       <span className="panda-library-head"><i className="panda-library-eye panda-library-eye--left" /><i className="panda-library-eye panda-library-eye--right" /><span className="panda-library-muzzle" /></span>
       <span className="panda-library-body" />
@@ -109,6 +109,7 @@ export function Library() {
   };
 
   const browse = () => { window.location.href = '/home'; };
+  const savedMoments = history.length + watchlist.length + favorites.length + completed.length;
 
 
   return (
@@ -121,7 +122,7 @@ export function Library() {
             <h1>Library</h1>
             <p>Everything you want to keep close — without the clutter.</p>
           </div>
-          <LibraryPandaScene savedMoments={history.length + watchlist.length + favorites.length + completed.length} />
+          <LibraryPandaScene savedMoments={savedMoments} />
         </header>
 
         <nav className="kinoma-library-tabs" aria-label="Library sections">
@@ -138,6 +139,15 @@ export function Library() {
             </button>
           ))}
         </nav>
+
+        <section className="panda-saved-moments" aria-label="Saved moments">
+          <div className="panda-saved-moments__copy">
+            <span className="kinoma-eyebrow">Inside Panda&apos;s TV</span>
+            <h2>Saved Moments</h2>
+            <p>Your watch history and saved titles, gathered into one little corner of Panda&apos;s world.</p>
+          </div>
+          <div className="panda-saved-moments__count"><strong>{savedMoments}</strong><span>moments</span></div>
+        </section>
 
         <div className="kinoma-library-toolbar">
           <label className="kinoma-library-search">
