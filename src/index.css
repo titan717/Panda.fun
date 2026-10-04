@@ -3057,7 +3057,10 @@ p {
   background: rgba(255,255,255,.05);
 }
 
-.kinoma-search-results { margin-top: clamp(48px, 7vw, 84px); }
+.kinoma-search-results { margin-top: clamp(32px, 4vw, 52px); }
+
+.kinoma-search-page.is-searching .kinoma-search-head h1 { font-size: clamp(2rem, 3.6vw, 4rem); line-height: 1; }
+.kinoma-search-page.is-searching .kinoma-search-head p { margin-top: 12px; }
 
 .kinoma-search-results__heading {
   display: flex;
