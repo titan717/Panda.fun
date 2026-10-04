@@ -5,7 +5,7 @@ import { Clock3, Filter, Search as SearchIcon, Sparkles, X } from 'lucide-react'
 import { Link, useLocation } from 'wouter';
 import { updateSEO } from '../lib/seo';
 import { trackGAEvent } from '../lib/analytics';
-import { slugifyTitle } from '../lib/slug';
+import { buildDetailsHref } from '../lib/mediaRoute';
 import { preferencesUtil } from '../lib/preferences';
 import { api, MovieApiError } from '../lib/api';
 import type { AnimeItem } from '../types';
@@ -22,7 +22,7 @@ const mapItem = (item: AnimeItem): SearchItem => {
     image: item.image,
     rating: Number(item.rating || 0) || 0,
     year: item.releaseDate ? Number(String(item.releaseDate).slice(0, 4)) || undefined : undefined,
-    href: '/details/' + slugifyTitle(item.title) + '?type=' + type,
+    href: buildDetailsHref(item.id, type),
   };
 };
 
