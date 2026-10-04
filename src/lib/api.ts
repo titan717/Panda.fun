@@ -1,5 +1,6 @@
 import type { AnimeDetails, AnimeItem, Episode, AnimeSeasonItem } from '../types';
 import { slugifyTitle } from './slug';
+import { trackApiFailure } from './analytics';
 
 export type MovieApiMedia = {
   id: string;
@@ -86,6 +87,7 @@ export const MOVIE_API_FALLBACK_URL = rawFallback.replace(/\/+$/, '');
 function reportApiFailure(error: unknown, path: string) {
   try {
     const detail = error instanceof MovieApiError ? { status: error.status, code: error.code } : { status: 0, code: 'NETWORK_ERROR' };
+    trackApiFailure(path, detail.status, detail.code);
     window.dispatchEvent(new CustomEvent('panda:api-failure', { detail: { path, ...detail } }));
   } catch {}
 }
