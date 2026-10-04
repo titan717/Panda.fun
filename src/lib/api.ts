@@ -392,12 +392,13 @@ export const api = {
     return { results: data.results.map(toAnimeItem), total: data.total };
   },
 
-  async getRecommendations(id: string) {
+  async getRecommendations(id: string, signal?: AbortSignal) {
     const media = mediaFromId(id);
     if (!media || media.provider !== 'tmdb') return { results: [] as AnimeItem[] };
     const data = await request<MovieApiPage>(
       `/api/v1/recommendations/${media.id}`,
-      { type: media.type }
+      { type: media.type },
+      { signal }
     );
     return { results: data.results.map(toAnimeItem) };
   },
@@ -431,23 +432,23 @@ export const api = {
     return { available: Boolean(trailer), trailer };
   },
 
-  async getDetails(id: string): Promise<AnimeDetails> {
+  async getDetails(id: string, signal?: AbortSignal): Promise<AnimeDetails> {
     const media = mediaFromId(id);
     if (!media) throw new MovieApiError('This title is not a MovieApi media ID.', 400, 'INVALID_MEDIA_ID');
 
     const path = media.provider === 'tvmaze'
       ? `/api/v1/tv/${media.id}`
       : `/api/v1/tmdb/${media.type === 'movie' ? 'movie' : 'tv'}/${media.id}`;
-    const data = await request<MovieApiMedia>(path);
+    const data = await request<MovieApiMedia>(path, undefined, { signal });
     return toDetails(data);
   },
 
-  async getSeasons(id: string) {
+  async getSeasons(id: string, signal?: AbortSignal) {
     const media = mediaFromId(id);
     if (!media || media.type !== 'tv') return { seasons: [] as AnimeSeasonItem[] };
 
     if (media.provider === 'tvmaze') {
-      const data = await request<{ seasons: any[] }>(`/api/v1/tv/${media.id}/seasons`);
+      const data = await request<{ seasons: any[] }>(`/api/v1/tv/${media.id}/seasons`, undefined, { signal });
       return {
         seasons: (data.seasons || []).map((season: any): AnimeSeasonItem => ({
           seasonNumber: Number(season.number || 1),
@@ -458,7 +459,7 @@ export const api = {
       };
     }
 
-    const tmdb = await request<MovieApiMedia & { numberOfSeasons?: number }>(`/api/v1/tmdb/tv/${media.id}`, undefined, undefined, 300_000);
+    const tmdb = await request<MovieApiMedia & { numberOfSeasons?: number }>(`/api/v1/tmdb/tv/${media.id}`, undefined, { signal }, 300_000);
     const tvmazeId = Number(tmdb.ids?.tvmaze || 0);
     if (!tvmazeId) {
       const count = Math.max(0, Number(tmdb.numberOfSeasons || 0));
@@ -466,27 +467,27 @@ export const api = {
         seasonNumber: index + 1, animeId: id, title: `Season ${index + 1}`, episodeCount: 0
       })) };
     }
-    const data = await request<{ seasons: any[] }>(`/api/v1/tv/${tvmazeId}/seasons`, undefined, undefined, 300_000);
+    const data = await request<{ seasons: any[] }>(`/api/v1/tv/${tvmazeId}/seasons`, undefined, { signal }, 300_000);
     return { seasons: (data.seasons || []).map((season: any): AnimeSeasonItem => ({
       seasonNumber: Number(season.number || 1), animeId: id, title: season.name || `Season ${season.number || 1}`,
       episodeCount: Number(season.episodeOrder || 0)
     })) };
   },
 
-  async getSeasonEpisodes(id: string, seasonNumber: number) {
+  async getSeasonEpisodes(id: string, seasonNumber: number, signal?: AbortSignal) {
     const media = mediaFromId(id);
     if (!media || media.type !== 'tv') return { anime_id: id, season_number: seasonNumber, season_anime_id: id, episodes: [] as Episode[] };
 
     let data: { episodes: any[] };
     if (media.provider === 'tvmaze') {
-      data = await request<{ episodes: any[] }>(`/api/v1/tv/${media.id}/season/${seasonNumber}`, undefined, undefined, 300_000);
+      data = await request<{ episodes: any[] }>(`/api/v1/tv/${media.id}/season/${seasonNumber}`, undefined, { signal }, 300_000);
     } else {
-      const tmdb = await request<MovieApiMedia>(`/api/v1/tmdb/tv/${media.id}`, undefined, undefined, 300_000);
+      const tmdb = await request<MovieApiMedia>(`/api/v1/tmdb/tv/${media.id}`, undefined, { signal }, 300_000);
       const tvmazeId = Number(tmdb.ids?.tvmaze || 0);
       if (tvmazeId) {
-        data = await request<{ episodes: any[] }>(`/api/v1/tv/${tvmazeId}/season/${seasonNumber}`, undefined, undefined, 300_000);
+        data = await request<{ episodes: any[] }>(`/api/v1/tv/${tvmazeId}/season/${seasonNumber}`, undefined, { signal }, 300_000);
       } else {
-        data = await request<{ episodes: any[] }>(`/api/v1/tmdb/tv/${media.id}/season/${seasonNumber}`, undefined, undefined, 300_000);
+        data = await request<{ episodes: any[] }>(`/api/v1/tmdb/tv/${media.id}/season/${seasonNumber}`, undefined, { signal }, 300_000);
       }
     }
 
@@ -499,7 +500,7 @@ export const api = {
     };
   },
 
-  async getWatchLink(id: string, season = 1, episode = 1) {
+  async getWatchLink(id: string, season = 1, episode = 1, signal?: AbortSignal) {
     const media = mediaFromId(id);
     if (!media) throw new MovieApiError('Playback requires a MovieApi media ID.', 400, 'INVALID_MEDIA_ID');
 
@@ -507,7 +508,7 @@ export const api = {
     // video server. English audio and subtitles are requested by default.
     let tmdbId = media.id;
     if (media.provider === 'tvmaze') {
-      const details = await request<MovieApiMedia>(`/api/v1/tv/${media.id}`, undefined, undefined, 300_000);
+      const details = await request<MovieApiMedia>(`/api/v1/tv/${media.id}`, undefined, { signal }, 300_000);
       tmdbId = Number(details.ids?.tmdb || 0);
       if (!tmdbId) throw new MovieApiError('Unable to resolve this title to a TMDB ID for EmbedWave playback.', 503, 'TMDB_ID_UNAVAILABLE');
     } else {
