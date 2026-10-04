@@ -10,7 +10,6 @@ import { historyUtil } from '../lib/history';
 import { updateSEO } from '../lib/seo';
 import { trackGAEvent } from '../lib/analytics';
 import { buildDetailsHref, resolveRouteMediaId } from '../lib/mediaRoute';
-import { slugifyTitle } from '../lib/slug';
 
 function cleanText(value: unknown) { return typeof value === 'string' ? value.replace(/<[^>]*>/g, '').trim() : ''; }
 function titleOf(data: any, fallback: string) { return typeof data?.title === 'string' ? data.title : data?.title?.english || data?.title?.romaji || data?.title?.native || fallback; }
