@@ -7,7 +7,7 @@ import { api, MovieApiError, MovieApiMedia } from '../lib/api';
 import { trackGAEvent } from '../lib/analytics';
 import { libraryManager } from '../lib/library';
 import { updateSEO } from '../lib/seo';
-import { slugifyTitle } from '../lib/slug';
+import { buildDetailsHref } from '../lib/mediaRoute';
 import { ModernContinueWatching } from '../components/ui/modern/ModernContinueWatching';
 import '../styles/panda-home.css';
 
@@ -121,7 +121,7 @@ function PandaContentCard({
       onMouseLeave={onLeave}
     >
       <Link
-        href={`/details/${slugifyTitle(item.title)}?type=${type}`}
+        href={buildDetailsHref(item.id, type)}
         className="panda-content-card__link"
         aria-label={`Open ${item.title}`}
         onFocus={() => onHover(item)}
@@ -391,7 +391,7 @@ export function Home() {
                 <p>One tap. One title. No scrolling required.</p>
               </div>
               {surprisePick ? (
-                <Link href={`/details/${slugifyTitle(surprisePick.title)}?type=${surprisePick.type === 'movie' ? 'movie' : 'series'}`} className="panda-surprise__pick"
+                <Link href={buildDetailsHref(surprisePick.id, surprisePick.type === 'movie' ? 'movie' : 'series')} className="panda-surprise__pick"
                   onClick={() => trackGAEvent('surprise_select', { content_type: surprisePick.type === 'movie' ? 'movie' : 'series', title: surprisePick.title })}>
                   <PandaPoster item={surprisePick} priority />
                   <span><strong>{surprisePick.title}</strong><small>{[surprisePick.year, surprisePick.rating ? `★ ${Number(surprisePick.rating).toFixed(1)}` : null].filter(Boolean).join(' · ')}</small></span>
@@ -416,7 +416,7 @@ export function Home() {
                   {trending.slice(0, 3).map((item, index) => (
                     <Link
                       key={item.id}
-                      href={`/details/${slugifyTitle(item.title)}?type=${item.type === 'movie' ? 'movie' : 'series'}`}
+                      href={buildDetailsHref(item.id, item.type === 'movie' ? 'movie' : 'series')}
                       className="panda-pulse__item"
                       onClick={() => trackGAEvent('panda_pulse_select', { content_type: item.type === 'movie' ? 'movie' : 'series', rank: index + 1, title: item.title })}
                       aria-label={`Open ${item.title}, Panda Pulse rank ${index + 1}`}
