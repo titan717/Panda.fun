@@ -716,7 +716,10 @@
 .panda-watch-loading{min-height:72vh;display:grid;place-items:center;align-content:center;gap:11px;color:rgba(235,225,211,.36)}
 .panda-watch-loading span{width:25px;height:25px;border:2px solid rgba(235,225,211,.1);border-top-color:rgba(235,225,211,.75);border-radius:50%;animation:panda-watch-spin .8s linear infinite}
 .panda-watch-loading p{font-size:10px}
-.panda-watch-error{width:min(100%,1680px);box-sizing:border-box;margin:0 auto 14px;padding:11px 13px;border:1px solid rgba(226,155,133,.16);border-radius:10px;background:rgba(89,49,39,.16);color:rgba(255,210,195,.78);font-size:10px}
+.panda-watch-error{width:min(100%,1680px);box-sizing:border-box;margin:0 auto 14px;padding:10px 12px;display:flex;align-items:center;justify-content:space-between;gap:14px;border:1px solid rgba(226,155,133,.16);border-radius:10px;background:rgba(89,49,39,.16);color:rgba(255,210,195,.78);font-size:10px}
+.panda-watch-error button{flex:0 0 auto;border:1px solid rgba(255,210,195,.16);border-radius:8px;background:rgba(255,255,255,.04);padding:7px 10px;color:#ffe9dd;font:inherit;font-size:9px;font-weight:800;cursor:pointer}
+.panda-watch-error button:hover,.panda-watch-error button:focus-visible{background:rgba(255,255,255,.08);border-color:rgba(255,210,195,.3)}
+.panda-watch-error button:focus-visible{outline:2px solid rgba(255,255,255,.4);outline-offset:2px}
 .panda-watch-empty{padding:22px;color:rgba(235,225,211,.3);font-size:10px;text-align:center}
 @keyframes panda-watch-spin{to{transform:rotate(360deg)}}
 @keyframes panda-watch-fade-in{from{opacity:0;transform:translateY(2px)}to{opacity:1;transform:none}}
