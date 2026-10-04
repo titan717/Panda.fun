@@ -158,24 +158,14 @@ export function Watch() {
 
   const shareTitle = title || 'Panda.fun';
   const shareText = type === 'movie'
-    ? `Watch ${shareTitle} on Panda.fun 🐼\
-\
-${window.location.href}`
-    : `Watch ${shareTitle} on Panda.fun 🐼\
-Season ${season} • Episode ${episode}${currentEpisode?.title ? ` — ${currentEpisode.title}` : ''}\
-\
-${window.location.href}`;
+    ? `Watch ${shareTitle} on Panda.fun 🐼\n\n${window.location.href}`
+    : `Watch ${shareTitle} on Panda.fun 🐼\nSeason ${season} • Episode ${episode}${currentEpisode?.title ? ` — ${currentEpisode.title}` : ''}\n\n${window.location.href}`;
 
   const shareCurrentPage = async () => {
     const url = window.location.href;
     const copyText = type === 'movie'
-      ? `Watch ${shareTitle} on Panda.fun 🐼\
-\
-${url}`
-      : `Watch ${shareTitle} on Panda.fun 🐼\
-Season ${season} • Episode ${episode}${currentEpisode?.title ? ` — ${currentEpisode.title}` : ''}\
-\
-${url}`;
+      ? `Watch ${shareTitle} on Panda.fun 🐼\n\n${url}`
+      : `Watch ${shareTitle} on Panda.fun 🐼\nSeason ${season} • Episode ${episode}${currentEpisode?.title ? ` — ${currentEpisode.title}` : ''}\n\n${url}`;
 
     try {
       if (typeof navigator.share === 'function') {
