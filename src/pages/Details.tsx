@@ -1,4 +1,5 @@
 import React, { useEffect, useMemo, useState } from 'react';
+import { Footer } from '../components/ui/Footer';
 import { useLocation, useRoute } from 'wouter';
 import { Play, Plus, Check, ChevronRight, Film, Tv, Clock3 } from 'lucide-react';
 import { api, resolveMediaIdFromSlug } from '../lib/api';
