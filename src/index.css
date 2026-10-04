@@ -5919,3 +5919,215 @@ body { min-width: 320px; overflow-x: hidden; }
     margin:0 auto 38px;
   }
 }
+
+
+/* =========================================================
+   PANDA.FUN — sidebar refinement
+   ========================================================= */
+.panda-mobile-topbar{
+  display:none;
+}
+
+@media (min-width:701px){
+  .kinoma-sidebar{
+    background:
+      linear-gradient(180deg,rgba(18,15,14,.96),rgba(11,10,10,.94)) !important;
+    border-right:1px solid rgba(232,208,192,.075) !important;
+    box-shadow:18px 0 55px rgba(0,0,0,.20),inset -1px 0 rgba(255,255,255,.018) !important;
+    backdrop-filter:blur(24px) saturate(.92);
+  }
+
+  .kinoma-sidebar__top{
+    padding:16px 12px 14px !important;
+    border-bottom:1px solid rgba(246,242,238,.055);
+  }
+
+  .kinoma-sidebar__brand{
+    border-radius:14px !important;
+  }
+
+  .kinoma-sidebar__nav{
+    padding:18px 10px !important;
+  }
+
+  .kinoma-sidebar__nav-group{
+    gap:5px !important;
+  }
+
+  .kinoma-sidebar__item{
+    min-height:46px;
+    padding:0 12px !important;
+    border:1px solid transparent !important;
+    border-radius:14px !important;
+    color:rgba(246,242,238,.52) !important;
+    transition:
+      color 160ms ease,
+      background-color 160ms ease,
+      border-color 160ms ease,
+      transform 160ms var(--ease-kinoma) !important;
+  }
+
+  .kinoma-sidebar__item:hover{
+    color:rgba(246,242,238,.88) !important;
+    background:rgba(232,208,192,.045) !important;
+    border-color:rgba(232,208,192,.055) !important;
+    transform:translateX(1px);
+  }
+
+  .kinoma-sidebar__item.is-active{
+    color:#fffaf6 !important;
+    background:linear-gradient(90deg,rgba(184,77,65,.16),rgba(184,77,65,.055)) !important;
+    border-color:rgba(193,147,95,.13) !important;
+    box-shadow:inset 2px 0 0 rgba(193,147,95,.78),0 8px 24px rgba(0,0,0,.10) !important;
+  }
+
+  .kinoma-sidebar__item.is-active svg{
+    color:#e8d0c0;
+    filter:drop-shadow(0 0 8px rgba(193,147,95,.16));
+  }
+
+  .kinoma-sidebar__about{
+    margin-top:6px;
+    padding-top:10px;
+    border-top:1px solid rgba(246,242,238,.045);
+  }
+
+  .kinoma-sidebar__submenu{
+    margin:4px 0 4px 28px !important;
+    padding-left:10px;
+    border-left:1px solid rgba(193,147,95,.12);
+  }
+
+  .kinoma-sidebar__submenu-item{
+    min-height:34px;
+    padding:7px 10px !important;
+    border-radius:10px !important;
+    color:rgba(246,242,238,.43) !important;
+    font-size:10px !important;
+    transition:color 150ms ease,background-color 150ms ease !important;
+  }
+
+  .kinoma-sidebar__submenu-item:hover{
+    color:#f6f2ee !important;
+    background:rgba(232,208,192,.045) !important;
+  }
+
+  .kinoma-sidebar__submenu-item.is-active{
+    color:#e8d0c0 !important;
+    background:rgba(184,77,65,.075) !important;
+  }
+
+  .kinoma-sidebar__profile-area{
+    padding:12px !important;
+    border-top:1px solid rgba(246,242,238,.055);
+  }
+
+  .kinoma-sidebar__profile{
+    min-height:48px;
+    padding:6px 9px !important;
+    border:1px solid rgba(246,242,238,.055) !important;
+    border-radius:14px !important;
+    background:rgba(255,255,255,.022) !important;
+  }
+
+  .kinoma-sidebar__profile:hover{
+    background:rgba(232,208,192,.055) !important;
+    border-color:rgba(232,208,192,.10) !important;
+  }
+
+  .kinoma-sidebar__avatar{
+    background:linear-gradient(145deg,rgba(193,147,95,.16),rgba(184,77,65,.09)) !important;
+    border-color:rgba(193,147,95,.15) !important;
+  }
+
+  .kinoma-sidebar__pin{
+    border-color:rgba(246,242,238,.065) !important;
+    background:rgba(255,255,255,.025) !important;
+    color:rgba(246,242,238,.48) !important;
+  }
+}
+
+@media (max-width:700px){
+  .panda-mobile-topbar{
+    position:fixed;
+    top:0;
+    left:0;
+    right:0;
+    z-index:121;
+    height:58px;
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    padding:0 14px;
+    padding-top:env(safe-area-inset-top);
+    background:rgba(9,8,8,.84);
+    border-bottom:1px solid rgba(232,208,192,.07);
+    box-shadow:0 8px 30px rgba(0,0,0,.18);
+    backdrop-filter:blur(20px) saturate(.9);
+  }
+
+  .panda-mobile-topbar__brand{
+    display:inline-flex;
+    align-items:center;
+    justify-content:center;
+    width:38px;
+    height:38px;
+    border-radius:12px;
+    background:rgba(255,255,255,.035);
+    border:1px solid rgba(246,242,238,.065);
+  }
+
+  .panda-mobile-topbar__logo{
+    max-width:26px;
+  }
+
+  .panda-mobile-topbar__actions{
+    display:flex;
+    align-items:center;
+    gap:6px;
+  }
+
+  .panda-mobile-topbar__action{
+    width:38px;
+    height:38px;
+    display:grid;
+    place-items:center;
+    border:1px solid rgba(246,242,238,.065);
+    border-radius:12px;
+    color:rgba(246,242,238,.56);
+    background:rgba(255,255,255,.025);
+  }
+
+  .panda-mobile-topbar__action.is-active{
+    color:#fffaf6;
+    background:rgba(184,77,65,.13);
+    border-color:rgba(193,147,95,.14);
+  }
+
+  .panda-app-content{
+    padding-top:58px !important;
+  }
+
+  .kinoma-sidebar{
+    background:rgba(10,9,9,.92) !important;
+    border-top-color:rgba(232,208,192,.075) !important;
+  }
+
+  .kinoma-sidebar__item.is-active{
+    color:#fffaf6 !important;
+    background:rgba(184,77,65,.11) !important;
+    box-shadow:inset 0 0 0 1px rgba(193,147,95,.10) !important;
+  }
+
+  .kinoma-sidebar__item.is-active svg{
+    color:#e8d0c0;
+  }
+}
+
+@media (prefers-reduced-motion:reduce){
+  .kinoma-sidebar__item,
+  .panda-mobile-topbar__action{
+    transform:none !important;
+    transition:none !important;
+  }
+}
