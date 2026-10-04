@@ -5,6 +5,7 @@ import { Search, Loader2 } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 import { api } from '../../lib/api';
 import { DEFAULT_POSTER } from '../../types';
+import { slugifyTitle } from '../../lib/slug';
 
 export function SearchBar() {
   const [query, setQuery] = useState('');
@@ -104,7 +105,7 @@ export function SearchBar() {
                   <div 
                     key={item.id}
                     onClick={() => {
-                      setLocation(`/details/${item.id}`);
+                      setLocation(`/details/${slugifyTitle(typeof item.title === 'string' ? item.title : (item.title?.english || item.title?.romaji || 'Untitled'))}?type=${item.type === 'movie' ? 'movie' : 'series'}`);
                       setIsOpen(false);
                       setQuery('');
                     }}
