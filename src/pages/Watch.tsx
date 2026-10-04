@@ -43,6 +43,13 @@ export function Watch() {
   const [inList, setInList] = useState(false);
   const [shareMessage, setShareMessage] = useState('');
 
+  useEffect(() => {
+    const nextSeason = Number(parsed?.[2] || 1);
+    const nextEpisode = Number(parsed?.[3] || 1);
+    setSeason(Number.isFinite(nextSeason) && nextSeason > 0 ? nextSeason : 1);
+    setEpisode(Number.isFinite(nextEpisode) && nextEpisode > 0 ? nextEpisode : 1);
+  }, [raw]);
+
   const type = mediaType(id, queryType, data);
   const title = titleOf(data, id || 'Untitled');
   const currentEpisode = episodes.find(item => item.number === episode);
