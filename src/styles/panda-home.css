@@ -1537,20 +1537,7 @@
    PANDA.FUN — sponsored banner placement
    Compact, centered, and hidden until the ad provider renders content.
    ========================================================= */
-.panda-adsterra{
-  width:min(100%,980px);
-  min-height:0;
-  margin:14px auto 24px;
-  padding:0;
-  box-sizing:border-box;
-  border:0;
-  border-radius:14px;
-  background:transparent;
-  overflow:hidden;
-  opacity:0;
-  visibility:hidden;
-  pointer-events:none;
-}
+
 .panda-adsterra.is-loaded{
   min-height:92px;
   padding:8px;
