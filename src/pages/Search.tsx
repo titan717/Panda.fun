@@ -104,7 +104,7 @@ export function Search() {
   };
   const chooseRecent = (value: string) => { setQuery(value); setSubmittedQuery(value); setFilter('all'); trackGAEvent('search', { content_type: 'catalog', has_query: true, source: 'recent_search' }); setLocation('/search?keyword=' + encodeURIComponent(value)); };
 
-  return <main className="kinoma-search-page">
+  return <main className={"kinoma-search-page" + (isSearching ? " is-searching" : "")}>
     <div className="kinoma-search-page__ambient" aria-hidden="true" />
     <div className="kinoma-search-page__inner">
       <header className="kinoma-search-head">
