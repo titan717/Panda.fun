@@ -36,6 +36,7 @@ export function Watch() {
   const [season, setSeason] = useState(Number(parsed?.[2] || 1));
   const [episode, setEpisode] = useState(Number(parsed?.[3] || 1));
   const [source, setSource] = useState<string>('');
+  const [sourceLoading, setSourceLoading] = useState(false);
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(true);
   const [inList, setInList] = useState(false);
@@ -93,9 +94,11 @@ export function Watch() {
   useEffect(() => {
     if (!data) return;
     let active = true;
+    setSourceLoading(true);
+    setSource('');
     api.getWatchLink(id, type === 'series' ? season : 1, type === 'series' ? episode : 1)
-      .then(result => { if (!active) return; setSource(result.url); trackGAEvent('watch_start', { content_type: type, title }); })
-      .catch(err => active && setError(err instanceof Error ? err.message : 'Playback source unavailable.'));
+      .then(result => { if (!active) return; setSource(result.url); setSourceLoading(false); trackGAEvent('watch_start', { content_type: type, title }); })
+      .catch(err => { if (!active) return; setSourceLoading(false); setError(err instanceof Error ? err.message : 'Playback source unavailable.'); });
     return () => { active = false; };
   }, [data, id, type, season, episode]);
 
@@ -215,16 +218,34 @@ export function Watch() {
       <section className={'panda-watch-stage ' + (type === 'series' ? 'is-series' : 'is-movie')}>
         <div className="panda-watch-player">
           {source ? (
-            <iframe
-              key={source}
-              src={source}
-              title={'Watch ' + title}
-              allow="autoplay; fullscreen; picture-in-picture; encrypted-media"
-              allowFullScreen
-              referrerPolicy="no-referrer"
-              loading="eager"
-            />
-          ) : <div className="panda-watch-player-empty"><Film size={32} /><strong>Playback unavailable</strong><span>The EmbedWave player could not be resolved for this title.</span></div>}
+            <>
+              {sourceLoading && (
+                <div className="panda-watch-player-loading" role="status" aria-live="polite">
+                  <span aria-hidden="true" />
+                  <strong>Preparing your stream…</strong>
+                  <small>Connecting to EmbedWave</small>
+                </div>
+              )}
+              <iframe
+                key={source}
+                src={source}
+                title={'Watch ' + title}
+                allow="autoplay; fullscreen; picture-in-picture; encrypted-media"
+                allowFullScreen
+                referrerPolicy="no-referrer"
+                loading="eager"
+                onLoad={() => setSourceLoading(false)}
+              />
+            </>
+          ) : sourceLoading ? (
+            <div className="panda-watch-player-loading" role="status" aria-live="polite">
+              <span aria-hidden="true" />
+              <strong>Preparing your stream…</strong>
+              <small>Connecting to EmbedWave</small>
+            </div>
+          ) : (
+            <div className="panda-watch-player-empty"><Film size={32} /><strong>Playback unavailable</strong><span>The EmbedWave player could not be resolved for this title.</span></div>
+          )}
         </div>
 
       <section className="panda-watch-info">
