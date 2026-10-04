@@ -5910,9 +5910,6 @@ body { min-width: 320px; overflow-x: hidden; }
   position:relative;
   z-index:3;
 }
-.panda-landing-ad-slot .panda-adsterra{
-  margin:0 auto;
-}
 @media(max-width:700px){
   .panda-landing-ad-slot{
     width:min(calc(100% - 22px),1220px);
