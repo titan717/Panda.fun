@@ -1890,3 +1890,13 @@
 .panda-shared-footer__top:focus-visible{outline:2px solid rgba(242,198,169,.35);outline-offset:2px}
 @media(max-width:620px){.panda-shared-footer__bottom{display:flex;flex-wrap:wrap;gap:8px}.panda-shared-footer__top{margin-left:0}}
 @media(prefers-reduced-motion:reduce){.panda-shared-footer__top{scroll-behavior:auto}}
+
+
+/* Final accessibility pass */
+:focus-visible{outline-color:rgba(242,198,169,.55)}
+@media(max-width:760px){
+  .panda-content-card:focus-visible,.panda-pulse__item:focus-visible{outline-offset:2px}
+}
+@media(prefers-reduced-motion:reduce){
+  html{scroll-behavior:auto!important}
+}
