@@ -265,24 +265,15 @@ export function SettingsModal() {
 
                 {/* Default playback */}
                 <div className="pt-2">
-                  <h4 className="text-xs font-bold uppercase tracking-wider text-gray-400 mb-2">Default playback</h4>
-                  <div className="space-y-2.5">
-                    <label className="flex items-center justify-between gap-4 p-3.5 bg-[#13141c] border border-[#222230] rounded-xl">
-                      <span className="flex items-center gap-3 min-w-0"><Server className="w-4 h-4 text-[#c084fc]" /><span><strong className="block text-xs text-white">Video provider</strong><small className="text-[11px] text-gray-400">Preferred stream server for new playback</small></span></span>
-                      <select value={playbackPreferences.videoProvider} onChange={e => updatePlaybackPreference('videoProvider', e.target.value as any)} className="bg-[#1c1c28] border border-[#2b2b3b] text-white text-xs rounded-lg px-2.5 py-2 outline-none"><option value="nxsha">Multi HD</option><option value="cinesrc">CineSrc</option><option value="videasy">Videasy</option></select>
-                    </label>
-                    <label className="flex items-center justify-between gap-4 p-3.5 bg-[#13141c] border border-[#222230] rounded-xl">
-                      <span className="flex items-center gap-3 min-w-0"><Volume2 className="w-4 h-4 text-[#c084fc]" /><span><strong className="block text-xs text-white">Audio language</strong><small className="text-[11px] text-gray-400">Preferred audio track when available</small></span></span>
-                      <select value={playbackPreferences.audioLanguage} onChange={e => updatePlaybackPreference('audioLanguage', e.target.value as any)} className="bg-[#1c1c28] border border-[#2b2b3b] text-white text-xs rounded-lg px-2.5 py-2 outline-none"><option value="en">English</option><option value="ja">Japanese</option><option value="ko">Korean</option><option value="es">Spanish</option><option value="hi">Hindi</option><option value="auto">Auto / Original</option></select>
-                    </label>
-                    <label className="flex items-center justify-between gap-4 p-3.5 bg-[#13141c] border border-[#222230] rounded-xl">
-                      <span className="flex items-center gap-3 min-w-0"><Captions className="w-4 h-4 text-[#c084fc]" /><span><strong className="block text-xs text-white">Subtitle language</strong><small className="text-[11px] text-gray-400">Preferred subtitle track when available</small></span></span>
-                      <select value={playbackPreferences.subtitleLanguage} onChange={e => updatePlaybackPreference('subtitleLanguage', e.target.value as any)} className="bg-[#1c1c28] border border-[#2b2b3b] text-white text-xs rounded-lg px-2.5 py-2 outline-none"><option value="en">English</option><option value="hi">Hindi</option><option value="es">Spanish</option><option value="ja">Japanese</option><option value="ko">Korean</option><option value="auto">Auto</option><option value="off">Off</option></select>
-                    </label>
-                    <label className="flex items-center justify-between gap-4 p-3.5 bg-[#13141c] border border-[#222230] rounded-xl">
-                      <span className="flex items-center gap-3 min-w-0"><Captions className="w-4 h-4 text-[#c084fc]" /><span><strong className="block text-xs text-white">Subtitle provider</strong><small className="text-[11px] text-gray-400">Provider used for subtitle preferences</small></span></span>
-                      <select value={playbackPreferences.subtitleProvider} onChange={e => updatePlaybackPreference('subtitleProvider', e.target.value as any)} className="bg-[#1c1c28] border border-[#2b2b3b] text-white text-xs rounded-lg px-2.5 py-2 outline-none"><option value="nitro">Nitro</option><option value="auto">Auto</option></select>
-                    </label>
+                  <h4 className="text-xs font-bold uppercase tracking-wider text-gray-400 mb-2">Playback provider</h4>
+                  <div className="p-3.5 bg-[#13141c] border border-[#222230] rounded-xl">
+                    <div className="flex items-center gap-3">
+                      <Play className="w-4 h-4 text-[#c084fc]" />
+                      <div>
+                        <strong className="block text-xs text-white">Vidy.st</strong>
+                        <small className="text-[11px] text-gray-400">Panda.fun now uses Vidy.st for all movie and TV playback.</small>
+                      </div>
+                    </div>
                   </div>
                 </div>
 
