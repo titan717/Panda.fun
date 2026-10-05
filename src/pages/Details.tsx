@@ -1,7 +1,7 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import { Footer } from '../components/ui/Footer';
 import { useLocation, useRoute } from 'wouter';
-import { Play, Plus, Check, ChevronRight, Film, Tv, Clock3, Share2, List, Grid2X2, ChevronDown } from 'lucide-react';
+import { Play, Plus, Check, ChevronRight, Film, Tv, Clock3, Share2, List, Grid2X2 } from 'lucide-react';
 import { api, resolveMediaIdFromSlug } from '../lib/api';
 import type { AnimeItem, Episode, AnimeSeasonItem } from '../types';
 import { DEFAULT_POSTER, DEFAULT_BANNER } from '../types';
@@ -197,22 +197,21 @@ export function Details() {
       {kind === 'series' && (
         <section className="kinoma-details-section kinoma-details-seasons">
           <div className="kinoma-details-section__heading kinoma-details-section__heading--episodes">
-            <div><span>EPISODES</span><h2>Seasons</h2></div>
+            <div className="kinoma-season-picker">
+              <button type="button" className="kinoma-season-picker__trigger" onClick={() => setSeasonMenuOpen(value => !value)} aria-expanded={seasonMenuOpen} aria-haspopup="listbox">
+                <span>Seasons</span><span className="kinoma-season-picker__chevron">⌄</span>
+              </button>
+              {seasonMenuOpen && (
+                <div className="kinoma-season-picker__menu" role="listbox" aria-label="Choose season">
+                  {modelSeasons.map(season => (
+                    <button type="button" key={season.number} role="option" aria-selected={selectedSeason === season.number} className={selectedSeason === season.number ? 'is-selected' : ''} onClick={() => { setSelectedSeason(season.number); setSeasonMenuOpen(false); }}>
+                      Season {season.number}
+                    </button>
+                  ))}
+                </div>
+              )}
+            </div>
             <div className="kinoma-details-section__controls">
-              <div className="kinoma-season-picker">
-                <button type="button" className="kinoma-season-picker__trigger" onClick={() => setSeasonMenuOpen(value => !value)} aria-expanded={seasonMenuOpen} aria-haspopup="listbox">
-                  <span>Season {selectedSeason}</span><ChevronDown size={16} />
-                </button>
-                {seasonMenuOpen && (
-                  <div className="kinoma-season-picker__menu" role="listbox" aria-label="Choose season">
-                    {modelSeasons.map(season => (
-                      <button type="button" key={season.number} role="option" aria-selected={selectedSeason === season.number} className={selectedSeason === season.number ? 'is-selected' : ''} onClick={() => { setSelectedSeason(season.number); setSeasonMenuOpen(false); }}>
-                        Season {season.number}
-                      </button>
-                    ))}
-                  </div>
-                )}
-              </div>
               <small>{seasonEpisodes.length} {seasonEpisodes.length === 1 ? 'episode' : 'episodes'}</small>
               <button type="button" className="kinoma-episode-view-toggle" onClick={() => setEpisodeView(value => value === 'list' ? 'grid' : 'list')} aria-label={episodeView === 'list' ? 'Switch to grid view' : 'Switch to list view'} title={episodeView === 'list' ? 'Grid view' : 'List view'}>
                 {episodeView === 'list' ? <Grid2X2 size={16} /> : <List size={17} />}
