@@ -110,7 +110,7 @@ export function Watch() {
     setSource('');
     setError('');
     api.getWatchLink(id, type === 'series' ? season : 1, type === 'series' ? episode : 1, controller.signal)
-      .then(result => { if (!active) return; setSource(result.url); trackGAEvent('watch_start', { content_type: type, title }); })
+      .then(result => { if (!active) return; setSource(result.url); setSourceLoading(true); trackGAEvent('watch_start', { content_type: type, title }); })
       .catch(err => { if (!active) return; setSourceLoading(false); setError(err instanceof Error ? err.message : 'Playback source unavailable.'); });
     return () => { active = false; controller.abort(); };
   }, [data, id, type, season, episode, playbackRetry]);
@@ -238,7 +238,7 @@ export function Watch() {
                 <div className="panda-watch-player-loading" role="status" aria-live="polite">
                   <span aria-hidden="true" />
                   <strong>Preparing your stream…</strong>
-                  <small>Connecting to EmbedWave</small>
+                  <small>Connecting to Vidy.st</small>
                 </div>
               )}
               <iframe
@@ -256,10 +256,10 @@ export function Watch() {
             <div className="panda-watch-player-loading" role="status" aria-live="polite">
               <span aria-hidden="true" />
               <strong>Preparing your stream…</strong>
-              <small>Connecting to EmbedWave</small>
+              <small>Connecting to Vidy.st</small>
             </div>
           ) : (
-            <div className="panda-watch-player-empty"><Film size={32} /><strong>Playback unavailable</strong><span>The EmbedWave player could not be resolved for this title.</span></div>
+            <div className="panda-watch-player-empty"><Film size={32} /><strong>Playback unavailable</strong><span>The Vidy.st player could not be resolved for this title.</span></div>
           )}
         </div>
 
