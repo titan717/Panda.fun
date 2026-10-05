@@ -248,7 +248,6 @@ export function Watch() {
                 allow="autoplay; fullscreen; picture-in-picture; encrypted-media"
                 allowFullScreen
                 referrerPolicy="no-referrer"
-                onBeforeLoad={(event) => event.preventDefault()}
                 loading="eager"
                 onLoad={() => setSourceLoading(false)}
               />
