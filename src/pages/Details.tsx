@@ -245,6 +245,7 @@ export function Details() {
                 <div className="kinoma-episode-copy">
                   <strong className="kinoma-episode-number">Episode {ep.number}</strong>
                   {ep.title && ep.title.toLowerCase() !== ('episode ' + ep.number).toLowerCase() && <span>{ep.title}</span>}
+                  <div className="kinoma-episode-meta">{ep.duration ? <span>{formatDuration(ep.duration)}</span> : null}{ep.duration && ep.rating ? <i>•</i> : null}{ep.rating ? <span>★ {ep.rating.toFixed(1)}</span> : null}</div>
                   {ep.synopsis && <p>{ep.synopsis}</p>}
                 </div>
                 <ChevronRight className="kinoma-episode-arrow" size={18} />
