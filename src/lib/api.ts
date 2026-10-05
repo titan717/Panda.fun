@@ -1,6 +1,7 @@
 import type { AnimeDetails, AnimeItem, Episode, AnimeSeasonItem } from '../types';
 import { slugifyTitle } from './slug';
 import { trackApiFailure } from './analytics';
+import { buildVidyUrl } from './vidy';
 
 export type MovieApiMedia = {
   id: string;
@@ -516,18 +517,7 @@ export const api = {
       if (!tmdbId) throw new MovieApiError('Unable to resolve this title to a TMDB ID for Vidy playback.', 503, 'TMDB_ID_UNAVAILABLE');
     }
 
-    const path = media.type === 'movie'
-      ? `movie/${tmdbId}`
-      : `tv/${tmdbId}/${season}/${episode}`;
-    const query = new URLSearchParams({
-      autoplay: 'true',
-      ...(media.type === 'tv' ? {
-        nextEpisode: 'true',
-        episodeSelector: 'true',
-        autoplayNextEpisode: 'true',
-      } : {}),
-    });
-    const url = `https://www.vidy.st/${path}?${query.toString()}`;
+    const url = buildVidyUrl(tmdbId, media.type === 'movie' ? 'movie' : 'tv', season, episode);
     const source: MovieApiPlaybackSource = {
       id: `vidy-${media.type}-${tmdbId}-${season}-${episode}`,
       provider: 'vidy',
