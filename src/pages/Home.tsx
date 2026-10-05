@@ -7,7 +7,7 @@ import { api, MovieApiError, MovieApiMedia } from '../lib/api';
 import { trackGAEvent } from '../lib/analytics';
 import { libraryManager } from '../lib/library';
 import { updateSEO } from '../lib/seo';
-import { slugifyTitle } from '../lib/slug';
+import { buildDetailsHref } from '../lib/mediaRoute';
 import { ModernContinueWatching } from '../components/ui/modern/ModernContinueWatching';
 import '../styles/panda-home.css';
 
@@ -121,7 +121,7 @@ function PandaContentCard({
       onMouseLeave={onLeave}
     >
       <Link
-        href={`/details/${slugifyTitle(item.title)}?type=${type}`}
+        href={buildDetailsHref(item.id, type)}
         className="panda-content-card__link"
         aria-label={`Open ${item.title}`}
         onFocus={() => onHover(item)}
@@ -260,6 +260,7 @@ export function Home() {
   const featuredType = featured?.type === 'movie' ? 'movie' : 'series';
   const featuredWatchUrl = featured?.id ? '/watch/' + encodeURIComponent(featured.id) + '?type=' + featuredType : '/search';
   const surprisePool = useMemo(() => [...trending, ...popularMovies, ...popularTv].filter((item, index, list) => item?.id && list.findIndex(candidate => candidate.id === item.id) === index), [trending, popularMovies, popularTv]);
+  const topTen = useMemo(() => surprisePool.slice(0, 10), [surprisePool]);
   const pickSurprise = () => {
     if (!surprisePool.length) return;
     const candidates = surprisePool.filter(item => item.id !== surprisePick?.id);
@@ -384,6 +385,37 @@ export function Home() {
 
         <div className="panda-home-v2">
           <div className="panda-home-v2__inner">
+            {topTen.length > 0 && (
+              <section className="panda-home-top10" aria-labelledby="panda-home-top10-heading">
+                <div className="panda-home-top10__head">
+                  <div>
+                    <span className="panda-home-v2__eyebrow"><Sparkles size={13} /> On Panda</span>
+                    <h2 id="panda-home-top10-heading" className="panda-home-top10__title">TOP 10</h2>
+                  </div>
+                  <span className="panda-home-top10__today">Right now</span>
+                </div>
+                <div className="panda-home-top10__rail">
+                  {topTen.map((item, index) => (
+                    <div className="panda-home-top10__rank" key={item.id}>
+                      <span className="panda-home-top10__number" aria-hidden="true">{index + 1}</span>
+                      <Link
+                        href={buildDetailsHref(item.id, item.type === 'movie' ? 'movie' : 'series')}
+                        className="panda-home-top10__link"
+                        aria-label={"Open " + item.title + ", Top 10 rank " + (index + 1)}
+                        onClick={() => trackGAEvent('home_top10_select', { rank: index + 1, item_id: item.id, title: item.title })}
+                      >
+                        {item.poster || item.backdrop ? (
+                          <img className="panda-home-top10__poster" src={(item.poster || item.backdrop) as string} alt="" loading={index < 3 ? 'eager' : 'lazy'} decoding="async" referrerPolicy="no-referrer" />
+                        ) : <div className="panda-home-top10__poster" aria-hidden="true" />}
+                        <span className="panda-home-top10__shade" aria-hidden="true" />
+                        <span className="panda-home-top10__meta"><strong>{item.title}</strong><span>{[item.year, item.rating ? "★ " + Number(item.rating).toFixed(1) : null, item.type === 'movie' ? 'Movie' : 'Series'].filter(Boolean).join(' · ')}</span></span>
+                      </Link>
+                    </div>
+                  ))}
+                </div>
+              </section>
+            )}
+
             <section className="panda-surprise" aria-labelledby="panda-surprise-heading">
               <div className="panda-surprise__copy">
                 <span className="panda-home-v2__eyebrow"><Sparkles size={13} /> Can't decide?</span>
@@ -391,7 +423,7 @@ export function Home() {
                 <p>One tap. One title. No scrolling required.</p>
               </div>
               {surprisePick ? (
-                <Link href={`/details/${slugifyTitle(surprisePick.title)}?type=${surprisePick.type === 'movie' ? 'movie' : 'series'}`} className="panda-surprise__pick"
+                <Link href={buildDetailsHref(surprisePick.id, surprisePick.type === 'movie' ? 'movie' : 'series')} className="panda-surprise__pick"
                   onClick={() => trackGAEvent('surprise_select', { content_type: surprisePick.type === 'movie' ? 'movie' : 'series', title: surprisePick.title })}>
                   <PandaPoster item={surprisePick} priority />
                   <span><strong>{surprisePick.title}</strong><small>{[surprisePick.year, surprisePick.rating ? `★ ${Number(surprisePick.rating).toFixed(1)}` : null].filter(Boolean).join(' · ')}</small></span>
@@ -416,7 +448,7 @@ export function Home() {
                   {trending.slice(0, 3).map((item, index) => (
                     <Link
                       key={item.id}
-                      href={`/details/${slugifyTitle(item.title)}?type=${item.type === 'movie' ? 'movie' : 'series'}`}
+                      href={buildDetailsHref(item.id, item.type === 'movie' ? 'movie' : 'series')}
                       className="panda-pulse__item"
                       onClick={() => trackGAEvent('panda_pulse_select', { content_type: item.type === 'movie' ? 'movie' : 'series', rank: index + 1, title: item.title })}
                       aria-label={`Open ${item.title}, Panda Pulse rank ${index + 1}`}
