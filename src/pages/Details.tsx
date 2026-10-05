@@ -56,6 +56,8 @@ export function Details() {
   const [retryKey, setRetryKey] = useState(0);
   const [episodeView, setEpisodeView] = useState<'list' | 'grid'>('grid');
   const [seasonMenuOpen, setSeasonMenuOpen] = useState(false);
+  const [episodeSearch, setEpisodeSearch] = useState('');
+  const [episodeSort, setEpisodeSort] = useState<'asc' | 'desc'>('asc');
   const kind = kindOf(type, data);
 
   useEffect(() => {
