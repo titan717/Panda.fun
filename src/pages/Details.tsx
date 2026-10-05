@@ -1,7 +1,7 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import { Footer } from '../components/ui/Footer';
 import { useLocation, useRoute } from 'wouter';
-import { Play, Plus, Check, ChevronRight, Film, Tv, Clock3, Share2 } from 'lucide-react';
+import { Play, Plus, Check, ChevronRight, Film, Tv, Clock3, Share2, List, Grid2X2 } from 'lucide-react';
 import { api, resolveMediaIdFromSlug } from '../lib/api';
 import type { AnimeItem, Episode, AnimeSeasonItem } from '../types';
 import { DEFAULT_POSTER, DEFAULT_BANNER } from '../types';
@@ -54,6 +54,7 @@ export function Details() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [retryKey, setRetryKey] = useState(0);
+  const [episodeView, setEpisodeView] = useState<'list' | 'grid'>('list');
   const kind = kindOf(type, data);
 
   useEffect(() => {
@@ -196,7 +197,12 @@ export function Details() {
         <section className="kinoma-details-section kinoma-details-seasons">
           <div className="kinoma-details-section__heading">
             <div><span>EPISODES</span><h2>Seasons</h2></div>
-            <small>{modelSeasons.length} {modelSeasons.length === 1 ? 'season' : 'seasons'}</small>
+            <div className="kinoma-details-section__controls">
+              <small>{modelSeasons.length} {modelSeasons.length === 1 ? 'season' : 'seasons'}</small>
+              <button type="button" className="kinoma-episode-view-toggle" onClick={() => setEpisodeView(value => value === 'list' ? 'grid' : 'list')} aria-label={episodeView === 'list' ? 'Switch to grid view' : 'Switch to list view'} title={episodeView === 'list' ? 'Grid view' : 'List view'}>
+                {episodeView === 'list' ? <Grid2X2 size={16} /> : <List size={17} />}
+              </button>
+            </div>
           </div>
           <div className="kinoma-season-tabs" aria-label="Seasons">
             {modelSeasons.map(season => (
@@ -205,7 +211,7 @@ export function Details() {
               </button>
             ))}
           </div>
-          <div className="kinoma-episode-list">
+          <div className={'kinoma-episode-list kinoma-episode-list--' + episodeView}>
             {(modelSeasons.find(s => s.number === selectedSeason)?.episodes || []).map(ep => (
               <button
                 type="button"
@@ -221,7 +227,7 @@ export function Details() {
                 </div>
                 <div className="kinoma-episode-copy">
                   <strong>Episode {ep.number}</strong>
-                  <span>{ep.title}</span>
+                  {ep.title && ep.title.toLowerCase() !== ('episode ' + ep.number).toLowerCase() && <span>{ep.title}</span>}
                   {ep.synopsis && <p>{ep.synopsis}</p>}
                 </div>
                 <ChevronRight className="kinoma-episode-arrow" size={18} />
