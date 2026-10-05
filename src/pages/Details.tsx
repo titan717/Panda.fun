@@ -135,8 +135,8 @@ export function Details() {
   };
 
   useEffect(() => {
-    const canonicalPath = buildDetailsHref(id, kind);
-    if (data && routeSlug !== slugifyTitle(title)) {
+    const canonicalPath = buildDetailsHref(routeSlug || title, kind);
+    if (data && window.location.pathname !== new URL(canonicalPath, window.location.origin).pathname) {
       window.history.replaceState(window.history.state, '', canonicalPath);
     }
     updateSEO({ title, description: `${title} — ${synopsis}`.slice(0, 160), image: poster, type: kind === 'movie' ? 'video.movie' : 'video.tv_show', keywords: [title, ...(data?.genres || []), kind === 'movie' ? 'movie' : 'TV series', 'Panda.fun', 'watch online'], schema: { '@context': 'https://schema.org', '@type': kind === 'movie' ? 'Movie' : 'TVSeries', name: title, description: synopsis, image: poster ? [poster] : undefined, url: window.location.origin + buildDetailsHref(id, kind), datePublished: data?.releaseDate || undefined, aggregateRating: data?.rating != null ? { '@type': 'AggregateRating', ratingValue: data.rating, bestRating: 10 } : undefined, genre: data?.genres || undefined, isPartOf: { '@type': 'WebSite', name: 'Panda.fun', url: window.location.origin } } });
