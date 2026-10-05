@@ -5,7 +5,7 @@
   --panda-line: rgba(255,255,255,0.085);
   --panda-muted: rgba(235,235,245,0.58);
   --panda-soft: rgba(255,255,255,0.055);
-  --panda-accent: #c9b6ff;
+  --panda-accent: #e8d0c0;
   padding: 4px 0 72px;
 }
 
@@ -255,8 +255,8 @@
 .panda-content-card__progress i {
   display: block;
   height: 100%;
-  background: linear-gradient(90deg, #b9a2ff, #eee8ff);
-  box-shadow: 0 0 12px rgba(201,182,255,.35);
+  background: linear-gradient(90deg, #b84d41, #e8d0c0);
+  box-shadow: 0 0 12px rgba(232,208,192,.20);
 }
 
 .panda-home-v2__featured-grid {
@@ -1905,3 +1905,42 @@
 @media(prefers-reduced-motion:reduce){
   html{scroll-behavior:auto!important}
 }
+
+
+/* =========================================================
+   PANDA.FUN — authoritative homepage theme
+   Homepage chrome follows the sidebar: deep neutral glass, warm-white type,
+   restrained Panda accent. No legacy purple/dashboards styling.
+   ========================================================= */
+.kinoma-home,
+.panda-home-v2 {
+  color: #f6f2ee;
+  background: #090808 !important;
+}
+.panda-home-v2 {
+  --panda-panel: rgba(18,16,16,.72);
+  --panda-panel-strong: rgba(22,20,20,.88);
+  --panda-line: rgba(246,242,238,.085);
+  --panda-muted: rgba(246,242,238,.54);
+  --panda-soft: rgba(255,255,255,.045);
+  --panda-accent: #e8d0c0;
+}
+.panda-home-v2__welcome h2,
+.panda-home-v2__section-title h3,
+.panda-content-card__copy strong { color:#f6f2ee; }
+.panda-home-v2__eyebrow,
+.panda-profile-v2__eyebrow { color:rgba(232,208,192,.72); }
+.panda-home-v2__see-all { color:rgba(246,242,238,.46); }
+.panda-home-v2__see-all:hover { color:#fff; }
+.panda-content-card__media {
+  background:#121110;
+  border-color:rgba(246,242,238,.085);
+  box-shadow:0 14px 34px rgba(0,0,0,.26);
+}
+.panda-content-card__badge,
+.panda-content-card__quick {
+  border-color:rgba(246,242,238,.10);
+  background:rgba(12,11,11,.68);
+}
+.panda-content-card__play { background:#f6f2ee; color:#090808; }
+.panda-content-card__copy span { color:rgba(246,242,238,.40); }
