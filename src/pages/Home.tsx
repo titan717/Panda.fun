@@ -405,7 +405,7 @@ export function Home() {
                         onClick={() => trackGAEvent('home_top10_select', { rank: index + 1, item_id: item.id, title: item.title })}
                       >
                         {item.poster || item.backdrop ? (
-                          <img className="panda-home-top10__poster" src={(item.poster || item.backdrop) as string} alt="" loading={index < 3 ? 'eager' : 'lazy'} decoding="async" referrerPolicy="no-referrer" />
+                          <img className="panda-home-top10__poster" src={(item.poster || item.backdrop) as string} alt="" loading={index < 3 ? 'eager' : 'lazy'} fetchPriority={index < 3 ? 'high' : 'auto'} decoding="async" referrerPolicy="no-referrer" />
                         ) : <div className="panda-home-top10__poster" aria-hidden="true" />}
                         <span className="panda-home-top10__shade" aria-hidden="true" />
                         <span className="panda-home-top10__meta"><strong>{item.title}</strong><span>{[item.year, item.rating ? "★ " + Number(item.rating).toFixed(1) : null, item.type === 'movie' ? 'Movie' : 'Series'].filter(Boolean).join(' · ')}</span></span>
