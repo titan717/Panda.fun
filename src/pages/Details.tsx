@@ -176,7 +176,12 @@ export function Details() {
           <div className="kinoma-details-copy">
             <div className="kinoma-details-eyebrow">{kind === 'movie' ? <Film size={13} /> : <Tv size={13} />} {kind === 'movie' ? 'Movie' : 'TV Series'}</div>
             <h1 className={'kinoma-details-title kinoma-details-title--' + (kind === 'movie' ? 'movie' : 'series')}>{title}</h1>
-            <div className="kinoma-details-meta">{data?.releaseDate && <span>{String(data.releaseDate).slice(0, 4)}</span>}{data?.rating != null && <span>★ {data.rating}</span>}<span>{kind === 'movie' ? formatDuration(data?.runtime) : 'Series'}</span>{(data?.genres || []).slice(0, 3).map((g: string) => <span key={g}>{g}</span>)}</div>
+            <div className="kinoma-details-meta" aria-label="Title information">
+              {data?.releaseDate && <span>{String(data.releaseDate).slice(0, 4)}</span>}
+              {data?.rating != null && <span>★ {data.rating}</span>}
+              <span>{kind === 'movie' ? formatDuration(data?.runtime) : 'Series'}</span>
+              {(data?.genres || []).slice(0, 3).map((g: string) => <span key={g}>{g}</span>)}
+            </div>
             <p className="kinoma-details-synopsis">{synopsis}</p>
             <div className="kinoma-details-actions">
               <button className="kinoma-details-3d-button kinoma-details-3d-button--watch" onClick={watch}><span><Play size={18} fill="currentColor" /> {watchLabel}</span></button>
@@ -188,14 +193,65 @@ export function Details() {
       </section>
 
       {kind === 'series' && (
-        <section className="kinoma-details-section">
-          <div className="kinoma-details-section__heading"><div><span>KEEP WATCHING</span><h2>Seasons & Episodes</h2></div><small>{modelSeasons.length} {modelSeasons.length === 1 ? 'season' : 'seasons'}</small></div>
-          <div className="kinoma-season-tabs">{modelSeasons.map(season => <button type="button" key={season.number} className={selectedSeason === season.number ? 'is-selected' : ''} onClick={() => setSelectedSeason(season.number)}>Season {season.number}</button>)}</div>
+        <section className="kinoma-details-section kinoma-details-seasons">
+          <div className="kinoma-details-section__heading">
+            <div><span>EPISODES</span><h2>Seasons</h2></div>
+            <small>{modelSeasons.length} {modelSeasons.length === 1 ? 'season' : 'seasons'}</small>
+          </div>
+          <div className="kinoma-season-tabs" aria-label="Seasons">
+            {modelSeasons.map(season => <button type="button" key={season.number} className={selectedSeason === season.number ? 'is-selected' : ''} onClick={() => setSelectedSeason(season.number)} aria-pressed={selectedSeason === season.number}>Season {season.number}</button>)}
+          </div>
           <div className="kinoma-episode-list">
             {(modelSeasons.find(s => s.number === selectedSeason)?.episodes || []).map(ep => (
-              <button type="button" key={ep.number} className="kinoma-episode-card" onClick={() => { trackGAEvent('episode_select', { content_type: 'series', season: selectedSeason, episode: ep.number, title }); setLocation('/watch/' + encodeURIComponent(id + '$season$' + selectedSeason + '$episode$' + ep.number) + '?type=series'); }}>
-                <div className="kinoma-episode-art">{ep.image ? <img src={ep.image} alt="" loading={ep.number === (historyUtil.getAnimeProgress(id)?.episodeNumber || 0) ? 'eager' : 'lazy'} decoding="async" /> : <span><Play size={20} /></span>}<b>EP {ep.number}</b></div>
-                <div className="kinoma-episode-copy"><strong>{ep.title}</strong>{ep.synopsis && <p>{ep.synopsis}</p>}</div>
+              <button type="button" key={ep.number} className="kinoma-episode-card" onClick={() => { trackGAEvent('episode_select', { content_type: 'series', season: selectedSeason, episode: ep.number, title }); setLocation('/watch/' + encodeURIComponent(id + '$season
+      )}
+
+      <section className="kinoma-details-section kinoma-details-more-section">
+        <div className="kinoma-details-section__heading"><div><span>DISCOVER MORE</span><h2>More Like This</h2></div><small>Recommended for you</small></div>
+        <div className="kinoma-more-rail">
+          {recommendations.map((item, i) => {
+            const itemTitle = typeof item.title === 'string' ? item.title : item.title.english || item.title.romaji || 'Untitled';
+            const itemType = item.contentType === 'movie' ? 'movie' : 'series';
+            return <button type="button" key={item.id} className="kinoma-more-card" onClick={() => setLocation(buildDetailsHref(itemTitle, itemType))} aria-label={'Open ' + itemTitle}>
+              <div className={'kinoma-more-card__art tone-' + (i % 5)}>{item.image ? <img src={item.image} alt="" loading={i < 3 ? 'eager' : 'lazy'} decoding="async" referrerPolicy="no-referrer" /> : <Film size={25} />}</div>
+              <div className="kinoma-more-card__copy"><strong>{itemTitle}</strong><span>{item.genres?.[0] || 'Recommended'} <i>•</i> {itemType === 'movie' ? 'Movie' : 'Series'}</span></div>
+            </button>;
+          })}
+          {!recommendations.length && !loading && <div className="kinoma-details-bottom">No recommendations are available right now.</div>}
+        </div>
+      </section>
+      <div className="kinoma-details-bottom"><Clock3 size={14} /> Metadata and playback are powered by MovieApi.</div>
+    </main>
+  );
+}
+ + selectedSeason + '$episode
+      )}
+
+      <section className="kinoma-details-section kinoma-details-more-section">
+        <div className="kinoma-details-section__heading"><div><span>KEEP EXPLORING</span><h2>More like this</h2></div><small>Recommended for you</small></div>
+        <div className="kinoma-more-rail">
+          {recommendations.map((item, i) => {
+            const itemTitle = typeof item.title === 'string' ? item.title : item.title.english || item.title.romaji || 'Untitled';
+            const itemType = item.contentType === 'movie' ? 'movie' : 'series';
+            return <button type="button" key={item.id} className="kinoma-more-card" onClick={() => setLocation(buildDetailsHref(item.id, itemType))} aria-label={'Open ' + itemTitle}>
+              <div className={'kinoma-more-card__art tone-' + (i % 5)}>{item.image ? <img src={item.image} alt="" loading={i < 3 ? 'eager' : 'lazy'} decoding="async" referrerPolicy="no-referrer" /> : <Film size={25} />}</div>
+              <div className="kinoma-more-card__copy"><strong>{itemTitle}</strong><span>{item.genres?.[0] || 'Recommended'} <i>•</i> {itemType === 'movie' ? 'Movie' : 'Series'}</span></div>
+            </button>;
+          })}
+          {!recommendations.length && !loading && <div className="kinoma-details-bottom">No recommendations are available right now.</div>}
+        </div>
+      </section>
+      <div className="kinoma-details-bottom"><Clock3 size={14} /> Metadata and playback are powered by MovieApi.</div>
+    </main>
+  );
+}
+ + ep.number) + '?type=series'); }}>
+                <div className="kinoma-episode-art">{ep.image ? <img src={ep.image} alt="" loading={ep.number === (historyUtil.getAnimeProgress(id)?.episodeNumber || 0) ? 'eager' : 'lazy'} decoding="async" /> : <span><Play size={20} /></span>}</div>
+                <div className="kinoma-episode-copy">
+                  <strong>Episode {ep.number}</strong>
+                  <span>{ep.title}</span>
+                  {ep.synopsis && <p>{ep.synopsis}</p>}
+                </div>
                 <ChevronRight className="kinoma-episode-arrow" size={18} />
               </button>
             ))}
