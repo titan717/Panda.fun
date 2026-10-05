@@ -161,24 +161,6 @@ export function Search() {
         </form>
         {!isSearching && <button type="button" className="panda-search-surprise" onClick={surpriseMe} disabled={!surprisePool.length} aria-label="Pick a surprise title and open its details page"><Sparkles size={15} /> Surprise Me <span>Pick something for me</span></button>}
       </header>
-      {!isSearching && surprisePool.length > 0 && <section className="panda-search-top10" aria-labelledby="panda-search-top10-heading">
-        <div className="panda-search-top10__head">
-          <h2 id="panda-search-top10-heading" className="panda-search-top10__title">TOP 10</h2>
-          <div className="panda-search-top10__today"><span>On Panda</span><span>Right now</span></div>
-        </div>
-        <div className="panda-search-top10__rail">
-          {surprisePool.slice(0, 10).map((item, index) => (
-            <div className="panda-search-rank" key={item.id}>
-              <span className="panda-search-rank__number" aria-hidden="true">{index + 1}</span>
-              <Link href={item.href} className="panda-search-rank__link" aria-label={"Open " + item.title} onClick={() => trackGAEvent('search_rank_select', { rank: index + 1, item_id: item.id, title: item.title })}>
-                {item.image ? <img className="panda-search-rank__poster" src={item.image} alt="" loading={index < 3 ? 'eager' : 'lazy'} decoding="async" referrerPolicy="no-referrer" /> : <div className="panda-search-rank__poster" />}
-                <span className="panda-search-rank__shade" aria-hidden="true" />
-                <span className="panda-search-rank__meta"><strong>{item.title}</strong><span>{item.meta}</span></span>
-              </Link>
-            </div>
-          ))}
-        </div>
-      </section>
       {!isSearching && recentSearches.length > 0 && <section className="kinoma-search-recent" aria-label="Recent searches"><div className="kinoma-search-recent__label"><Clock3 size={14} /> Recent</div><div className="kinoma-search-recent__items">{recentSearches.slice(0, 5).map(item => <button key={item} type="button" onClick={() => chooseRecent(item)}>{item}</button>)}<button type="button" className="kinoma-search-recent__clear" onClick={clearRecent}>Clear</button></div></section>}
       <section ref={resultsRef} className="kinoma-search-results" id="search-results">
         <div className="kinoma-search-results__heading"><div><span className="kinoma-eyebrow">{isSearching ? 'Your search' : 'Live discovery'}</span><h2>{isSearching ? 'Matches' : 'Trending now'}</h2></div>{!isSearching && <Sparkles size={18} />}</div>
