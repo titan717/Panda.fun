@@ -7056,3 +7056,423 @@ body {
     padding: 9px 9px 10px;
   }
 }
+
+
+/* Reference-faithful Details page — presentation only; Panda data and playback stay unchanged. */
+.kinoma-details-page {
+  font-family: "Google Sans", sans-serif;
+  background: transparent !important;
+}
+
+.kinoma-details-hero--trailer .kinoma-details-hero__content {
+  width: min(100%, 1440px);
+}
+
+.kinoma-details-hero--trailer .kinoma-details-copy {
+  max-width: 760px;
+}
+
+.kinoma-details-eyebrow {
+  color: rgba(255,255,255,.55);
+  font-size: 10px;
+  line-height: 1;
+  font-weight: 700;
+  letter-spacing: .22em;
+}
+
+.kinoma-details-title {
+  margin-top: 10px;
+  max-width: 900px;
+  font-family: "Google Sans", sans-serif;
+  font-size: clamp(3.1rem, 7vw, 7.25rem);
+  line-height: .9;
+  letter-spacing: -.055em;
+  font-weight: 900;
+  color: #fff;
+  text-wrap: balance;
+  text-shadow: 0 10px 35px rgba(0,0,0,.45);
+}
+
+.kinoma-details-title::after {
+  display: none;
+}
+
+.kinoma-details-meta {
+  align-items: center;
+  gap: 9px;
+  margin-top: 18px;
+}
+
+.kinoma-details-meta span {
+  padding: 0;
+  border: 0;
+  border-radius: 0;
+  background: transparent;
+  color: rgba(255,255,255,.62);
+  font-size: 12px;
+  line-height: 1.2;
+  font-weight: 700;
+}
+
+.kinoma-details-meta span + span::before {
+  content: "·";
+  margin-right: 9px;
+  color: rgba(255,255,255,.25);
+}
+
+.kinoma-details-meta span:nth-child(2) {
+  color: #facc15;
+}
+
+.kinoma-details-synopsis {
+  max-width: 640px;
+  margin-top: 17px;
+  color: rgba(255,255,255,.62);
+  font-size: 14px;
+  line-height: 1.7;
+}
+
+.kinoma-details-actions {
+  align-items: center;
+  gap: 10px;
+  margin-top: 24px;
+}
+
+.kinoma-details-3d-button,
+.kinoma-details-share {
+  filter: none;
+  transform: none;
+}
+
+.kinoma-details-3d-button::after {
+  display: none;
+}
+
+.kinoma-details-3d-button span {
+  min-height: 44px;
+  padding: 0 18px;
+  border-radius: 12px;
+  border: 1px solid rgba(255,255,255,.16);
+  font-size: 12px;
+  font-weight: 700;
+  box-shadow: none;
+}
+
+.kinoma-details-3d-button--watch span {
+  background: #fff;
+  color: #090909;
+}
+
+.kinoma-details-3d-button--list span {
+  background: rgba(255,255,255,.08);
+  color: #fff;
+  backdrop-filter: blur(14px);
+}
+
+.kinoma-details-3d-button.is-added span {
+  background: rgba(184,77,65,.35);
+  color: #fff;
+}
+
+.kinoma-details-share > span {
+  width: 44px;
+  height: 44px;
+  padding: 0;
+  justify-content: center;
+  border-radius: 12px;
+  background: rgba(255,255,255,.08);
+  color: rgba(255,255,255,.78);
+  font-size: 0;
+}
+
+.kinoma-details-share__icon {
+  width: 17px;
+  height: 17px;
+}
+
+.kinoma-details-3d-button:hover,
+.kinoma-details-share:hover {
+  transform: translateY(-2px);
+  filter: none;
+}
+
+.kinoma-details-section {
+  width: min(100%, 1440px);
+  padding: 54px clamp(16px, 3vw, 48px) 0;
+}
+
+.kinoma-details-section__heading {
+  margin-bottom: 18px;
+}
+
+.kinoma-details-section__heading span {
+  color: rgba(255,255,255,.4);
+  font-size: 9px;
+  font-weight: 700;
+  letter-spacing: .24em;
+}
+
+.kinoma-details-section__heading h2 {
+  margin-top: 5px;
+  font-family: "Google Sans", sans-serif;
+  font-size: clamp(1.6rem, 2.7vw, 2.45rem);
+  line-height: 1;
+  letter-spacing: -.04em;
+  font-weight: 800;
+  color: #fff;
+}
+
+.kinoma-details-section__heading small {
+  color: rgba(255,255,255,.3);
+  font-size: 10px;
+  font-weight: 500;
+}
+
+.kinoma-season-tabs {
+  gap: 8px;
+  padding: 2px 0 18px;
+  margin-bottom: 2px;
+}
+
+.kinoma-season-tabs button {
+  min-width: 104px;
+  height: 44px;
+  padding: 0 16px;
+  border: 1px solid rgba(255,255,255,.10);
+  border-radius: 12px;
+  background: rgba(255,255,255,.055);
+  color: rgba(255,255,255,.52);
+  box-shadow: none;
+  font-family: "Google Sans", sans-serif;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: .02em;
+}
+
+.kinoma-season-tabs button:hover {
+  transform: translateY(-1px);
+  border-color: rgba(255,255,255,.18);
+  color: #fff;
+  background: rgba(255,255,255,.09);
+}
+
+.kinoma-season-tabs button.is-selected {
+  color: #090909;
+  background: #fff;
+  border-color: #fff;
+  box-shadow: 0 8px 24px rgba(0,0,0,.18);
+}
+
+.kinoma-season-tabs button.is-selected::after {
+  display: none;
+}
+
+.kinoma-episode-list {
+  gap: 8px;
+}
+
+.kinoma-episode-card {
+  grid-template-columns: 170px minmax(0,1fr) 22px;
+  gap: 16px;
+  padding: 8px;
+  border: 1px solid rgba(255,255,255,.075);
+  border-radius: 14px;
+  background: rgba(255,255,255,.035);
+  box-shadow: none;
+}
+
+.kinoma-episode-card:hover {
+  transform: translateY(-1px);
+  border-color: rgba(255,255,255,.15);
+  background: rgba(255,255,255,.055);
+  box-shadow: 0 12px 30px rgba(0,0,0,.18);
+}
+
+.kinoma-episode-art {
+  border-radius: 9px;
+  background: #181818;
+}
+
+.kinoma-episode-art b {
+  display: none;
+}
+
+.kinoma-episode-copy strong {
+  display: block;
+  color: rgba(255,255,255,.52);
+  font-size: 9px;
+  line-height: 1.1;
+  letter-spacing: .16em;
+  text-transform: uppercase;
+}
+
+.kinoma-episode-copy span {
+  display: block;
+  margin-top: 5px;
+  overflow: hidden;
+  color: #fff;
+  font-size: 14px;
+  font-weight: 700;
+  line-height: 1.25;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.kinoma-episode-copy p {
+  max-width: 780px;
+  margin-top: 7px;
+  color: rgba(255,255,255,.4);
+  font-size: 10px;
+  line-height: 1.65;
+}
+
+.kinoma-episode-arrow {
+  color: rgba(255,255,255,.28);
+}
+
+.kinoma-more-section,
+.kinoma-details-more-section {
+  padding-bottom: 8px;
+}
+
+.kinoma-more-rail {
+  display: flex;
+  gap: 8px;
+  overflow-x: auto;
+  overflow-y: hidden;
+  padding: 0 0 16px;
+  scrollbar-width: none;
+  scroll-snap-type: x proximity;
+  overscroll-behavior-x: contain;
+  touch-action: pan-x pinch-zoom;
+}
+
+.kinoma-more-rail::-webkit-scrollbar {
+  display: none;
+}
+
+.kinoma-more-card {
+  flex: 0 0 140px;
+  min-width: 140px;
+  max-width: none;
+  border: 0;
+  border-radius: 16px;
+  overflow: visible;
+  background: transparent;
+  box-shadow: none;
+  scroll-snap-align: start;
+}
+
+.kinoma-more-card:hover {
+  transform: none;
+  border-color: transparent;
+  box-shadow: none;
+}
+
+.kinoma-more-card__art {
+  width: 100%;
+  aspect-ratio: 2 / 3;
+  border-radius: 16px;
+  overflow: hidden;
+  background: #181818;
+  box-shadow: 0 18px 38px rgba(0,0,0,.30);
+}
+
+.kinoma-more-card__art img {
+  transition: transform 500ms ease;
+}
+
+.kinoma-more-card:hover .kinoma-more-card__art img {
+  transform: scale(1.05);
+}
+
+.kinoma-more-card__copy {
+  padding: 10px 2px 0;
+}
+
+.kinoma-more-card strong {
+  color: #fff;
+  font-size: 13px;
+  line-height: 1.2;
+}
+
+.kinoma-more-card span {
+  margin-top: 5px;
+  padding: 0;
+  color: rgba(255,255,255,.4);
+  font-size: 10px;
+  line-height: 1.2;
+}
+
+.kinoma-details-bottom {
+  width: min(100%, 1440px);
+  margin-top: 48px;
+  padding: 15px clamp(16px, 3vw, 48px);
+  border-top-color: rgba(255,255,255,.06);
+  color: rgba(255,255,255,.22);
+}
+
+@media (min-width: 640px) {
+  .kinoma-more-card {
+    flex-basis: 160px;
+  }
+}
+
+@media (min-width: 768px) {
+  .kinoma-episode-card {
+    grid-template-columns: 190px minmax(0,1fr) 22px;
+  }
+
+  .kinoma-more-card {
+    flex-basis: 180px;
+  }
+}
+
+@media (max-width: 700px) {
+  .kinoma-details-title {
+    font-size: clamp(2.7rem, 13vw, 5rem);
+  }
+
+  .kinoma-details-synopsis {
+    font-size: 12px;
+  }
+
+  .kinoma-episode-card {
+    grid-template-columns: 112px minmax(0,1fr);
+    gap: 11px;
+    padding: 7px;
+  }
+
+  .kinoma-episode-arrow {
+    display: none;
+  }
+
+  .kinoma-episode-copy span {
+    font-size: 12px;
+  }
+
+  .kinoma-episode-copy p {
+    font-size: 9px;
+    -webkit-line-clamp: 2;
+  }
+}
+
+@media (max-width: 520px) {
+  .kinoma-more-card {
+    flex-basis: 145px;
+  }
+
+  .kinoma-details-actions {
+    gap: 8px;
+  }
+
+  .kinoma-details-3d-button span {
+    min-height: 42px;
+    padding-inline: 14px;
+  }
+
+  .kinoma-details-share > span {
+    width: 42px;
+    height: 42px;
+  }
+}
