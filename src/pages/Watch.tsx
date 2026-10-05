@@ -247,8 +247,8 @@ export function Watch() {
                 title={'Watch ' + title + ' on Panda.fun'}
                 allow="autoplay; fullscreen; picture-in-picture; encrypted-media"
                 allowFullScreen
-                sandbox="allow-scripts allow-same-origin allow-forms allow-presentation"
                 referrerPolicy="no-referrer"
+                onBeforeLoad={(event) => event.preventDefault()}
                 loading="eager"
                 onLoad={() => setSourceLoading(false)}
               />
