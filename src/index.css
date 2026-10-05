@@ -6414,8 +6414,8 @@ body {
    adapted to Panda.fun's darker/warm identity. */
 .panda-home-top10 {
   width: 100%;
-  padding: 40px 0 0;
-  margin: 0 0 34px;
+  padding: 40px 0;
+  margin: 0;
   overflow: visible;
   font-family: "Google Sans", sans-serif;
 }
@@ -6460,7 +6460,8 @@ body {
   gap: 4px;
   overflow-x: auto;
   overflow-y: hidden;
-  padding: 0 32px 20px 16px;
+  padding: 0 32px 0 16px;
+  margin-bottom: 20px;
   scrollbar-width: none;
   scroll-behavior: smooth;
   overscroll-behavior-x: contain;
