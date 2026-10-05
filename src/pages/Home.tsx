@@ -447,7 +447,7 @@ export function Home() {
                 <p>One tap. One title. No scrolling required.</p>
               </div>
               {surprisePick ? (
-                <Link href={buildDetailsHref(surprisePick.id, surprisePick.type === 'movie' ? 'movie' : 'series')} className="panda-surprise__pick"
+                <Link href={buildDetailsHref(surprisePick.title, surprisePick.type === 'movie' ? 'movie' : 'series')} className="panda-surprise__pick"
                   onClick={() => trackGAEvent('surprise_select', { content_type: surprisePick.type === 'movie' ? 'movie' : 'series', title: surprisePick.title })}>
                   <PandaPoster item={surprisePick} priority />
                   <span><strong>{surprisePick.title}</strong><small>{[surprisePick.year, surprisePick.rating ? `★ ${Number(surprisePick.rating).toFixed(1)}` : null].filter(Boolean).join(' · ')}</small></span>
@@ -472,7 +472,7 @@ export function Home() {
                   {trending.slice(0, 3).map((item, index) => (
                     <Link
                       key={item.id}
-                      href={buildDetailsHref(item.id, item.type === 'movie' ? 'movie' : 'series')}
+                      href={buildDetailsHref(item.title, item.type === 'movie' ? 'movie' : 'series')}
                       className="panda-pulse__item"
                       onClick={() => trackGAEvent('panda_pulse_select', { content_type: item.type === 'movie' ? 'movie' : 'series', rank: index + 1, title: item.title })}
                       aria-label={`Open ${item.title}, Panda Pulse rank ${index + 1}`}
