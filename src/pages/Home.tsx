@@ -195,11 +195,7 @@ export function Home() {
   const soundEnabled = true;
   const [trailerReady, setTrailerReady] = useState(false);
   const trailerFrameRef = useRef<HTMLIFrameElement | null>(null);
-  const pandaSecretBuffer = useRef('');
-  const pandaSecretTimer = useRef<number | null>(null);
-  const pandaTapCount = useRef(0);
-  const [pandaSecret, setPandaSecret] = useState<string | null>(null);
-  const [surprisePick, setSurprisePick] = useState<MovieApiMedia | null>(null);
+  
   const [hoverTrailer, setHoverTrailer] = useState<MovieApiMedia | null>(null);
   const [hoverTrailerUrl, setHoverTrailerUrl] = useState('');
   const hoverTrailerTimer = useRef<number | null>(null);
@@ -259,13 +255,7 @@ export function Home() {
   const popularTv = (sections?.popularTv || []) as MovieApiMedia[];
   const featuredType = featured?.type === 'movie' ? 'movie' : 'series';
   const featuredWatchUrl = featured?.id ? '/watch/' + encodeURIComponent(featured.id) + '?type=' + featuredType : '/search';
-  const surprisePool = useMemo(() => [...trending, ...popularMovies, ...popularTv].filter((item, index, list) => item?.id && list.findIndex(candidate => candidate.id === item.id) === index), [trending, popularMovies, popularTv]);
-  const topTen = useMemo(() => surprisePool.slice(0, 10), [surprisePool]);
-  const pickSurprise = () => {
-    if (!surprisePool.length) return;
-    const candidates = surprisePool.filter(item => item.id !== surprisePick?.id);
-    setSurprisePick((candidates.length ? candidates : surprisePool)[Math.floor(Math.random() * (candidates.length || surprisePool.length))]);
-  };
+  const topTen = useMemo(() => [...trending, ...popularMovies, ...popularTv].filter((item, index, list) => item?.id && list.findIndex(candidate => candidate.id === item.id) === index).slice(0, 10), [trending, popularMovies, popularTv]);
 
   const toggleFeaturedList = () => {
     if (featured) {
@@ -281,26 +271,6 @@ export function Home() {
     setTrailerReady(false);
     if (featured?.id) setIsInList(libraryManager.isInWatchlist(featured.id));
   }, [featured?.id]);
-
-  useEffect(() => {
-    const onKeyDown = (event: KeyboardEvent) => {
-      const target = event.target as HTMLElement | null;
-      if (target?.closest('input, textarea, select, [contenteditable="true"]')) return;
-      if (event.key.length !== 1) return;
-      pandaSecretBuffer.current = (pandaSecretBuffer.current + event.key.toLowerCase()).slice(-12);
-      if (pandaSecretBuffer.current.endsWith('panda')) {
-        setPandaSecret('🐼 You found the sleepy panda den.');
-        pandaSecretBuffer.current = '';
-        if (pandaSecretTimer.current) window.clearTimeout(pandaSecretTimer.current);
-        pandaSecretTimer.current = window.setTimeout(() => setPandaSecret(null), 3600);
-      }
-    };
-    window.addEventListener('keydown', onKeyDown);
-    return () => {
-      window.removeEventListener('keydown', onKeyDown);
-      if (pandaSecretTimer.current) window.clearTimeout(pandaSecretTimer.current);
-    };
-  }, []);
 
   const showHoverTrailer = (item: MovieApiMedia) => {
     if (hoverTrailerTimer.current) window.clearTimeout(hoverTrailerTimer.current);
@@ -343,16 +313,6 @@ export function Home() {
     hoverTrailerController.current = null;
   }, []);
 
-  const wakePanda = () => {
-    pandaTapCount.current += 1;
-    if (pandaTapCount.current >= 3) {
-      setPandaSecret('🌿 The panda noticed you. Keep browsing.');
-      pandaTapCount.current = 0;
-      if (pandaSecretTimer.current) window.clearTimeout(pandaSecretTimer.current);
-      pandaSecretTimer.current = window.setTimeout(() => setPandaSecret(null), 3600);
-    }
-  };
-
   return (
     <main className="kinoma-home">
       <div className="kinoma-home__ambient" aria-hidden="true">
@@ -373,7 +333,7 @@ export function Home() {
             )}
           </div>
           <div className="kinoma-home-hero__copy">
-            <button type="button" className="kinoma-home-hero__eyebrow panda-secret-trigger" onClick={wakePanda}><Sparkles size={14} /> YOUR NEXT WATCH</button>
+            <span className="kinoma-home-hero__eyebrow"><Sparkles size={14} /> YOUR NEXT WATCH</span>
             <h1 id="kinoma-home-title">{featured?.title || 'Something good is waiting.'}</h1>
             <p>{featured?.overview || error || 'Movies, series and stories worth pressing play for. Discover something, save it, and come back whenever you like.'}</p>
             <div className="kinoma-home-hero__actions">
@@ -440,58 +400,6 @@ export function Home() {
               </section>
             )}
 
-            <section className="panda-surprise" aria-labelledby="panda-surprise-heading">
-              <div className="panda-surprise__copy">
-                <span className="panda-home-v2__eyebrow"><Sparkles size={13} /> Can't decide?</span>
-                <h2 id="panda-surprise-heading">Let Panda pick.</h2>
-                <p>One tap. One title. No scrolling required.</p>
-              </div>
-              {surprisePick ? (
-                <Link href={buildDetailsHref(surprisePick.title, surprisePick.type === 'movie' ? 'movie' : 'series')} className="panda-surprise__pick"
-                  onClick={() => trackGAEvent('surprise_select', { content_type: surprisePick.type === 'movie' ? 'movie' : 'series', title: surprisePick.title })}>
-                  <PandaPoster item={surprisePick} priority />
-                  <span><strong>{surprisePick.title}</strong><small>{[surprisePick.year, surprisePick.rating ? `★ ${Number(surprisePick.rating).toFixed(1)}` : null].filter(Boolean).join(' · ')}</small></span>
-                  <ArrowRight size={14} aria-hidden="true" />
-                </Link>
-              ) : <span className="panda-surprise__hint">Your next watch is hiding in the library.</span>}
-              <button type="button" className="panda-surprise__button" onClick={() => { trackGAEvent('surprise_me', { source: 'home' }); pickSurprise(); }} disabled={!surprisePool.length} aria-label="Pick a surprise title">
-                <Sparkles size={15} /> Surprise Me
-              </button>
-            </section>
-
-            {trending.length > 0 && (
-              <section className="panda-pulse" aria-labelledby="panda-pulse-heading">
-                <div className="panda-pulse__head">
-                  <div>
-                    <span className="panda-home-v2__eyebrow"><Sparkles size={13} /> Live discovery</span>
-                    <h2 id="panda-pulse-heading">Panda Pulse</h2>
-                  </div>
-                  <span className="panda-pulse__signal"><i aria-hidden="true" /> Updating from today's picks</span>
-                </div>
-                <div className="panda-pulse__items">
-                  {trending.slice(0, 3).map((item, index) => (
-                    <Link
-                      key={item.id}
-                      href={buildDetailsHref(item.title, item.type === 'movie' ? 'movie' : 'series')}
-                      className="panda-pulse__item"
-                      onClick={() => trackGAEvent('panda_pulse_select', { content_type: item.type === 'movie' ? 'movie' : 'series', rank: index + 1, title: item.title })}
-                      aria-label={`Open ${item.title}, Panda Pulse rank ${index + 1}`}
-                    >
-                      <span className="panda-pulse__rank">{String(index + 1).padStart(2, '0')}</span>
-                      <span className="panda-pulse__poster">
-                        <PandaPoster item={item} priority={index === 0} />
-                      </span>
-                      <span className="panda-pulse__copy">
-                        <strong>{item.title}</strong>
-                        <small>{[item.year, item.rating ? `★ ${Number(item.rating).toFixed(1)}` : null, item.type === 'movie' ? 'Movie' : 'Series'].filter(Boolean).join(' · ')}</small>
-                      </span>
-                      <ArrowRight size={14} aria-hidden="true" />
-                    </Link>
-                  ))}
-                </div>
-              </section>
-            )}
-
             <PandaRail priority kind="trending" title="Trending now" subtitle="The titles getting attention today." items={trending} onHover={showHoverTrailer} onLeave={hideHoverTrailer} />
             <PandaRail kind="streamingNetflix" title="New on Netflix" subtitle="Freshly released movies now showing on the service." items={newOnNetflix} onHover={showHoverTrailer} onLeave={hideHoverTrailer} badge="NETFLIX" />
             <PandaRail kind="streamingDisney" title="New on Disney+" subtitle="Recently added titles surfaced from TMDB." items={newOnDisneyPlus} onHover={showHoverTrailer} onLeave={hideHoverTrailer} badge="DISNEY+" />
@@ -553,7 +461,6 @@ export function Home() {
           </div>
         </div>
       </div>
-      {pandaSecret && <div className="panda-easter-egg" role="status" aria-live="polite">{pandaSecret}</div>}
     </main>
   );
 }
