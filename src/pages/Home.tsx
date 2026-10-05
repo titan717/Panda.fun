@@ -388,28 +388,55 @@ export function Home() {
             {topTen.length > 0 && (
               <section className="panda-home-top10" aria-labelledby="panda-home-top10-heading">
                 <div className="panda-home-top10__head">
-                  <div>
-                    <span className="panda-home-v2__eyebrow"><Sparkles size={13} /> On Panda</span>
-                    <h2 id="panda-home-top10-heading" className="panda-home-top10__title">TOP 10</h2>
+                  <h2 id="panda-home-top10-heading" className="panda-home-top10__title">TOP10</h2>
+                  <div className="panda-home-top10__today">
+                    <span>Content</span>
+                    <span>Today</span>
                   </div>
-                  <span className="panda-home-top10__today">Right now</span>
                 </div>
                 <div className="panda-home-top10__rail">
                   {topTen.map((item, index) => (
                     <div className="panda-home-top10__rank" key={item.id}>
-                      <span className="panda-home-top10__number" aria-hidden="true">{index + 1}</span>
-                      <Link
-                        href={buildDetailsHref(item.id, item.type === 'movie' ? 'movie' : 'series')}
-                        className="panda-home-top10__link"
-                        aria-label={"Open " + item.title + ", Top 10 rank " + (index + 1)}
-                        onClick={() => trackGAEvent('home_top10_select', { rank: index + 1, item_id: item.id, title: item.title })}
-                      >
-                        {item.poster || item.backdrop ? (
-                          <img className="panda-home-top10__poster" src={(item.poster || item.backdrop) as string} alt="" loading={index < 3 ? 'eager' : 'lazy'} fetchPriority={index < 3 ? 'high' : 'auto'} decoding="async" referrerPolicy="no-referrer" />
-                        ) : <div className="panda-home-top10__poster" aria-hidden="true" />}
-                        <span className="panda-home-top10__shade" aria-hidden="true" />
-                        <span className="panda-home-top10__meta"><strong>{item.title}</strong><span>{[item.year, item.rating ? "★ " + Number(item.rating).toFixed(1) : null, item.type === 'movie' ? 'Movie' : 'Series'].filter(Boolean).join(' · ')}</span></span>
-                      </Link>
+                      <div className="panda-home-top10__rank-row">
+                        <div className="panda-home-top10__number-wrap" aria-hidden="true">
+                          <span className="panda-home-top10__number">{index + 1}</span>
+                        </div>
+                        <div className="panda-home-top10__card">
+                          <Link
+                            href={buildDetailsHref(item.id, item.type === 'movie' ? 'movie' : 'series')}
+                            className="panda-home-top10__link"
+                            aria-label={"Open " + item.title + ", Top 10 rank " + (index + 1)}
+                            onClick={() => trackGAEvent('home_top10_select', { rank: index + 1, item_id: item.id, title: item.title })}
+                          >
+                            {item.poster || item.backdrop ? (
+                              <div className="panda-home-top10__poster-wrap">
+                                <img
+                                  className="panda-home-top10__poster"
+                                  src={(item.poster || item.backdrop) as string}
+                                  alt=""
+                                  loading={index < 3 ? 'eager' : 'lazy'}
+                                  fetchPriority={index < 3 ? 'high' : 'auto'}
+                                  decoding="async"
+                                  referrerPolicy="no-referrer"
+                                />
+                                {index > 0 && (
+                                  <span className="panda-home-top10__badge" aria-hidden="true">Recently Added</span>
+                                )}
+                              </div>
+                            ) : <div className="panda-home-top10__poster" aria-hidden="true" />}
+                          </Link>
+                          <div className="panda-home-top10__meta">
+                            <p>{item.title}</p>
+                            <div>
+                              {item.rating ? <span className="panda-home-top10__rating">★</span> : null}
+                              {item.rating ? <span>{Number(item.rating).toFixed(1)}</span> : null}
+                              {item.year ? <><span className="panda-home-top10__dot">·</span><span>{item.year}</span></> : null}
+                              <span className="panda-home-top10__dot">·</span>
+                              <span>{item.type === 'movie' ? 'Movie' : 'Series'}</span>
+                            </div>
+                          </div>
+                        </div>
+                      </div>
                     </div>
                   ))}
                 </div>
