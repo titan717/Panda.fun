@@ -1,3 +1,4 @@
+@import url("https://fonts.googleapis.com/css2?family=Google+Sans:wght@400;500;700&display=swap");
 @import "tailwindcss";
 
 @theme {
@@ -6490,11 +6491,12 @@ body {
 
 .panda-home-top10__number {
   display: block;
-  color: rgba(245, 245, 245, .32);
-  font-size: clamp(100px, 10vw, 140px);
-  line-height: .78;
-  letter-spacing: -.075em;
-  font-weight: 950;
+  font-family: "Google Sans", sans-serif;
+  color: #f4f4f5;
+  font-size: 100px;
+  font-weight: 900;
+  line-height: 1;
+  letter-spacing: normal;
   user-select: none;
   pointer-events: none;
 }
@@ -6577,8 +6579,12 @@ body {
 
 @media (min-width: 640px) {
   .panda-home-top10__number-wrap {
-    width: 100px;
-    margin-right: -16px;
+    width: auto;
+    margin-right: -12px;
+  }
+
+  .panda-home-top10__number {
+    font-size: 120px;
   }
 
   .panda-home-top10__link,
@@ -6589,8 +6595,12 @@ body {
 
 @media (min-width: 768px) {
   .panda-home-top10__number-wrap {
-    width: 108px;
-    margin-right: -18px;
+    width: auto;
+    margin-right: -12px;
+  }
+
+  .panda-home-top10__number {
+    font-size: 140px;
   }
 
   .panda-home-top10__link,
