@@ -97,24 +97,6 @@ function reportApiFailure(error: unknown, path: string) {
 const cache = new Map<string, { expires: number; value: unknown }>();
 const inflight = new Map<string, Promise<unknown>>();
 const CACHE_TTL = 120_000;
-const PLAYBACK_PREFERENCES_KEY = 'panda_playback_preferences';
-const DEFAULT_PLAYBACK_PREFERENCES = { videoProvider: 'nxsha', audioLanguage: 'en', subtitleLanguage: 'en', subtitleProvider: 'nitro' } as const;
-
-type PlaybackPreferences = typeof DEFAULT_PLAYBACK_PREFERENCES;
-
-function getPlaybackPreferences(): PlaybackPreferences {
-  try {
-    const stored = window.localStorage.getItem(PLAYBACK_PREFERENCES_KEY);
-    if (stored) return { ...DEFAULT_PLAYBACK_PREFERENCES, ...JSON.parse(stored) } as PlaybackPreferences;
-  } catch {}
-  return DEFAULT_PLAYBACK_PREFERENCES;
-}
-
-function embedWaveServer(provider: PlaybackPreferences['videoProvider']) {
-  return provider === 'cinesrc' ? 'cinesrc' : provider === 'videasy' ? 'videasy' : 'nxsha';
-}
-
-
 
 function unwrap<T>(payload: any): T {
   if (payload?.success === false) {
@@ -525,34 +507,33 @@ export const api = {
     const media = mediaFromId(id);
     if (!media) throw new MovieApiError('Playback requires a MovieApi media ID.', 400, 'INVALID_MEDIA_ID');
 
-    // Keep EmbedWave as the actual embedder with Multi HD as the default
-    // video server. English audio and subtitles are requested by default.
+    // Vidy.st is the sole playback provider. It addresses content by TMDB ID.
+    // TV links include the season/episode path and enable Vidy's native episode controls.
     let tmdbId = media.id;
     if (media.provider === 'tvmaze') {
       const details = await request<MovieApiMedia>(`/api/v1/tv/${media.id}`, undefined, { signal }, 300_000);
       tmdbId = Number(details.ids?.tmdb || 0);
-      if (!tmdbId) throw new MovieApiError('Unable to resolve this title to a TMDB ID for EmbedWave playback.', 503, 'TMDB_ID_UNAVAILABLE');
+      if (!tmdbId) throw new MovieApiError('Unable to resolve this title to a TMDB ID for Vidy playback.', 503, 'TMDB_ID_UNAVAILABLE');
     }
 
-    const base = media.type === 'movie'
-      ? `https://embedwave.cc/embed/movie/${tmdbId}`
-      : `https://embedwave.cc/embed/tv/${tmdbId}/${season}/${episode}`;
-    const preferences = getPlaybackPreferences();
-    const separator = base.includes('?') ? '&' : '?';
+    const path = media.type === 'movie'
+      ? `movie/${tmdbId}`
+      : `tv/${tmdbId}/${season}/${episode}`;
     const query = new URLSearchParams({
-      autoplay: '1',
-      nobrand: '1',
-      server: embedWaveServer(preferences.videoProvider),
-      ...(preferences.audioLanguage !== 'auto' ? { lang: preferences.audioLanguage } : {}),
-      ...(preferences.subtitleLanguage !== 'auto' && preferences.subtitleLanguage !== 'off' ? { sub: preferences.subtitleLanguage } : {}),
+      autoplay: 'true',
+      ...(media.type === 'tv' ? {
+        nextEpisode: 'true',
+        episodeSelector: 'true',
+        autoplayNextEpisode: 'true',
+      } : {}),
     });
-    const url = `${base}${separator}${query.toString()}`;
+    const url = `https://www.vidy.st/${path}?${query.toString()}`;
     const source: MovieApiPlaybackSource = {
-      id: `embedwave-${preferences.videoProvider}-${tmdbId}`,
-      provider: 'embedwave',
+      id: `vidy-${media.type}-${tmdbId}-${season}-${episode}`,
+      provider: 'vidy',
       type: 'embed',
       url,
-      title: `EmbedWave · ${preferences.videoProvider === 'nxsha' ? 'Multi HD' : preferences.videoProvider === 'cinesrc' ? 'CineSrc' : 'Videasy'}`,
+      title: 'Vidy.st',
       quality: 'auto',
       requiresClientPlayback: true,
     };
