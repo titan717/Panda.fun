@@ -1,13 +1,31 @@
 import React from 'react';
 import { Link } from 'wouter';
-import { Github, Instagram, Youtube, ArrowUp } from 'lucide-react';
+import { Github, Instagram, Youtube, ArrowUp, Home as HomeIcon, Search, Bookmark, Info, FileText, Shield, BookOpen } from 'lucide-react';
 
-const links = [
-  { href: '/about', label: 'About' },
-  { href: '/docs', label: 'API Docs' },
-  { href: '/terms', label: 'Terms' },
-  { href: '/privacy', label: 'Privacy' },
-  { href: '/contact', label: 'Contact' },
+const linkGroups = [
+  {
+    label: 'Explore',
+    links: [
+      { href: '/browse', label: 'Home', icon: HomeIcon },
+      { href: '/search', label: 'Search', icon: Search },
+      { href: '/library', label: 'My List', icon: Bookmark },
+    ],
+  },
+  {
+    label: 'Panda',
+    links: [
+      { href: '/about', label: 'About', icon: Info },
+      { href: '/docs', label: 'API Docs', icon: BookOpen },
+      { href: '/contact', label: 'Contact', icon: FileText },
+    ],
+  },
+  {
+    label: 'Legal',
+    links: [
+      { href: '/terms', label: 'Terms of Service', icon: FileText },
+      { href: '/privacy', label: 'Privacy Policy', icon: Shield },
+    ],
+  },
 ];
 
 export function Footer() {
@@ -22,9 +40,16 @@ export function Footer() {
           </div>
         </div>
 
-        <nav className="panda-shared-footer__links" aria-label="Footer navigation">
-          {links.map(link => <Link key={link.href} href={link.href}>{link.label}</Link>)}
-        </nav>
+        <div className="panda-shared-footer__groups">
+          {linkGroups.map(group => (
+            <nav key={group.label} className="panda-shared-footer__group" aria-label={group.label}>
+              <span>{group.label}</span>
+              {group.links.map(({ href, label, icon: Icon }) => (
+                <Link key={href} href={href}><Icon size={13} aria-hidden="true" />{label}</Link>
+              ))}
+            </nav>
+          ))}
+        </div>
 
         <div className="panda-shared-footer__social" aria-label="Social links">
           <a href="https://github.com/titan717/Panda.fun" target="_blank" rel="noreferrer" aria-label="Source on GitHub">
@@ -40,7 +65,7 @@ export function Footer() {
       </div>
       <div className="panda-shared-footer__bottom"><button type="button" className="panda-shared-footer__top" onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })} aria-label="Back to top"><ArrowUp size={13} /> Top</button>
         <span>© {new Date().getFullYear()} Panda.fun</span>
-        <span>Built for the next thing you want to watch.</span>
+        <span>Made for your next great watch.</span>
       </div>
     </footer>
   );
