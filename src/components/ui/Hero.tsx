@@ -3,7 +3,7 @@ import { Link } from 'wouter';
 import { Play, Plus, Star, Film, Volume2, Globe } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 import { AnimeItem, DEFAULT_BANNER } from '../../types';
-import { slugifyTitle } from '../../lib/slug';
+import { buildDetailsHref } from '../../lib/mediaRoute';
 
 interface HeroProps {
   item?: AnimeItem;
@@ -146,7 +146,7 @@ export function Hero({ item, items }: HeroProps) {
             
             {/* Buttons */}
             <div className="mt-2 flex items-center gap-3 sm:gap-4">
-              <Link href={`/details/${slugifyTitle(title)}?type=${currentItem.type === 'movie' ? 'movie' : 'series'}`}>
+              <Link href={buildDetailsHref(title, currentItem.type === 'movie' ? 'movie' : 'series')}>
                 <motion.button 
                   whileHover={{ scale: 1.03 }}
                   whileTap={{ scale: 0.97 }}
