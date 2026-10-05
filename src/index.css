@@ -7760,3 +7760,144 @@ body {
   .kinoma-episode-list--grid .kinoma-episode-copy span{font-size:12px}
   .kinoma-episode-list--grid .kinoma-episode-copy p{font-size:9px}
 }
+
+/* Reference episode rail/picker refinement. */
+.kinoma-details-section__heading--episodes{
+  position:relative;
+  align-items:flex-end;
+}
+.kinoma-details-section__heading--episodes .kinoma-details-section__controls{
+  position:relative;
+  align-items:center;
+  gap:10px;
+}
+.kinoma-season-picker{position:relative}
+.kinoma-season-picker__trigger{
+  display:inline-flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:10px;
+  min-width:124px;
+  height:44px;
+  padding:0 13px 0 15px;
+  border:1px solid rgba(255,255,255,.1);
+  border-radius:12px;
+  background:rgba(255,255,255,.055);
+  color:#fff;
+  font-family:"Google Sans",sans-serif;
+  font-size:11px;
+  font-weight:700;
+  box-shadow:none;
+  transition:background 180ms ease,border-color 180ms ease,transform 180ms ease;
+}
+.kinoma-season-picker__trigger:hover,
+.kinoma-season-picker__trigger[aria-expanded="true"]{
+  background:rgba(255,255,255,.09);
+  border-color:rgba(255,255,255,.18);
+}
+.kinoma-season-picker__menu{
+  position:absolute;
+  z-index:30;
+  top:calc(100% + 8px);
+  right:0;
+  min-width:180px;
+  padding:6px;
+  border:1px solid rgba(255,255,255,.11);
+  border-radius:14px;
+  background:rgba(20,18,18,.96);
+  box-shadow:0 18px 45px rgba(0,0,0,.42);
+  backdrop-filter:blur(18px);
+}
+.kinoma-season-picker__menu button{
+  display:block;
+  width:100%;
+  padding:10px 12px;
+  border:0;
+  border-radius:9px;
+  background:transparent;
+  color:rgba(255,255,255,.62);
+  text-align:left;
+  font-family:"Google Sans",sans-serif;
+  font-size:11px;
+  font-weight:700;
+}
+.kinoma-season-picker__menu button:hover,
+.kinoma-season-picker__menu button.is-selected{
+  background:rgba(255,255,255,.09);
+  color:#fff;
+}
+.kinoma-details-section__heading--episodes .kinoma-details-section__controls > small{
+  white-space:nowrap;
+  color:rgba(255,255,255,.42);
+  font-size:10px;
+  font-weight:600;
+}
+.kinoma-episode-number{
+  color:#fff !important;
+  font-size:12px !important;
+  font-weight:800 !important;
+  letter-spacing:.02em !important;
+  text-transform:none !important;
+}
+.kinoma-episode-list--grid .kinoma-episode-card{
+  flex:0 0 286px;
+  min-width:286px;
+  padding:0;
+  overflow:hidden;
+  border:1px solid rgba(255,255,255,.08);
+  border-radius:16px;
+  background:rgba(255,255,255,.035);
+  box-shadow:0 12px 32px rgba(0,0,0,.18);
+}
+.kinoma-episode-list--grid .kinoma-episode-card:hover{
+  transform:translateY(-3px) scale(1.01);
+  border-color:rgba(255,255,255,.16);
+  background:rgba(255,255,255,.055);
+  box-shadow:0 18px 42px rgba(0,0,0,.28);
+}
+.kinoma-episode-list--grid .kinoma-episode-art{
+  border-radius:0;
+  aspect-ratio:16/9;
+}
+.kinoma-episode-list--grid .kinoma-episode-copy{
+  padding:13px 14px 15px;
+}
+.kinoma-episode-list--grid .kinoma-episode-copy strong{
+  margin-bottom:6px;
+}
+.kinoma-episode-list--grid .kinoma-episode-copy span{
+  margin-top:0;
+  font-size:13px;
+}
+.kinoma-episode-list--grid .kinoma-episode-copy p{
+  margin-top:7px;
+  min-height:3.9em;
+  font-size:10px;
+  line-height:1.55;
+  color:rgba(255,255,255,.42);
+}
+.kinoma-episode-list--grid .kinoma-episode-arrow{display:none}
+.kinoma-episode-list--grid{
+  padding-top:2px;
+  padding-bottom:20px;
+}
+@media(max-width:700px){
+  .kinoma-details-section__heading--episodes{
+    align-items:flex-start;
+    gap:12px;
+  }
+  .kinoma-details-section__heading--episodes .kinoma-details-section__controls{
+    flex-wrap:wrap;
+  }
+  .kinoma-episode-list--grid .kinoma-episode-card{
+    flex-basis:260px;
+    min-width:260px;
+  }
+}
+@media(max-width:560px){
+  .kinoma-season-picker__trigger{min-width:112px;height:40px}
+  .kinoma-episode-list--grid .kinoma-episode-card{
+    flex-basis:245px;
+    min-width:245px;
+  }
+}
