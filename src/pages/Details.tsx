@@ -9,7 +9,7 @@ import { libraryManager } from '../lib/library';
 import { historyUtil } from '../lib/history';
 import { updateSEO } from '../lib/seo';
 import { trackGAEvent } from '../lib/analytics';
-import { slugifyTitle } from '../lib/slug';
+import { buildDetailsHref } from '../lib/mediaRoute';
 
 function cleanText(value: unknown) { return typeof value === 'string' ? value.replace(/<[^>]*>/g, '').trim() : ''; }
 function titleOf(data: any, fallback: string) { return typeof data?.title === 'string' ? data.title : data?.title?.english || data?.title?.romaji || data?.title?.native || fallback; }
@@ -135,13 +135,26 @@ export function Details() {
   };
 
   useEffect(() => {
-    const canonicalPath = '/details/' + slugifyTitle(title) + '?type=' + kind;
+    const canonicalPath = buildDetailsHref(id, kind);
     if (data && routeSlug !== slugifyTitle(title)) {
       window.history.replaceState(window.history.state, '', canonicalPath);
     }
-    updateSEO({ title, description: `${title} — ${synopsis}`.slice(0, 160), image: poster, type: kind === 'movie' ? 'video.movie' : 'video.tv_show', keywords: [title, ...(data?.genres || []), kind === 'movie' ? 'movie' : 'TV series', 'Panda.fun', 'watch online'], schema: { '@context': 'https://schema.org', '@type': kind === 'movie' ? 'Movie' : 'TVSeries', name: title, description: synopsis, image: poster ? [poster] : undefined, url: window.location.origin + '/details/' + slugifyTitle(title) + '?type=' + kind, datePublished: data?.releaseDate || undefined, aggregateRating: data?.rating != null ? { '@type': 'AggregateRating', ratingValue: data.rating, bestRating: 10 } : undefined, genre: data?.genres || undefined, isPartOf: { '@type': 'WebSite', name: 'Panda.fun', url: window.location.origin } } });
+    updateSEO({ title, description: `${title} — ${synopsis}`.slice(0, 160), image: poster, type: kind === 'movie' ? 'video.movie' : 'video.tv_show', keywords: [title, ...(data?.genres || []), kind === 'movie' ? 'movie' : 'TV series', 'Panda.fun', 'watch online'], schema: { '@context': 'https://schema.org', '@type': kind === 'movie' ? 'Movie' : 'TVSeries', name: title, description: synopsis, image: poster ? [poster] : undefined, url: window.location.origin + buildDetailsHref(id, kind), datePublished: data?.releaseDate || undefined, aggregateRating: data?.rating != null ? { '@type': 'AggregateRating', ratingValue: data.rating, bestRating: 10 } : undefined, genre: data?.genres || undefined, isPartOf: { '@type': 'WebSite', name: 'Panda.fun', url: window.location.origin } } });
     setIsInList(libraryManager.isInWatchlist(id));
   }, [title, synopsis, poster, id, kind]);
+
+  const share = async () => {
+    const shareUrl = window.location.href;
+    try {
+      if (navigator.share) {
+        await navigator.share({ title, text: 'Watch ' + title + ' on Panda.fun', url: shareUrl });
+      } else if (navigator.clipboard) {
+        await navigator.clipboard.writeText(shareUrl);
+      }
+    } catch {
+      // Native share can be cancelled; no UI error is needed.
+    }
+  };
 
   const toggleList = () => {
     const next = libraryManager.toggleWatchlist({ id, title, image: poster });
@@ -162,12 +175,13 @@ export function Details() {
         <div className="kinoma-details-hero__content">
           <div className="kinoma-details-copy">
             <div className="kinoma-details-eyebrow">{kind === 'movie' ? <Film size={13} /> : <Tv size={13} />} {kind === 'movie' ? 'Movie' : 'TV Series'}</div>
-            <h1>{title}</h1>
+            <h1 className={'kinoma-details-title kinoma-details-title--' + (kind === 'movie' ? 'movie' : 'series')}>{title}</h1>
             <div className="kinoma-details-meta">{data?.releaseDate && <span>{String(data.releaseDate).slice(0, 4)}</span>}{data?.rating != null && <span>★ {data.rating}</span>}<span>{kind === 'movie' ? formatDuration(data?.runtime) : 'Series'}</span>{(data?.genres || []).slice(0, 3).map((g: string) => <span key={g}>{g}</span>)}</div>
             <p className="kinoma-details-synopsis">{synopsis}</p>
             <div className="kinoma-details-actions">
               <button className="kinoma-details-3d-button kinoma-details-3d-button--watch" onClick={watch}><span><Play size={18} fill="currentColor" /> {watchLabel}</span></button>
               <button className={'kinoma-details-3d-button kinoma-details-3d-button--list ' + (isInList ? 'is-added' : '')} onClick={toggleList}><span>{isInList ? <Check size={18} /> : <Plus size={18} />} {isInList ? 'In My List' : 'Add to My List'}</span></button>
+              <button className="kinoma-details-share" type="button" onClick={share} aria-label="Share this title"><span><span className="kinoma-details-share__icon">↗</span> Share</span></button>
             </div>
           </div>
         </div>
@@ -190,15 +204,20 @@ export function Details() {
         </section>
       )}
 
-      {kind === 'movie' && (
-        <section className="kinoma-details-section">
-          <div className="kinoma-details-section__heading"><div><span>KEEP EXPLORING</span><h2>More like this</h2></div><small>Powered by MovieApi recommendations</small></div>
-          <div className="kinoma-more-grid">
-            {recommendations.map((item, i) => <button type="button" key={item.id} className="kinoma-more-card" onClick={() => setLocation('/details/' + slugifyTitle(typeof item.title === 'string' ? item.title : item.title.english || item.title.romaji || 'Untitled') + '?type=' + (item.contentType === 'movie' ? 'movie' : 'series'))}><div className={'kinoma-more-card__art tone-' + (i % 5)}>{item.image ? <img src={item.image} alt="" loading="lazy" decoding="async" /> : <Film size={25} />}</div><strong>{typeof item.title === 'string' ? item.title : item.title.english || item.title.romaji || 'Untitled'}</strong><span>{item.genres?.[0] || 'Recommended'} • {item.contentType === 'movie' ? 'Movie' : 'Series'}</span></button>)}
-            {!recommendations.length && !loading && <div className="kinoma-details-bottom">No recommendations are available right now.</div>}
-          </div>
-        </section>
-      )}
+      <section className="kinoma-details-section kinoma-details-more-section">
+        <div className="kinoma-details-section__heading"><div><span>KEEP EXPLORING</span><h2>More like this</h2></div><small>Recommended for you</small></div>
+        <div className="kinoma-more-rail">
+          {recommendations.map((item, i) => {
+            const itemTitle = typeof item.title === 'string' ? item.title : item.title.english || item.title.romaji || 'Untitled';
+            const itemType = item.contentType === 'movie' ? 'movie' : 'series';
+            return <button type="button" key={item.id} className="kinoma-more-card" onClick={() => setLocation(buildDetailsHref(item.id, itemType))} aria-label={'Open ' + itemTitle}>
+              <div className={'kinoma-more-card__art tone-' + (i % 5)}>{item.image ? <img src={item.image} alt="" loading={i < 3 ? 'eager' : 'lazy'} decoding="async" referrerPolicy="no-referrer" /> : <Film size={25} />}</div>
+              <div className="kinoma-more-card__copy"><strong>{itemTitle}</strong><span>{item.genres?.[0] || 'Recommended'} <i>•</i> {itemType === 'movie' ? 'Movie' : 'Series'}</span></div>
+            </button>;
+          })}
+          {!recommendations.length && !loading && <div className="kinoma-details-bottom">No recommendations are available right now.</div>}
+        </div>
+      </section>
       <div className="kinoma-details-bottom"><Clock3 size={14} /> Metadata and playback are powered by MovieApi.</div>
     </main>
   );
