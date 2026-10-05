@@ -419,9 +419,6 @@ export function Home() {
                                   decoding="async"
                                   referrerPolicy="no-referrer"
                                 />
-                                {index > 0 && (
-                                  <span className="panda-home-top10__badge" aria-hidden="true">Recently Added</span>
-                                )}
                               </div>
                             ) : <div className="panda-home-top10__poster" aria-hidden="true" />}
                           </Link>
