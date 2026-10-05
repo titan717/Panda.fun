@@ -7632,17 +7632,24 @@ body {
 }
 
 
-/* Homepage theme restoration */
-.panda-home-top10__today span {
+/* Homepage final Top 10 title treatment — keep “Content Today” neutral. */
+.panda-home-top10__title {
   font-family: "Google Sans", "Montserrat", "Arial", sans-serif !important;
   font-weight: 900 !important;
-  letter-spacing: 0.18em !important;
+  letter-spacing: -0.045em !important;
   color: #050505 !important;
   -webkit-text-fill-color: #050505 !important;
-  -webkit-text-stroke: 1px rgba(255,255,255,.98) !important;
+  -webkit-text-stroke: 2px rgba(255,255,255,.98) !important;
   paint-order: stroke fill !important;
+  text-shadow: none !important;
 }
-.kinoma-home,
-.panda-home-v2 {
-  background-color: #050505 !important;
+.panda-home-top10__today span {
+  font-family: "Google Sans", "Montserrat", "Arial", sans-serif !important;
+  font-weight: 700 !important;
+  letter-spacing: 0.3em !important;
+  color: #a1a1aa !important;
+  -webkit-text-fill-color: #a1a1aa !important;
+  -webkit-text-stroke: 0 !important;
 }
+@media (min-width: 640px) { .panda-home-top10__title { -webkit-text-stroke-width: 2.5px !important; } }
+@media (min-width: 1200px) { .panda-home-top10__title { -webkit-text-stroke-width: 3px !important; } }
