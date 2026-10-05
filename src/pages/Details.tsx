@@ -220,7 +220,9 @@ export function Details() {
               )}
             </div>
             <div className="kinoma-details-section__controls">
-              <small>{seasonEpisodes.length} {seasonEpisodes.length === 1 ? 'episode' : 'episodes'}</small>
+              <div className="kinoma-episode-search"><Search size={14} /><input value={episodeSearch} onChange={e => setEpisodeSearch(e.target.value)} placeholder="Search episodes" aria-label="Search episodes" /></div>
+              <button type="button" className="kinoma-episode-sort" onClick={() => setEpisodeSort(value => value === 'asc' ? 'desc' : 'asc')} title={episodeSort === 'asc' ? 'Sort descending' : 'Sort ascending'} aria-label={episodeSort === 'asc' ? 'Sort episodes descending' : 'Sort episodes ascending'}><ArrowUpDown size={15} /><span>{episodeSort === 'asc' ? 'ASC' : 'DESC'}</span></button>
+              <small>{modelSeasons.find(s => s.number === selectedSeason)?.episodes.length || 0} {((modelSeasons.find(s => s.number === selectedSeason)?.episodes.length || 0) === 1) ? 'episode' : 'episodes'}</small>
               <button type="button" className="kinoma-episode-view-toggle" onClick={() => setEpisodeView(value => value === 'list' ? 'grid' : 'list')} aria-label={episodeView === 'list' ? 'Switch to grid view' : 'Switch to list view'} title={episodeView === 'list' ? 'Grid view' : 'List view'}>
                 {episodeView === 'list' ? <Grid2X2 size={16} /> : <List size={17} />}
               </button>
