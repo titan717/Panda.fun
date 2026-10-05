@@ -2,7 +2,7 @@
 
 ## Goal
 
-Refine the existing Panda.fun Details page without replacing its current structure or trailer. Use the Movy details-page reference as the visual benchmark for the season selector, episode presentation, and More Like This, while keeping Panda.fun branding, data, routing, and EmbedWave playback.
+Refine the existing Panda.fun Details page without replacing its current structure or trailer. Use the Movy details-page reference as the visual benchmark for the season selector, episode presentation, and More Like This, while keeping Panda.fun branding, data, routing, and Vidy.st playback.
 
 ## Scope
 
@@ -51,7 +51,7 @@ Presentation should follow the reference's visual language:
 - useful metadata when available;
 - clear hover/focus affordance.
 
-Selecting an episode routes to the existing EmbedWave playback target using TMDB identity plus season and episode.
+Selecting an episode routes to the existing Vidy.st playback target using TMDB identity plus season and episode.
 
 ### 5. More Like This
 
@@ -79,7 +79,7 @@ Do not modify:
 - unrelated homepage card systems;
 - existing trailer implementation;
 - MovieAPI architecture;
-- EmbedWave provider.
+- Vidy.st provider.
 
 ## Data and interaction
 
