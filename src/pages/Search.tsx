@@ -5,7 +5,7 @@ import { Clock3, Filter, Search as SearchIcon, Sparkles, X } from 'lucide-react'
 import { Link, useLocation } from 'wouter';
 import { updateSEO } from '../lib/seo';
 import { trackGAEvent } from '../lib/analytics';
-import { slugifyTitle } from '../lib/slug';
+import { buildDetailsHref } from '../lib/mediaRoute';
 import { preferencesUtil } from '../lib/preferences';
 import { api, MovieApiError } from '../lib/api';
 import type { AnimeItem } from '../types';
@@ -22,7 +22,7 @@ const mapItem = (item: AnimeItem): SearchItem => {
     image: item.image,
     rating: Number(item.rating || 0) || 0,
     year: item.releaseDate ? Number(String(item.releaseDate).slice(0, 4)) || undefined : undefined,
-    href: '/details/' + slugifyTitle(item.title) + '?type=' + type,
+    href: buildDetailsHref(item.id, type),
   };
 };
 
@@ -108,6 +108,13 @@ export function Search() {
   const clearSearch = () => { setQuery(''); setSubmittedQuery(''); setError(null); setFilter('all'); inputRef.current?.focus(); setLocation('/search'); };
   const clearQueryInput = () => { setQuery(''); inputRef.current?.focus(); };
   const clearRecent = () => { preferencesUtil.clearRecentSearches(); setRecentSearches([]); };
+  const surprisePool = useMemo(() => results.filter(item => item.id && item.title), [results]);
+  const surpriseMe = () => {
+    if (!surprisePool.length) return;
+    const pick = surprisePool[Math.floor(Math.random() * surprisePool.length)];
+    trackGAEvent('surprise_me', { source: 'search', content_type: pick.type, item_id: pick.id, title: pick.title });
+    setLocation(pick.href);
+  };
 
   const handleInputKeyDown = (event: React.KeyboardEvent<HTMLInputElement>) => {
     if (event.key === 'Escape' && query) { setQuery(''); return; }
@@ -152,7 +159,26 @@ export function Search() {
           {query && <button type="button" className="kinoma-search-control__clear" onClick={clearQueryInput} aria-label="Clear search"><X size={16} /></button>}
           <button type="submit" className="kinoma-search-control__submit">Search</button>
         </form>
+        {!isSearching && <button type="button" className="panda-search-surprise" onClick={surpriseMe} disabled={!surprisePool.length} aria-label="Pick a surprise title and open its details page"><Sparkles size={15} /> Surprise Me <span>Pick something for me</span></button>}
       </header>
+      {!isSearching && surprisePool.length > 0 && <section className="panda-search-top10" aria-labelledby="panda-search-top10-heading">
+        <div className="panda-search-top10__head">
+          <h2 id="panda-search-top10-heading" className="panda-search-top10__title">TOP 10</h2>
+          <div className="panda-search-top10__today"><span>On Panda</span><span>Right now</span></div>
+        </div>
+        <div className="panda-search-top10__rail">
+          {surprisePool.slice(0, 10).map((item, index) => (
+            <div className="panda-search-rank" key={item.id}>
+              <span className="panda-search-rank__number" aria-hidden="true">{index + 1}</span>
+              <Link href={item.href} className="panda-search-rank__link" aria-label={"Open " + item.title} onClick={() => trackGAEvent('search_rank_select', { rank: index + 1, item_id: item.id, title: item.title })}>
+                {item.image ? <img className="panda-search-rank__poster" src={item.image} alt="" loading={index < 3 ? 'eager' : 'lazy'} decoding="async" referrerPolicy="no-referrer" /> : <div className="panda-search-rank__poster" />}
+                <span className="panda-search-rank__shade" aria-hidden="true" />
+                <span className="panda-search-rank__meta"><strong>{item.title}</strong><span>{item.meta}</span></span>
+              </Link>
+            </div>
+          ))}
+        </div>
+      </section>
       {!isSearching && recentSearches.length > 0 && <section className="kinoma-search-recent" aria-label="Recent searches"><div className="kinoma-search-recent__label"><Clock3 size={14} /> Recent</div><div className="kinoma-search-recent__items">{recentSearches.slice(0, 5).map(item => <button key={item} type="button" onClick={() => chooseRecent(item)}>{item}</button>)}<button type="button" className="kinoma-search-recent__clear" onClick={clearRecent}>Clear</button></div></section>}
       <section ref={resultsRef} className="kinoma-search-results" id="search-results">
         <div className="kinoma-search-results__heading"><div><span className="kinoma-eyebrow">{isSearching ? 'Your search' : 'Live discovery'}</span><h2>{isSearching ? 'Matches' : 'Trending now'}</h2></div>{!isSearching && <Sparkles size={18} />}</div>
