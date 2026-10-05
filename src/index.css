@@ -6412,118 +6412,240 @@ body {
 /* Search discovery ranking — inspired by the reference's oversized rank typography,
    adapted to Panda.fun's darker/warm identity. */
 .panda-home-top10 {
-  position: relative;
-  margin: 18px 0 34px;
-  padding: 0 0 4px;
-  overflow: hidden;
+  width: 100%;
+  margin: 0 0 34px;
+  padding: 40px 0 0;
+  overflow: visible;
 }
+
 .panda-home-top10__head {
   display: flex;
-  align-items: end;
+  align-items: flex-end;
   gap: 12px;
-  padding: 0 4px 18px;
+  margin: 0 0 24px;
+  padding: 0 16px;
 }
+
 .panda-home-top10__title {
   margin: 0;
-  font-size: clamp(38px, 6vw, 76px);
-  line-height: .84;
-  letter-spacing: -.065em;
-  font-weight: 900;
+  font-size: clamp(48px, 7vw, 112px);
+  line-height: .86;
+  letter-spacing: -.055em;
+  font-weight: 950;
   text-transform: uppercase;
-  color: #f4eee9;
+  color: #f5f5f5;
 }
+
 .panda-home-top10__today {
-  padding-bottom: 3px;
-  display: grid;
+  display: flex;
+  flex-direction: column;
   gap: 2px;
-  font-size: 9px;
-  line-height: 1.1;
-  letter-spacing: .24em;
-  text-transform: uppercase;
-  color: rgba(255,244,232,.35);
+  margin-bottom: 5px;
 }
+
+.panda-home-top10__today span {
+  color: #a1a1aa;
+  font-size: clamp(10px, .8vw, 12px);
+  line-height: 1.15;
+  font-weight: 800;
+  letter-spacing: .3em;
+  text-transform: uppercase;
+}
+
 .panda-home-top10__rail {
   display: flex;
   align-items: flex-end;
   gap: 4px;
   overflow-x: auto;
-  padding: 0 4px 12px;
+  overflow-y: hidden;
+  padding: 0 32px 20px 16px;
   scrollbar-width: none;
   scroll-snap-type: x proximity;
+  overscroll-behavior-x: contain;
 }
-.panda-home-top10__rail::-webkit-scrollbar { display: none; }
+
+.panda-home-top10__rail::-webkit-scrollbar {
+  display: none;
+}
+
 .panda-home-top10__rank {
   position: relative;
   flex: 0 0 auto;
-  display: flex;
-  align-items: flex-end;
-  min-width: 174px;
   scroll-snap-align: start;
 }
-.panda-home-top10__number {
-  width: 86px;
-  margin-right: -22px;
-  padding-bottom: 2px;
+
+.panda-home-top10__rank-row {
+  display: flex;
+  align-items: flex-end;
+}
+
+.panda-home-top10__number-wrap {
+  position: relative;
   z-index: 0;
-  font-size: clamp(92px, 11vw, 142px);
-  line-height: .72;
-  letter-spacing: -.09em;
+  flex-shrink: 0;
+  width: 92px;
+  margin-right: -14px;
+  overflow: visible;
+}
+
+.panda-home-top10__number {
+  display: block;
+  color: rgba(245, 245, 245, .32);
+  font-size: clamp(100px, 10vw, 140px);
+  line-height: .78;
+  letter-spacing: -.075em;
   font-weight: 950;
-  color: rgba(245,238,232,.13);
   user-select: none;
   pointer-events: none;
-  text-align: center;
 }
-.panda-home-top10__rank:first-child .panda-home-top10__number {
-  color: rgba(184,77,65,.24);
-}
-.panda-home-top10__link {
+
+.panda-home-top10__card {
   position: relative;
   z-index: 1;
+  flex-shrink: 0;
+}
+
+.panda-home-top10__link {
   display: block;
-  width: 128px;
-  border-radius: 17px;
+  width: 130px;
   overflow: hidden;
-  background: #0d0c0b;
-  border: 1px solid rgba(255,244,232,.07);
-  box-shadow: 0 18px 42px rgba(0,0,0,.38);
-  transition: transform .35s ease, border-color .35s ease, box-shadow .35s ease;
+  border-radius: 16px;
+  background: #18181b;
+  box-shadow: 0 20px 42px rgba(0, 0, 0, .38);
+  text-decoration: none;
+  transition: box-shadow .5s ease, transform .35s ease;
 }
+
 .panda-home-top10__link:hover {
-  transform: translateY(-6px) scale(1.018);
-  border-color: rgba(184,77,65,.32);
-  box-shadow: 0 24px 54px rgba(0,0,0,.52), 0 0 28px rgba(142,57,48,.10);
+  transform: translateY(-3px);
+  box-shadow: 0 0 24px rgba(255, 255, 255, .06);
 }
+
+.panda-home-top10__poster-wrap {
+  position: relative;
+  width: 100%;
+  aspect-ratio: 2 / 3;
+  overflow: hidden;
+  background: #18181b;
+}
+
 .panda-home-top10__poster {
   display: block;
   width: 100%;
-  aspect-ratio: 2 / 3;
+  height: 100%;
   object-fit: cover;
+  transition: transform .5s ease;
 }
-.panda-home-top10__shade {
-  position: absolute;
-  inset: 0;
-  background: linear-gradient(to top, rgba(5,4,4,.78), transparent 42%);
-  pointer-events: none;
+
+.panda-home-top10__link:hover .panda-home-top10__poster {
+  transform: scale(1.05);
 }
+
 .panda-home-top10__meta {
-  padding: 8px 9px 10px;
-  position: relative;
+  width: 130px;
+  padding: 10px 2px 0;
 }
-.panda-home-top10__meta strong {
-  display: block;
+
+.panda-home-top10__meta p {
+  margin: 0;
   overflow: hidden;
+  color: #fff;
+  font-size: 13px;
+  font-weight: 600;
+  line-height: 1.2;
   text-overflow: ellipsis;
   white-space: nowrap;
+}
+
+.panda-home-top10__meta > div {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  margin-top: 4px;
+  color: rgba(255, 255, 255, .45);
   font-size: 11px;
-  font-weight: 700;
+  line-height: 1.1;
 }
-.panda-home-top10__meta span {
-  display: block;
-  margin-top: 3px;
-  color: rgba(255,244,232,.4);
-  font-size: 9px;
+
+.panda-home-top10__rating {
+  color: #eab308;
 }
+
+.panda-home-top10__dot {
+  color: rgba(255, 255, 255, .2);
+}
+
+@media (min-width: 640px) {
+  .panda-home-top10__number-wrap {
+    width: 100px;
+    margin-right: -16px;
+  }
+
+  .panda-home-top10__link,
+  .panda-home-top10__meta {
+    width: 150px;
+  }
+}
+
+@media (min-width: 768px) {
+  .panda-home-top10__number-wrap {
+    width: 108px;
+    margin-right: -18px;
+  }
+
+  .panda-home-top10__link,
+  .panda-home-top10__meta {
+    width: 170px;
+  }
+}
+
+@media (max-width: 700px) {
+  .panda-home-top10 {
+    margin-top: 0;
+    padding-top: 26px;
+  }
+
+  .panda-home-top10__head {
+    margin-bottom: 18px;
+    padding: 0 12px;
+  }
+
+  .panda-home-top10__title {
+    font-size: clamp(48px, 16vw, 76px);
+  }
+
+  .panda-home-top10__today span {
+    font-size: 9px;
+  }
+
+  .panda-home-top10__rail {
+    padding-left: 12px;
+    padding-right: 24px;
+    gap: 2px;
+  }
+
+  .panda-home-top10__number-wrap {
+    width: 78px;
+    margin-right: -12px;
+  }
+
+  .panda-home-top10__number {
+    font-size: 100px;
+  }
+
+  .panda-home-top10__link,
+  .panda-home-top10__meta {
+    width: 130px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .panda-home-top10__link,
+  .panda-home-top10__poster {
+    transition: none;
+  }
+}
+
 .panda-search-surprise {
   display: inline-flex;
   align-items: center;
