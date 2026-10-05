@@ -36,7 +36,7 @@ The application does not store the movie or TV video files itself. It retrieves 
 │                                              │
 │  Landing → Home → Search → Details → Watch  │
 │                         │            │        │
-│                         │            └───────┼── EmbedWave
+│                         │            └───────┼── Vidy.st
 │                         │                    │   └─ CineSrc default
 │                         │                    │
 │                         └── MovieAPI ────────┘
@@ -158,25 +158,19 @@ TVMaze IDs can be resolved to TMDB IDs when a TMDB-only operation, such as trail
 
 ## ▶️ Playback
 
-The current web player architecture uses **EmbedWave as the embedder**.
+The current web player architecture uses **Vidy.st as the sole playback provider**.
 
 For the current configuration:
 
 ```
 Panda.fun
    ↓
-EmbedWave
+Vidy.st
    ↓
-CineSrc (default server)
+TMDB-powered movie / TV playback
 ```
 
-The frontend generates an EmbedWave playback URL with:
-
-```
-autoplay=1
-nobrand=1
-server=cinesrc
-```
+The frontend generates Vidy.st playback URLs with `autoplay=true`. TV playback also enables `nextEpisode=true`, `episodeSelector=true`, and `autoplayNextEpisode=true`.
 
 ### Movies
 
@@ -204,7 +198,7 @@ The player page also provides:
 - Native device sharing
 - Similar/recommended titles
 - Responsive player layout
-- EmbedWave fallback/error states
+- Vidy.st fallback/error states
 
 ### Important playback note
 
