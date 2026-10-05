@@ -121,10 +121,16 @@ export function Details() {
   const watchLabel = resume && !resume.isCompleted ? 'Continue Watching' : resume?.isCompleted ? 'Watch Again' : 'Watch Now';
   const modelSeasons = useMemo(() => seasonItems.map(season => ({
     number: season.seasonNumber,
-    episodes: season.seasonNumber === selectedSeason ? seasonEpisodes.map(ep => ({
-      number: ep.number, title: cleanText(ep.title) || 'Episode ' + ep.number, synopsis: cleanText((ep as any).synopsis), image: ep.image || ''
-    })) : []
-  })), [seasonItems, selectedSeason, seasonEpisodes]);
+    episodes: season.seasonNumber === selectedSeason ? [...seasonEpisodes]
+      .filter(ep => {
+        const q = episodeSearch.trim().toLowerCase();
+        return !q || ('episode ' + ep.number).includes(q) || cleanText(ep.title).toLowerCase().includes(q) || cleanText(ep.synopsis).toLowerCase().includes(q);
+      })
+      .sort((a, b) => episodeSort === 'asc' ? a.number - b.number : b.number - a.number)
+      .map(ep => ({
+        number: ep.number, title: cleanText(ep.title) || 'Episode ' + ep.number, synopsis: cleanText(ep.synopsis), image: ep.image || '', duration: ep.duration, rating: ep.rating
+      })) : []
+  })), [seasonItems, selectedSeason, seasonEpisodes, episodeSearch, episodeSort]);
 
   const watch = () => {
     trackGAEvent('select_content', { content_type: kind });
