@@ -1,7 +1,7 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import { Footer } from '../components/ui/Footer';
 import { useLocation, useRoute } from 'wouter';
-import { Play, Plus, Check, ChevronRight, Film, Tv, Clock3 } from 'lucide-react';
+import { Play, Plus, Check, ChevronRight, Film, Tv, Clock3, Share2 } from 'lucide-react';
 import { api, resolveMediaIdFromSlug } from '../lib/api';
 import type { AnimeItem, Episode, AnimeSeasonItem } from '../types';
 import { DEFAULT_POSTER, DEFAULT_BANNER } from '../types';
@@ -181,7 +181,7 @@ export function Details() {
             <div className="kinoma-details-actions">
               <button className="kinoma-details-3d-button kinoma-details-3d-button--watch" onClick={watch}><span><Play size={18} fill="currentColor" /> {watchLabel}</span></button>
               <button className={'kinoma-details-3d-button kinoma-details-3d-button--list ' + (isInList ? 'is-added' : '')} onClick={toggleList}><span>{isInList ? <Check size={18} /> : <Plus size={18} />} {isInList ? 'In My List' : 'Add to My List'}</span></button>
-              <button className="kinoma-details-share" type="button" onClick={share} aria-label="Share this title"><span><span className="kinoma-details-share__icon">↗</span> Share</span></button>
+              <button className="kinoma-details-share" type="button" onClick={share} aria-label="Share this title"><span><Share2 className="kinoma-details-share__icon" size={16} /> Share</span></button>
             </div>
           </div>
         </div>
