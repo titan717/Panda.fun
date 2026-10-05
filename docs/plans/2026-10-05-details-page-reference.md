@@ -4,9 +4,9 @@
 
 **Goal:** Refine the existing Panda.fun Details page so its information remains Panda.fun-native while the series selector, episodes, and More Like This visually and interactively follow the approved Movy reference.
 
-**Architecture:** Keep `src/pages/Details.tsx` as the data/interaction owner and use focused Details-page CSS in `src/index.css` for the reference-faithful presentation. Preserve MovieAPI, history/watchlist, canonical media routing, and EmbedWave watch routing. Split the work into independently testable visual/behavioral commits.
+**Architecture:** Keep `src/pages/Details.tsx` as the data/interaction owner and use focused Details-page CSS in `src/index.css` for the reference-faithful presentation. Preserve MovieAPI, history/watchlist, canonical media routing, and Vidy.st watch routing. Split the work into independently testable visual/behavioral commits.
 
-**Tech Stack:** React + TypeScript, Wouter, Tailwind/CSS in `src/index.css`, Lucide icons, Vitest, MovieAPI, EmbedWave.
+**Tech Stack:** React + TypeScript, Wouter, Tailwind/CSS in `src/index.css`, Lucide icons, Vitest, MovieAPI, Vidy.st.
 
 ## Global Constraints
 
@@ -14,7 +14,7 @@
 - Existing Panda.fun information-page structure is retained.
 - Title presentation is refined to be cinematic/distinctive without replacing the information layout.
 - Series season selector matches the Movy reference in dimensions, spacing, geometry, typography, selected/hover/focus effects, transitions, horizontal behavior, and responsive behavior.
-- Episodes retain real MovieAPI data and existing EmbedWave watch routing.
+- Episodes retain real MovieAPI data and existing Vidy.st watch routing.
 - More Like This matches the Movy reference in card proportions, image treatment, spacing, typography, hover/scale behavior, horizontal behavior, and responsive rhythm.
 - Movie order: Trailer -> Information -> More Like This.
 - Series order: Trailer -> Information -> Season selector -> Episodes -> More Like This.
