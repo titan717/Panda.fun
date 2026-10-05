@@ -259,7 +259,7 @@ export function Details() {
       )}
 
       <section className="kinoma-details-section kinoma-details-more-section">
-        <div className="kinoma-details-section__heading"><div><span>DISCOVER MORE</span><h2>More Like This</h2></div><small>Recommended for you</small></div>
+        <div className="kinoma-details-section__heading kinoma-details-section__heading--more"><div><span className="kinoma-section-accent" aria-hidden="true" /><div><span>DISCOVER MORE</span><h2>More Like This</h2></div></div><small>Recommended for you</small></div>
         <div className="kinoma-more-rail">
           {recommendations.map((item, i) => {
             const itemTitle = typeof item.title === 'string' ? item.title : item.title.english || item.title.romaji || 'Untitled';
