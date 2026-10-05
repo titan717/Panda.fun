@@ -499,7 +499,9 @@ export const api = {
       anime_id: id, season_number: seasonNumber, season_anime_id: id,
       episodes: (data.episodes || []).map((ep) => ({
         id: String(ep.id), number: Number(ep.number || 1), title: ep.title || `Episode ${ep.number || 1}`,
-        synopsis: ep.synopsis || ep.overview || '', image: ep.image?.original || ep.image?.medium || ep.image || ''
+        synopsis: ep.synopsis || ep.overview || '', image: ep.image?.original || ep.image?.medium || ep.image || '',
+        duration: Number(ep.runtime || ep.duration || 0) || undefined,
+        rating: Number(ep.rating ?? ep.vote_average ?? 0) || undefined
       }))
     };
   },
