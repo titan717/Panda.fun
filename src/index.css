@@ -7529,30 +7529,50 @@ body {
   position: relative !important;
   z-index: 0 !important;
 }
+.panda-home-top10__rank-row {
+  position: relative !important;
+  display: block !important;
+  overflow: visible !important;
+}
 .panda-home-top10__number-wrap {
-  width: auto !important;
-  min-width: 0 !important;
-  margin-right: -12px !important;
+  position: absolute !important;
+  z-index: 0 !important;
+  left: -38px !important;
+  bottom: 0 !important;
+  width: 118px !important;
+  height: 142px !important;
+  margin: 0 !important;
   overflow: visible !important;
   display: flex !important;
   align-items: flex-end !important;
+  justify-content: flex-end !important;
+  pointer-events: none !important;
+}
+.panda-home-top10__number {
+  position: relative !important;
+  z-index: 0 !important;
+}
+.panda-home-top10__card {
   position: relative !important;
   z-index: 2 !important;
+  margin-left: 46px !important;
 }
-.panda-home-top10__card { z-index: 1; }
 .panda-home-top10__link { box-shadow: 0 16px 36px rgba(0,0,0,.28); }
 .panda-home-top10__link:hover { box-shadow: 0 20px 40px rgba(0,0,0,.34); }
 @media (min-width: 640px) {
   .panda-home-top10__number { font-size: 132px !important; -webkit-text-stroke-width: 3.5px !important; }
-  .panda-home-top10__number-wrap { margin-right: -15px !important; }
+  .panda-home-top10__number-wrap { left: -46px !important; width: 132px !important; height: 154px !important; }
+  .panda-home-top10__card { margin-left: 54px !important; }
 }
 @media (min-width: 1200px) {
   .panda-home-top10__number { font-size: 156px !important; -webkit-text-stroke-width: 4px !important; }
-  .panda-home-top10__number-wrap { margin-right: -18px !important; }
+  .panda-home-top10__number-wrap { left: -54px !important; width: 150px !important; height: 176px !important; }
+  .panda-home-top10__card { margin-left: 64px !important; }
 }
 @media (max-width: 700px) {
   .panda-home-top10__number { font-size: 92px !important; -webkit-text-stroke-width: 2.5px !important; }
-  .panda-home-top10__number-wrap { margin-right: -12px !important; }
+  .panda-home-top10__number-wrap { left: -34px !important; width: 104px !important; height: 116px !important; }
+  .panda-home-top10__card { margin-left: 40px !important; }
 }
 
 /* New footer — quiet editorial layout rather than a dashboard-like panel. */
