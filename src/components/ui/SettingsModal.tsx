@@ -27,8 +27,6 @@ export function SettingsModal() {
     isSettingsModalOpen, 
     closeSettingsModal, 
     playerSettings,
-    playbackPreferences,
-    updatePlaybackPreference, 
     updatePlayerSetting,
     activeSettingsTab,
     setActiveSettingsTab
