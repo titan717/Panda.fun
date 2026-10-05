@@ -205,7 +205,9 @@ export function Details() {
       {kind === 'series' && (
         <section className="kinoma-details-section kinoma-details-seasons">
           <div className="kinoma-details-section__heading kinoma-details-section__heading--episodes">
-            <div className="kinoma-season-picker">
+            <div className="kinoma-season-heading">
+              <span className="kinoma-section-accent" aria-hidden="true" />
+              <div className="kinoma-season-picker">
               <button type="button" className="kinoma-season-picker__trigger" onClick={() => setSeasonMenuOpen(value => !value)} aria-expanded={seasonMenuOpen} aria-haspopup="listbox">
                 <span>Seasons</span><span className="kinoma-season-picker__chevron">⌄</span>
               </button>
