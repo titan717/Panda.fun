@@ -1,7 +1,6 @@
 import React, { useEffect, useMemo, useState } from 'react';
-import { Footer } from '../components/ui/Footer';
 import { useLocation, useRoute } from 'wouter';
-import { Play, Plus, Check, ChevronRight, Film, Tv, Clock3, Share2 } from 'lucide-react';
+import { Play, Plus, Check, ChevronRight, Film, Clock3 } from 'lucide-react';
 import { api, resolveMediaIdFromSlug } from '../lib/api';
 import type { AnimeItem, Episode, AnimeSeasonItem } from '../types';
 import { DEFAULT_POSTER, DEFAULT_BANNER } from '../types';
@@ -167,6 +166,8 @@ export function Details() {
       {loading && <div className="panda-state-card" role="status"><span className="panda-state-card__spinner" aria-hidden="true" /><div><strong>Loading title</strong><small>Fetching the latest details…</small></div></div>}
       {error && !loading && <div className="panda-state-card is-error" role="alert"><div><strong>We couldn't load this title.</strong><small>{error}</small></div><button type="button" onClick={() => setRetryKey(value => value + 1)}>Retry</button></div>}
       <section className="kinoma-details-hero kinoma-details-hero--trailer">
+        <div className="kinoma-details-hero__backdrop" aria-hidden="true"><img src={backdrop} alt="" /></div>
+        <div className="kinoma-details-hero__scrim" aria-hidden="true" />
         <div className="kinoma-details-hero__trailer-bg" aria-label={title + ' trailer preview'}>
           {trailer?.trailer?.embedUrl ? <iframe src={trailerSrc(trailer.trailer.embedUrl)} title={title + ' trailer'} className="kinoma-details-hero__trailer-video" allow="autoplay; encrypted-media; picture-in-picture" allowFullScreen /> : (
             <div className="kinoma-details-hero__trailer-placeholder"><div><Film size={42} /></div><span>TRAILER PREVIEW</span><strong>Trailer preview unavailable</strong><small>MovieApi did not return a trailer for this title.</small></div>
@@ -174,19 +175,20 @@ export function Details() {
         </div>
         <div className="kinoma-details-hero__content">
           <div className="kinoma-details-copy">
-            <div className="kinoma-details-eyebrow">{kind === 'movie' ? <Film size={13} /> : <Tv size={13} />} {kind === 'movie' ? 'Movie' : 'TV Series'}</div>
             <h1 className={'kinoma-details-title kinoma-details-title--' + (kind === 'movie' ? 'movie' : 'series')}>{title}</h1>
             <div className="kinoma-details-meta" aria-label="Title information">
-              {data?.releaseDate && <span>{String(data.releaseDate).slice(0, 4)}</span>}
               {data?.rating != null && <span>★ {data.rating}</span>}
-              <span>{kind === 'movie' ? formatDuration(data?.runtime) : 'Series'}</span>
-              {(data?.genres || []).slice(0, 3).map((g: string) => <span key={g}>{g}</span>)}
+              {data?.releaseDate && <span>·</span>}
+              {data?.releaseDate && <span>{String(data.releaseDate).slice(0, 4)}</span>}
+              <span>·</span>
+              <span>{kind === 'movie' ? formatDuration(data?.runtime) : (seasonItems.length || 1) + ' Seasons'}</span>
             </div>
+            <p className="kinoma-details-genres">{(data?.genres || []).slice(0, 3).map((g: string, i: number) => <React.Fragment key={g}>{i > 0 && <span> · </span>}{g}</React.Fragment>)}</p>
             <p className="kinoma-details-synopsis">{synopsis}</p>
             <div className="kinoma-details-actions">
               <button className="kinoma-details-3d-button kinoma-details-3d-button--watch" onClick={watch}><span><Play size={18} fill="currentColor" /> {watchLabel}</span></button>
-              <button className={'kinoma-details-3d-button kinoma-details-3d-button--list ' + (isInList ? 'is-added' : '')} onClick={toggleList}><span>{isInList ? <Check size={18} /> : <Plus size={18} />} {isInList ? 'In My List' : 'Add to My List'}</span></button>
-              <button className="kinoma-details-share" type="button" onClick={share} aria-label="Share this title"><span><Share2 className="kinoma-details-share__icon" size={16} /> Share</span></button>
+              <button className={'kinoma-details-3d-button kinoma-details-3d-button--list ' + (isInList ? 'is-added' : '')} onClick={toggleList}><span>{isInList ? <Check size={18} /> : <Plus size={18} />} {isInList ? 'In My List' : 'Add to List'}</span></button>
+              
             </div>
           </div>
         </div>
