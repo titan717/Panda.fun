@@ -3305,7 +3305,7 @@ p {
 .kinoma-details-trailer__placeholder{width:100%;height:100%;display:grid;place-items:center;align-content:center;gap:8px;text-align:center;background:radial-gradient(circle at 50% 42%,rgba(184,77,65,.22),transparent 34%),linear-gradient(145deg,#251b1a,#100e0e 72%);color:rgba(246,242,238,.5)}
 .kinoma-details-trailer__placeholder-art{display:grid;place-items:center;width:64px;height:64px;border:1px solid rgba(232,208,192,.16);border-radius:20px;color:rgba(232,208,192,.75);background:rgba(255,255,255,.035);box-shadow:0 15px 45px rgba(0,0,0,.24)}
 .kinoma-details-trailer__placeholder span{margin-top:8px;font-size:8px;letter-spacing:.18em;font-weight:900;color:rgba(232,208,192,.6)}.kinoma-details-trailer__placeholder strong{font-size:clamp(1.1rem,2vw,1.8rem);color:#fff}.kinoma-details-trailer__placeholder small{max-width:330px;color:rgba(246,242,238,.32);font-size:9px;line-height:1.6}
-.kinoma-details-trailer__play{position:absolute;z-index:3;border:1px solid rgba(255,255,255,.12);border-radius:12px;color:#fff;background:rgba(10,9,9,.62);backdrop-filter:blur(12px);cursor:pointer}.kinoma-details-trailer__play{left:50%;top:50%;transform:translate(-50%,-50%);display:flex;align-items:center;gap:8px;padding:11px 14px;font-size:10px;font-weight:850}
+.kinoma-details-trailer__sound,.kinoma-details-trailer__play{position:absolute;z-index:3;border:1px solid rgba(255,255,255,.12);border-radius:12px;color:#fff;background:rgba(10,9,9,.62);backdrop-filter:blur(12px);cursor:pointer}.kinoma-details-trailer__sound{right:14px;bottom:14px;width:40px;height:40px;display:grid;place-items:center}.kinoma-details-trailer__play{left:50%;top:50%;transform:translate(-50%,-50%);display:flex;align-items:center;gap:8px;padding:11px 14px;font-size:10px;font-weight:850}
 .kinoma-details-hero__content{position:relative;min-height:760px;display:flex;align-items:flex-end;padding:0 clamp(20px,6vw,92px) 88px}
 .kinoma-details-copy{width:min(100%,620px)}
 .kinoma-details-eyebrow{display:inline-flex;align-items:center;gap:7px;color:rgba(232,208,192,.68);font-size:9px;font-weight:900;letter-spacing:.16em;text-transform:uppercase}
@@ -6487,29 +6487,20 @@ body {
 .panda-home-top10__number-wrap {
   position: relative;
   z-index: 0;
-  flex: 0 0 82px;
-  width: 82px;
-  margin-right: -26px;
+  flex-shrink: 0;
+  width: auto;
+  margin-right: -8px;
   overflow: visible;
-  display: flex;
-  align-items: flex-end;
-  justify-content: flex-end;
 }
 
 .panda-home-top10__number {
   display: block;
-  position: relative;
-  z-index: 0;
-  transform: translateY(3px);
   font-family: "Google Sans", sans-serif;
-  color: #050505;
-  -webkit-text-fill-color: #050505;
-  -webkit-text-stroke: 2px rgba(255,255,255,.98);
-  paint-order: stroke fill;
-  font-size: 112px;
+  color: #f4f4f5;
+  font-size: 100px;
   font-weight: 900;
-  line-height: .82;
-  letter-spacing: -.055em;
+  line-height: 1;
+  letter-spacing: normal;
   user-select: none;
   pointer-events: none;
 }
@@ -7529,50 +7520,30 @@ body {
   position: relative !important;
   z-index: 0 !important;
 }
-.panda-home-top10__rank-row {
-  position: relative !important;
-  display: block !important;
-  overflow: visible !important;
-}
 .panda-home-top10__number-wrap {
-  position: absolute !important;
-  z-index: 0 !important;
-  left: -38px !important;
-  bottom: 0 !important;
-  width: 118px !important;
-  height: 142px !important;
-  margin: 0 !important;
+  width: auto !important;
+  min-width: 0 !important;
+  margin-right: -12px !important;
   overflow: visible !important;
   display: flex !important;
   align-items: flex-end !important;
-  justify-content: flex-end !important;
-  pointer-events: none !important;
-}
-.panda-home-top10__number {
-  position: relative !important;
-  z-index: 0 !important;
-}
-.panda-home-top10__card {
   position: relative !important;
   z-index: 2 !important;
-  margin-left: 46px !important;
 }
+.panda-home-top10__card { z-index: 1; }
 .panda-home-top10__link { box-shadow: 0 16px 36px rgba(0,0,0,.28); }
 .panda-home-top10__link:hover { box-shadow: 0 20px 40px rgba(0,0,0,.34); }
 @media (min-width: 640px) {
   .panda-home-top10__number { font-size: 132px !important; -webkit-text-stroke-width: 3.5px !important; }
-  .panda-home-top10__number-wrap { left: -46px !important; width: 132px !important; height: 154px !important; }
-  .panda-home-top10__card { margin-left: 54px !important; }
+  .panda-home-top10__number-wrap { margin-right: -15px !important; }
 }
 @media (min-width: 1200px) {
   .panda-home-top10__number { font-size: 156px !important; -webkit-text-stroke-width: 4px !important; }
-  .panda-home-top10__number-wrap { left: -54px !important; width: 150px !important; height: 176px !important; }
-  .panda-home-top10__card { margin-left: 64px !important; }
+  .panda-home-top10__number-wrap { margin-right: -18px !important; }
 }
 @media (max-width: 700px) {
   .panda-home-top10__number { font-size: 92px !important; -webkit-text-stroke-width: 2.5px !important; }
-  .panda-home-top10__number-wrap { left: -34px !important; width: 104px !important; height: 116px !important; }
-  .panda-home-top10__card { margin-left: 40px !important; }
+  .panda-home-top10__number-wrap { margin-right: -12px !important; }
 }
 
 /* New footer — quiet editorial layout rather than a dashboard-like panel. */
@@ -7661,335 +7632,17 @@ body {
 }
 
 
-/* Homepage final Top 10 title treatment — keep “Content Today” neutral. */
-.panda-home-top10__title {
-  font-family: "Google Sans", "Montserrat", "Arial", sans-serif !important;
-  font-weight: 900 !important;
-  letter-spacing: -0.045em !important;
-  color: #050505 !important;
-  -webkit-text-fill-color: #050505 !important;
-  -webkit-text-stroke: 2px rgba(255,255,255,.98) !important;
-  paint-order: stroke fill !important;
-  text-shadow: none !important;
-}
+/* Homepage theme restoration */
 .panda-home-top10__today span {
   font-family: "Google Sans", "Montserrat", "Arial", sans-serif !important;
-  font-weight: 700 !important;
-  letter-spacing: 0.3em !important;
-  color: #a1a1aa !important;
-  -webkit-text-fill-color: #a1a1aa !important;
-  -webkit-text-stroke: 0 !important;
+  font-weight: 900 !important;
+  letter-spacing: 0.18em !important;
+  color: #050505 !important;
+  -webkit-text-fill-color: #050505 !important;
+  -webkit-text-stroke: 1px rgba(255,255,255,.98) !important;
+  paint-order: stroke fill !important;
 }
-@media (min-width: 640px) { .panda-home-top10__title { -webkit-text-stroke-width: 2.5px !important; } }
-@media (min-width: 1200px) { .panda-home-top10__title { -webkit-text-stroke-width: 3px !important; } }
-
-
-/* Reference-matched details hero — intentionally omits the reference sound control. */
-.kinoma-details-page{
-  min-height:100dvh;
-  background:#08090b;
-  color:#f5f5f5;
-  padding-bottom:72px;
-}
-.kinoma-details-hero{
-  position:relative;
-  min-height:720px;
-  overflow:hidden;
-  isolation:isolate;
-}
-.kinoma-details-hero__backdrop{
-  position:absolute;
-  inset:0;
-  z-index:-5;
-  overflow:hidden;
-  background:#08090b;
-}
-.kinoma-details-hero__backdrop img{
-  width:100%;
-  height:100%;
-  object-fit:cover;
-  object-position:center;
-  transform:scale(1.035);
-  filter:brightness(.62) saturate(.9);
-}
-.kinoma-details-hero__scrim{
-  position:absolute;
-  inset:0;
-  z-index:-4;
-  background:
-    linear-gradient(90deg,rgba(5,7,9,.96) 0%,rgba(5,7,9,.78) 32%,rgba(5,7,9,.28) 67%,rgba(5,7,9,.52) 100%),
-    linear-gradient(0deg,#08090b 0%,rgba(8,9,11,.12) 38%,rgba(8,9,11,.15) 100%);
-}
-.kinoma-details-hero__trailer-bg{
-  position:absolute;
-  inset:0;
-  z-index:-3;
-  overflow:hidden;
-  background:transparent;
-}
-.kinoma-details-hero__trailer-bg iframe{
-  position:absolute;
-  inset:-2%;
-  width:104%;
-  height:104%;
-  border:0;
-  opacity:.9;
-  pointer-events:none;
-  transform:scale(1.08);
-  transform-origin:center;
-}
-.kinoma-details-hero__content{
-  position:relative;
-  z-index:2;
-  min-height:720px;
-  display:flex;
-  align-items:flex-end;
-  padding:0 clamp(20px,5vw,72px) 72px;
-}
-.kinoma-details-copy{
-  width:min(100%,650px);
-}
-.kinoma-details-copy h1{
-  margin:0;
-  max-width:680px;
-  font-family:Inter,system-ui,sans-serif;
-  font-size:clamp(3.5rem,7.2vw,7rem);
-  line-height:.88;
-  letter-spacing:-.075em;
-  font-weight:900;
-  text-wrap:balance;
-  text-shadow:0 8px 28px rgba(0,0,0,.42);
-}
-.kinoma-details-meta{
-  display:flex;
-  align-items:center;
-  flex-wrap:wrap;
-  gap:10px;
-  margin-top:18px;
-}
-.kinoma-details-meta span{
-  padding:0;
-  border:0;
-  border-radius:0;
-  background:none;
-  color:rgba(255,255,255,.76);
-  font-size:13px;
-  line-height:1;
-  font-weight:500;
-  box-shadow:none;
-}
-.kinoma-details-meta span:first-child{color:#fff}
-.kinoma-details-genres{
-  margin-top:10px;
-  color:rgba(255,255,255,.74);
-  font-size:12px;
-  line-height:1.5;
-}
-.kinoma-details-synopsis{
-  max-width:650px;
-  margin-top:16px;
-  color:rgba(255,255,255,.78);
-  font-size:13px;
-  line-height:1.65;
-  text-shadow:0 2px 12px rgba(0,0,0,.5);
-}
-.kinoma-details-actions{
-  display:flex;
-  flex-wrap:wrap;
-  gap:9px;
-  margin-top:22px;
-}
-.kinoma-details-3d-button{
-  position:relative;
-  filter:none;
-}
-.kinoma-details-3d-button::after{display:none}
-.kinoma-details-3d-button span{
-  display:flex;
-  align-items:center;
-  justify-content:center;
-  gap:9px;
-  min-height:44px;
-  padding:0 25px;
-  border:0;
-  border-radius:999px;
-  background:#f5f5f5;
-  color:#05070a;
-  font-size:13px;
-  font-weight:600;
-  box-shadow:none;
-}
-.kinoma-details-3d-button--list span{
-  background:rgba(15,17,20,.72);
-  color:#f5f5f5;
-  border:1px solid rgba(255,255,255,.12);
-  backdrop-filter:blur(12px);
-}
-.kinoma-details-3d-button:hover{
-  transform:translateY(-1px);
-  filter:none;
-}
-.kinoma-details-3d-button--watch span{background:#f5f5f5;box-shadow:none}
-.kinoma-details-section{
-  width:min(100%,1280px);
-  margin:0 auto;
-  padding:42px clamp(18px,3vw,32px) 0;
-}
-.kinoma-details-section__heading{
-  display:flex;
-  align-items:center;
-  justify-content:space-between;
-  gap:16px;
-  margin-bottom:18px;
-  padding-left:11px;
-  border-left:3px solid #f5f5f5;
-  min-height:48px;
-}
-.kinoma-details-section__heading>div>span{
-  display:block;
-  color:rgba(255,255,255,.52);
-  font-size:9px;
-  font-weight:700;
-  letter-spacing:.16em;
-  text-transform:uppercase;
-}
-.kinoma-details-section__heading h2{
-  margin-top:2px;
-  font-size:clamp(1.25rem,2.4vw,1.75rem);
-  line-height:1;
-  letter-spacing:-.035em;
-  font-weight:650;
-}
-.kinoma-details-section__heading small{
-  color:rgba(255,255,255,.46);
-  font-size:12px;
-}
-.kinoma-season-tabs{
-  display:flex;
-  gap:8px;
-  overflow-x:auto;
-  padding:2px 0 16px;
-}
-.kinoma-season-tabs button{
-  min-width:104px;
-  height:44px;
-  padding:0 17px;
-  border:1px solid rgba(255,255,255,.08);
-  border-radius:12px;
-  background:rgba(255,255,255,.035);
-  color:rgba(255,255,255,.65);
-  font-size:12px;
-  font-weight:600;
-  box-shadow:none;
-}
-.kinoma-season-tabs button.is-selected{
-  color:#08090b;
-  background:#f5f5f5;
-  border-color:#f5f5f5;
-  box-shadow:none;
-}
-.kinoma-episode-list{display:grid;gap:10px}
-.kinoma-episode-card{
-  display:grid;
-  grid-template-columns:minmax(230px,28%) minmax(0,1fr) 24px;
-  gap:18px;
-  align-items:center;
-  width:100%;
-  padding:8px;
-  border:1px solid rgba(255,255,255,.07);
-  border-radius:16px;
-  background:rgba(255,255,255,.035);
-  color:inherit;
-  text-align:left;
-  box-shadow:none;
-}
-.kinoma-episode-card:hover{
-  transform:none;
-  border-color:rgba(255,255,255,.15);
-  background:rgba(255,255,255,.055);
-}
-.kinoma-episode-art{border-radius:11px;background:#111317}
-.kinoma-episode-copy strong{
-  display:block;
-  font-size:12px;
-  font-weight:650;
-  text-transform:uppercase;
-  letter-spacing:.08em;
-  color:rgba(255,255,255,.58);
-}
-.kinoma-episode-copy span{
-  display:block;
-  margin-top:4px;
-  font-size:16px;
-  font-weight:600;
-  color:#fff;
-}
-.kinoma-episode-copy p{
-  max-width:760px;
-  margin-top:8px;
-  color:rgba(255,255,255,.55);
-  font-size:12px;
-  line-height:1.65;
-}
-.kinoma-episode-arrow{color:rgba(255,255,255,.45)}
-.kinoma-more-rail{
-  display:flex;
-  gap:12px;
-  overflow-x:auto;
-  padding:2px 0 12px;
-  scrollbar-width:none;
-}
-.kinoma-more-rail::-webkit-scrollbar{display:none}
-.kinoma-more-card{
-  flex:0 0 180px;
-  min-width:180px;
-  overflow:hidden;
-  border:1px solid rgba(255,255,255,.07);
-  border-radius:15px;
-  background:rgba(255,255,255,.035);
-  color:inherit;
-  text-align:left;
-}
-.kinoma-more-card:hover{transform:translateY(-3px);border-color:rgba(255,255,255,.14)}
-.kinoma-more-card__art{
-  aspect-ratio:2/3;
-  background:#111317;
-}
-.kinoma-more-card__art img{width:100%;height:100%;object-fit:cover}
-.kinoma-more-card__copy strong{
-  display:block;
-  padding:11px 11px 0;
-  font-size:12px;
-  font-weight:600;
-}
-.kinoma-more-card__copy span{
-  display:block;
-  padding:4px 11px 12px;
-  color:rgba(255,255,255,.42);
-  font-size:9px;
-}
-@media(max-width:800px){
-  .kinoma-details-hero{min-height:650px}
-  .kinoma-details-hero__content{min-height:650px;padding:0 18px 48px}
-  .kinoma-details-hero__scrim{
-    background:linear-gradient(0deg,rgba(5,7,9,.99) 0%,rgba(5,7,9,.78) 43%,rgba(5,7,9,.28) 100%);
-  }
-  .kinoma-details-hero__trailer-bg iframe{opacity:.68;transform:scale(1.2)}
-  .kinoma-details-copy h1{font-size:clamp(3rem,14vw,5rem)}
-  .kinoma-details-section{padding-top:36px}
-  .kinoma-episode-card{grid-template-columns:135px minmax(0,1fr) 18px;gap:12px}
-}
-@media(max-width:560px){
-  .kinoma-details-hero{min-height:600px}
-  .kinoma-details-hero__content{min-height:600px;padding:0 14px 38px}
-  .kinoma-details-meta{margin-top:14px;gap:7px}
-  .kinoma-details-meta span,.kinoma-details-genres{font-size:11px}
-  .kinoma-details-synopsis{font-size:11.5px}
-  .kinoma-details-actions{margin-top:18px}
-  .kinoma-details-3d-button span{min-height:40px;padding:0 18px;font-size:12px}
-  .kinoma-episode-card{grid-template-columns:105px minmax(0,1fr);gap:10px}
-  .kinoma-episode-arrow{display:none}
-  .kinoma-episode-copy span{font-size:13px}
-  .kinoma-episode-copy p{font-size:10px}
-  .kinoma-more-card{flex-basis:145px;min-width:145px}
+.kinoma-home,
+.panda-home-v2 {
+  background-color: #050505 !important;
 }
