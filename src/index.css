@@ -4208,13 +4208,15 @@ body {
 }
 
 .kinoma-home-hero--trailer .kinoma-home-hero__trailer-video {
-  opacity: 0;
-  transition: opacity 320ms ease;
+  opacity: 1 !important;
+  transition: none;
   pointer-events: none;
+  transform: scale(1.08) !important;
+  transform-origin: center center;
 }
 
 .kinoma-home-hero--trailer .kinoma-home-hero__trailer-video.is-ready {
-  opacity: 1;
+  opacity: 1 !important;
 }
 
 .kinoma-home-hero--trailer .kinoma-home-hero__trailer-shade {
