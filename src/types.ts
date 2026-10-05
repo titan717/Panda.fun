@@ -2,8 +2,10 @@ export interface Episode {
   id: string;
   number: number;
   title?: string;
+  synopsis?: string;
   image?: string;
   duration?: number;
+  rating?: number;
   playable?: boolean;
   subbed?: boolean;
   dubbed?: boolean;
