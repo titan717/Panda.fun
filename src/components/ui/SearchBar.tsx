@@ -5,7 +5,7 @@ import { Search, Loader2 } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 import { api } from '../../lib/api';
 import { DEFAULT_POSTER } from '../../types';
-import { slugifyTitle } from '../../lib/slug';
+import { buildDetailsHref } from '../../lib/mediaRoute';
 
 export function SearchBar() {
   const [query, setQuery] = useState('');
@@ -105,7 +105,7 @@ export function SearchBar() {
                   <div 
                     key={item.id}
                     onClick={() => {
-                      setLocation(`/details/${slugifyTitle(typeof item.title === 'string' ? item.title : (item.title?.english || item.title?.romaji || 'Untitled'))}?type=${item.type === 'movie' ? 'movie' : 'series'}`);
+                      setLocation(buildDetailsHref(typeof item.title === 'string' ? item.title : (item.title?.english || item.title?.romaji || 'Untitled'), item.type === 'movie' ? 'movie' : 'series'));
                       setIsOpen(false);
                       setQuery('');
                     }}
