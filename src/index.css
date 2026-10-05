@@ -7647,7 +7647,7 @@ body {
   background-color: #050505 !important;
 }
 
-/* Details page refinements: red section accent, reference-style horizontal seasons and episode view toggle. */
+/* Details page refinements: red section accent, horizontal season tabs and reference-style episode cards. */
 .kinoma-details-section__heading{
   border-left-color:#e5484d !important;
 }
@@ -7689,36 +7689,74 @@ body {
 .kinoma-season-tabs button{
   flex:0 0 auto !important;
 }
+
+/* Grid view = one horizontal episode-card rail, matching the reference treatment.
+   Cards sit side-by-side and continue to the right instead of forming a 2-D grid. */
 .kinoma-episode-list--grid{
-  grid-template-columns:repeat(auto-fill,minmax(260px,1fr));
-  gap:12px;
+  display:flex !important;
+  flex-direction:row !important;
+  flex-wrap:nowrap !important;
+  gap:14px;
+  width:100%;
+  overflow-x:auto !important;
+  overflow-y:hidden !important;
+  padding:2px 2px 18px;
+  scrollbar-width:none;
+  scroll-snap-type:x proximity;
+  overscroll-behavior-x:contain;
+  touch-action:pan-x pinch-zoom;
 }
+.kinoma-episode-list--grid::-webkit-scrollbar{display:none}
 .kinoma-episode-list--grid .kinoma-episode-card{
+  flex:0 0 300px;
+  min-width:300px;
   display:flex;
   flex-direction:column;
   align-items:stretch;
+  gap:0;
   padding:8px;
+  border-radius:14px;
+  scroll-snap-align:start;
 }
 .kinoma-episode-list--grid .kinoma-episode-art{
   width:100%;
   aspect-ratio:16/9;
+  flex:none;
 }
 .kinoma-episode-list--grid .kinoma-episode-copy{
-  padding:10px 5px 5px;
+  min-width:0;
+  padding:11px 5px 6px;
+}
+.kinoma-episode-list--grid .kinoma-episode-copy strong{
+  margin-bottom:5px;
+}
+.kinoma-episode-list--grid .kinoma-episode-copy span{
+  white-space:nowrap;
 }
 .kinoma-episode-list--grid .kinoma-episode-copy p{
   display:-webkit-box;
   -webkit-box-orient:vertical;
   -webkit-line-clamp:3;
   overflow:hidden;
+  min-height:calc(1.65em * 3);
 }
 .kinoma-episode-list--grid .kinoma-episode-arrow{
   display:none;
 }
+@media(max-width:700px){
+  .kinoma-episode-list--grid{gap:10px}
+  .kinoma-episode-list--grid .kinoma-episode-card{
+    flex-basis:270px;
+    min-width:270px;
+  }
+}
 @media(max-width:560px){
   .kinoma-details-section__controls{gap:8px}
   .kinoma-episode-view-toggle{width:34px;height:34px}
-  .kinoma-episode-list--grid{grid-template-columns:repeat(2,minmax(0,1fr));gap:9px}
+  .kinoma-episode-list--grid .kinoma-episode-card{
+    flex-basis:250px;
+    min-width:250px;
+  }
   .kinoma-episode-list--grid .kinoma-episode-copy span{font-size:12px}
   .kinoma-episode-list--grid .kinoma-episode-copy p{font-size:9px}
 }
