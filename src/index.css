@@ -7646,3 +7646,79 @@ body {
 .panda-home-v2 {
   background-color: #050505 !important;
 }
+
+/* Details page refinements: red section accent, reference-style horizontal seasons and episode view toggle. */
+.kinoma-details-section__heading{
+  border-left-color:#e5484d !important;
+}
+.kinoma-details-section__heading > div > span{
+  color:rgba(229,72,77,.82) !important;
+}
+.kinoma-details-section__controls{
+  display:flex;
+  align-items:center;
+  gap:12px;
+}
+.kinoma-episode-view-toggle{
+  width:36px;
+  height:36px;
+  display:grid;
+  place-items:center;
+  border:1px solid rgba(255,255,255,.1);
+  border-radius:10px;
+  background:rgba(255,255,255,.045);
+  color:rgba(255,255,255,.72);
+  transition:background 160ms ease,border-color 160ms ease,color 160ms ease,transform 160ms ease;
+}
+.kinoma-episode-view-toggle:hover{
+  background:rgba(255,255,255,.09);
+  border-color:rgba(229,72,77,.35);
+  color:#fff;
+  transform:translateY(-1px);
+}
+.kinoma-season-tabs{
+  display:flex !important;
+  flex-direction:row !important;
+  flex-wrap:nowrap !important;
+  width:100%;
+  overflow-x:auto !important;
+  overflow-y:hidden !important;
+  white-space:nowrap;
+  scrollbar-width:none;
+}
+.kinoma-season-tabs button{
+  flex:0 0 auto !important;
+}
+.kinoma-episode-list--grid{
+  grid-template-columns:repeat(auto-fill,minmax(260px,1fr));
+  gap:12px;
+}
+.kinoma-episode-list--grid .kinoma-episode-card{
+  display:flex;
+  flex-direction:column;
+  align-items:stretch;
+  padding:8px;
+}
+.kinoma-episode-list--grid .kinoma-episode-art{
+  width:100%;
+  aspect-ratio:16/9;
+}
+.kinoma-episode-list--grid .kinoma-episode-copy{
+  padding:10px 5px 5px;
+}
+.kinoma-episode-list--grid .kinoma-episode-copy p{
+  display:-webkit-box;
+  -webkit-box-orient:vertical;
+  -webkit-line-clamp:3;
+  overflow:hidden;
+}
+.kinoma-episode-list--grid .kinoma-episode-arrow{
+  display:none;
+}
+@media(max-width:560px){
+  .kinoma-details-section__controls{gap:8px}
+  .kinoma-episode-view-toggle{width:34px;height:34px}
+  .kinoma-episode-list--grid{grid-template-columns:repeat(2,minmax(0,1fr));gap:9px}
+  .kinoma-episode-list--grid .kinoma-episode-copy span{font-size:12px}
+  .kinoma-episode-list--grid .kinoma-episode-copy p{font-size:9px}
+}
