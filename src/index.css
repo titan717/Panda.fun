@@ -6487,20 +6487,29 @@ body {
 .panda-home-top10__number-wrap {
   position: relative;
   z-index: 0;
-  flex-shrink: 0;
-  width: auto;
-  margin-right: -8px;
+  flex: 0 0 82px;
+  width: 82px;
+  margin-right: -26px;
   overflow: visible;
+  display: flex;
+  align-items: flex-end;
+  justify-content: flex-end;
 }
 
 .panda-home-top10__number {
   display: block;
+  position: relative;
+  z-index: 0;
+  transform: translateY(3px);
   font-family: "Google Sans", sans-serif;
-  color: #f4f4f5;
-  font-size: 100px;
+  color: #050505;
+  -webkit-text-fill-color: #050505;
+  -webkit-text-stroke: 2px rgba(255,255,255,.98);
+  paint-order: stroke fill;
+  font-size: 112px;
   font-weight: 900;
-  line-height: 1;
-  letter-spacing: normal;
+  line-height: .82;
+  letter-spacing: -.055em;
   user-select: none;
   pointer-events: none;
 }
