@@ -65,12 +65,12 @@
 
 :root {
   color-scheme: dark;
-  --kinoma-bg: #0f0d0d;
-  --kinoma-bg-elevated: #151313;
-  --kinoma-surface: #1b1817;
+  --kinoma-bg: #090808;
+  --kinoma-bg-elevated: #0f0e0e;
+  --kinoma-surface: #151312;
   --kinoma-surface-hover: #24201f;
-  --kinoma-card: #181515;
-  --kinoma-card-hover: #211d1c;
+  --kinoma-card: #121110;
+  --kinoma-card-hover: #1b1918;
   --kinoma-text: #f6f2ee;
   --kinoma-text-soft: #ded7d1;
   --kinoma-muted: #aaa19b;
@@ -7492,6 +7492,14 @@ body {
 }
 .kinoma-home-hero--trailer .kinoma-home-hero__copy h1 {
   text-shadow: 0 6px 28px rgba(0,0,0,.42) !important;
+}
+
+/* Keep the Top 10 “Content Today” rail visually tied to the reference treatment. */
+.panda-home-top10__today span {
+  font-family: "Google Sans", "Montserrat", "Arial", sans-serif !important;
+  font-weight: 900 !important;
+  letter-spacing: 0.28em !important;
+  color: rgba(255,255,255,.78) !important;
 }
 
 /* Top 10 reference: hollow geometric numerals with a crisp white outline. */
