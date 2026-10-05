@@ -199,54 +199,26 @@ export function Details() {
             <small>{modelSeasons.length} {modelSeasons.length === 1 ? 'season' : 'seasons'}</small>
           </div>
           <div className="kinoma-season-tabs" aria-label="Seasons">
-            {modelSeasons.map(season => <button type="button" key={season.number} className={selectedSeason === season.number ? 'is-selected' : ''} onClick={() => setSelectedSeason(season.number)} aria-pressed={selectedSeason === season.number}>Season {season.number}</button>)}
+            {modelSeasons.map(season => (
+              <button type="button" key={season.number} className={selectedSeason === season.number ? 'is-selected' : ''} onClick={() => setSelectedSeason(season.number)} aria-pressed={selectedSeason === season.number}>
+                Season {season.number}
+              </button>
+            ))}
           </div>
           <div className="kinoma-episode-list">
             {(modelSeasons.find(s => s.number === selectedSeason)?.episodes || []).map(ep => (
-              <button type="button" key={ep.number} className="kinoma-episode-card" onClick={() => { trackGAEvent('episode_select', { content_type: 'series', season: selectedSeason, episode: ep.number, title }); setLocation('/watch/' + encodeURIComponent(id + '$season
-      )}
-
-      <section className="kinoma-details-section kinoma-details-more-section">
-        <div className="kinoma-details-section__heading"><div><span>DISCOVER MORE</span><h2>More Like This</h2></div><small>Recommended for you</small></div>
-        <div className="kinoma-more-rail">
-          {recommendations.map((item, i) => {
-            const itemTitle = typeof item.title === 'string' ? item.title : item.title.english || item.title.romaji || 'Untitled';
-            const itemType = item.contentType === 'movie' ? 'movie' : 'series';
-            return <button type="button" key={item.id} className="kinoma-more-card" onClick={() => setLocation(buildDetailsHref(itemTitle, itemType))} aria-label={'Open ' + itemTitle}>
-              <div className={'kinoma-more-card__art tone-' + (i % 5)}>{item.image ? <img src={item.image} alt="" loading={i < 3 ? 'eager' : 'lazy'} decoding="async" referrerPolicy="no-referrer" /> : <Film size={25} />}</div>
-              <div className="kinoma-more-card__copy"><strong>{itemTitle}</strong><span>{item.genres?.[0] || 'Recommended'} <i>•</i> {itemType === 'movie' ? 'Movie' : 'Series'}</span></div>
-            </button>;
-          })}
-          {!recommendations.length && !loading && <div className="kinoma-details-bottom">No recommendations are available right now.</div>}
-        </div>
-      </section>
-      <div className="kinoma-details-bottom"><Clock3 size={14} /> Metadata and playback are powered by MovieApi.</div>
-    </main>
-  );
-}
- + selectedSeason + '$episode
-      )}
-
-      <section className="kinoma-details-section kinoma-details-more-section">
-        <div className="kinoma-details-section__heading"><div><span>KEEP EXPLORING</span><h2>More like this</h2></div><small>Recommended for you</small></div>
-        <div className="kinoma-more-rail">
-          {recommendations.map((item, i) => {
-            const itemTitle = typeof item.title === 'string' ? item.title : item.title.english || item.title.romaji || 'Untitled';
-            const itemType = item.contentType === 'movie' ? 'movie' : 'series';
-            return <button type="button" key={item.id} className="kinoma-more-card" onClick={() => setLocation(buildDetailsHref(item.id, itemType))} aria-label={'Open ' + itemTitle}>
-              <div className={'kinoma-more-card__art tone-' + (i % 5)}>{item.image ? <img src={item.image} alt="" loading={i < 3 ? 'eager' : 'lazy'} decoding="async" referrerPolicy="no-referrer" /> : <Film size={25} />}</div>
-              <div className="kinoma-more-card__copy"><strong>{itemTitle}</strong><span>{item.genres?.[0] || 'Recommended'} <i>•</i> {itemType === 'movie' ? 'Movie' : 'Series'}</span></div>
-            </button>;
-          })}
-          {!recommendations.length && !loading && <div className="kinoma-details-bottom">No recommendations are available right now.</div>}
-        </div>
-      </section>
-      <div className="kinoma-details-bottom"><Clock3 size={14} /> Metadata and playback are powered by MovieApi.</div>
-    </main>
-  );
-}
- + ep.number) + '?type=series'); }}>
-                <div className="kinoma-episode-art">{ep.image ? <img src={ep.image} alt="" loading={ep.number === (historyUtil.getAnimeProgress(id)?.episodeNumber || 0) ? 'eager' : 'lazy'} decoding="async" /> : <span><Play size={20} /></span>}</div>
+              <button
+                type="button"
+                key={ep.number}
+                className="kinoma-episode-card"
+                onClick={() => {
+                  trackGAEvent('episode_select', { content_type: 'series', season: selectedSeason, episode: ep.number, title });
+                  setLocation('/watch/' + encodeURIComponent(id + '$season$' + selectedSeason + '$episode$' + ep.number) + '?type=series');
+                }}
+              >
+                <div className="kinoma-episode-art">
+                  {ep.image ? <img src={ep.image} alt="" loading={ep.number === (historyUtil.getAnimeProgress(id)?.episodeNumber || 0) ? 'eager' : 'lazy'} decoding="async" /> : <span><Play size={20} /></span>}
+                </div>
                 <div className="kinoma-episode-copy">
                   <strong>Episode {ep.number}</strong>
                   <span>{ep.title}</span>
@@ -261,15 +233,19 @@ export function Details() {
       )}
 
       <section className="kinoma-details-section kinoma-details-more-section">
-        <div className="kinoma-details-section__heading"><div><span>KEEP EXPLORING</span><h2>More like this</h2></div><small>Recommended for you</small></div>
+        <div className="kinoma-details-section__heading"><div><span>DISCOVER MORE</span><h2>More Like This</h2></div><small>Recommended for you</small></div>
         <div className="kinoma-more-rail">
           {recommendations.map((item, i) => {
             const itemTitle = typeof item.title === 'string' ? item.title : item.title.english || item.title.romaji || 'Untitled';
             const itemType = item.contentType === 'movie' ? 'movie' : 'series';
-            return <button type="button" key={item.id} className="kinoma-more-card" onClick={() => setLocation(buildDetailsHref(item.id, itemType))} aria-label={'Open ' + itemTitle}>
-              <div className={'kinoma-more-card__art tone-' + (i % 5)}>{item.image ? <img src={item.image} alt="" loading={i < 3 ? 'eager' : 'lazy'} decoding="async" referrerPolicy="no-referrer" /> : <Film size={25} />}</div>
-              <div className="kinoma-more-card__copy"><strong>{itemTitle}</strong><span>{item.genres?.[0] || 'Recommended'} <i>•</i> {itemType === 'movie' ? 'Movie' : 'Series'}</span></div>
-            </button>;
+            return (
+              <button type="button" key={item.id} className="kinoma-more-card" onClick={() => setLocation(buildDetailsHref(itemTitle, itemType))} aria-label={'Open ' + itemTitle}>
+                <div className={'kinoma-more-card__art tone-' + (i % 5)}>
+                  {item.image ? <img src={item.image} alt="" loading={i < 3 ? 'eager' : 'lazy'} decoding="async" referrerPolicy="no-referrer" /> : <Film size={25} />}
+                </div>
+                <div className="kinoma-more-card__copy"><strong>{itemTitle}</strong><span>{item.genres?.[0] || 'Recommended'} <i>•</i> {itemType === 'movie' ? 'Movie' : 'Series'}</span></div>
+              </button>
+            );
           })}
           {!recommendations.length && !loading && <div className="kinoma-details-bottom">No recommendations are available right now.</div>}
         </div>
