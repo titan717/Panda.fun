@@ -63,8 +63,8 @@ export function Layout({ children }: { children: React.ReactNode }) {
           <div className="kinoma-sidebar__about-group">
             <Link href="/about" className={`kinoma-sidebar__item ${location === '/about' || location === '/terms' || location === '/privacy' ? 'is-active' : ''}`} aria-label="About" data-tooltip="About"><Info size={20} strokeWidth={1.8} /><span>About</span></Link>
             <div className="kinoma-sidebar__about-submenu" aria-label="About links">
-              <Link href="/terms" className={`kinoma-sidebar__about-subitem ${location === '/terms' ? 'is-active' : ''}`}><span>Terms of Service</span></Link>
-              <Link href="/privacy" className={`kinoma-sidebar__about-subitem ${location === '/privacy' ? 'is-active' : ''}`}><span>Privacy Policy</span></Link>
+              <Link href="/terms" className={`kinoma-sidebar__about-subitem ${location === '/terms' ? 'is-active' : ''}`}><FileText size={15} strokeWidth={1.8} /><span>Terms of Service</span></Link>
+              <Link href="/privacy" className={`kinoma-sidebar__about-subitem ${location === '/privacy' ? 'is-active' : ''}`}><Shield size={15} strokeWidth={1.8} /><span>Privacy Policy</span></Link>
             </div>
           </div>
         </nav>
