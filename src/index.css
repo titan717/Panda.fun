@@ -7901,3 +7901,54 @@ body {
     min-width:245px;
   }
 }
+
+
+/* Keep season selection attached to the Seasons heading itself. */
+.kinoma-details-section__heading--episodes .kinoma-season-picker{
+  position:relative;
+  flex:0 0 auto;
+}
+.kinoma-details-section__heading--episodes .kinoma-season-picker__trigger{
+  min-width:0;
+  width:auto;
+  height:auto;
+  padding:0;
+  border:0;
+  border-radius:0;
+  background:transparent;
+  box-shadow:none;
+  color:#fff;
+  display:inline-flex;
+  align-items:center;
+  gap:7px;
+  font-family:"Google Sans",sans-serif;
+  font-size:clamp(21px,2.1vw,30px);
+  line-height:1.05;
+  font-weight:800;
+  letter-spacing:-.035em;
+  transition:color 160ms ease,transform 160ms ease;
+}
+.kinoma-details-section__heading--episodes .kinoma-season-picker__trigger:hover,
+.kinoma-details-section__heading--episodes .kinoma-season-picker__trigger[aria-expanded="true"]{
+  background:transparent;
+  border:0;
+  color:#fff;
+  transform:translateY(-1px);
+}
+.kinoma-details-section__heading--episodes .kinoma-season-picker__chevron{
+  color:rgba(255,255,255,.48);
+  font-size:17px;
+  line-height:1;
+  transform:translateY(1px);
+  transition:transform 160ms ease,color 160ms ease;
+}
+.kinoma-details-section__heading--episodes .kinoma-season-picker__trigger[aria-expanded="true"] .kinoma-season-picker__chevron{
+  color:#fff;
+  transform:rotate(180deg) translateY(-1px);
+}
+.kinoma-details-section__heading--episodes .kinoma-season-picker__menu{
+  left:0;
+  right:auto;
+  top:calc(100% + 10px);
+  min-width:170px;
+}
