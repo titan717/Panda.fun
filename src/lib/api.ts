@@ -510,22 +510,22 @@ export const api = {
     const media = mediaFromId(id);
     if (!media) throw new MovieApiError('Playback requires a MovieApi media ID.', 400, 'INVALID_MEDIA_ID');
 
-    // Vidy.st is the sole playback provider. It addresses content by TMDB ID.
-    // TV links include the season/episode path and enable Vidy's native episode controls.
+    // EmbedWave is the sole playback provider. It addresses content by TMDB ID.
+    // TV links include the season/episode path.
     let tmdbId = media.id;
     if (media.provider === 'tvmaze') {
       const details = await request<MovieApiMedia>(`/api/v1/tv/${media.id}`, undefined, { signal }, 300_000);
       tmdbId = Number(details.ids?.tmdb || 0);
-      if (!tmdbId) throw new MovieApiError('Unable to resolve this title to a TMDB ID for Vidy playback.', 503, 'TMDB_ID_UNAVAILABLE');
+      if (!tmdbId) throw new MovieApiError('Unable to resolve this title to a TMDB ID for EmbedWave playback.', 503, 'TMDB_ID_UNAVAILABLE');
     }
 
     const url = buildVidyUrl(tmdbId, media.type === 'movie' ? 'movie' : 'tv', season, episode);
     const source: MovieApiPlaybackSource = {
-      id: `vidy-${media.type}-${tmdbId}-${season}-${episode}`,
-      provider: 'vidy',
+      id: `embedwave-${media.type}-${tmdbId}-${season}-${episode}`,
+      provider: 'embedwave',
       type: 'embed',
       url,
-      title: 'Vidy.st',
+      title: 'EmbedWave',
       quality: 'auto',
       requiresClientPlayback: true,
     };
