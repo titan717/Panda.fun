@@ -317,14 +317,17 @@ async function searchAll(query: string, page = 1, signal?: AbortSignal) {
 }
 
 export async function resolveMediaIdFromSlug(slug: string, type?: string) {
-  const legacy = mediaFromId(decodeURIComponent(slug));
+  const decoded = decodeURIComponent(slug);
+  const legacy = mediaFromId(decoded);
   if (legacy) return legacy.id;
-  const normalized = slugifyTitle(decodeURIComponent(slug));
+
+  const normalized = slugifyTitle(decoded);
   if (!normalized) throw new MovieApiError('Invalid title slug.', 400, 'INVALID_TITLE_SLUG');
+
   const candidates = type === 'movie' ? ['movie'] : type === 'series' ? ['tv'] : ['movie', 'tv'];
   const matches = await Promise.all(candidates.map(async (kind) => {
     try {
-      const data = await request<any>('/api/v1/tmdb/search/' + kind, { q: decodeURIComponent(slug), page: 1 }, undefined, 60_000);
+      const data = await request<any>('/api/v1/tmdb/search/' + kind, { q: decoded, page: 1 }, undefined, 60_000);
       return (data.results || []).map((item: any): MovieApiMedia => ({
         id: 'tmdb_' + kind + '_' + item.id,
         type: kind === 'movie' ? 'movie' : 'tv',
@@ -339,10 +342,32 @@ export async function resolveMediaIdFromSlug(slug: string, type?: string) {
       }));
     } catch { return [] as MovieApiMedia[]; }
   }));
+
   const exact = matches.flat().find(item => slugifyTitle(item.title) === normalized);
   const fallback = matches.flat()[0];
-  if (!exact && !fallback) throw new MovieApiError('Unable to resolve this title.', 404, 'TITLE_NOT_FOUND');
-  return (exact || fallback)!.id;
+  if (exact || fallback) return (exact || fallback)!.id;
+
+  // Some newer TV titles can be absent from a TMDB search response while
+  // MovieAPI/TVMaze already knows the show. Resolve those to a TVMaze ID;
+  // the details endpoint can then enrich the record with TMDB metadata.
+  if (type === 'series' || !type) {
+    try {
+      const query = decoded.replace(/-/g, ' ');
+      const tvmaze = await request<any>('/api/v1/tv/search', { q: query, page: 1, limit: 20 }, undefined, 60_000);
+      const tvMatches = (tvmaze.results || []).map((item: any) => ({
+        id: String(item.id || ''),
+        title: item.title || item.name || 'Untitled'
+      })).filter((item: { id: string; title: string }) => item.id);
+
+      const tvExact = tvMatches.find((item: { id: string; title: string }) => slugifyTitle(item.title) === normalized);
+      const tvFallback = tvMatches[0];
+      if (tvExact || tvFallback) return 'kinoma_tvmaze_' + (tvExact || tvFallback)!.id;
+    } catch {
+      // Preserve the existing not-found error when both providers fail.
+    }
+  }
+
+  throw new MovieApiError('Unable to resolve this title.', 404, 'TITLE_NOT_FOUND');
 }
 
 export const api = {
