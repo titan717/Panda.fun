@@ -473,7 +473,24 @@ export const api = {
       { signal },
       300_000
     );
-    const videos = Array.isArray(data.videos) ? data.videos : [];
+    let videos = Array.isArray(data.videos) ? data.videos : [];
+
+    // Some series have no show-level video record even though a season's
+    // premiere episode has a trailer. Use S1E1 as a secondary trailer source.
+    if (!videos.some(video => video.type === 'Trailer') && videoType === 'tv') {
+      try {
+        const episodeData = await request<{ videos: MovieApiVideo[] }>(
+          `/api/v1/tv/${videoId}/season/1/episode/1/videos`,
+          undefined,
+          { signal },
+          300_000
+        );
+        videos = Array.isArray(episodeData.videos) ? episodeData.videos : [];
+      } catch {
+        // Keep the show-level result when the episode video endpoint is unavailable.
+      }
+    }
+
     const trailer = videos.find(video => video.type === 'Trailer' && video.official)
       || videos.find(video => video.type === 'Trailer')
       || null;
