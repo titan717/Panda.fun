@@ -19,6 +19,11 @@ describe('title-based detail routes', () => {
     );
   });
 
+  it('keeps legacy TVMaze media IDs normalized when resolving details', async () => {
+    const { resolveMediaIdFromSlug } = await import('./api');
+    expect(await resolveMediaIdFromSlug('kinoma_tvmaze_44776', 'series')).toBe('kinoma_tvmaze_44776');
+  });
+
   it('normalizes punctuation and spacing into a stable title slug', () => {
     expect(buildDetailsHref("Marvel's Daredevil: Born Again", 'series')).toBe('/details/marvel-s-daredevil-born-again?type=series');
   });
