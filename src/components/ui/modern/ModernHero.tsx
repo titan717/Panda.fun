@@ -209,7 +209,7 @@ export function ModernHero({ items }: ModernHeroProps) {
               </motion.button>
 
               {/* Tertiary CTA: More Info */}
-              <Link href={buildDetailsHref(currentItem.id, currentItem.type === 'movie' ? 'movie' : 'series')}>
+              <Link href={buildDetailsHref(title, currentItem.type === 'movie' ? 'movie' : 'series')}>
                 <motion.button
                   whileHover={{ scale: 1.03 }}
                   whileTap={{ scale: 0.97 }}
