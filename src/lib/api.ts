@@ -1,4 +1,4 @@
-import type { AnimeDetails, AnimeItem, Episode, AnimeSeasonItem } from '../types';
+import type { AnimeDetails, AnimeItem, Episode, AnimeSeasonItem, MediaTrailer } from '../types';
 import { slugifyTitle } from './slug';
 import { trackApiFailure } from './analytics';
 import { buildVidyUrl } from './vidy';
@@ -25,6 +25,7 @@ export type MovieApiMedia = {
     [key: string]: unknown;
   };
   source?: string;
+  trailer?: MediaTrailer | null;
   [key: string]: unknown;
 };
 
@@ -249,6 +250,7 @@ function toDetails(item: MovieApiMedia): AnimeDetails {
     seasons: [],
     description: item.overview || undefined,
     totalEpisodes: 0,
+    trailer: item.trailer || null,
   };
 }
 
@@ -461,43 +463,11 @@ export const api = {
   },
 
   async getTrailer(id: string, signal?: AbortSignal) {
-    const media = mediaFromId(id);
-    if (!media) return { available: false, trailer: null };
-
-    // Video routes use TMDB IDs. Resolve TVMaze-backed series through MovieAPI first.
-    const resolvedTmdbId = await resolveTmdbId(media, signal);
-    if (!resolvedTmdbId) return { available: false, trailer: null };
-    const videoType: 'movie' | 'tv' = media.type;
-    const videoId = resolvedTmdbId;
-
-    const data = await request<{ videos: MovieApiVideo[] }>(
-      `/api/v1/${videoType}/${videoId}/videos`,
-      undefined,
-      { signal },
-      300_000
-    );
-    let videos = Array.isArray(data.videos) ? data.videos : [];
-
-    // Some series have no show-level video record even though a season's
-    // premiere episode has a trailer. Use S1E1 as a secondary trailer source.
-    if (!videos.some(video => video.type === 'Trailer') && videoType === 'tv') {
-      try {
-        const episodeData = await request<{ videos: MovieApiVideo[] }>(
-          `/api/v1/tv/${videoId}/season/1/episode/1/videos`,
-          undefined,
-          { signal },
-          300_000
-        );
-        videos = Array.isArray(episodeData.videos) ? episodeData.videos : [];
-      } catch {
-        // Keep the show-level result when the episode video endpoint is unavailable.
-      }
-    }
-
-    const trailer = videos.find(video => video.type === 'Trailer' && video.official)
-      || videos.find(video => video.type === 'Trailer')
-      || null;
-    return { available: Boolean(trailer), trailer };
+    const details = await this.getDetails(id, signal);
+    return {
+      available: Boolean(details.trailer?.embedUrl),
+      trailer: details.trailer || null
+    };
   },
 
   async getDetails(id: string, signal?: AbortSignal): Promise<AnimeDetails> {
@@ -585,21 +555,20 @@ export const api = {
     };
   },
 
-  async getWatchLink(id: string, season = 1, episode = 1, signal?: AbortSignal) {
+  async getWatchLink(id: string, season = 1, episode = 1, signal?: AbortSignal, progress = 0) {
     const media = mediaFromId(id);
     if (!media) throw new MovieApiError('Playback requires a MovieApi media ID.', 400, 'INVALID_MEDIA_ID');
 
-    // EmbedWave is the sole playback provider. It addresses content by TMDB ID.
     const tmdbId = await resolveTmdbId(media, signal);
-    if (!tmdbId) throw new MovieApiError('Unable to resolve this title to a TMDB ID for EmbedWave playback.', 503, 'TMDB_ID_UNAVAILABLE');
+    if (!tmdbId) throw new MovieApiError('Unable to resolve this title to a TMDB ID for Vidy playback.', 503, 'TMDB_ID_UNAVAILABLE');
 
-    const url = buildVidyUrl(tmdbId, media.type === 'movie' ? 'movie' : 'tv', season, episode);
+    const url = buildVidyUrl(tmdbId, media.type === 'movie' ? 'movie' : 'tv', season, episode, progress);
     const source: MovieApiPlaybackSource = {
-      id: `embedwave-${media.type}-${tmdbId}-${season}-${episode}`,
-      provider: 'embedwave',
+      id: `vidy-${media.type}-${tmdbId}-${season}-${episode}`,
+      provider: 'vidy',
       type: 'embed',
       url,
-      title: 'EmbedWave',
+      title: 'Vidy',
       quality: 'auto',
       requiresClientPlayback: true,
     };
