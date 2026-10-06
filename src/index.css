@@ -7922,10 +7922,10 @@ body {
   align-items:center;
   gap:7px;
   font-family:"Google Sans",sans-serif;
-  font-size:clamp(21px,2.1vw,30px);
-  line-height:1.05;
-  font-weight:800;
-  letter-spacing:-.035em;
+  font-size:clamp(24px,2.35vw,34px);
+  line-height:1.02;
+  font-weight:900;
+  letter-spacing:-.04em;
   transition:color 160ms ease,transform 160ms ease;
 }
 .kinoma-details-section__heading--episodes .kinoma-season-picker__trigger:hover,
