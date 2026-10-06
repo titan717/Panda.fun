@@ -10,12 +10,22 @@ export type MediaRouteType = 'movie' | 'series';
  * Details can skip title-based resolution entirely and use the selected
  * movie/TV identity without ambiguity.
  */
-export function buildDetailsHref(title: string, type: MediaRouteType, mediaId?: string): string {
-  const rawTitle = String(title || '').trim();
+type DetailsRouteMedia = {
+  title: string;
+  id?: string | null;
+};
+
+export function buildDetailsHref(
+  titleOrMedia: string | DetailsRouteMedia,
+  type: MediaRouteType,
+  mediaId?: string
+): string {
+  const media = typeof titleOrMedia === 'string' ? null : titleOrMedia;
+  const rawTitle = String(media ? media.title : titleOrMedia || '').trim();
   if (!rawTitle) throw new Error('A title is required to build a details route.');
   const slug = slugifyTitle(rawTitle);
   const params = new URLSearchParams({ type });
-  const normalizedMediaId = String(mediaId || '').trim();
+  const normalizedMediaId = String(media ? media.id || '' : mediaId || '').trim();
   if (normalizedMediaId) params.set('mediaId', normalizedMediaId);
   return '/details/' + encodeURIComponent(slug) + '?' + params.toString();
 }

@@ -185,11 +185,11 @@ export function Details() {
   };
 
   useEffect(() => {
-    const canonicalPath = buildDetailsHref(title || routeSlug, kind);
+    const canonicalPath = buildDetailsHref({ title: title || routeSlug, id }, kind);
     if (data && window.location.pathname !== new URL(canonicalPath, window.location.origin).pathname) {
       window.history.replaceState(window.history.state, '', canonicalPath);
     }
-    updateSEO({ title, description: `${title} — ${synopsis}`.slice(0, 160), image: poster, type: kind === 'movie' ? 'video.movie' : 'video.tv_show', keywords: [title, ...(data?.genres || []), kind === 'movie' ? 'movie' : 'TV series', 'Panda.fun', 'watch online'], schema: { '@context': 'https://schema.org', '@type': kind === 'movie' ? 'Movie' : 'TVSeries', name: title, description: synopsis, image: poster ? [poster] : undefined, url: window.location.origin + buildDetailsHref(title || routeSlug, kind), datePublished: data?.releaseDate || undefined, aggregateRating: data?.rating != null ? { '@type': 'AggregateRating', ratingValue: data.rating, bestRating: 10 } : undefined, genre: data?.genres || undefined, isPartOf: { '@type': 'WebSite', name: 'Panda.fun', url: window.location.origin } } });
+    updateSEO({ title, description: `${title} — ${synopsis}`.slice(0, 160), image: poster, type: kind === 'movie' ? 'video.movie' : 'video.tv_show', keywords: [title, ...(data?.genres || []), kind === 'movie' ? 'movie' : 'TV series', 'Panda.fun', 'watch online'], schema: { '@context': 'https://schema.org', '@type': kind === 'movie' ? 'Movie' : 'TVSeries', name: title, description: synopsis, image: poster ? [poster] : undefined, url: window.location.origin + buildDetailsHref({ title: title || routeSlug, id }, kind), datePublished: data?.releaseDate || undefined, aggregateRating: data?.rating != null ? { '@type': 'AggregateRating', ratingValue: data.rating, bestRating: 10 } : undefined, genre: data?.genres || undefined, isPartOf: { '@type': 'WebSite', name: 'Panda.fun', url: window.location.origin } } });
     setIsInList(libraryManager.isInWatchlist(id));
   }, [title, synopsis, poster, id, kind]);
 
@@ -310,7 +310,7 @@ export function Details() {
             const itemTitle = typeof item.title === 'string' ? item.title : item.title.english || item.title.romaji || 'Untitled';
             const itemType = item.contentType === 'movie' ? 'movie' : 'series';
             return (
-              <button type="button" key={item.id} className="kinoma-more-card" onClick={() => setLocation(buildDetailsHref(itemTitle, itemType))} aria-label={'Open ' + itemTitle}>
+              <button type="button" key={item.id} className="kinoma-more-card" onClick={() => setLocation(buildDetailsHref({ title: itemTitle, id: item.id }, itemType))} aria-label={'Open ' + itemTitle}>
                 <div className={'kinoma-more-card__art tone-' + (i % 5)}>
                   {item.image ? <img src={item.image} alt="" loading={i < 3 ? 'eager' : 'lazy'} decoding="async" referrerPolicy="no-referrer" /> : <Film size={25} />}
                 </div>

@@ -121,7 +121,7 @@ function PandaContentCard({
       onMouseLeave={onLeave}
     >
       <Link
-        href={buildDetailsHref(item.title, type)}
+        href={buildDetailsHref(item, type)}
         className="panda-content-card__link"
         aria-label={`Open ${item.title}`}
         onFocus={() => onHover(item)}
