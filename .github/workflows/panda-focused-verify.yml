@@ -1,0 +1,16 @@
+name: Panda focused verification
+on:
+  push:
+    branches:
+      - verify/panda-site-wide-focus
+jobs:
+  focused:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+      - run: npm install
+      - run: npx vitest run src/lib/mediaRoute.test.ts src/lib/api.behavior.test.ts
