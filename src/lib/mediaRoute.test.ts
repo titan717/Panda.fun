@@ -14,7 +14,7 @@ describe('title-based detail routes', () => {
     expect(buildDetailsHref({
       title: 'The Last of Us',
       id: 'tmdb_tv_100088'
-    }, 'series')).toBe('/details/the-last-of-us?type=series&mediaId=tmdb_tv_100088');
+    } as any, 'series')).toBe('/details/the-last-of-us?type=series&mediaId=tmdb_tv_100088');
   });
 
   it('preserves an explicit media ID for collision-safe details navigation', () => {
