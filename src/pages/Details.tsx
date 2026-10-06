@@ -42,8 +42,10 @@ export function Details() {
   const [, params] = useRoute<{ id: string }>('/details/:id');
   const [location, setLocation] = useLocation();
   const routeSlug = params?.id ? decodeURIComponent(params.id) : '';
-  const [id, setId] = useState(routeSlug);
-  const type = new URLSearchParams(location.split('?')[1] || '').get('type');
+  const searchParams = new URLSearchParams(location.split('?')[1] || '');
+  const type = searchParams.get('type');
+  const routeMediaId = searchParams.get('mediaId');
+  const [id, setId] = useState(routeMediaId || routeSlug);
   const [data, setData] = useState<any>(null);
   const [trailer, setTrailer] = useState<any>(null);
   const [seasonItems, setSeasonItems] = useState<AnimeSeasonItem[]>([]);
@@ -66,8 +68,15 @@ export function Details() {
     let active = true;
     const controller = new AbortController();
     setLoading(true); setError(null); setData(null); setSeasonItems([]); setSeasonEpisodes([]); setRecommendations([]);
-    resolveMediaIdFromSlug(routeSlug, type || undefined).then(resolvedId => {
+    const resolveSelectedMedia = routeMediaId
+      ? Promise.resolve(routeMediaId)
+      : resolveMediaIdFromSlug(routeSlug, type || undefined);
+
+    resolveSelectedMedia.then(resolvedId => {
       if (!active) return;
+      const parsed = api.getDetailsMediaId(resolvedId);
+      if (type === 'movie' && parsed && parsed.type !== 'movie') throw new Error('This title is not a movie result.');
+      if (type === 'series' && parsed && parsed.type !== 'tv') throw new Error('This title is not a series result.');
       setId(resolvedId);
       return Promise.all([
         api.getDetails(resolvedId, controller.signal),
