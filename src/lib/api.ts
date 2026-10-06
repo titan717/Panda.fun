@@ -218,6 +218,13 @@ function mediaFromId(id: string): MovieApiMediaRef | null {
   return null;
 }
 
+async function resolveTmdbId(media: MovieApiMediaRef, signal?: AbortSignal): Promise<number | null> {
+  if (media.provider === 'tmdb') return media.id;
+  const details = await request<MovieApiMedia>(`/api/v1/tv/${media.id}`, undefined, { signal }, 300_000);
+  const tmdbId = Number(details.ids?.tmdb || 0);
+  return tmdbId > 0 ? tmdbId : null;
+}
+
 function toAnimeItem(item: MovieApiMedia): AnimeItem {
   return {
     id: item.id,
@@ -442,9 +449,11 @@ export const api = {
 
   async getRecommendations(id: string, signal?: AbortSignal) {
     const media = mediaFromId(id);
-    if (!media || media.provider !== 'tmdb') return { results: [] as AnimeItem[] };
+    if (!media) return { results: [] as AnimeItem[] };
+    const tmdbId = await resolveTmdbId(media, signal);
+    if (!tmdbId) return { results: [] as AnimeItem[] };
     const data = await request<MovieApiPage>(
-      `/api/v1/recommendations/${media.id}`,
+      `/api/v1/recommendations/${tmdbId}`,
       { type: media.type },
       { signal }
     );
@@ -455,17 +464,11 @@ export const api = {
     const media = mediaFromId(id);
     if (!media) return { available: false, trailer: null };
 
-    // TVMaze IDs are accepted by the frontend, but MovieApi video routes use TMDB IDs.
-    // Resolve the TVMaze show first so trailers work for both ID formats.
-    let videoType: 'movie' | 'tv' = media.type;
-    let videoId = media.id;
-    if (media.provider === 'tvmaze') {
-      const details = await request<MovieApiMedia>(`/api/v1/tv/${media.id}`, undefined, { signal }, 300_000);
-      const resolvedTmdbId = Number(details.ids?.tmdb || 0);
-      if (!resolvedTmdbId) return { available: false, trailer: null };
-      videoId = resolvedTmdbId;
-      videoType = 'tv';
-    }
+    // Video routes use TMDB IDs. Resolve TVMaze-backed series through MovieAPI first.
+    const resolvedTmdbId = await resolveTmdbId(media, signal);
+    if (!resolvedTmdbId) return { available: false, trailer: null };
+    const videoType: 'movie' | 'tv' = media.type;
+    const videoId = resolvedTmdbId;
 
     const data = await request<{ videos: MovieApiVideo[] }>(
       `/api/v1/${videoType}/${videoId}/videos`,
@@ -587,13 +590,8 @@ export const api = {
     if (!media) throw new MovieApiError('Playback requires a MovieApi media ID.', 400, 'INVALID_MEDIA_ID');
 
     // EmbedWave is the sole playback provider. It addresses content by TMDB ID.
-    // TV links include the season/episode path.
-    let tmdbId = media.id;
-    if (media.provider === 'tvmaze') {
-      const details = await request<MovieApiMedia>(`/api/v1/tv/${media.id}`, undefined, { signal }, 300_000);
-      tmdbId = Number(details.ids?.tmdb || 0);
-      if (!tmdbId) throw new MovieApiError('Unable to resolve this title to a TMDB ID for EmbedWave playback.', 503, 'TMDB_ID_UNAVAILABLE');
-    }
+    const tmdbId = await resolveTmdbId(media, signal);
+    if (!tmdbId) throw new MovieApiError('Unable to resolve this title to a TMDB ID for EmbedWave playback.', 503, 'TMDB_ID_UNAVAILABLE');
 
     const url = buildVidyUrl(tmdbId, media.type === 'movie' ? 'movie' : 'tv', season, episode);
     const source: MovieApiPlaybackSource = {
