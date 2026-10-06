@@ -219,7 +219,6 @@ export function Details() {
               <span>{kind === 'movie' ? formatDuration(data?.runtime) : 'Series'}</span>
               {(data?.genres || []).slice(0, 3).map((g: string) => <span key={g}>{g}</span>)}
             </div>
-            <p className="kinoma-details-synopsis">{synopsis}</p>
             <div className="kinoma-details-actions">
               <button className="kinoma-details-3d-button kinoma-details-3d-button--watch" onClick={watch}><span><Play size={18} fill="currentColor" /> {watchLabel}</span></button>
               <button className={'kinoma-details-3d-button kinoma-details-3d-button--list ' + (isInList ? 'is-added' : '')} onClick={toggleList}><span>{isInList ? <Check size={18} /> : <Plus size={18} />} {isInList ? 'In My List' : 'Add to My List'}</span></button>
@@ -307,6 +306,13 @@ export function Details() {
           })}
           {!recommendations.length && !loading && <div className="kinoma-details-bottom">No recommendations are available right now.</div>}
         </div>
+      </section>
+      <section className="kinoma-details-section kinoma-details-synopsis-section" aria-labelledby="details-synopsis-heading">
+        <div className="kinoma-details-section__heading">
+          <span>ABOUT THIS TITLE</span>
+          <h2 id="details-synopsis-heading">Synopsis</h2>
+        </div>
+        <p className="kinoma-details-synopsis">{synopsis}</p>
       </section>
       <div className="kinoma-details-bottom"><Clock3 size={14} /> Metadata and playback are powered by MovieApi.</div>
     </main>
