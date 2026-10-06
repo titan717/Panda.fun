@@ -3,15 +3,21 @@ import { slugifyTitle } from './slug';
 export type MediaRouteType = 'movie' | 'series';
 
 /**
- * Builds the Details URL from the displayed title.
- * MovieAPI/TMDB IDs stay internal to the data/playback layer; the public
- * route remains a human-readable title slug.
+ * Builds the Details URL from the displayed title while optionally carrying
+ * the exact MovieApi media ID selected from search/discovery.
+ *
+ * The title remains the human-readable public route. When mediaId is present,
+ * Details can skip title-based resolution entirely and use the selected
+ * movie/TV identity without ambiguity.
  */
-export function buildDetailsHref(title: string, type: MediaRouteType): string {
+export function buildDetailsHref(title: string, type: MediaRouteType, mediaId?: string): string {
   const rawTitle = String(title || '').trim();
   if (!rawTitle) throw new Error('A title is required to build a details route.');
   const slug = slugifyTitle(rawTitle);
-  return '/details/' + encodeURIComponent(slug) + '?type=' + type;
+  const params = new URLSearchParams({ type });
+  const normalizedMediaId = String(mediaId || '').trim();
+  if (normalizedMediaId) params.set('mediaId', normalizedMediaId);
+  return '/details/' + encodeURIComponent(slug) + '?' + params.toString();
 }
 
 /**
