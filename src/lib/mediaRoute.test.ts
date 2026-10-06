@@ -17,4 +17,20 @@ describe('title-based detail routes', () => {
   it('rejects an empty title', () => {
     expect(() => buildDetailsHref('   ', 'movie')).toThrow('A title is required to build a details route.');
   });
+
+  it('builds the exact watch route format used by the Watch parser', async () => {
+    const mediaRoute = await import('./mediaRoute');
+    expect(typeof mediaRoute.buildWatchHref).toBe('function');
+    expect(mediaRoute.buildWatchHref('tmdb_tv_95350', 'series', 1, 2)).toBe(
+      '/watch/tmdb_tv_95350%24season%241%24episode%242?type=series'
+    );
+  });
+
+  it('preserves movie watch routes without an episode suffix', async () => {
+    const mediaRoute = await import('./mediaRoute');
+    expect(typeof mediaRoute.buildWatchHref).toBe('function');
+    expect(mediaRoute.buildWatchHref('tmdb_movie_550', 'movie')).toBe(
+      '/watch/tmdb_movie_550?type=movie'
+    );
+  });
 });
