@@ -146,7 +146,7 @@ export function Hero({ item, items }: HeroProps) {
             
             {/* Buttons */}
             <div className="mt-2 flex items-center gap-3 sm:gap-4">
-              <Link href={buildDetailsHref(currentItem.id, currentItem.type === 'movie' ? 'movie' : 'series')}>
+              <Link href={buildDetailsHref(title, currentItem.type === 'movie' ? 'movie' : 'series')}>
                 <motion.button 
                   whileHover={{ scale: 1.03 }}
                   whileTap={{ scale: 0.97 }}
