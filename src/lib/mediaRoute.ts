@@ -8,7 +8,8 @@ export type MediaRouteType = 'movie' | 'series';
  * route remains a human-readable title slug.
  */
 export function buildDetailsHref(title: string, type: MediaRouteType): string {
-  const slug = slugifyTitle(title);
-  if (!slug) throw new Error('A title is required to build a details route.');
+  const rawTitle = String(title || '').trim();
+  if (!rawTitle) throw new Error('A title is required to build a details route.');
+  const slug = slugifyTitle(rawTitle);
   return '/details/' + encodeURIComponent(slug) + '?type=' + type;
 }
