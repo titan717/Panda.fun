@@ -7912,3 +7912,54 @@ body {
 .kinoma-episode-sort{display:inline-flex;align-items:center;gap:6px;height:36px;padding:0 10px;border:1px solid rgba(255,255,255,.075);border-radius:11px;background:rgba(0,0,0,.42);color:rgba(255,255,255,.62);font:700 9px/1 "Google Sans",sans-serif;box-shadow:inset 0 1px 0 rgba(255,255,255,.025);transition:background 160ms ease,border-color 160ms ease,color 160ms ease,transform 160ms ease}.kinoma-episode-sort:hover{background:rgba(255,255,255,.07);border-color:rgba(255,255,255,.14);color:#fff;transform:translateY(-1px)}
 .kinoma-season-heading,.kinoma-details-section__heading--more > div{display:flex;align-items:center;gap:11px}.kinoma-section-accent{display:block;width:3px;height:31px;flex:0 0 3px;border-radius:999px;background:#e5484d;box-shadow:0 0 16px rgba(229,72,77,.18)}.kinoma-details-section__heading--more .kinoma-section-accent{height:29px}
 @media(max-width:900px){.kinoma-episode-list--grid .kinoma-episode-card{flex-basis:calc((100% - 32px)/2.5)}.kinoma-episode-search{width:150px}}@media(max-width:560px){.kinoma-episode-list--grid .kinoma-episode-card{flex-basis:245px;min-width:245px}.kinoma-episode-search{width:130px}.kinoma-episode-sort span{display:none}}
+
+
+/* Panda visual pass — deeper global surfaces + matching TOP10 display typography. */
+html,
+body,
+#root {
+  background: #030303 !important;
+}
+
+.kinoma-home,
+.panda-home-v2 {
+  background-color: #030303 !important;
+}
+
+.kinoma-home__inner,
+.panda-home-v2__inner {
+  background-color: transparent !important;
+}
+
+.panda-home-top10__title {
+  font-family: 'Roboto Slab', Georgia, serif !important;
+  font-weight: 900 !important;
+  text-transform: uppercase;
+  letter-spacing: -0.055em !important;
+  line-height: .82 !important;
+  color: #f6f2ee !important;
+  -webkit-text-stroke: 1.25px rgba(246, 242, 238, .82);
+  text-shadow:
+    0 2px 0 rgba(0, 0, 0, .9),
+    0 8px 24px rgba(0, 0, 0, .42);
+}
+
+.panda-home-top10__number {
+  font-family: 'Roboto Slab', Georgia, serif !important;
+  font-weight: 900 !important;
+  letter-spacing: -0.075em !important;
+  line-height: .78 !important;
+  -webkit-text-stroke: 1px rgba(246, 242, 238, .72);
+  text-shadow:
+    0 3px 0 rgba(0, 0, 0, .95),
+    0 10px 26px rgba(0, 0, 0, .48);
+}
+
+/* Keep artwork cinematic while making every page feel noticeably darker. */
+.kinoma-home,
+.kinoma-welcome,
+.kinoma-settings-page,
+.panda-home-v2 {
+  color-scheme: dark;
+}
+
