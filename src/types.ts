@@ -1,3 +1,18 @@
+export interface MediaTrailer {
+  id: string;
+  name: string;
+  type: string;
+  site: string;
+  key: string;
+  url?: string | null;
+  embedUrl?: string | null;
+  thumbnail?: string | null;
+  official?: boolean;
+  publishedAt?: string | null;
+  language?: string | null;
+  country?: string | null;
+}
+
 export interface Episode {
   id: string;
   number: number;
@@ -43,9 +58,8 @@ export interface AnimeDetails extends AnimeItem {
   episodes: Episode[];
   seasons?: AnimeSeasonItem[];
   studio?: string;
+  trailer?: MediaTrailer | null;
 }
 
 export const DEFAULT_POSTER = 'https://images.unsplash.com/photo-1578632767115-351597cf2477?w=600&auto=format&fit=crop&q=60';
 export const DEFAULT_BANNER = 'https://images.unsplash.com/photo-1534447677768-be436bb09401?w=1600&auto=format&fit=crop&q=80';
-
-
