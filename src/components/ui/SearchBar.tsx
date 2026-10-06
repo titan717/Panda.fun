@@ -105,7 +105,7 @@ export function SearchBar() {
                   <div 
                     key={item.id}
                     onClick={() => {
-                      setLocation(buildDetailsHref(item.id, item.type === 'movie' ? 'movie' : 'series'));
+                      setLocation(buildDetailsHref(item.title, item.type === 'movie' ? 'movie' : 'series'));
                       setIsOpen(false);
                       setQuery('');
                     }}
