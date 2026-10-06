@@ -79,11 +79,25 @@ export class MovieApiError extends Error {
 
 const DEFAULT_BASE_URL = 'https://movieapi-3d0v.onrender.com';
 const DEFAULT_FALLBACK_URL = '';
+const LEGACY_VERCEL_API_HOST = 'apikinoma.vercel.app';
 const viteEnv = (import.meta as ImportMeta & { env?: Record<string, string | undefined> }).env || {};
+
+export function resolveMovieApiBaseUrl(configuredBase: unknown): string {
+  const normalized = String(configuredBase || '').trim().replace(/\/+$/, '');
+  if (!normalized) return DEFAULT_BASE_URL;
+  try {
+    const hostname = new URL(normalized).hostname.toLowerCase();
+    if (hostname === LEGACY_VERCEL_API_HOST) return DEFAULT_BASE_URL;
+  } catch {
+    return DEFAULT_BASE_URL;
+  }
+  return normalized;
+}
+
 const rawBase = String(viteEnv.VITE_MOVIE_API_URL || DEFAULT_BASE_URL).trim();
-export const MOVIE_API_BASE_URL = rawBase.replace(/\/+$/, '');
+export const MOVIE_API_BASE_URL = resolveMovieApiBaseUrl(rawBase);
 const rawFallback = String(viteEnv.VITE_MOVIE_API_FALLBACK_URL || DEFAULT_FALLBACK_URL).trim();
-export const MOVIE_API_FALLBACK_URL = rawFallback.replace(/\/+$/, '');
+export const MOVIE_API_FALLBACK_URL = resolveMovieApiBaseUrl(rawFallback);
 
 function reportApiFailure(error: unknown, path: string) {
   try {
@@ -163,7 +177,7 @@ async function request<T>(
           const error = data?.error || {};
           const apiError = new MovieApiError(error.message || `MovieApi request failed (${response.status}).`, response.status, error.code, error.requestId || response.headers.get('X-Request-ID') || undefined);
           lastError = apiError;
-          if (index < bases.length - 1 && (response.status >= 500 || response.status === 429)) continue;
+          if (index < bases.length - 1 && (response.status >= 500 || response.status === 429 || response.status === 404)) continue;
           throw apiError;
         }
         const value = unwrap<T>(payload);
