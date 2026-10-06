@@ -209,7 +209,7 @@ export function Details() {
               <span className="kinoma-section-accent" aria-hidden="true" />
               <div className="kinoma-season-picker">
               <button type="button" className="kinoma-season-picker__trigger" onClick={() => setSeasonMenuOpen(value => !value)} aria-expanded={seasonMenuOpen} aria-haspopup="listbox">
-                <span>Seasons</span><span className="kinoma-season-picker__chevron">⌄</span>
+                <span>Season {selectedSeason}</span><span className="kinoma-season-picker__chevron">⌄</span>
               </button>
               {seasonMenuOpen && (
                 <div className="kinoma-season-picker__menu" role="listbox" aria-label="Choose season">
@@ -244,14 +244,17 @@ export function Details() {
               >
                 <div className="kinoma-episode-art">
                   {ep.image ? <img src={ep.image} alt="" loading={ep.number === (historyUtil.getAnimeProgress(id)?.episodeNumber || 0) ? 'eager' : 'lazy'} decoding="async" /> : <span><Play size={20} /></span>}
+                  <div className="kinoma-episode-copy">
+                    <span className="kinoma-episode-kicker">EPISODE {ep.number}</span>
+                    <strong className="kinoma-episode-number">{ep.title || 'Episode ' + ep.number}</strong>
+                    {ep.synopsis && <p>{ep.synopsis}</p>}
+                    <div className="kinoma-episode-meta">
+                      <span>{ep.duration ? <><Play size={10} fill="currentColor" /> {formatDuration(ep.duration)}</> : <><Play size={10} fill="currentColor" /> Play</>}</span>
+                      {ep.rating != null && <span>★ {Number(ep.rating).toFixed(1)}</span>}
+                    </div>
+                  </div>
+                  <ChevronRight className="kinoma-episode-arrow" size={19} aria-hidden="true" />
                 </div>
-                <div className="kinoma-episode-copy">
-                  <strong className="kinoma-episode-number">Episode {ep.number}</strong>
-                  {ep.title && ep.title.toLowerCase() !== ('episode ' + ep.number).toLowerCase() && <span>{ep.title}</span>}
-                  <div className="kinoma-episode-meta">{ep.duration ? <span>{formatDuration(ep.duration)}</span> : null}{ep.duration && ep.rating ? <i>•</i> : null}{ep.rating ? <span>★ {ep.rating.toFixed(1)}</span> : null}</div>
-                  {ep.synopsis && <p>{ep.synopsis}</p>}
-                </div>
-                <ChevronRight className="kinoma-episode-arrow" size={18} />
               </button>
             ))}
             {!loading && !(modelSeasons.find(s => s.number === selectedSeason)?.episodes.length) && <div className="kinoma-details-bottom">No episodes were returned for this season.</div>}
