@@ -4,7 +4,7 @@
 
 **Goal:** Ensure every Panda.fun content card carries its exact MovieApi/TMDB-backed identity through details, trailer, recommendations, library, and playback navigation, eliminating same-title collisions.
 
-**Architecture:** Use the existing MovieApi media ID (for example `kinoma_tmdb_movie_123`) as the canonical details-route identity. Centralize construction of details URLs so every card uses the ID, while `Details.tsx` accepts canonical IDs directly and retains title-slug resolution only for legacy URLs.
+**Architecture:** Use the existing MovieApi media ID (for example `tmdb_movie_123`) as the canonical details-route identity. Centralize construction of details URLs so every card uses the ID, while `Details.tsx` accepts canonical IDs directly and retains title-slug resolution only for legacy URLs.
 
 **Tech Stack:** React 19, TypeScript, Vite, Wouter, Vitest, MovieApi.
 
@@ -29,14 +29,14 @@
 - Modify: `src/lib/api.ts` only if the route helper needs an exported canonical-ID predicate
 
 **Interfaces:**
-- Consumes: existing `AnimeItem.id` values such as `kinoma_tmdb_movie_123` and `kinoma_tmdb_tv_456`.
+- Consumes: existing `AnimeItem.id` values such as `tmdb_movie_123` and `tmdb_tv_456`.
 - Produces: `buildDetailsHref(id: string, type: 'movie' | 'series'): string` and a predicate/parser that distinguishes canonical MovieApi IDs from title slugs.
 
 - [ ] **Step 1: Add the focused failing tests**
 
 Test:
-1. `buildDetailsHref('kinoma_tmdb_movie_123', 'movie')` returns a route containing `kinoma_tmdb_movie_123` and `type=movie`.
-2. Two items titled `2018` but with IDs `kinoma_tmdb_movie_123` and `kinoma_tmdb_movie_456` produce different hrefs.
+1. `buildDetailsHref('tmdb_movie_123', 'movie')` returns a route containing `tmdb_movie_123` and `type=movie`.
+2. Two items titled `2018` but with IDs `tmdb_movie_123` and `tmdb_movie_456` produce different hrefs.
 3. Canonical movie and TV IDs are recognized as IDs.
 4. A normal title such as `breaking-bad` is not recognized as a canonical ID.
 
@@ -47,7 +47,7 @@ Expected: the new test file fails because the route helper does not yet exist.
 
 - [ ] **Step 3: Implement the minimum behavior**
 
-Create a small pure route module. Encode the canonical ID with `encodeURIComponent` when placing it in the path, and append the content type query parameter. Recognize the existing MovieApi ID forms used by `mediaFromId()`: `kinoma_tmdb_movie_<number>`, `kinoma_tmdb_tv_<number>`, and `kinoma_tvmaze_<number>`.
+Create a small pure route module. Encode the canonical ID with `encodeURIComponent` when placing it in the path, and append the content type query parameter. Recognize the existing MovieApi ID forms used by `mediaFromId()`: `tmdb_movie_<number>`, `tmdb_tv_<number>`, and `kinoma_tvmaze_<number>`.
 
 Do not perform network requests or title resolution in this module.
 
@@ -132,8 +132,8 @@ git commit -m "fix: preserve media identity across content navigation"
 - [ ] **Step 1: Add focused failing tests**
 
 Test the pure resolution boundary:
-1. A canonical `kinoma_tmdb_movie_123` route resolves to exactly that ID.
-2. A canonical `kinoma_tmdb_tv_456` route resolves to exactly that ID.
+1. A canonical `tmdb_movie_123` route resolves to exactly that ID.
+2. A canonical `tmdb_tv_456` route resolves to exactly that ID.
 3. A legacy title slug remains eligible for `resolveMediaIdFromSlug()`.
 4. No title lookup is required for a canonical ID.
 
