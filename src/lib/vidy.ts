@@ -9,17 +9,5 @@ export function buildVidyUrl(
   const path = type === 'movie'
     ? `movie/${tmdbId}`
     : `tv/${tmdbId}/${season}/${episode}`;
-
-  const query = new URLSearchParams({
-    autoplay: 'true',
-    ...(type === 'tv'
-      ? {
-          nextEpisode: 'true',
-          episodeSelector: 'true',
-          autoplayNextEpisode: 'true',
-        }
-      : {}),
-  });
-
-  return `https://www.vidy.st/${path}?${query.toString()}`;
+  return `https://embedwave.cc/embed/${path}`;
 }
