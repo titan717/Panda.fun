@@ -1,7 +1,7 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import { Footer } from '../components/ui/Footer';
 import { useLocation, useRoute } from 'wouter';
-import { Play, Plus, Check, ChevronRight, Film, Tv, Clock3, Share2, List, Grid2X2, Search, ArrowUpDown } from 'lucide-react';
+import { Play, Plus, Check, ChevronRight, Film, Tv, Clock3, Share2, List, Grid2X2, Search, ArrowUpDown, Star } from 'lucide-react';
 import { api, resolveMediaIdFromSlug } from '../lib/api';
 import type { AnimeItem, Episode, AnimeSeasonItem } from '../types';
 import { DEFAULT_POSTER, DEFAULT_BANNER } from '../types';
@@ -220,8 +220,9 @@ export function Details() {
                   ))}
                 </div>
               )}
+              <small className="kinoma-season-count">{modelSeasons.find(s => s.number === selectedSeason)?.episodes.length || 0} {((modelSeasons.find(s => s.number === selectedSeason)?.episodes.length || 0) === 1) ? 'episode' : 'episodes'}</small>
+              </div>
             </div>
-            <small className="kinoma-season-count">{modelSeasons.find(s => s.number === selectedSeason)?.episodes.length || 0} {((modelSeasons.find(s => s.number === selectedSeason)?.episodes.length || 0) === 1) ? 'episode' : 'episodes'}</small>
             <div className="kinoma-details-section__controls">
               <div className="kinoma-episode-search"><Search size={14} /><input value={episodeSearch} onChange={e => setEpisodeSearch(e.target.value)} placeholder="Search episodes" aria-label="Search episodes" /></div>
               <button type="button" className="kinoma-episode-sort" onClick={() => setEpisodeSort(value => value === 'asc' ? 'desc' : 'asc')} title={episodeSort === 'asc' ? 'Sort descending' : 'Sort ascending'} aria-label={episodeSort === 'asc' ? 'Sort episodes descending' : 'Sort episodes ascending'}><ArrowUpDown size={15} /><span>{episodeSort === 'asc' ? 'ASC' : 'DESC'}</span></button>
@@ -251,7 +252,7 @@ export function Details() {
                   {ep.synopsis && <p>{ep.synopsis}</p>}
                   <div className="kinoma-episode-meta">
                     <span>{ep.duration ? <><Play size={10} fill="currentColor" /> {formatDuration(ep.duration)}</> : <><Play size={10} fill="currentColor" /> Play</>}</span>
-                    {ep.rating != null && <span>★ {Number(ep.rating).toFixed(1)}</span>}
+                    {ep.rating != null && <span><Star size={10} fill="currentColor" aria-hidden="true" /> {Number(ep.rating).toFixed(1)}</span>}
                   </div>
                 </div>
                 <ChevronRight className="kinoma-episode-arrow" size={19} aria-hidden="true" />
