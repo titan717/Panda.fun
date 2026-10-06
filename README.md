@@ -129,8 +129,8 @@ Search queries are sent to MovieAPI for both movies and TV shows. The frontend c
 Search results use normalized Panda.fun media IDs such as:
 
 ```
-kinoma_tmdb_movie_<tmdbId>
-kinoma_tmdb_tv_<tmdbId>
+tmdb_movie_<tmdbId>
+tmdb_tv_<tmdbId>
 kinoma_tvmaze_<tvmazeId>
 ```
 
