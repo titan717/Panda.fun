@@ -5,6 +5,7 @@ import { useAuth } from '../lib/AuthContext';
 import { libraryManager } from '../lib/library';
 import { historyUtil, HistoryItem } from '../lib/history';
 import { preferencesUtil } from '../lib/preferences';
+import { buildWatchHref } from '../lib/mediaRoute';
 import '../styles/panda-profile.css';
 
 export function Profile() {
@@ -135,10 +136,13 @@ export function Profile() {
             </div>
             {recent.length > 0 ? (
               <div className="panda-profile-v2__links">
-                {recent.map(item => (
+                {recent.map(item => {
+                  const mediaId = item.animeId || item.slug;
+                  const type = mediaId.startsWith('tmdb_movie_') ? 'movie' : 'series';
+                  return (
                   <Link
                     key={item.slug}
-                    href={`/watch/${encodeURIComponent(item.animeId || item.slug)}?type=series&season=${item.seasonNumber || 1}&episode=${item.episodeNumber || 1}`}
+                    href={buildWatchHref(mediaId, type, item.seasonNumber, Number(item.episodeNumber), item.playbackTimestamp)}
                     className="panda-profile-v2__link"
                   >
                     <span>
@@ -150,7 +154,8 @@ export function Profile() {
                     </span>
                     <ArrowRight size={14} />
                   </Link>
-                ))}
+                  );
+                })}
               </div>
             ) : (
               <p className="panda-profile-v2__hint">Nothing here yet. Start a movie or series and your recent watching will appear here automatically.</p>

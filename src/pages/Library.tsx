@@ -1,7 +1,7 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import { Footer } from '../components/ui/Footer';
 import { Bookmark, CheckCircle2, Clock3, Heart, Play, Search, Trash2, X, Sparkles } from 'lucide-react';
-import { buildDetailsHref } from '../lib/mediaRoute';
+import { buildDetailsHref, buildWatchHref } from '../lib/mediaRoute';
 import { ModernCard } from '../components/ui/modern/ModernCard';
 import { Link } from 'wouter';
 import { historyUtil, HistoryItem } from '../lib/history';
@@ -168,8 +168,7 @@ export function Library() {
                 const type = mediaId.startsWith('tmdb_movie_') ? 'movie' : 'series';
                 const season = Math.max(1, Number(item.seasonNumber) || 1);
                 const episode = Math.max(1, Number(item.episodeNumber) || 1);
-                const watchId = type === 'movie' ? mediaId : `${mediaId}$season${season}$episode${episode}`;
-                const watchUrl = '/watch/' + encodeURIComponent(watchId) + '?type=' + type + (item.playbackTimestamp > 0 ? '&t=' + Math.floor(item.playbackTimestamp) : '');
+                const watchUrl = buildWatchHref(mediaId, type, season, episode, item.playbackTimestamp);
                 return (
                   <ModernCard
                     key={item.episodeId || item.slug}
