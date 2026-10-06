@@ -1944,3 +1944,10 @@
 }
 .panda-content-card__play { background:#f6f2ee; color:#090808; }
 .panda-content-card__copy span { color:rgba(246,242,238,.40); }
+
+/* Player-only watch route: use the available viewport, with no surrounding content chrome. */
+.panda-watch-page{min-height:100dvh;height:100dvh;width:100vw;padding:0 !important;overflow:hidden;display:flex;align-items:center;justify-content:center;background:#000}
+.panda-watch-stage{width:100vw !important;max-width:none !important;height:100dvh;margin:0 !important;display:flex;align-items:center;justify-content:center}
+.panda-watch-player{width:100vw !important;height:100dvh !important;max-width:none !important;aspect-ratio:auto !important;border:0 !important;border-radius:0 !important;box-shadow:none !important}
+.panda-watch-player iframe{width:100% !important;height:100% !important;min-height:100% !important;display:block}
+.panda-watch-player-loading,.panda-watch-player-empty{background:#000}
