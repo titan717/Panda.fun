@@ -244,17 +244,17 @@ export function Details() {
               >
                 <div className="kinoma-episode-art">
                   {ep.image ? <img src={ep.image} alt="" loading={ep.number === (historyUtil.getAnimeProgress(id)?.episodeNumber || 0) ? 'eager' : 'lazy'} decoding="async" /> : <span><Play size={20} /></span>}
-                  <div className="kinoma-episode-copy">
-                    <span className="kinoma-episode-kicker">EPISODE {ep.number}</span>
-                    <strong className="kinoma-episode-number">{ep.title || 'Episode ' + ep.number}</strong>
-                    {ep.synopsis && <p>{ep.synopsis}</p>}
-                    <div className="kinoma-episode-meta">
-                      <span>{ep.duration ? <><Play size={10} fill="currentColor" /> {formatDuration(ep.duration)}</> : <><Play size={10} fill="currentColor" /> Play</>}</span>
-                      {ep.rating != null && <span>★ {Number(ep.rating).toFixed(1)}</span>}
-                    </div>
-                  </div>
-                  <ChevronRight className="kinoma-episode-arrow" size={19} aria-hidden="true" />
                 </div>
+                <div className="kinoma-episode-copy">
+                  <span className="kinoma-episode-kicker">EPISODE {ep.number}</span>
+                  <strong className="kinoma-episode-number">{ep.title || 'Episode ' + ep.number}</strong>
+                  {ep.synopsis && <p>{ep.synopsis}</p>}
+                  <div className="kinoma-episode-meta">
+                    <span>{ep.duration ? <><Play size={10} fill="currentColor" /> {formatDuration(ep.duration)}</> : <><Play size={10} fill="currentColor" /> Play</>}</span>
+                    {ep.rating != null && <span>★ {Number(ep.rating).toFixed(1)}</span>}
+                  </div>
+                </div>
+                <ChevronRight className="kinoma-episode-arrow" size={19} aria-hidden="true" />
               </button>
             ))}
             {!loading && !(modelSeasons.find(s => s.number === selectedSeason)?.episodes.length) && <div className="kinoma-details-bottom">No episodes were returned for this season.</div>}
