@@ -7496,56 +7496,6 @@ body {
   text-shadow: 0 6px 28px rgba(0,0,0,.42) !important;
 }
 
-/* Keep the Top 10 “Content Today” rail visually tied to the reference treatment. */
-.panda-home-top10__today span {
-  font-family: "Google Sans", "Montserrat", "Arial", sans-serif !important;
-  font-weight: 900 !important;
-  letter-spacing: 0.28em !important;
-  color: rgba(255,255,255,.78) !important;
-}
-
-/* Top 10 reference: hollow geometric numerals with a crisp white outline. */
-.panda-home-top10__number {
-  font-family: "Google Sans", "Montserrat", "Arial", sans-serif !important;
-  font-size: 108px !important;
-  font-weight: 900 !important;
-  line-height: .82 !important;
-  letter-spacing: -.065em !important;
-  color: #050505 !important;
-  -webkit-text-fill-color: #050505 !important;
-  -webkit-text-stroke: 3px rgba(255,255,255,.98) !important;
-  paint-order: stroke fill !important;
-  text-shadow: none !important;
-  font-variant-numeric: lining-nums tabular-nums !important;
-  position: relative !important;
-  z-index: 0 !important;
-}
-.panda-home-top10__number-wrap {
-  width: auto !important;
-  min-width: 0 !important;
-  margin-right: -12px !important;
-  overflow: visible !important;
-  display: flex !important;
-  align-items: flex-end !important;
-  position: relative !important;
-  z-index: 2 !important;
-}
-.panda-home-top10__card { z-index: 1; }
-.panda-home-top10__link { box-shadow: 0 16px 36px rgba(0,0,0,.28); }
-.panda-home-top10__link:hover { box-shadow: 0 20px 40px rgba(0,0,0,.34); }
-@media (min-width: 640px) {
-  .panda-home-top10__number { font-size: 132px !important; -webkit-text-stroke-width: 3.5px !important; }
-  .panda-home-top10__number-wrap { margin-right: -15px !important; }
-}
-@media (min-width: 1200px) {
-  .panda-home-top10__number { font-size: 156px !important; -webkit-text-stroke-width: 4px !important; }
-  .panda-home-top10__number-wrap { margin-right: -18px !important; }
-}
-@media (max-width: 700px) {
-  .panda-home-top10__number { font-size: 92px !important; -webkit-text-stroke-width: 2.5px !important; }
-  .panda-home-top10__number-wrap { margin-right: -12px !important; }
-}
-
 /* New footer — quiet editorial layout rather than a dashboard-like panel. */
 .panda-shared-footer {
   margin-top: 82px !important;
@@ -7633,15 +7583,6 @@ body {
 
 
 /* Homepage theme restoration */
-.panda-home-top10__today span {
-  font-family: "Google Sans", "Montserrat", "Arial", sans-serif !important;
-  font-weight: 900 !important;
-  letter-spacing: 0.18em !important;
-  color: #050505 !important;
-  -webkit-text-fill-color: #050505 !important;
-  -webkit-text-stroke: 1px rgba(255,255,255,.98) !important;
-  paint-order: stroke fill !important;
-}
 .kinoma-home,
 .panda-home-v2 {
   background-color: #050505 !important;
