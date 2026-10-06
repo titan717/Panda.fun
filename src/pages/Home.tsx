@@ -121,7 +121,7 @@ function PandaContentCard({
       onMouseLeave={onLeave}
     >
       <Link
-        href={buildDetailsHref(item.title, type)}
+        href={buildDetailsHref(item.id, type)}
         className="panda-content-card__link"
         aria-label={`Open ${item.title}`}
         onFocus={() => onHover(item)}
@@ -363,7 +363,7 @@ export function Home() {
                         </div>
                         <div className="panda-home-top10__card">
                           <Link
-                            href={buildDetailsHref(item.title, item.type === 'movie' ? 'movie' : 'series')}
+                            href={buildDetailsHref(item.id, item.type === 'movie' ? 'movie' : 'series')}
                             className="panda-home-top10__link"
                             aria-label={"Open " + item.title + ", Top 10 rank " + (index + 1)}
                             onClick={() => trackGAEvent('home_top10_select', { rank: index + 1, item_id: item.id, title: item.title })}
