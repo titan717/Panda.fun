@@ -1,12 +1,14 @@
+import { slugifyTitle } from './slug';
+
 export type MediaRouteType = 'movie' | 'series';
 
 /**
- * Builds the canonical Details URL from the MovieAPI/TMDB media identity.
- * Keeping the media ID in the route prevents duplicate-title collisions and
- * lets the Details page load the exact metadata/trailer record selected by the user.
+ * Builds the Details URL from the displayed title.
+ * MovieAPI/TMDB IDs stay internal to the data/playback layer; the public
+ * route remains a human-readable title slug.
  */
-export function buildDetailsHref(mediaId: string, type: MediaRouteType): string {
-  const id = mediaId.trim();
-  if (!id) throw new Error('A media ID is required to build a details route.');
-  return '/details/' + encodeURIComponent(id) + '?type=' + type;
+export function buildDetailsHref(title: string, type: MediaRouteType): string {
+  const slug = slugifyTitle(title);
+  if (!slug) throw new Error('A title is required to build a details route.');
+  return '/details/' + encodeURIComponent(slug) + '?type=' + type;
 }
