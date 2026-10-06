@@ -8219,6 +8219,9 @@ body,
 }
 .kinoma-details-seasons .kinoma-season-picker__trigger{
   line-height:1;
+  font-size:clamp(30px,3vw,42px) !important;
+  font-weight:950 !important;
+  letter-spacing:-.045em !important;
 }
 .kinoma-details-seasons .kinoma-season-count{
   display:block;
