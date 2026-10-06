@@ -6604,7 +6604,8 @@ body {
   }
 
   .panda-home-top10__number {
-    font-size: 120px;
+    /* ~75% of a 150px-wide 2:3 poster height */
+    font-size: 169px;
   }
 
   .panda-home-top10__link,
@@ -6619,7 +6620,8 @@ body {
   }
 
   .panda-home-top10__number {
-    font-size: 140px;
+    /* ~75% of a 170px-wide 2:3 poster height */
+    font-size: 191px;
   }
 
   .panda-home-top10__link,
@@ -6678,7 +6680,7 @@ body {
   .panda-home-top10 { margin-top: 10px; }
   .panda-home-top10__head { padding-bottom: 14px; }
   .panda-home-top10__rank { min-width: 154px; }
-  .panda-home-top10__number { width: 70px; margin-right: -18px; font-size: 92px; }
+  .panda-home-top10__number { width: 70px; margin-right: -18px; /* ~75% of a 116px-wide 2:3 poster height */ font-size: 131px; }
   .panda-home-top10__link { width: 116px; border-radius: 15px; }
   .panda-search-surprise { width: 100%; justify-content: center; }
 }
