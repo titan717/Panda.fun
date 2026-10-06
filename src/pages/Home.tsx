@@ -7,7 +7,7 @@ import { api, MovieApiError, MovieApiMedia } from '../lib/api';
 import { trackGAEvent } from '../lib/analytics';
 import { libraryManager } from '../lib/library';
 import { updateSEO } from '../lib/seo';
-import { buildDetailsHref } from '../lib/mediaRoute';
+import { buildDetailsHref, buildWatchHref } from '../lib/mediaRoute';
 import { ModernContinueWatching } from '../components/ui/modern/ModernContinueWatching';
 import '../styles/panda-home.css';
 
@@ -254,7 +254,7 @@ export function Home() {
   const popularMovies = (sections?.popularMovies || []) as MovieApiMedia[];
   const popularTv = (sections?.popularTv || []) as MovieApiMedia[];
   const featuredType = featured?.type === 'movie' ? 'movie' : 'series';
-  const featuredWatchUrl = featured?.id ? '/watch/' + encodeURIComponent(featured.id) + '?type=' + featuredType : '/search';
+  const featuredWatchUrl = featured?.id ? buildWatchHref(featured.id, featuredType) : '/search';
   const topTen = useMemo(() => [...trending, ...popularMovies, ...popularTv].filter((item, index, list) => item?.id && list.findIndex(candidate => candidate.id === item.id) === index).slice(0, 10), [trending, popularMovies, popularTv]);
 
   const toggleFeaturedList = () => {

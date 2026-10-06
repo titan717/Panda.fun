@@ -5,7 +5,7 @@ import { motion, AnimatePresence } from 'motion/react';
 import { AnimeItem, DEFAULT_BANNER } from '../../../types';
 import { libraryManager } from '../../../lib/library';
 import { historyUtil, HistoryItem } from '../../../lib/history';
-import { buildDetailsHref } from '../../../lib/mediaRoute';
+import { buildDetailsHref, buildWatchHref } from '../../../lib/mediaRoute';
 
 interface ModernHeroProps {
   items: AnimeItem[];
@@ -79,12 +79,15 @@ export function ModernHero({ items }: ModernHeroProps) {
   const heroType = currentItem.contentType === 'movie' || currentItem.type === 'movie' ? 'movie' : 'series';
   const heroSeason = Math.max(1, Number(activeHistory?.seasonNumber) || 1);
   const heroEpisode = Math.max(1, Number(activeHistory?.episodeNumber) || 1);
-  const heroWatchId = heroType === 'movie'
-    ? currentItem.id
-    : currentItem.id + '$season$' + heroSeason + '$episode$' + heroEpisode;
-  const watchUrl = hasHistory && activeHistory
-    ? '/watch/' + encodeURIComponent(heroWatchId) + '?type=' + heroType + '&t=' + Math.floor(activeHistory.playbackTimestamp ?? activeHistory.progress ?? 0)
-    : '/watch/' + encodeURIComponent(heroWatchId) + '?type=' + heroType;
+  const watchUrl = buildWatchHref(
+    currentItem.id,
+    heroType,
+    heroSeason,
+    heroEpisode,
+    hasHistory && activeHistory
+      ? activeHistory.playbackTimestamp ?? activeHistory.progress ?? 0
+      : 0
+  );
   const primaryLabel = hasHistory && activeHistory
     ? 'Continue Watching' + (heroType === 'series' ? ' (S' + heroSeason + ' E' + heroEpisode + ')' : '')
     : 'Watch Now';

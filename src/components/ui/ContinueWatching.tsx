@@ -3,18 +3,19 @@ import { Link } from 'wouter';
 import { Play, X } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 import { historyUtil, HistoryItem, formatPlaybackTimestamp } from '../../lib/history';
+import { buildWatchHref } from '../../lib/mediaRoute';
 import { DEFAULT_POSTER } from '../../types';
 
 function watchUrl(item: HistoryItem) {
   const mediaId = item.animeId || item.slug;
-  if (mediaId.startsWith('tmdb_movie_')) {
-    return '/watch/' + encodeURIComponent(mediaId) + '?type=movie' +
-      (item.playbackTimestamp > 0 ? '&t=' + Math.floor(item.playbackTimestamp) : '');
-  }
-  const season = Math.max(1, Number(item.seasonNumber) || 1);
-  const episode = Math.max(1, Number(item.episodeNumber) || 1);
-  return '/watch/' + encodeURIComponent(mediaId + '$season$' + season + '$episode$' + episode) +
-    '?type=series' + (item.playbackTimestamp > 0 ? '&t=' + Math.floor(item.playbackTimestamp) : '');
+  const type = mediaId.startsWith('tmdb_movie_') ? 'movie' : 'series';
+  return buildWatchHref(
+    mediaId,
+    type,
+    item.seasonNumber,
+    Number(item.episodeNumber),
+    item.playbackTimestamp
+  );
 }
 
 export function ContinueWatching() {

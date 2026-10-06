@@ -9,7 +9,7 @@ import { libraryManager } from '../lib/library';
 import { historyUtil } from '../lib/history';
 import { updateSEO } from '../lib/seo';
 import { trackGAEvent } from '../lib/analytics';
-import { buildDetailsHref } from '../lib/mediaRoute';
+import { buildDetailsHref, buildWatchHref } from '../lib/mediaRoute';
 
 function cleanText(value: unknown) { return typeof value === 'string' ? value.replace(/<[^>]*>/g, '').trim() : ''; }
 function titleOf(data: any, fallback: string) { return typeof data?.title === 'string' ? data.title : data?.title?.english || data?.title?.romaji || data?.title?.native || fallback; }
@@ -162,13 +162,12 @@ export function Details() {
   const watch = () => {
     trackGAEvent('select_content', { content_type: kind });
     if (kind === 'movie') {
-      const suffix = resume?.playbackTimestamp ? '?type=movie&t=' + Math.floor(resume.playbackTimestamp) : '?type=movie';
-      setLocation('/watch/' + encodeURIComponent(id) + suffix);
+      setLocation(buildWatchHref(id, 'movie', 1, 1, resume?.playbackTimestamp || 0));
       return;
     }
     const season = resume?.seasonNumber && seasonItems.some(s => s.seasonNumber === resume.seasonNumber) ? resume.seasonNumber : selectedSeason;
     const episode = Math.max(1, Number(resume?.episodeNumber || 1));
-    setLocation('/watch/' + encodeURIComponent(id + '$season$' + season + '$episode$' + episode) + '?type=series');
+    setLocation(buildWatchHref(id, 'series', season, episode));
   };
 
   useEffect(() => {
@@ -266,7 +265,7 @@ export function Details() {
                 className="kinoma-episode-card"
                 onClick={() => {
                   trackGAEvent('episode_select', { content_type: 'series', season: selectedSeason, episode: ep.number, title });
-                  setLocation('/watch/' + encodeURIComponent(id + '$season$' + selectedSeason + '$episode$' + ep.number) + '?type=series');
+                  setLocation(buildWatchHref(id, 'series', selectedSeason, ep.number));
                 }}
               >
                 <div className="kinoma-episode-art">

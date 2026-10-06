@@ -9,7 +9,7 @@ import type { AnimeItem, Episode, AnimeSeasonItem } from '../types';
 import { DEFAULT_POSTER } from '../types';
 import { updateSEO } from '../lib/seo';
 import { trackGAEvent } from '../lib/analytics';
-import { buildDetailsHref } from '../lib/mediaRoute';
+import { buildDetailsHref, buildWatchHref } from '../lib/mediaRoute';
 
 function clean(value: unknown) {
   return typeof value === 'string' ? value.replace(/<[^>]*>/g, '').trim() : '';
@@ -138,7 +138,7 @@ export function Watch() {
     if (next) {
       trackGAEvent('episode_navigate', { content_type: type, direction: direction > 0 ? 'next' : 'previous', episode: next.number, title });
       setEpisode(next.number);
-      setLocation('/watch/' + encodeURIComponent(id + '$season$' + season + '$episode$' + next.number) + '?type=series');
+      setLocation(buildWatchHref(id, 'series', season, next.number));
     }
   };
 
