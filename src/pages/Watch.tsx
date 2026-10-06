@@ -27,6 +27,7 @@ export function Watch() {
   const raw = params?.id ? decodeURIComponent(params.id) : '';
   const query = new URLSearchParams(location.split('?')[1] || '');
   const queryType = query.get('type');
+  const playbackProgress = Math.max(0, Number(query.get('t') || 0));
   const parsed = raw.match(/^(.*)\$season\$(\d+)\$episode\$(\d+)$/);
   const id = parsed?.[1] || raw;
   const [data, setData] = useState<any>(null);
@@ -109,7 +110,7 @@ export function Watch() {
     setSourceLoading(true);
     setSource('');
     setError('');
-    api.getWatchLink(id, type === 'series' ? season : 1, type === 'series' ? episode : 1, controller.signal)
+    api.getWatchLink(id, type === 'series' ? season : 1, type === 'series' ? episode : 1, controller.signal, playbackProgress)
       .then(result => { if (!active) return; setSource(result.url); setSourceLoading(true); trackGAEvent('watch_start', { content_type: type, title }); })
       .catch(err => { if (!active) return; setSourceLoading(false); setError(err instanceof Error ? err.message : 'Playback source unavailable.'); });
     return () => { active = false; controller.abort(); };
