@@ -22,7 +22,7 @@ const mapItem = (item: AnimeItem): SearchItem => {
     image: item.image,
     rating: Number(item.rating || 0) || 0,
     year: item.releaseDate ? Number(String(item.releaseDate).slice(0, 4)) || undefined : undefined,
-    href: buildDetailsHref(item.title, type),
+    href: buildDetailsHref(item.id, type),
   };
 };
 
