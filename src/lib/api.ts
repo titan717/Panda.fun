@@ -325,46 +325,51 @@ export async function resolveMediaIdFromSlug(slug: string, type?: string) {
   if (!normalized) throw new MovieApiError('Invalid title slug.', 400, 'INVALID_TITLE_SLUG');
 
   const candidates = type === 'movie' ? ['movie'] : type === 'series' ? ['tv'] : ['movie', 'tv'];
-  const matches = await Promise.all(candidates.map(async (kind) => {
-    try {
-      const data = await request<any>('/api/v1/tmdb/search/' + kind, { q: decoded, page: 1 }, undefined, 60_000);
-      return (data.results || []).map((item: any): MovieApiMedia => ({
-        id: 'tmdb_' + kind + '_' + item.id,
-        type: kind === 'movie' ? 'movie' : 'tv',
-        title: item.title || item.name || item.original_title || item.original_name || 'Untitled',
-        poster: item.poster_path ? 'https://image.tmdb.org/t/p/w500' + item.poster_path : null,
-        backdrop: item.backdrop_path ? 'https://image.tmdb.org/t/p/w1280' + item.backdrop_path : null,
-        releaseDate: item.release_date || item.first_air_date || null,
-        overview: item.overview || null,
-        rating: Number.isFinite(Number(item.vote_average)) ? Number(item.vote_average) : null,
-        ids: { tmdb: Number(item.id) },
-        source: 'tmdb'
-      }));
-    } catch { return [] as MovieApiMedia[]; }
-  }));
 
-  const exact = matches.flat().find(item => slugifyTitle(item.title) === normalized);
-  const fallback = matches.flat()[0];
-  if (exact || fallback) return (exact || fallback)!.id;
+  const [providerMatches, tvmazeMatches] = await Promise.all([
+    Promise.all(candidates.map(async (kind) => {
+      try {
+        const data = await request<any>('/api/v1/tmdb/search/' + kind, { q: decoded, page: 1 }, undefined, 60_000);
+        return (data.results || []).map((item: any): MovieApiMedia => ({
+          id: 'tmdb_' + kind + '_' + item.id,
+          type: kind === 'movie' ? 'movie' : 'tv',
+          title: item.title || item.name || item.original_title || item.original_name || 'Untitled',
+          poster: item.poster_path ? 'https://image.tmdb.org/t/p/w500' + item.poster_path : null,
+          backdrop: item.backdrop_path ? 'https://image.tmdb.org/t/p/w1280' + item.backdrop_path : null,
+          releaseDate: item.release_date || item.first_air_date || null,
+          overview: item.overview || null,
+          rating: Number.isFinite(Number(item.vote_average)) ? Number(item.vote_average) : null,
+          ids: { tmdb: Number(item.id) },
+          source: 'tmdb'
+        }));
+      } catch { return [] as MovieApiMedia[]; }
+    })),
+    (type === 'series' || !type) ? (async () => {
+      try {
+        const data = await request<any>('/api/v1/tv/search', { q: decoded, page: 1, limit: 20 }, undefined, 60_000);
+        return (data.results || []).map((item: any) => ({
+          id: String(item.id || ''),
+          title: item.title || item.name || 'Untitled'
+        })).filter((item: { id: string; title: string }) => item.id);
+      } catch { return [] as Array<{ id: string; title: string }>; }
+    })() : Promise.resolve([] as Array<{ id: string; title: string }>)
+  ]);
 
-  // Some newer TV titles can be absent from a TMDB search response while
-  // MovieAPI/TVMaze already knows the show. Resolve those to a TVMaze ID;
-  // the details endpoint can then enrich the record with TMDB metadata.
-  if (type === 'series' || !type) {
-    try {
-      const query = decoded.replace(/-/g, ' ');
-      const tvmaze = await request<any>('/api/v1/tv/search', { q: query, page: 1, limit: 20 }, undefined, 60_000);
-      const tvMatches = (tvmaze.results || []).map((item: any) => ({
-        id: String(item.id || ''),
-        title: item.title || item.name || 'Untitled'
-      })).filter((item: { id: string; title: string }) => item.id);
+  const tmdbResults = providerMatches.flat();
+  const tmdbExact = tmdbResults.find(item => slugifyTitle(item.title) === normalized);
+  const tvmazeExact = tvmazeMatches.find(item => slugifyTitle(item.title) === normalized);
 
-      const tvExact = tvMatches.find((item: { id: string; title: string }) => slugifyTitle(item.title) === normalized);
-      const tvFallback = tvMatches[0];
-      if (tvExact || tvFallback) return 'kinoma_tvmaze_' + (tvExact || tvFallback)!.id;
-    } catch {
-      // Preserve the existing not-found error when both providers fail.
-    }
+  // TVMaze is the preferred metadata source for series, while MovieAPI maps
+  // its records to TMDB IDs for trailers and EmbedWave playback.
+  if ((type === 'series' || !type) && tvmazeExact) {
+    return 'kinoma_tvmaze_' + tvmazeExact.id;
+  }
+
+  if (tmdbExact) return tmdbExact.id;
+  if (tmdbResults[0]) return tmdbResults[0].id;
+
+  if ((type === 'series' || !type) && tvmazeMatches[0]) {
+    return 'kinoma_tvmaze_' + tvmazeMatches[0].id;
   }
 
   throw new MovieApiError('Unable to resolve this title.', 404, 'TITLE_NOT_FOUND');
