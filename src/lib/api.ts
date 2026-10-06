@@ -369,7 +369,7 @@ export async function resolveMediaIdFromSlug(slug: string, type?: string) {
   const tvmazeExact = tvmazeMatches.find(item => slugifyTitle(item.title) === normalized);
 
   // TVMaze is the preferred metadata source for series, while MovieAPI maps
-  // its records to TMDB IDs for trailers and EmbedWave playback.
+  // its records to TMDB IDs for trailers and Vidy playback.
   if ((type === 'series' || !type) && tvmazeExact) {
     return 'kinoma_tvmaze_' + tvmazeExact.id;
   }
