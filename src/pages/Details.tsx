@@ -309,8 +309,10 @@ export function Details() {
       </section>
       <section className="kinoma-details-section kinoma-details-synopsis-section" aria-labelledby="details-synopsis-heading">
         <div className="kinoma-details-section__heading">
-          <span>ABOUT THIS TITLE</span>
-          <h2 id="details-synopsis-heading">Synopsis</h2>
+          <div>
+            <span>ABOUT THIS TITLE</span>
+            <h2 id="details-synopsis-heading">Synopsis</h2>
+          </div>
         </div>
         <p className="kinoma-details-synopsis">{synopsis}</p>
       </section>
