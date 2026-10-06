@@ -10,6 +10,15 @@ describe('title-based detail routes', () => {
     expect(buildDetailsHref('Breaking Bad', 'series')).toBe('/details/breaking-bad?type=series');
   });
 
+  it('preserves an explicit media ID for collision-safe details navigation', () => {
+    expect(buildDetailsHref('The Last of Us', 'series', 'tmdb_tv_100088')).toBe(
+      '/details/the-last-of-us?type=series&mediaId=tmdb_tv_100088'
+    );
+    expect(buildDetailsHref('The Last of Us', 'movie', 'tmdb_movie_100088')).toBe(
+      '/details/the-last-of-us?type=movie&mediaId=tmdb_movie_100088'
+    );
+  });
+
   it('normalizes punctuation and spacing into a stable title slug', () => {
     expect(buildDetailsHref("Marvel's Daredevil: Born Again", 'series')).toBe('/details/marvel-s-daredevil-born-again?type=series');
   });
