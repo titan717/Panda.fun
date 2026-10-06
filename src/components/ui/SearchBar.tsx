@@ -101,11 +101,15 @@ export function SearchBar() {
               </div>
             ) : data?.results?.length > 0 ? (
               <div className="overflow-y-auto no-scrollbar py-2">
-                {data.results.slice(0, 6).map((item: any) => (
+                {data.results.slice(0, 6).map((item: any) => {
+                  const itemTitle = typeof item.title === 'string'
+                    ? item.title
+                    : item.title?.english || item.title?.romaji || item.title?.native || 'Untitled';
+                  return (
                   <div 
                     key={item.id}
                     onClick={() => {
-                      setLocation(buildDetailsHref(item.title, item.type === 'movie' ? 'movie' : 'series'));
+                      setLocation(buildDetailsHref(itemTitle, item.type === 'movie' ? 'movie' : 'series'));
                       setIsOpen(false);
                       setQuery('');
                     }}
@@ -122,7 +126,8 @@ export function SearchBar() {
                       </div>
                     </div>
                   </div>
-                ))}
+                  );
+                })}
                 <div 
                   onClick={handleSubmit}
                   className="mt-1 p-3 text-center text-xs font-bold text-[#c084fc] hover:text-white cursor-pointer border-t border-[#262635] hover:bg-[#252533] transition-colors tracking-wide"
