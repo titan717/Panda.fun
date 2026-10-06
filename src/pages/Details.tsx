@@ -231,7 +231,6 @@ export function Details() {
               </button>
             </div>
           </div>
-          </div>
           <div className={'kinoma-episode-list kinoma-episode-list--' + episodeView}>
             {(modelSeasons.find(s => s.number === selectedSeason)?.episodes || []).map(ep => (
               <button
