@@ -29,8 +29,8 @@ function mediaRouteId(raw: string) {
   return null;
 }
 
-async function fetchSeoMedia(rawId: string) {
-  const media = mediaRouteId(rawId);
+async function fetchSeoMedia(rawId: string, selectedMediaId?: string | null) {
+  const media = mediaRouteId(selectedMediaId || '') || mediaRouteId(rawId);
   try {
     if (media) {
       const endpoint = media.provider === "tvmaze"
@@ -70,7 +70,8 @@ async function renderSeoHtml(distPath: string, req: express.Request) {
   if (!route.startsWith("/details/") && !route.startsWith("/watch/")) return html;
   const rawRouteId = route.slice(route.startsWith("/details/") ? 9 : 7).split("/")[0];
   const rawId = route.startsWith("/watch/") ? rawRouteId.split("$season$")[0] : rawRouteId;
-  const data = await fetchSeoMedia(rawId);
+  const selectedMediaId = Array.isArray(req.query.mediaId) ? req.query.mediaId[0] : req.query.mediaId;
+  const data = await fetchSeoMedia(rawId, typeof selectedMediaId === "string" ? selectedMediaId : null);
   if (!data) return html;
   const origin = req.protocol + "://" + req.get("host");
   const title = seoTitle(data, decodeURIComponent(rawId));
