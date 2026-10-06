@@ -29,7 +29,7 @@ export function ModernCard({
     ? item.title
     : item.title?.english || item.title?.romaji || 'Unknown Anime';
 
-  const detailHref = href || buildDetailsHref(item.id, item.type === 'movie' ? 'movie' : 'series');
+  const detailHref = href || buildDetailsHref(title, item.type === 'movie' ? 'movie' : 'series');
   const defaultBadge = badgeText || (item.status === 'RELEASING' ? 'New Season' : undefined);
 
   return (
