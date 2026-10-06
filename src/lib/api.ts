@@ -195,7 +195,7 @@ type MovieApiMediaRef =
   | { provider: 'tvmaze'; type: 'tv'; id: number };
 
 function mediaFromId(id: string): MovieApiMediaRef | null {
-  const tmdb = id.match(/^tmdb_(movie|tv)_(\d+)$/);
+  const tmdb = id.match(/^(?:kinoma_)?tmdb_(movie|tv)_(\d+)$/);
   if (tmdb) return { provider: 'tmdb', type: tmdb[1] as 'movie' | 'tv', id: Number(tmdb[2]) };
 
   const tvmaze = id.match(/^kinoma_tvmaze_(\d+)$/);
@@ -444,6 +444,21 @@ export const api = {
       ? `/api/v1/tv/${media.id}`
       : `/api/v1/tmdb/${media.type === 'movie' ? 'movie' : 'tv'}/${media.id}`;
     const data = await request<MovieApiMedia>(path, undefined, { signal });
+    if (media.provider === 'tmdb' && media.type === 'tv' && !data.overview && data.ids?.tvmaze) {
+      try {
+        const tvmaze = await request<MovieApiMedia>(`/api/v1/tv/${data.ids.tvmaze}`, undefined, { signal }, 300_000);
+        return toDetails({
+          ...data,
+          overview: data.overview || tvmaze.overview || null,
+          poster: data.poster || tvmaze.poster || null,
+          backdrop: data.backdrop || tvmaze.backdrop || null,
+          genres: data.genres?.length ? data.genres : (tvmaze.genres || []),
+          runtime: data.runtime || tvmaze.runtime || null,
+        });
+      } catch {
+        // TMDB remains the authoritative detail response when the optional fallback is unavailable.
+      }
+    }
     return toDetails(data);
   },
 
