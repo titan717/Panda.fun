@@ -195,7 +195,7 @@ type MovieApiMediaRef =
   | { provider: 'tvmaze'; type: 'tv'; id: number };
 
 function mediaFromId(id: string): MovieApiMediaRef | null {
-  const tmdb = id.match(/^kinoma_tmdb_(movie|tv)_(\d+)$/);
+  const tmdb = id.match(/^tmdb_(movie|tv)_(\d+)$/);
   if (tmdb) return { provider: 'tmdb', type: tmdb[1] as 'movie' | 'tv', id: Number(tmdb[2]) };
 
   const tvmaze = id.match(/^kinoma_tvmaze_(\d+)$/);
@@ -251,7 +251,7 @@ async function searchAll(query: string, page = 1, signal?: AbortSignal) {
 
   const movieResults = movies.status === 'fulfilled'
     ? (movies.value.results || []).map((item: any): MovieApiMedia => ({
-        id: `kinoma_tmdb_movie_${item.id}`,
+        id: `tmdb_movie_${item.id}`,
         type: 'movie',
         title: item.title || item.original_title || 'Untitled',
         originalTitle: item.original_title || item.title || null,
@@ -272,7 +272,7 @@ async function searchAll(query: string, page = 1, signal?: AbortSignal) {
 
   const tvResults = tv.status === 'fulfilled'
     ? (tv.value.results || []).map((item: any): MovieApiMedia => ({
-        id: `kinoma_tmdb_tv_${item.id}`,
+        id: `tmdb_tv_${item.id}`,
         type: 'tv',
         title: item.name || item.original_name || 'Untitled',
         originalTitle: item.original_name || item.name || null,
@@ -312,7 +312,7 @@ export async function resolveMediaIdFromSlug(slug: string, type?: string) {
     try {
       const data = await request<any>('/api/v1/tmdb/search/' + kind, { q: decodeURIComponent(slug), page: 1 }, undefined, 60_000);
       return (data.results || []).map((item: any): MovieApiMedia => ({
-        id: 'kinoma_tmdb_' + kind + '_' + item.id,
+        id: 'tmdb_' + kind + '_' + item.id,
         type: kind === 'movie' ? 'movie' : 'tv',
         title: item.title || item.name || item.original_title || item.original_name || 'Untitled',
         poster: item.poster_path ? 'https://image.tmdb.org/t/p/w500' + item.poster_path : null,
