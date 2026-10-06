@@ -8387,3 +8387,29 @@ body,
     animation:none;
   }
 }
+
+
+/* Lower title synopsis section — kept close to the page footer. */
+.kinoma-details-synopsis-section{
+  padding-top:48px;
+  padding-bottom:4px;
+}
+.kinoma-details-synopsis-section .kinoma-details-section__heading{
+  margin-bottom:14px;
+}
+.kinoma-details-synopsis-section .kinoma-details-synopsis{
+  max-width:880px;
+  margin:0;
+  color:rgba(255,255,255,.58);
+  font-size:13px;
+  line-height:1.85;
+}
+@media(max-width:560px){
+  .kinoma-details-synopsis-section{
+    padding-top:38px;
+  }
+  .kinoma-details-synopsis-section .kinoma-details-synopsis{
+    font-size:12px;
+    line-height:1.75;
+  }
+}
