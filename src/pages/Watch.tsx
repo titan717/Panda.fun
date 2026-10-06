@@ -230,7 +230,7 @@ export function Watch() {
               key={source}
               src={source}
               title={'Watch ' + title + ' on Panda.fun'}
-              allow="autoplay; fullscreen; picture-in-picture; encrypted-media"
+              allow="encrypted-media; autoplay *; fullscreen *"
               allowFullScreen
               referrerPolicy="no-referrer"
               loading="eager"
