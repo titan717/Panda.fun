@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useState } from 'react';
+import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { Footer } from '../components/ui/Footer';
 import { useLocation, useRoute } from 'wouter';
 import { Play, Plus, Check, ChevronRight, Film, Tv, Clock3, Share2, List, Grid2X2, Search, ArrowUpDown, Star } from 'lucide-react';
@@ -58,6 +58,8 @@ export function Details() {
   const [seasonMenuOpen, setSeasonMenuOpen] = useState(false);
   const [episodeSearch, setEpisodeSearch] = useState('');
   const [episodeSort, setEpisodeSort] = useState<'asc' | 'desc'>('asc');
+  const episodeRailRef = useRef<HTMLDivElement | null>(null);
+  const [showEpisodeRailHint, setShowEpisodeRailHint] = useState(false);
   const kind = kindOf(type, data);
 
   useEffect(() => {
@@ -131,6 +133,31 @@ export function Details() {
         number: ep.number, title: cleanText(ep.title) || 'Episode ' + ep.number, synopsis: cleanText(ep.synopsis), image: ep.image || '', duration: ep.duration, rating: ep.rating
       })) : []
   })), [seasonItems, selectedSeason, seasonEpisodes, episodeSearch, episodeSort]);
+
+  useEffect(() => {
+    if (kind !== 'series' || episodeView !== 'grid') {
+      setShowEpisodeRailHint(false);
+      return;
+    }
+    const rail = episodeRailRef.current;
+    if (!rail) return;
+
+    const updateHint = () => {
+      const maxScroll = rail.scrollWidth - rail.clientWidth;
+      setShowEpisodeRailHint(maxScroll > 8 && rail.scrollLeft < maxScroll - 8);
+    };
+
+    updateHint();
+    rail.addEventListener('scroll', updateHint, { passive: true });
+    const resizeObserver = typeof ResizeObserver !== 'undefined' ? new ResizeObserver(updateHint) : null;
+    resizeObserver?.observe(rail);
+    Array.from(rail.children).forEach(child => resizeObserver?.observe(child));
+
+    return () => {
+      rail.removeEventListener('scroll', updateHint);
+      resizeObserver?.disconnect();
+    };
+  }, [kind, episodeView, selectedSeason, seasonEpisodes, episodeSearch, episodeSort]);
 
   const watch = () => {
     trackGAEvent('select_content', { content_type: kind });
@@ -231,7 +258,7 @@ export function Details() {
               </button>
             </div>
           </div>
-          <div className={'kinoma-episode-list kinoma-episode-list--' + episodeView}>
+          <div ref={episodeRailRef} className={'kinoma-episode-list kinoma-episode-list--' + episodeView}>
             {(modelSeasons.find(s => s.number === selectedSeason)?.episodes || []).map(ep => (
               <button
                 type="button"
@@ -257,6 +284,7 @@ export function Details() {
                 <ChevronRight className="kinoma-episode-arrow" size={19} aria-hidden="true" />
               </button>
             ))}
+            {showEpisodeRailHint && <div className="kinoma-episode-rail-hint" aria-hidden="true"><span><ChevronRight size={19} /></span></div>}
             {!loading && !(modelSeasons.find(s => s.number === selectedSeason)?.episodes.length) && <div className="kinoma-details-bottom">No episodes were returned for this season.</div>}
           </div>
         </section>
