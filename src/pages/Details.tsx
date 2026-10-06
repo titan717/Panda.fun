@@ -220,7 +220,7 @@ export function Details() {
                   ))}
                 </div>
               )}
-              <small className="kinoma-season-count">{modelSeasons.find(s => s.number === selectedSeason)?.episodes.length || 0} {((modelSeasons.find(s => s.number === selectedSeason)?.episodes.length || 0) === 1) ? 'episode' : 'episodes'}</small>
+              <small className="kinoma-season-count">{seasonItems.find(s => s.seasonNumber === selectedSeason)?.episodeCount || seasonEpisodes.length} {((seasonItems.find(s => s.seasonNumber === selectedSeason)?.episodeCount || seasonEpisodes.length) === 1) ? 'episode' : 'episodes'}</small>
               </div>
             </div>
             <div className="kinoma-details-section__controls">
