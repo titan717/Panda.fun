@@ -6500,14 +6500,14 @@ body {
   -webkit-text-fill-color: #050505;
   -webkit-text-stroke: 1.25px rgba(255,255,255,.96);
   paint-order: stroke fill;
-  font-size: 100px;
+  font-size: 118px;
   font-weight: 900;
-  line-height: .88;
+  line-height: .78;
   letter-spacing: -.075em;
   user-select: none;
   pointer-events: none;
-  transform: scaleX(.92);
-  transform-origin: right center;
+  transform: translateY(-10px) scaleX(.92);
+  transform-origin: right bottom;
 }
 
 .panda-home-top10__card {
