@@ -49,7 +49,7 @@ function EmptyState({ tab, onBrowse }: { tab: Tab; onBrowse: () => void }) {
 }
 
 function LibraryPosterCard({ item, onRemove }: { item: LibraryItem; onRemove: () => void }) {
-  const mediaType = item.id.startsWith('kinoma_tmdb_movie_') ? 'movie' : 'series';
+  const mediaType = item.id.startsWith('tmdb_movie_') ? 'movie' : 'series';
 
   return (
     <ModernCard
@@ -165,7 +165,7 @@ export function Library() {
             <section className="kinoma-library-grid">
               {(filtered as HistoryItem[]).map(item => {
                 const mediaId = item.animeId || item.slug;
-                const type = mediaId.startsWith('kinoma_tmdb_movie_') ? 'movie' : 'series';
+                const type = mediaId.startsWith('tmdb_movie_') ? 'movie' : 'series';
                 const season = Math.max(1, Number(item.seasonNumber) || 1);
                 const episode = Math.max(1, Number(item.episodeNumber) || 1);
                 const watchId = type === 'movie' ? mediaId : `${mediaId}$season${season}$episode${episode}`;
