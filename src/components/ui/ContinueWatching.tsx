@@ -7,7 +7,7 @@ import { DEFAULT_POSTER } from '../../types';
 
 function watchUrl(item: HistoryItem) {
   const mediaId = item.animeId || item.slug;
-  if (mediaId.startsWith('kinoma_tmdb_movie_')) {
+  if (mediaId.startsWith('tmdb_movie_')) {
     return '/watch/' + encodeURIComponent(mediaId) + '?type=movie' +
       (item.playbackTimestamp > 0 ? '&t=' + Math.floor(item.playbackTimestamp) : '');
   }
