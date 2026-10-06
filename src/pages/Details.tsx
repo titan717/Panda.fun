@@ -214,12 +214,12 @@ export function Details() {
             <div className="kinoma-details-eyebrow">{kind === 'movie' ? <Film size={13} /> : <Tv size={13} />} {kind === 'movie' ? 'Movie' : 'TV Series'}</div>
             <h1 className={'kinoma-details-title kinoma-details-title--' + (kind === 'movie' ? 'movie' : 'series')}>{title}</h1>
             <div className="kinoma-details-meta" aria-label="Title information">
-            <p className="kinoma-details-synopsis">{synopsis}</p>
               {data?.releaseDate && <span>{String(data.releaseDate).slice(0, 4)}</span>}
               {data?.rating != null && <span>★ {data.rating}</span>}
               <span>{kind === 'movie' ? formatDuration(data?.runtime) : 'Series'}</span>
               {(data?.genres || []).slice(0, 3).map((g: string) => <span key={g}>{g}</span>)}
             </div>
+            <p className="kinoma-details-synopsis">{synopsis}</p>
             <div className="kinoma-details-actions">
               <button className="kinoma-details-3d-button kinoma-details-3d-button--watch" onClick={watch}><span><Play size={18} fill="currentColor" /> {watchLabel}</span></button>
               <button className={'kinoma-details-3d-button kinoma-details-3d-button--list ' + (isInList ? 'is-added' : '')} onClick={toggleList}><span>{isInList ? <Check size={18} /> : <Plus size={18} />} {isInList ? 'In My List' : 'Add to My List'}</span></button>
