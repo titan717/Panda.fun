@@ -22,7 +22,7 @@ function slugifyTitle(title: string) {
 
 function mediaRouteId(raw: string) {
   const id = decodeURIComponent(raw || "");
-  const tmdb = id.match(/^kinoma_tmdb_(movie|tv)_(\d+)$/);
+  const tmdb = id.match(/^tmdb_(movie|tv)_(\d+)$/);
   if (tmdb) return { id, type: tmdb[1] as "movie" | "tv", provider: "tmdb", providerId: Number(tmdb[2]) };
   const tvmaze = id.match(/^kinoma_tvmaze_(\d+)$/);
   if (tvmaze) return { id, type: "tv" as const, provider: "tvmaze", providerId: Number(tvmaze[1]) };
