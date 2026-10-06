@@ -55,7 +55,7 @@ function LibraryPosterCard({ item, onRemove }: { item: LibraryItem; onRemove: ()
     <ModernCard
       item={{ id: item.id, title: item.title, image: item.image, type: mediaType }}
       subText={item.type === 'watchlist' ? 'My List' : item.type === 'favorites' ? 'Favourite' : 'Completed'}
-      href={buildDetailsHref(item.title, mediaType)}
+      href={buildDetailsHref(item.title, mediaType, item.id)}
       onRemove={onRemove}
     />
   );
