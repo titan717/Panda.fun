@@ -8387,3 +8387,301 @@ body,
     animation:none;
   }
 }
+
+
+/* Responsive Details polish — preserve the reference composition while adapting density. */
+.kinoma-details-page{
+  width:100%;
+  max-width:100vw;
+  overflow-x:clip;
+}
+.kinoma-details-hero--trailer .kinoma-details-hero__content{
+  padding-inline:clamp(16px,4vw,64px);
+}
+.kinoma-details-section{
+  padding-inline:clamp(16px,3vw,48px);
+}
+
+/* Large tablets / small laptops. */
+@media (max-width:1199px) and (min-width:901px){
+  .kinoma-details-hero--trailer .kinoma-details-hero__content{
+    padding-bottom:clamp(58px,7vw,86px);
+  }
+  .kinoma-details-hero--trailer .kinoma-details-copy{
+    max-width:min(760px,70vw);
+  }
+  .kinoma-details-title{
+    font-size:clamp(3.6rem,7vw,6.4rem);
+  }
+  .kinoma-details-section{
+    padding-top:50px;
+  }
+  .kinoma-details-seasons .kinoma-episode-list--grid .kinoma-episode-card{
+    flex-basis:320px;
+    min-width:320px;
+    width:320px;
+  }
+}
+
+/* Tablet. */
+@media (max-width:900px) and (min-width:641px){
+  .kinoma-details-hero--trailer .kinoma-details-hero__trailer-bg{
+    height:52vw;
+    min-height:310px;
+    max-height:520px;
+  }
+  .kinoma-details-hero--trailer .kinoma-details-hero__content{
+    padding:0 28px 48px;
+  }
+  .kinoma-details-title{
+    font-size:clamp(3.1rem,8vw,5.6rem);
+    max-width:88vw;
+  }
+  .kinoma-details-meta{
+    gap:7px;
+    flex-wrap:wrap;
+  }
+  .kinoma-details-meta span{
+    font-size:11px;
+  }
+  .kinoma-details-synopsis{
+    max-width:min(680px,90vw);
+    font-size:13px;
+  }
+  .kinoma-details-actions{
+    flex-wrap:wrap;
+    gap:9px;
+  }
+  .kinoma-details-seasons .kinoma-details-section__heading--episodes{
+    align-items:flex-start;
+    flex-wrap:wrap;
+    row-gap:16px;
+  }
+  .kinoma-details-seasons .kinoma-details-section__controls{
+    width:100%;
+    justify-content:flex-start;
+  }
+  .kinoma-details-seasons .kinoma-episode-search{
+    width:min(210px,42vw);
+  }
+  .kinoma-details-seasons .kinoma-episode-list--grid .kinoma-episode-card{
+    flex-basis:310px;
+    min-width:310px;
+    width:310px;
+  }
+  .kinoma-details-seasons .kinoma-episode-list--grid .kinoma-episode-copy{
+    padding:15px 44px 50px 15px;
+  }
+}
+
+/* Phone. */
+@media (max-width:640px){
+  .kinoma-details-hero--trailer .kinoma-details-hero__trailer-bg{
+    height:61vw;
+    min-height:205px;
+    max-height:360px;
+  }
+  .kinoma-details-hero--trailer .kinoma-details-hero__content{
+    padding:0 16px 44px;
+  }
+  .kinoma-details-hero--trailer .kinoma-details-copy{
+    width:100%;
+  }
+  .kinoma-details-title{
+    max-width:100%;
+    font-size:clamp(2.55rem,12.5vw,4.6rem);
+    line-height:.92;
+  }
+  .kinoma-details-meta{
+    gap:6px 8px;
+    margin-top:14px;
+  }
+  .kinoma-details-meta span{
+    font-size:10px;
+  }
+  .kinoma-details-meta span + span::before{
+    margin-right:8px;
+  }
+  .kinoma-details-synopsis{
+    max-width:100%;
+    margin-top:14px;
+    font-size:12px;
+    line-height:1.65;
+  }
+  .kinoma-details-actions{
+    width:100%;
+    gap:8px;
+    margin-top:20px;
+  }
+  .kinoma-details-3d-button{
+    flex:0 0 auto;
+    max-width:calc(100% - 54px);
+  }
+  .kinoma-details-3d-button span{
+    min-height:42px;
+    padding-inline:13px;
+    white-space:nowrap;
+  }
+  .kinoma-details-section{
+    width:100%;
+    padding:44px 16px 0;
+  }
+  .kinoma-details-section__heading{
+    width:100%;
+  }
+  .kinoma-details-section__heading h2{
+    font-size:clamp(1.55rem,7vw,2.15rem);
+  }
+  .kinoma-details-seasons .kinoma-details-section__heading--episodes{
+    display:flex;
+    flex-wrap:wrap;
+    align-items:flex-start;
+    gap:14px;
+    margin-bottom:16px;
+  }
+  .kinoma-details-seasons .kinoma-season-heading{
+    width:auto;
+    max-width:100%;
+    gap:9px;
+  }
+  .kinoma-details-seasons .kinoma-season-picker{
+    gap:5px;
+  }
+  .kinoma-details-seasons .kinoma-season-picker__trigger{
+    font-size:clamp(24px,7.5vw,32px) !important;
+    line-height:.98;
+  }
+  .kinoma-details-seasons .kinoma-season-picker__chevron{
+    font-size:15px;
+  }
+  .kinoma-details-seasons .kinoma-season-count{
+    font-size:10px;
+  }
+  .kinoma-details-seasons .kinoma-section-accent{
+    height:34px;
+  }
+  .kinoma-details-seasons .kinoma-details-section__controls{
+    width:100%;
+    min-width:0;
+    justify-content:flex-start;
+    flex-wrap:nowrap;
+    gap:7px;
+  }
+  .kinoma-details-seasons .kinoma-episode-search{
+    flex:1 1 auto;
+    width:auto;
+    min-width:0;
+    max-width:none;
+  }
+  .kinoma-details-seasons .kinoma-episode-sort,
+  .kinoma-details-seasons .kinoma-episode-view-toggle{
+    flex:0 0 36px;
+    width:36px;
+    padding:0;
+    justify-content:center;
+  }
+  .kinoma-details-seasons .kinoma-episode-sort span{
+    display:none;
+  }
+  .kinoma-details-seasons .kinoma-episode-list--grid{
+    gap:10px;
+    padding:3px 2px 20px;
+  }
+  .kinoma-details-seasons .kinoma-episode-list--grid .kinoma-episode-card{
+    flex:0 0 min(84vw,320px);
+    min-width:0;
+    width:min(84vw,320px);
+    border-radius:16px;
+  }
+  .kinoma-details-seasons .kinoma-episode-list--grid .kinoma-episode-copy{
+    padding:13px 40px 48px 13px;
+  }
+  .kinoma-details-seasons .kinoma-episode-list--grid .kinoma-episode-kicker{
+    font-size:8px;
+  }
+  .kinoma-details-seasons .kinoma-episode-list--grid .kinoma-episode-number{
+    font-size:clamp(15px,4.4vw,18px) !important;
+  }
+  .kinoma-details-seasons .kinoma-episode-list--grid .kinoma-episode-copy p{
+    margin-top:6px;
+    font-size:9px;
+    line-height:1.42;
+    -webkit-line-clamp:2;
+  }
+  .kinoma-details-seasons .kinoma-episode-list--grid .kinoma-episode-meta{
+    left:13px;
+    right:13px;
+    bottom:11px;
+    font-size:9px;
+  }
+  .kinoma-details-seasons .kinoma-episode-list--grid .kinoma-episode-arrow{
+    right:10px;
+    width:26px;
+    height:26px;
+  }
+  .kinoma-details-seasons .kinoma-episode-rail-hint{
+    right:4px;
+    flex-basis:34px;
+    width:34px;
+    height:50px;
+    margin-left:-39px;
+  }
+  .kinoma-details-seasons .kinoma-episode-rail-hint span{
+    width:27px;
+    height:27px;
+  }
+  .kinoma-more-rail{
+    gap:9px;
+    padding-bottom:12px;
+  }
+  .kinoma-more-card{
+    flex:0 0 min(31vw,145px);
+    min-width:0;
+  }
+  .kinoma-more-card__art{
+    border-radius:13px;
+  }
+  .kinoma-more-card strong{
+    font-size:11px;
+  }
+  .kinoma-more-card span{
+    font-size:8px;
+  }
+  .kinoma-details-bottom{
+    width:100%;
+    margin-top:38px;
+    padding-inline:16px;
+  }
+}
+
+/* Very small phones: keep controls and title from crowding each other. */
+@media (max-width:390px){
+  .kinoma-details-hero--trailer .kinoma-details-hero__content{
+    padding-inline:13px;
+    padding-bottom:38px;
+  }
+  .kinoma-details-title{
+    font-size:clamp(2.35rem,13vw,3.8rem);
+  }
+  .kinoma-details-actions{
+    gap:6px;
+  }
+  .kinoma-details-3d-button span{
+    padding-inline:11px;
+    font-size:10px;
+  }
+  .kinoma-details-share > span{
+    width:40px;
+    height:40px;
+  }
+  .kinoma-details-section{
+    padding-inline:13px;
+  }
+  .kinoma-details-seasons .kinoma-season-picker__trigger{
+    font-size:clamp(23px,8vw,29px) !important;
+  }
+  .kinoma-details-seasons .kinoma-episode-list--grid .kinoma-episode-card{
+    flex-basis:88vw;
+    width:88vw;
+  }
+}
