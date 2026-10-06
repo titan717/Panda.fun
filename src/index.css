@@ -8205,3 +8205,130 @@ body,
     transition:none!important;
   }
 }
+
+
+/* Exact reference hierarchy for Details seasons + episode cards. */
+.kinoma-details-seasons .kinoma-season-heading{
+  align-items:flex-start;
+}
+.kinoma-details-seasons .kinoma-season-picker{
+  display:flex;
+  flex-direction:column;
+  align-items:flex-start;
+  gap:7px;
+}
+.kinoma-details-seasons .kinoma-season-picker__trigger{
+  line-height:1;
+}
+.kinoma-details-seasons .kinoma-season-count{
+  display:block;
+  margin:0;
+  padding:0;
+  color:rgba(255,255,255,.42);
+  font-size:11px;
+  line-height:1.2;
+  font-weight:600;
+  letter-spacing:.01em;
+}
+.kinoma-details-seasons .kinoma-section-accent{
+  height:42px;
+  margin-top:1px;
+}
+
+.kinoma-details-seasons .kinoma-episode-list--grid .kinoma-episode-copy{
+  inset:0;
+  top:0;
+  right:0;
+  bottom:0;
+  left:0;
+  justify-content:flex-start;
+  padding:16px 48px 54px 16px;
+  background:transparent;
+}
+.kinoma-details-seasons .kinoma-episode-list--grid .kinoma-episode-copy::after{
+  content:"";
+  position:absolute;
+  left:0;
+  right:0;
+  bottom:0;
+  z-index:-1;
+  height:55%;
+  pointer-events:none;
+  background:linear-gradient(180deg,transparent 0%,rgba(0,0,0,.08) 16%,rgba(0,0,0,.52) 55%,rgba(0,0,0,.96) 100%);
+}
+.kinoma-details-seasons .kinoma-episode-list--grid .kinoma-episode-kicker{
+  margin:0 0 5px;
+  font-size:9px;
+  line-height:1;
+  color:rgba(255,255,255,.52);
+}
+.kinoma-details-seasons .kinoma-episode-list--grid .kinoma-episode-number{
+  max-width:calc(100% - 4px);
+  font-size:19px !important;
+  line-height:1.12;
+  font-weight:800 !important;
+  letter-spacing:-.02em !important;
+}
+.kinoma-details-seasons .kinoma-episode-list--grid .kinoma-episode-copy p{
+  max-width:700px;
+  margin-top:8px;
+  color:rgba(255,255,255,.70);
+  font-size:10px;
+  line-height:1.5;
+  -webkit-line-clamp:2;
+}
+.kinoma-details-seasons .kinoma-episode-list--grid .kinoma-episode-meta{
+  position:absolute;
+  left:16px;
+  right:16px;
+  bottom:14px;
+  width:auto;
+  margin:0;
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:12px;
+  color:#fff;
+  font-size:10px;
+  line-height:1;
+  font-weight:700;
+}
+.kinoma-details-seasons .kinoma-episode-list--grid .kinoma-episode-meta > span{
+  margin:0 !important;
+  display:inline-flex;
+  align-items:center;
+  gap:5px;
+  color:rgba(255,255,255,.88);
+}
+.kinoma-details-seasons .kinoma-episode-list--grid .kinoma-episode-meta > span:last-child{
+  margin-left:auto !important;
+}
+.kinoma-details-seasons .kinoma-episode-list--grid .kinoma-episode-arrow{
+  right:12px;
+}
+@media(max-width:640px){
+  .kinoma-details-seasons .kinoma-section-accent{
+    height:38px;
+  }
+  .kinoma-details-seasons .kinoma-season-picker__trigger{
+    font-size:clamp(22px,6vw,28px);
+  }
+  .kinoma-details-seasons .kinoma-season-count{
+    font-size:10px;
+  }
+  .kinoma-details-seasons .kinoma-episode-list--grid .kinoma-episode-copy{
+    padding:14px 42px 50px 14px;
+  }
+  .kinoma-details-seasons .kinoma-episode-list--grid .kinoma-episode-number{
+    font-size:16px !important;
+  }
+  .kinoma-details-seasons .kinoma-episode-list--grid .kinoma-episode-copy p{
+    font-size:9px;
+  }
+  .kinoma-details-seasons .kinoma-episode-list--grid .kinoma-episode-meta{
+    left:14px;
+    right:14px;
+    bottom:12px;
+    font-size:9px;
+  }
+}
