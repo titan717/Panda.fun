@@ -70,12 +70,17 @@ export function Details() {
       if (!active) return;
       setId(resolvedId);
       return Promise.all([
-      api.getDetails(resolvedId, controller.signal),
-      api.getTrailer(resolvedId, controller.signal).catch(() => ({ available: false, trailer: null })), 
-      api.getRecommendations(resolvedId, controller.signal).catch(() => ({ results: [] as AnimeItem[] }))
-      ]).then(([details, trailerResult, recs]) => {
+        api.getDetails(resolvedId, controller.signal),
+        api.getRecommendations(resolvedId, controller.signal).catch(() => ({ results: [] as AnimeItem[] }))
+      ]).then(([details, recs]) => {
         if (!active) return;
-        setData(details); setTrailer(trailerResult); setRecommendations(recs.results); setLoading(false);
+        setData(details);
+        setTrailer({
+          available: Boolean(details.trailer?.embedUrl),
+          trailer: details.trailer || null
+        });
+        setRecommendations(recs.results);
+        setLoading(false);
       });
     }).catch(err => {
       if (!active) return;
