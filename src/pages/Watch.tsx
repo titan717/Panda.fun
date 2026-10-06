@@ -217,169 +217,34 @@ export function Watch() {
   };
 
   if (loading) {
-    return <main className="panda-watch-page"><div className="panda-watch-loading"><span /><p>Preparing your stream…</p></div></main>;
+    return <main className="panda-watch-page"><div className="panda-watch-loading"><span /></div></main>;
   }
 
   return (
     <main className="panda-watch-page">
-      <div className="panda-watch-topbar">
-        <button className="panda-watch-back" type="button" onClick={() => { trackGAEvent('watch_back', { content_type: type, title }); window.history.length > 1 ? window.history.back() : setLocation('/home'); }}><ArrowLeft size={17} /><span>Back</span></button>
-        <div className="panda-watch-brand"><span className="panda-watch-brand__mark">🐼</span><strong>Panda.fun</strong><span className="panda-watch-brand__status">NOW PLAYING</span></div>
-        <button className="panda-watch-list-btn" type="button" onClick={toggleList}>{inList ? <Check size={16} /> : <Plus size={16} />}<span>{inList ? 'My List' : 'Add to My List'}</span></button>
-      </div>
-
-      {error && <div className="panda-watch-error" role="alert"><span>{error}</span><button type="button" onClick={() => { trackGAEvent('playback_retry', { content_type: type, title, season, episode }); setPlaybackRetry(value => value + 1); }}>Retry</button></div>}
-
-      <section className={'panda-watch-stage ' + (type === 'series' ? 'is-series' : 'is-movie')}>
+      <section className="panda-watch-stage">
         <div className="panda-watch-player">
           {source ? (
-            <>
-              {sourceLoading && (
-                <div className="panda-watch-player-loading" role="status" aria-live="polite">
-                  <span aria-hidden="true" />
-                  <strong>Preparing your stream…</strong>
-                  <small>Connecting to Vidy.st</small>
-                </div>
-              )}
-              <iframe
-                key={source}
-                src={source}
-                title={'Watch ' + title + ' on Panda.fun'}
-                allow="autoplay; fullscreen; picture-in-picture; encrypted-media"
-                allowFullScreen
-                referrerPolicy="no-referrer"
-                loading="eager"
-                onLoad={() => setSourceLoading(false)}
-              />
-            </>
+            <iframe
+              key={source}
+              src={source}
+              title={'Watch ' + title + ' on Panda.fun'}
+              allow="autoplay; fullscreen; picture-in-picture; encrypted-media"
+              allowFullScreen
+              referrerPolicy="no-referrer"
+              loading="eager"
+              onLoad={() => setSourceLoading(false)}
+            />
           ) : sourceLoading ? (
             <div className="panda-watch-player-loading" role="status" aria-live="polite">
               <span aria-hidden="true" />
-              <strong>Preparing your stream…</strong>
-              <small>Connecting to Vidy.st</small>
             </div>
           ) : (
-            <div className="panda-watch-player-empty"><Film size={32} /><strong>Playback unavailable</strong><span>The Vidy.st player could not be resolved for this title.</span></div>
+            <div className="panda-watch-player-empty">
+              <strong>Playback unavailable</strong>
+              <span>{error || 'The player could not be resolved for this title.'}</span>
+            </div>
           )}
-        </div>
-
-      <section className="panda-watch-info">
-        <div className="panda-watch-info__backdrop" aria-hidden="true">
-          <img src={data?.backdrop || poster} alt="" srcSet={data?.backdrop?.includes("/w1280/") ? (data.backdrop.replace("/w1280/", "/w780/") + " 780w, " + data.backdrop + " 1280w") : undefined} sizes="100vw" loading="eager" fetchPriority="high" decoding="async" />
-        </div>
-        <div className="panda-watch-info__visual">
-          <img src={poster} alt="" srcSet={poster.includes("/w500/") ? (poster.replace("/w500/", "/w342/") + " 342w, " + poster + " 500w") : undefined} sizes="(max-width: 700px) 34vw, 220px" loading="eager" fetchPriority="high" decoding="async" />
-          <span>{type === 'movie' ? 'MOVIE' : 'SERIES'}</span>
-        </div>
-        <div className="panda-watch-info__copy">
-          <div className="panda-watch-kicker">
-            {type === 'movie' ? <Film size={12} /> : <Tv size={12} />}
-            <span>{type === 'movie' ? 'MOVIE' : 'TV SERIES'}</span>
-            {type === 'series' && <span>· S{season} E{episode}</span>}
-          </div>
-          <h1>{title}</h1>
-          {currentEpisode && <p className="panda-watch-episode-title">{currentEpisode.title}</p>}
-          <div className="panda-watch-info__meta">
-            {data?.releaseDate && <span>{String(data.releaseDate).slice(0, 4)}</span>}
-            {data?.rating != null && <span>★ {data.rating}</span>}
-            {(data?.genres || []).slice(0, 4).map((genre: string) => <span key={genre}>{genre}</span>)}
-          </div>
-          <p className="panda-watch-info__description">{clean(data?.description) || 'No synopsis is available for this title yet.'}</p>
-          <div className="panda-watch-info__actions">
-            {shareMessage && <span className="panda-watch-share-feedback" role="status" aria-live="polite">{shareMessage}</span>}
-            <button type="button" className="panda-watch-info__action is-primary" onClick={toggleList}>
-              {inList ? <Check size={15} /> : <Plus size={15} />} {inList ? 'Saved to My List' : 'Add to My List'}
-            </button>
-            <button type="button" className="panda-watch-info__action" onClick={shareCurrentPage}>
-              <Share2 size={15} /> Share
-            </button>
-          </div>
-        </div>
-      </section>
-
-        {type === 'series' && (
-          <section className="panda-watch-player-episodes">
-            <div className="kinoma-details-section__heading">
-              <div>
-                <span>KEEP WATCHING</span>
-                <h2>Seasons & Episodes</h2>
-              </div>
-              <small>{seasons.length} {seasons.length === 1 ? 'season' : 'seasons'}</small>
-            </div>
-
-            <div className="kinoma-season-tabs panda-watch-season-tabs" role="tablist" aria-label="Seasons">
-              {seasons.map(item => (
-                <button
-                  type="button"
-                  key={item.seasonNumber}
-                  role="tab"
-                  aria-selected={season === item.seasonNumber}
-                  className={season === item.seasonNumber ? 'is-selected' : ''}
-                  onClick={() => chooseSeason(item.seasonNumber)}
-                >
-                  Season {item.seasonNumber}
-                </button>
-              ))}
-            </div>
-
-            <div className="kinoma-episode-list panda-watch-episode-list">
-              {episodes.map(item => (
-                <button
-                  type="button"
-                  key={item.number}
-                  className={'kinoma-episode-card panda-watch-episode-card ' + (item.number === episode ? 'is-current' : '')}
-                  onClick={() => {
-                    setEpisode(item.number);
-                    setLocation('/watch/' + encodeURIComponent(id + '$season$' + season + '$episode$' + item.number) + '?type=series');
-                  }}
-                >
-                  <div className="kinoma-episode-art">
-                    {item.image ? (
-                      <img
-                        src={item.image}
-                        alt=""
-                        loading={item.number === episode ? 'eager' : 'lazy'}
-                        fetchPriority={item.number === episode ? 'high' : 'auto'}
-                        decoding="async"
-                        srcSet={item.image.includes('/w500/') ? `${item.image.replace('/w500/', '/w342/')} 342w, ${item.image} 500w` : undefined}
-                        sizes="(max-width: 620px) 34vw, 108px"
-                      />
-                    ) : <span><Film size={20} /></span>}
-                    <b>EP {item.number}</b>
-                    {item.number === episode && <i className="panda-watch-current-indicator"><Play size={12} fill="currentColor" /></i>}
-                  </div>
-                  <div className="kinoma-episode-copy">
-                    <strong>{clean(item.title) || 'Episode ' + item.number}</strong>
-                    {item.synopsis && <p>{clean((item as any).synopsis)}</p>}
-                    {item.duration && <small>{item.duration}</small>}
-                  </div>
-                  <ChevronRight className="kinoma-episode-arrow" size={18} />
-                </button>
-              ))}
-              {!episodes.length && <div className="panda-watch-empty">No episodes were returned for this season.</div>}
-            </div>
-
-            <div className="panda-watch-episodes__nav">
-              <button type="button" disabled={!episodes.find(item => item.number === episode - 1)} onClick={() => navigateEpisode(-1)}>
-                <ChevronLeft size={15} /> Previous
-              </button>
-              <button type="button" disabled={!episodes.find(item => item.number === episode + 1)} onClick={() => navigateEpisode(1)}>
-                Next <ChevronRight size={15} />
-              </button>
-            </div>
-          </section>
-        )}
-      </section>
-
-      <section className="panda-watch-similar">
-        <div className="panda-watch-section-head"><div><span>KEEP EXPLORING</span><h2>More like this</h2></div><small>{similar.length} titles</small></div>
-        <div className="panda-watch-similar-grid">
-          {similar.map(item => <button type="button" key={item.id} onClick={() => setLocation(buildDetailsHref(titleOf(item, 'Untitled'), item.contentType === 'movie' ? 'movie' : 'series'))}>
-            <div>{item.image ? <img src={item.image} alt="" loading="lazy" decoding="async" /> : <Film size={25} />}</div>
-            <strong>{titleOf(item, 'Untitled')}</strong>
-            <span>{item.contentType === 'movie' ? 'Movie' : 'Series'}{item.genres?.[0] ? ' · ' + item.genres[0] : ''}</span>
-          </button>)}
-          {!similar.length && <div className="panda-watch-empty">No recommendations available right now.</div>}
         </div>
       </section>
     </main>
