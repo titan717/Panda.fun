@@ -1,4 +1,4 @@
-@import url("https://fonts.googleapis.com/css2?family=Google+Sans:wght@400;500;700&display=swap");
+@import url("https://fonts.googleapis.com/css2?family=Google+Sans:wght@400;500;700&family=Roboto+Slab:wght@900&display=swap");
 @import "tailwindcss";
 
 @theme {
@@ -6495,14 +6495,19 @@ body {
 
 .panda-home-top10__number {
   display: block;
-  font-family: "Google Sans", sans-serif;
-  color: #f4f4f5;
+  font-family: "Roboto Slab", Georgia, serif;
+  color: #050505;
+  -webkit-text-fill-color: #050505;
+  -webkit-text-stroke: 1.25px rgba(255,255,255,.96);
+  paint-order: stroke fill;
   font-size: 100px;
   font-weight: 900;
-  line-height: 1;
-  letter-spacing: normal;
+  line-height: .88;
+  letter-spacing: -.075em;
   user-select: none;
   pointer-events: none;
+  transform: scaleX(.92);
+  transform-origin: right center;
 }
 
 .panda-home-top10__card {
