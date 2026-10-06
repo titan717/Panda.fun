@@ -172,7 +172,7 @@ export function Details() {
   };
 
   useEffect(() => {
-    const canonicalPath = buildDetailsHref(id || routeSlug || title, kind);
+    const canonicalPath = buildDetailsHref(title || routeSlug, kind);
     if (data && window.location.pathname !== new URL(canonicalPath, window.location.origin).pathname) {
       window.history.replaceState(window.history.state, '', canonicalPath);
     }
@@ -297,7 +297,7 @@ export function Details() {
             const itemTitle = typeof item.title === 'string' ? item.title : item.title.english || item.title.romaji || 'Untitled';
             const itemType = item.contentType === 'movie' ? 'movie' : 'series';
             return (
-              <button type="button" key={item.id} className="kinoma-more-card" onClick={() => setLocation(buildDetailsHref(item.id, itemType))} aria-label={'Open ' + itemTitle}>
+              <button type="button" key={item.id} className="kinoma-more-card" onClick={() => setLocation(buildDetailsHref(itemTitle, itemType))} aria-label={'Open ' + itemTitle}>
                 <div className={'kinoma-more-card__art tone-' + (i % 5)}>
                   {item.image ? <img src={item.image} alt="" loading={i < 3 ? 'eager' : 'lazy'} decoding="async" referrerPolicy="no-referrer" /> : <Film size={25} />}
                 </div>
