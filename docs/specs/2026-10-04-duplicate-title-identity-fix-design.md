@@ -26,7 +26,7 @@ Pros: deterministic, minimal, matches the existing MovieApi identity contract.
 Cons: URLs are less human-readable.
 
 ### B. Title slug plus ID query parameter
-Use `/details/2018?type=movie&mediaId=kinoma_tmdb_movie_12345`.
+Use `/details/2018?type=movie&mediaId=tmdb_movie_12345`.
 
 Pros: readable path.
 
