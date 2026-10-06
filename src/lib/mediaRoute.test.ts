@@ -1,16 +1,20 @@
 import { describe, expect, it } from 'vitest';
 import { buildDetailsHref } from './mediaRoute';
 
-describe('title-based media routes', () => {
-  it('builds the details route from the supplied title', () => {
-    expect(buildDetailsHref('Breaking Bad', 'series')).toBe('/details/Breaking%20Bad?type=series');
+describe('media-identity detail routes', () => {
+  it('builds a movie details route from its canonical media ID', () => {
+    expect(buildDetailsHref('tmdb_movie_123', 'movie')).toBe('/details/tmdb_movie_123?type=movie');
   });
 
-  it('preserves punctuation and unicode through URL encoding', () => {
-    expect(buildDetailsHref('Spider-Man: No Way Home', 'movie')).toBe('/details/Spider-Man%3A%20No%20Way%20Home?type=movie');
+  it('builds a TV details route from its canonical media ID', () => {
+    expect(buildDetailsHref('kinoma_tmdb_tv_456', 'series')).toBe('/details/kinoma_tmdb_tv_456?type=series');
   });
 
-  it('rejects an empty title', () => {
-    expect(() => buildDetailsHref('   ', 'movie')).toThrow('A media title is required to build a details route.');
+  it('keeps duplicate titles on distinct routes because the ID is preserved', () => {
+    expect(buildDetailsHref('tmdb_movie_123', 'movie')).not.toBe(buildDetailsHref('tmdb_movie_456', 'movie'));
+  });
+
+  it('rejects an empty media ID', () => {
+    expect(() => buildDetailsHref('   ', 'movie')).toThrow('A media ID is required to build a details route.');
   });
 });
