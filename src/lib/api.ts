@@ -476,7 +476,7 @@ export const api = {
 
     const path = media.provider === 'tvmaze'
       ? `/api/v1/tv/${media.id}`
-      : `/api/v1/tmdb/${media.type === 'movie' ? 'movie' : 'tv'}/${media.id}`;
+      : `/api/v1/details/${media.type === 'movie' ? 'movie' : 'tv'}/${media.id}`;
     const data = await request<MovieApiMedia>(path, undefined, { signal });
     if (media.provider === 'tmdb' && media.type === 'tv' && !data.overview && data.ids?.tvmaze) {
       try {
