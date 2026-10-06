@@ -328,7 +328,7 @@ async function searchAll(query: string, page = 1, signal?: AbortSignal) {
 export async function resolveMediaIdFromSlug(slug: string, type?: string) {
   const decoded = decodeURIComponent(slug);
   const legacy = mediaFromId(decoded);
-  if (legacy) return legacy.id;
+  if (legacy) return decoded;
 
   const normalized = slugifyTitle(decoded);
   if (!normalized) throw new MovieApiError('Invalid title slug.', 400, 'INVALID_TITLE_SLUG');
@@ -371,14 +371,16 @@ export async function resolveMediaIdFromSlug(slug: string, type?: string) {
   // TVMaze is the preferred metadata source for series, while MovieAPI maps
   // its records to TMDB IDs for trailers and Vidy playback.
   if ((type === 'series' || !type) && tvmazeExact) {
-    return 'kinoma_tvmaze_' + tvmazeExact.id;
+    const id = String(tvmazeExact.id);
+    return id.startsWith('kinoma_tvmaze_') ? id : 'kinoma_tvmaze_' + id;
   }
 
   if (tmdbExact) return tmdbExact.id;
   if (tmdbResults[0]) return tmdbResults[0].id;
 
   if ((type === 'series' || !type) && tvmazeMatches[0]) {
-    return 'kinoma_tvmaze_' + tvmazeMatches[0].id;
+    const id = String(tvmazeMatches[0].id);
+    return id.startsWith('kinoma_tvmaze_') ? id : 'kinoma_tvmaze_' + id;
   }
 
   throw new MovieApiError('Unable to resolve this title.', 404, 'TITLE_NOT_FOUND');
