@@ -10,6 +10,13 @@ describe('title-based detail routes', () => {
     expect(buildDetailsHref('Breaking Bad', 'series')).toBe('/details/breaking-bad?type=series');
   });
 
+  it('preserves a media item ID when building a details route from a card item', () => {
+    expect(buildDetailsHref({
+      title: 'The Last of Us',
+      id: 'tmdb_tv_100088'
+    }, 'series')).toBe('/details/the-last-of-us?type=series&mediaId=tmdb_tv_100088');
+  });
+
   it('preserves an explicit media ID for collision-safe details navigation', () => {
     expect(buildDetailsHref('The Last of Us', 'series', 'tmdb_tv_100088')).toBe(
       '/details/the-last-of-us?type=series&mediaId=tmdb_tv_100088'
