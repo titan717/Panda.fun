@@ -142,21 +142,43 @@ export function Privacy() {
   }, []);
 
   return (
-    <main className="kinoma-simple-page">
-      <article className="kinoma-simple-page__document">
-        <div className="kinoma-simple-page__icon"><ShieldCheck size={20} /></div>
-        <span className="kinoma-eyebrow">LEGAL</span>
-        <h1>Privacy Policy</h1>
-        <p className="kinoma-simple-page__meta"><strong>Last updated:</strong> October 7, 2026</p>
-        <p className="kinoma-simple-page__lead">Your privacy and digital security are important to us. This Privacy Policy explains how MyPanda handles information when you access or use our website and related services.</p>
-        {sections.map(section => (
-          <section key={section.title}>
-            <h2>{section.title}</h2>
-            {section.body}
-          </section>
-        ))}
-        <Link href="/home" className="kinoma-simple-page__button"><ArrowLeft size={15} /> Back home</Link>
-      </article>
-    </main>
+    <div className="kinoma-terms kinoma-privacy-page">
+      <header className="kinoma-terms__header">
+        <Link href="/home" aria-label="Back to MyPanda home" className="kinoma-terms__brand">
+          <span className="kinoma-privacy-page__brand-mark"><ShieldCheck size={18} /></span>
+          <span className="kinoma-privacy-page__brand-name">MYPANDA</span>
+        </Link>
+        <Link href="/home" className="kinoma-terms__back">
+          <ArrowLeft className="h-4 w-4" />
+          Back to MyPanda
+        </Link>
+      </header>
+
+      <main className="kinoma-terms__main">
+        <div className="kinoma-terms__intro">
+          <div className="kinoma-terms__icon" aria-hidden="true"><ShieldCheck className="h-5 w-5" /></div>
+          <p>LEGAL / PRIVACY</p>
+          <h1>Privacy Policy</h1>
+          <span>Last updated: October 7, 2026 · How MyPanda handles information across the service.</span>
+        </div>
+
+        <article className="kinoma-terms__document">
+          {sections.map((section, index) => (
+            <section key={section.title} className="kinoma-terms__section">
+              <div className="kinoma-terms__number">{String(index + 1).padStart(2, '0')}</div>
+              <div>
+                <h2>{section.title.replace(/^\\d+\\.\\s*/, '')}</h2>
+                <div className="kinoma-privacy-page__body">{section.body}</div>
+              </div>
+            </section>
+          ))}
+        </article>
+      </main>
+
+      <footer className="kinoma-terms__footer">
+        <span>MyPanda Privacy Policy</span>
+        <Link href="/home">Home</Link>
+      </footer>
+    </div>
   );
 }
