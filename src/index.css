@@ -8771,3 +8771,209 @@ body,
     min-height:250px;
   }
 }
+
+
+/* Details reference finish — episode rail geometry, typography, and scroll affordance. */
+.kinoma-details-seasons .kinoma-season-picker__trigger{
+  min-width:238px;
+  min-height:72px;
+  padding:0 18px 0 0;
+  border:0;
+  border-radius:0;
+  background:transparent;
+  box-shadow:none;
+  font-family:"Netflix Sans","Netflix Sans UI","Helvetica Neue",Arial,sans-serif;
+  font-size:clamp(42px,4.1vw,58px)!important;
+  font-weight:750!important;
+  letter-spacing:-.055em!important;
+  line-height:.96;
+  justify-content:flex-start;
+  gap:14px;
+}
+.kinoma-details-seasons .kinoma-season-picker__trigger:hover,
+.kinoma-details-seasons .kinoma-season-picker__trigger[aria-expanded="true"]{
+  background:transparent;
+  border-color:transparent;
+}
+.kinoma-details-seasons .kinoma-season-picker__chevron{
+  font-family:"Netflix Sans","Netflix Sans UI","Helvetica Neue",Arial,sans-serif;
+  font-size:28px;
+  color:rgba(255,255,255,.72);
+}
+.kinoma-details-seasons .kinoma-season-count{
+  display:block;
+  margin-top:1px;
+  font-family:"Netflix Sans","Netflix Sans UI","Helvetica Neue",Arial,sans-serif;
+  font-size:15px;
+  line-height:1.2;
+  color:rgba(255,255,255,.5);
+}
+.kinoma-details-seasons .kinoma-episode-list--grid{
+  position:relative;
+  gap:14px;
+  padding:4px 2px 28px;
+  overflow-x:auto!important;
+  overflow-y:visible!important;
+  scrollbar-width:none;
+  -ms-overflow-style:none;
+}
+.kinoma-details-seasons .kinoma-episode-list--grid::-webkit-scrollbar{display:none}
+.kinoma-details-seasons .kinoma-episode-list--grid .kinoma-episode-card{
+  position:relative;
+  flex:0 0 440px;
+  min-width:440px;
+  width:440px;
+  height:250px;
+  min-height:250px;
+  padding:0;
+  border:1px solid rgba(255,255,255,.09);
+  border-radius:15px;
+  overflow:hidden;
+  background:#111;
+  box-shadow:0 8px 24px rgba(0,0,0,.24);
+}
+.kinoma-details-seasons .kinoma-episode-list--grid .kinoma-episode-card:hover{
+  transform:translateY(-2px);
+  border-color:rgba(255,255,255,.16);
+  box-shadow:0 16px 36px rgba(0,0,0,.3);
+}
+.kinoma-details-seasons .kinoma-episode-list--grid .kinoma-episode-art{
+  position:absolute;
+  inset:0;
+  z-index:0;
+  width:100%;
+  height:100%;
+  aspect-ratio:auto;
+  border-radius:0;
+}
+.kinoma-details-seasons .kinoma-episode-list--grid .kinoma-episode-art::after{
+  content:"";
+  position:absolute;
+  inset:0;
+  background:linear-gradient(180deg,rgba(0,0,0,.04) 24%,rgba(0,0,0,.3) 48%,rgba(0,0,0,.94) 100%);
+  pointer-events:none;
+}
+.kinoma-details-seasons .kinoma-episode-list--grid .kinoma-episode-copy{
+  position:absolute;
+  inset:auto 0 0;
+  z-index:2;
+  padding:12px 18px 15px;
+  text-align:left;
+}
+.kinoma-details-seasons .kinoma-episode-list--grid .kinoma-episode-kicker{
+  display:block;
+  margin:0 0 5px;
+  font-family:"Netflix Sans","Netflix Sans UI","Helvetica Neue",Arial,sans-serif;
+  font-size:11px;
+  font-weight:700;
+  line-height:1;
+  letter-spacing:.14em;
+  color:rgba(255,255,255,.68);
+}
+.kinoma-details-seasons .kinoma-episode-list--grid .kinoma-episode-number{
+  display:block;
+  margin:0;
+  font-family:"Netflix Sans","Netflix Sans UI","Helvetica Neue",Arial,sans-serif;
+  font-size:20px!important;
+  font-weight:750!important;
+  line-height:1.15;
+  letter-spacing:-.025em!important;
+}
+.kinoma-details-seasons .kinoma-episode-list--grid .kinoma-episode-name{
+  display:block;
+  margin-top:3px;
+  font-family:"Netflix Sans","Netflix Sans UI","Helvetica Neue",Arial,sans-serif;
+  font-size:17px;
+  font-weight:650;
+  line-height:1.15;
+  color:#fff;
+  overflow:hidden;
+  text-overflow:ellipsis;
+  white-space:nowrap;
+}
+.kinoma-details-seasons .kinoma-episode-list--grid .kinoma-episode-copy p{
+  max-width:100%;
+  margin:8px 0 0;
+  display:-webkit-box;
+  -webkit-box-orient:vertical;
+  -webkit-line-clamp:2;
+  overflow:hidden;
+  font-family:"Netflix Sans","Netflix Sans UI","Helvetica Neue",Arial,sans-serif;
+  font-size:12px;
+  line-height:1.45;
+  color:rgba(255,255,255,.68);
+}
+.kinoma-details-seasons .kinoma-episode-list--grid .kinoma-episode-meta{
+  position:static;
+  display:flex;
+  justify-content:space-between;
+  gap:12px;
+  margin-top:10px;
+  font-family:"Netflix Sans","Netflix Sans UI","Helvetica Neue",Arial,sans-serif;
+  font-size:12px;
+  color:rgba(255,255,255,.86);
+}
+.kinoma-details-seasons .kinoma-episode-list--grid .kinoma-episode-arrow{
+  display:none!important;
+}
+.kinoma-details-seasons .kinoma-episode-rail-hint{
+  position:sticky;
+  right:10px;
+  z-index:5;
+  align-self:center;
+  flex:0 0 54px;
+  width:54px;
+  height:72px;
+  margin-left:-66px;
+  display:grid;
+  place-items:center;
+  pointer-events:none;
+  background:linear-gradient(90deg,rgba(0,0,0,0),rgba(0,0,0,.28) 18%,rgba(0,0,0,.84) 100%);
+}
+.kinoma-details-seasons .kinoma-episode-rail-hint span{
+  width:46px;
+  height:46px;
+  display:grid;
+  place-items:center;
+  border:0;
+  border-radius:50%;
+  background:rgba(10,10,10,.72);
+  color:#fff;
+  box-shadow:0 10px 28px rgba(0,0,0,.42);
+  backdrop-filter:blur(10px);
+}
+@media(max-width:1100px){
+  .kinoma-details-seasons .kinoma-episode-list--grid .kinoma-episode-card{
+    flex-basis:400px;
+    min-width:400px;
+    width:400px;
+    height:245px;
+    min-height:245px;
+  }
+}
+@media(max-width:640px){
+  .kinoma-details-seasons .kinoma-season-picker__trigger{
+    min-width:200px;
+    min-height:56px;
+    font-size:clamp(34px,9vw,46px)!important;
+  }
+  .kinoma-details-seasons .kinoma-season-picker__chevron{font-size:22px}
+  .kinoma-details-seasons .kinoma-season-count{font-size:12px}
+  .kinoma-details-seasons .kinoma-episode-list--grid{
+    gap:10px;
+    padding-bottom:22px;
+  }
+  .kinoma-details-seasons .kinoma-episode-list--grid .kinoma-episode-card{
+    flex-basis:min(88vw,360px);
+    min-width:min(88vw,360px);
+    width:min(88vw,360px);
+    height:230px;
+    min-height:230px;
+  }
+  .kinoma-details-seasons .kinoma-episode-list--grid .kinoma-episode-copy{
+    padding:11px 13px 13px;
+  }
+  .kinoma-details-seasons .kinoma-episode-list--grid .kinoma-episode-name{font-size:15px}
+  .kinoma-details-seasons .kinoma-episode-list--grid .kinoma-episode-copy p{font-size:10px}
+  .kinoma-details-seasons .kinoma-episode-list--grid .kinoma-episode-meta{font-size:10px}
+}
