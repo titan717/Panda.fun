@@ -11,6 +11,7 @@ import { updateSEO } from '../lib/seo';
 import { trackGAEvent } from '../lib/analytics';
 import { buildDetailsHref, buildWatchHref, parseDetailsRouteSearch } from '../lib/mediaRoute';
 import { createEpisodeRailObserver } from '../lib/safeResizeObserver';
+import { calculateEpisodeRailStep, sortEpisodesForDisplay } from '../lib/episodeRail';
 
 function cleanText(value: unknown) { return typeof value === 'string' ? value.replace(/<[^>]*>/g, '').trim() : ''; }
 function titleOf(data: any, fallback: string) { return typeof data?.title === 'string' ? data.title : data?.title?.english || data?.title?.romaji || data?.title?.native || fallback; }
@@ -48,6 +49,7 @@ export function Details() {
   const [id, setId] = useState(routeMediaId || routeSlug);
   const [data, setData] = useState<any>(null);
   const [trailer, setTrailer] = useState<any>(null);
+  const [trailerFailed, setTrailerFailed] = useState(false);
   const [seasonItems, setSeasonItems] = useState<AnimeSeasonItem[]>([]);
   const [seasonEpisodes, setSeasonEpisodes] = useState<Episode[]>([]);
   const [selectedSeason, setSelectedSeason] = useState(1);
@@ -67,7 +69,7 @@ export function Details() {
   useEffect(() => {
     let active = true;
     const controller = new AbortController();
-    setLoading(true); setError(null); setData(null); setSeasonItems([]); setSeasonEpisodes([]); setRecommendations([]);
+    setLoading(true); setError(null); setData(null); setTrailerFailed(false); setSeasonItems([]); setSeasonEpisodes([]); setRecommendations([]);
     const routeMedia = routeMediaId ? api.getDetailsMediaId(routeMediaId) : null;
     const routeTypeMatches = !routeMedia || !type || (type === 'movie' ? routeMedia.type === 'movie' : routeMedia.type === 'tv');
     const resolveSelectedMedia = routeMediaId && routeTypeMatches
@@ -139,15 +141,20 @@ export function Details() {
   const watchLabel = resume && !resume.isCompleted ? 'Continue Watching' : resume?.isCompleted ? 'Watch Again' : 'Watch Now';
   const modelSeasons = useMemo(() => seasonItems.map(season => ({
     number: season.seasonNumber,
-    episodes: season.seasonNumber === selectedSeason ? [...seasonEpisodes]
-      .filter(ep => {
+    episodes: season.seasonNumber === selectedSeason ? sortEpisodesForDisplay(
+      [...seasonEpisodes].filter(ep => {
         const q = episodeSearch.trim().toLowerCase();
         return !q || ('episode ' + ep.number).includes(q) || cleanText(ep.title).toLowerCase().includes(q) || cleanText(ep.synopsis).toLowerCase().includes(q);
-      })
-      .sort((a, b) => episodeSort === 'asc' ? a.number - b.number : b.number - a.number)
-      .map(ep => ({
-        number: ep.number, title: cleanText(ep.title) || 'Episode ' + ep.number, synopsis: cleanText(ep.synopsis), image: ep.image || '', duration: ep.duration, rating: ep.rating
-      })) : []
+      }),
+      episodeSort
+    ).map(ep => ({
+      number: ep.number,
+      title: cleanText(ep.title) || 'Episode ' + ep.number,
+      synopsis: cleanText(ep.synopsis),
+      image: ep.image || '',
+      duration: ep.duration,
+      rating: ep.rating
+    })) : []
   })), [seasonItems, selectedSeason, seasonEpisodes, episodeSearch, episodeSort]);
 
   useEffect(() => {
@@ -176,6 +183,17 @@ export function Details() {
       stopObserving();
     };
   }, [kind, episodeView, selectedSeason, seasonEpisodes, episodeSearch, episodeSort]);
+
+  const scrollEpisodeRail = () => {
+    const rail = episodeRailRef.current;
+    if (!rail) return;
+    const firstCard = rail.querySelector<HTMLElement>('.kinoma-episode-card');
+    if (!firstCard) return;
+    const styles = window.getComputedStyle(rail);
+    const gap = Number.parseFloat(styles.columnGap || styles.gap || '0') || 0;
+    const delta = calculateEpisodeRailStep(firstCard.getBoundingClientRect().width, gap);
+    rail.scrollBy({ left: delta, behavior: 'smooth' });
+  };
 
   const watch = () => {
     trackGAEvent('select_content', { content_type: kind });
@@ -222,7 +240,15 @@ export function Details() {
       {error && !loading && <div className="panda-state-card is-error" role="alert"><div><strong>We couldn't load this title.</strong><small>{error}</small></div><button type="button" onClick={() => setRetryKey(value => value + 1)}>Retry</button></div>}
       <section className="kinoma-details-hero kinoma-details-hero--trailer">
         <div className="kinoma-details-hero__trailer-bg" aria-label={title + ' trailer preview'}>
-          {trailer?.trailer?.embedUrl ? <iframe src={trailerSrc(trailer.trailer.embedUrl)} title={title + ' trailer'} className="kinoma-details-hero__trailer-video" allow="autoplay; encrypted-media; picture-in-picture" allowFullScreen /> : (
+          {trailer?.trailer?.embedUrl && !trailerFailed ? <iframe
+            src={trailerSrc(trailer.trailer.embedUrl)}
+            title={title + ' trailer'}
+            className="kinoma-details-hero__trailer-video"
+            loading="eager"
+            allow="autoplay; encrypted-media; picture-in-picture"
+            allowFullScreen
+            onError={() => setTrailerFailed(true)}
+          /> : (
             <div className="kinoma-details-hero__trailer-placeholder"><div><Film size={42} /></div><span>TRAILER PREVIEW</span><strong>Trailer preview unavailable</strong><small>MovieApi did not return a trailer for this title.</small></div>
           )}
         </div>
@@ -268,7 +294,7 @@ export function Details() {
               </div>
             </div>
             <div className="kinoma-details-section__controls">
-              <div className="kinoma-episode-search"><Search size={14} /><input value={episodeSearch} onChange={e => setEpisodeSearch(e.target.value)} placeholder="Search episodes" aria-label="Search episodes" /></div>
+              <div className="kinoma-episode-search"><Search size={14} /><input id="episode-search" name="episode-search" autoComplete="off" value={episodeSearch} onChange={e => setEpisodeSearch(e.target.value)} placeholder="Search episodes" aria-label="Search episodes" /></div>
               <button type="button" className="kinoma-episode-sort" onClick={() => setEpisodeSort(value => value === 'asc' ? 'desc' : 'asc')} title={episodeSort === 'asc' ? 'Sort descending' : 'Sort ascending'} aria-label={episodeSort === 'asc' ? 'Sort episodes descending' : 'Sort episodes ascending'}><ArrowUpDown size={15} /><span>{episodeSort === 'asc' ? 'ASC' : 'DESC'}</span></button>
               <button type="button" className="kinoma-episode-view-toggle" onClick={() => setEpisodeView(value => value === 'list' ? 'grid' : 'list')} aria-label={episodeView === 'list' ? 'Switch to grid view' : 'Switch to list view'} title={episodeView === 'list' ? 'Grid view' : 'List view'}>
                 {episodeView === 'list' ? <Grid2X2 size={16} /> : <List size={17} />}
@@ -290,15 +316,14 @@ export function Details() {
                   {ep.image ? <img
                     src={ep.image}
                     alt=""
-                    loading={ep.number <= 3 ? 'eager' : 'lazy'}
-                    fetchPriority={ep.number <= 2 ? 'high' : 'auto'}
+                    loading="eager"
+                    fetchPriority={ep.number <= 3 ? 'high' : 'auto'}
                     decoding="async"
                   /> : <span><Play size={20} /></span>}
                 </div>
                 <div className="kinoma-episode-copy">
                   <span className="kinoma-episode-kicker">EPISODE {ep.number}</span>
-                  <strong className="kinoma-episode-number">Episode {ep.number}</strong>
-                  {ep.title && !/^Episode\s+\d+$/i.test(ep.title) && <span className="kinoma-episode-name">{ep.title}</span>}
+                  <strong className="kinoma-episode-number">{ep.title || 'Episode ' + ep.number}</strong>
                   {ep.synopsis && <p>{ep.synopsis}</p>}
                   <div className="kinoma-episode-meta">
                     <span>{ep.duration ? <><Play size={10} fill="currentColor" /> {formatDuration(ep.duration)}</> : <><Play size={10} fill="currentColor" /> Play</>}</span>
@@ -308,7 +333,11 @@ export function Details() {
 
               </button>
             ))}
-            {showEpisodeRailHint && <div className="kinoma-episode-rail-hint" aria-hidden="true"><span><ChevronRight size={19} /></span></div>}
+            {showEpisodeRailHint && (
+              <button type="button" className="kinoma-episode-rail-hint" onClick={scrollEpisodeRail} aria-label="Show the next three and a half episodes">
+                <ChevronRight size={30} strokeWidth={2.25} aria-hidden="true" />
+              </button>
+            )}
             {!loading && !(modelSeasons.find(s => s.number === selectedSeason)?.episodes.length) && <div className="kinoma-details-bottom">No episodes were returned for this season.</div>}
           </div>
         </section>
@@ -316,14 +345,14 @@ export function Details() {
 
       <section className="kinoma-details-section kinoma-details-more-section">
         <div className="kinoma-details-section__heading kinoma-details-section__heading--more"><div><span className="kinoma-section-accent" aria-hidden="true" /><div><span>DISCOVER MORE</span><h2>More Like This</h2></div></div><small>Recommended for you</small></div>
-        <div className="kinoma-more-rail">
-          {recommendations.map((item, i) => {
+        <div className="kinoma-more-rail kinoma-more-grid-3rows">
+          {recommendations.slice(0, 15).map((item, i) => {
             const itemTitle = typeof item.title === 'string' ? item.title : item.title.english || item.title.romaji || 'Untitled';
             const itemType = item.contentType === 'movie' ? 'movie' : 'series';
             return (
               <button type="button" key={item.id} className="kinoma-more-card" onClick={() => setLocation(buildDetailsHref({ title: itemTitle, id: item.id }, itemType))} aria-label={'Open ' + itemTitle}>
                 <div className={'kinoma-more-card__art tone-' + (i % 5)}>
-                  {item.image ? <img src={item.image} alt="" loading={i < 3 ? 'eager' : 'lazy'} decoding="async" referrerPolicy="no-referrer" /> : <Film size={25} />}
+                  {item.image ? <img src={item.image} alt="" loading="eager" fetchPriority={i < 5 ? 'high' : 'auto'} decoding="async" referrerPolicy="no-referrer" /> : <Film size={25} />}
                 </div>
                 <div className="kinoma-more-card__copy"><strong>{itemTitle}</strong><span>{item.genres?.[0] || 'Recommended'} <i>•</i> {itemType === 'movie' ? 'Movie' : 'Series'}</span></div>
               </button>
