@@ -7721,22 +7721,34 @@ body {
 }
 .kinoma-season-picker{position:relative}
 .kinoma-season-picker__trigger{
+  position:relative;
   display:inline-flex;
   align-items:center;
   justify-content:space-between;
-  gap:10px;
-  min-width:124px;
-  height:44px;
-  padding:0 13px 0 15px;
+  gap:14px;
+  min-width:150px;
+  height:48px;
+  padding:0 15px 0 22px;
   border:1px solid rgba(255,255,255,.1);
-  border-radius:12px;
-  background:rgba(255,255,255,.055);
+  border-radius:6px;
+  background:#090909;
   color:#fff;
-  font-family:"Google Sans",sans-serif;
-  font-size:11px;
-  font-weight:700;
-  box-shadow:none;
-  transition:background 180ms ease,border-color 180ms ease,transform 180ms ease;
+  font-family:Arial,Helvetica,sans-serif;
+  font-size:13px;
+  font-weight:900;
+  letter-spacing:.01em;
+  box-shadow:0 8px 22px rgba(0,0,0,.28);
+  transition:background 180ms ease,border-color 180ms ease,transform 180ms ease,box-shadow 180ms ease;
+}
+.kinoma-season-picker__trigger::before{
+  content:"";
+  position:absolute;
+  left:-1px;
+  top:6px;
+  bottom:6px;
+  width:4px;
+  border-radius:2px;
+  background:#d92f2f;
 }
 .kinoma-season-picker__trigger:hover,
 .kinoma-season-picker__trigger[aria-expanded="true"]{
