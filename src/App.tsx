@@ -12,13 +12,28 @@ import { Privacy } from './pages/Privacy';
 import { Contact } from './pages/Contact';
 import { Docs } from './pages/Docs';
 import { Home } from './pages/Home';
-const Search = lazy(() => import('./pages/Search').then(m => ({ default: m.Search })));
-const Details = lazy(() => import('./pages/Details').then(m => ({ default: m.Details })));
-const Watch = lazy(() => import('./pages/Watch').then(m => ({ default: m.Watch })));
-const Library = lazy(() => import('./pages/Library').then(m => ({ default: m.Library })));
-const WhatsNew = lazy(() => import('./pages/WhatsNew').then(m => ({ default: m.WhatsNew })));
-const Admin = lazy(() => import('./pages/Admin').then(m => ({ default: m.Admin })));
-const SettingsPage = lazy(() => import('./pages/Settings').then(m => ({ default: m.Settings })));
+function retryLazyImport<T>(importer: () => Promise<T>, chunkName: string) {
+  return importer().catch(error => {
+    if (!isRecoverableChunkLoadError(error)) throw error;
+    try {
+      const retryKey = 'panda-lazy-retry:' + chunkName + ':' + window.location.pathname;
+      if (!sessionStorage.getItem(retryKey)) {
+        sessionStorage.setItem(retryKey, '1');
+        window.location.reload();
+        return new Promise<T>(() => {});
+      }
+    } catch {}
+    throw error;
+  });
+}
+
+const Search = lazy(() => retryLazyImport(() => import('./pages/Search').then(m => ({ default: m.Search })), 'search'));
+const Details = lazy(() => retryLazyImport(() => import('./pages/Details').then(m => ({ default: m.Details })), 'details'));
+const Watch = lazy(() => retryLazyImport(() => import('./pages/Watch').then(m => ({ default: m.Watch })), 'watch'));
+const Library = lazy(() => retryLazyImport(() => import('./pages/Library').then(m => ({ default: m.Library })), 'library'));
+const WhatsNew = lazy(() => retryLazyImport(() => import('./pages/WhatsNew').then(m => ({ default: m.WhatsNew })), 'whats-new'));
+const Admin = lazy(() => retryLazyImport(() => import('./pages/Admin').then(m => ({ default: m.Admin })), 'admin'));
+const SettingsPage = lazy(() => retryLazyImport(() => import('./pages/Settings').then(m => ({ default: m.Settings })), 'settings'));
 import { AuthProvider } from './lib/AuthContext';
 import { AuthModal } from './components/ui/AuthModal';
 import { AppearanceProvider } from './lib/AppearanceContext';
@@ -28,6 +43,7 @@ import { PWAUpdatePrompt } from './components/ui/PWAUpdatePrompt';
 import { trackPageView } from './lib/analytics';
 import { usePWAUpdate } from './lib/usePWAUpdate';
 import { PandaIntro, shouldShowPandaIntro } from './components/intro/PandaIntro';
+import { isRecoverableChunkLoadError, shouldResetErrorBoundary } from './lib/appReliability';
 import './components/intro/panda-intro.css';
 
 function AnimatedRoutes() {
@@ -89,9 +105,14 @@ function AnimatedRoutes() {
   );
 }
 
-class AppErrorBoundary extends Component<{ children: React.ReactNode }, { hasError: boolean }> {
+class AppErrorBoundary extends Component<{ children: React.ReactNode; resetKey?: string }, { hasError: boolean }> {
   state = { hasError: false };
   static getDerivedStateFromError() { return { hasError: true }; }
+  componentDidUpdate(previousProps: { children: React.ReactNode; resetKey?: string }) {
+    if (shouldResetErrorBoundary(previousProps.resetKey, this.props.resetKey, this.state.hasError)) {
+      this.setState({ hasError: false });
+    }
+  }
   componentDidCatch(error: unknown) { console.error('[Panda.fun] App render error:', error); }
   render() {
     if (!this.state.hasError) return this.props.children;
@@ -120,24 +141,22 @@ function MainAppShell() {
     return <PandaIntro onComplete={() => setShowIntro(false)} />;
   }
 
-  return <AnimatedRoutes />;
+  return <AppErrorBoundary resetKey={location}><AnimatedRoutes /></AppErrorBoundary>;
 }
 
 export default function App() {
   return (
-    <AppErrorBoundary>
-      <SWRConfig value={{ provider: localCache.getSwrStorageProvider(), revalidateOnFocus: false, revalidateIfStale: false, dedupingInterval: 30000 }}>
-        <AuthProvider>
-          <AppearanceProvider>
-            <PWAUpdateBridge />
-            <MainAppShell />
-            <PWAInstallPrompt />
-            <PWAUpdatePrompt />
-            <AuthModal />
-            <SettingsModal />
-          </AppearanceProvider>
-        </AuthProvider>
-      </SWRConfig>
-    </AppErrorBoundary>
+    <SWRConfig value={{ provider: localCache.getSwrStorageProvider(), revalidateOnFocus: false, revalidateIfStale: false, dedupingInterval: 30000 }}>
+      <AuthProvider>
+        <AppearanceProvider>
+          <PWAUpdateBridge />
+          <MainAppShell />
+          <PWAInstallPrompt />
+          <PWAUpdatePrompt />
+          <AuthModal />
+          <SettingsModal />
+        </AppearanceProvider>
+      </AuthProvider>
+    </SWRConfig>
   );
 }
