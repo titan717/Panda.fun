@@ -327,7 +327,7 @@ export function Details() {
                   <strong className="kinoma-episode-number">{ep.title || 'Episode ' + ep.number}</strong>
                   {ep.synopsis && <p>{ep.synopsis}</p>}
                   <div className="kinoma-episode-meta">
-                    <span>{ep.duration ? <><Play size={10} fill="currentColor" /> {formatDuration(ep.duration)}</> : <><Play size={10} fill="currentColor" /> Play</>}</span>
+                    <span>{ep.duration ? <>{episodeView === 'list' ? <Clock3 size={11} /> : <Play size={10} fill="currentColor" />} {formatDuration(ep.duration)}</> : <>{episodeView === 'list' ? <Clock3 size={11} /> : <Play size={10} fill="currentColor" />} Play</>}</span>
                     {ep.rating != null && <span><Star size={10} fill="currentColor" aria-hidden="true" /> {Number(ep.rating).toFixed(1)}</span>}
                   </div>
                 </div>
