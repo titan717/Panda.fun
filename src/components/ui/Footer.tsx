@@ -23,7 +23,7 @@ const linkGroups = [
     label: 'Legal',
     links: [
       { href: '/terms', label: 'Terms of Service', icon: FileText },
-      { href: '/privacy', label: 'Privacy Policy', icon: Shield },
+      { href: '/privacy-policy', label: 'Privacy Policy', icon: Shield },
     ],
   },
 ];
