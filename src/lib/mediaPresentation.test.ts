@@ -58,8 +58,8 @@ describe('media presentation and episode ordering', () => {
             name: 'Season 1',
             episode_count: 2,
             episodes: [
-              { id: 2, episode_number: 2, name: 'Episode Two', overview: 'Second', still_path: '/two.jpg', runtime: 55, vote_average: 7.8 },
-              { id: 1, episode_number: 1, name: 'Episode One', overview: 'First', still_path: '/one.jpg', runtime: 58, vote_average: 8.1 }
+              { id: 2, number: 2, name: 'Episode Two', overview: 'Second', still_path: '/two.jpg', runtime: 55, vote_average: 7.8 },
+              { id: 1, number: 1, name: 'Episode One', overview: 'First', still_path: '/one.jpg', runtime: 58, vote_average: 8.1 }
             ]
           });
         }
