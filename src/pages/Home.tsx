@@ -8,6 +8,7 @@ import { trackGAEvent } from '../lib/analytics';
 import { libraryManager } from '../lib/library';
 import { updateSEO } from '../lib/seo';
 import { buildDetailsHref, buildWatchHref } from '../lib/mediaRoute';
+import { optimizeImageUrl } from '../lib/mediaImages';
 import { ModernContinueWatching } from '../components/ui/modern/ModernContinueWatching';
 import '../styles/panda-home.css';
 
@@ -44,7 +45,9 @@ function trailerSrc(url: unknown, soundEnabled = true) {
 }
 
 function PandaPoster({ item, priority = false }: { item: MovieApiMedia; priority?: boolean }) {
-  const candidates = [item.poster, item.backdrop].filter((value): value is string => typeof value === 'string' && value.length > 0);
+  const candidates = [item.poster, item.backdrop]
+    .filter((value): value is string => typeof value === 'string' && value.length > 0)
+    .map(value => optimizeImageUrl(value, 'w342') || value);
   const [sourceIndex, setSourceIndex] = useState(0);
   const [failed, setFailed] = useState(false);
 
@@ -178,7 +181,7 @@ function PandaRail({
         {action && <Link href="/search" className="panda-home-v2__see-all">Explore <ArrowRight size={13} /></Link>}
       </div>
       <div className="panda-home-v2__rail">
-        {items.slice(0, 5).map((item, index) => React.createElement(PandaContentCard, { key: `${kind}-${item.id}-${index}`, item, onHover, onLeave, badge, priority: priority && index === 0, analyticsSection: kind }))}
+        {items.slice(0, 5).map((item, index) => React.createElement(PandaContentCard, { key: `${kind}-${item.id}-${index}`, item, onHover, onLeave, badge, priority: priority && index < 5, analyticsSection: kind }))}
       </div>
     </section>
   );
@@ -372,7 +375,7 @@ export function Home() {
                               <div className="panda-home-top10__poster-wrap">
                                 <img
                                   className="panda-home-top10__poster"
-                                  src={(item.poster || item.backdrop) as string}
+                                  src={(optimizeImageUrl((item.poster || item.backdrop) as string, 'w342') || (item.poster || item.backdrop)) as string}
                                   alt=""
                                   loading={index < 3 ? 'eager' : 'lazy'}
                                   fetchPriority={index < 3 ? 'high' : 'auto'}

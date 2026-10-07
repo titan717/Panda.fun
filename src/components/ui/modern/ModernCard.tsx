@@ -3,6 +3,7 @@ import { useLocation } from 'wouter';
 import { Play, X } from 'lucide-react';
 import { AnimeItem, DEFAULT_POSTER } from '../../../types';
 import { buildDetailsHref } from '../../../lib/mediaRoute';
+import { optimizeImageUrl } from '../../../lib/mediaImages';
 
 export interface ModernCardProps {
   key?: React.Key;
@@ -30,6 +31,7 @@ export function ModernCard({
     : item.title?.english || item.title?.romaji || 'Unknown Anime';
 
   const detailHref = href || buildDetailsHref(title, item.type === 'movie' ? 'movie' : 'series', item.id);
+  const cardImage = optimizeImageUrl(item.image, 'w342') || item.image || DEFAULT_POSTER;
   const defaultBadge = badgeText || (item.status === 'RELEASING' ? 'New Season' : undefined);
 
   return (
@@ -53,9 +55,9 @@ export function ModernCard({
           )}
 
           <img
-            src={item.image || DEFAULT_POSTER}
+            src={cardImage}
             alt={title}
-            srcSet={item.image?.includes("/w500/") ? (item.image.replace("/w500/", "/w342/") + " 342w, " + item.image + " 500w") : undefined}
+            srcSet={cardImage.includes("/w342/") ? (cardImage + " 342w, " + (optimizeImageUrl(cardImage, 'w500') || cardImage) + " 500w") : undefined}
             sizes="(max-width: 540px) 44vw, (max-width: 900px) 30vw, (max-width: 1200px) 20vw, 18vw"
             loading="lazy"
             decoding="async"

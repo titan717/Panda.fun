@@ -2,6 +2,7 @@ import type { AnimeDetails, AnimeItem, Episode, AnimeSeasonItem, MediaTrailer } 
 import { slugifyTitle } from './slug';
 import { trackApiFailure } from './analytics';
 import { buildVidyUrl } from './vidy';
+import { optimizeImageUrl } from './mediaImages';
 
 export type MovieApiMedia = {
   id: string;
@@ -230,7 +231,7 @@ function toAnimeItem(item: MovieApiMedia): AnimeItem {
   return {
     id: item.id,
     title: item.title,
-    image: item.poster || '',
+    image: optimizeImageUrl(item.poster, 'w342') || '',
     cover: item.backdrop || '',
     banner: item.backdrop || '',
     rating: item.rating ?? undefined,
@@ -246,6 +247,7 @@ function toAnimeItem(item: MovieApiMedia): AnimeItem {
 function toDetails(item: MovieApiMedia): AnimeDetails {
   return {
     ...toAnimeItem(item),
+    image: item.poster || '',
     episodes: [],
     seasons: [],
     description: item.overview || undefined,
@@ -532,17 +534,9 @@ export const api = {
     }
 
     const tmdb = await request<MovieApiMedia & { numberOfSeasons?: number }>(`/api/v1/tmdb/tv/${media.id}`, undefined, { signal }, 300_000);
-    const tvmazeId = Number(tmdb.ids?.tvmaze || 0);
-    if (!tvmazeId) {
-      const count = Math.max(0, Number(tmdb.numberOfSeasons || 0));
-      return { seasons: Array.from({ length: count }, (_, index): AnimeSeasonItem => ({
-        seasonNumber: index + 1, animeId: id, title: `Season ${index + 1}`, episodeCount: 0
-      })) };
-    }
-    const data = await request<{ seasons: any[] }>(`/api/v1/tv/${tvmazeId}/seasons`, undefined, { signal }, 300_000);
-    return { seasons: (data.seasons || []).map((season: any): AnimeSeasonItem => ({
-      seasonNumber: Number(season.number || 1), animeId: id, title: season.name || `Season ${season.number || 1}`,
-      episodeCount: Number(season.episodeOrder || 0)
+    const count = Math.max(0, Number(tmdb.numberOfSeasons || 0));
+    return { seasons: Array.from({ length: count }, (_, index): AnimeSeasonItem => ({
+      seasonNumber: index + 1, animeId: id, title: `Season ${index + 1}`, episodeCount: 0
     })) };
   },
 
@@ -554,23 +548,20 @@ export const api = {
     if (media.provider === 'tvmaze') {
       data = await request<{ episodes: any[] }>(`/api/v1/tv/${media.id}/season/${seasonNumber}`, undefined, { signal }, 300_000);
     } else {
-      const tmdb = await request<MovieApiMedia>(`/api/v1/tmdb/tv/${media.id}`, undefined, { signal }, 300_000);
-      const tvmazeId = Number(tmdb.ids?.tvmaze || 0);
-      if (tvmazeId) {
-        data = await request<{ episodes: any[] }>(`/api/v1/tv/${tvmazeId}/season/${seasonNumber}`, undefined, { signal }, 300_000);
-      } else {
-        data = await request<{ episodes: any[] }>(`/api/v1/tmdb/tv/${media.id}/season/${seasonNumber}`, undefined, { signal }, 300_000);
-      }
+      data = await request<{ episodes: any[] }>(`/api/v1/tmdb/tv/${media.id}/season/${seasonNumber}`, undefined, { signal }, 300_000);
     }
 
     return {
       anime_id: id, season_number: seasonNumber, season_anime_id: id,
-      episodes: (data.episodes || []).map((ep) => ({
-        id: String(ep.id), number: Number(ep.number || 1), title: ep.title || `Episode ${ep.number || 1}`,
-        synopsis: ep.synopsis || ep.overview || '', image: ep.image?.original || ep.image?.medium || ep.image || '',
-        duration: Number(ep.runtime || ep.duration || 0) || undefined,
-        rating: Number(ep.rating ?? ep.vote_average ?? 0) || undefined
-      }))
+      episodes: (data.episodes || [])
+        .map((ep) => ({
+          id: String(ep.id), number: Number(ep.number || 1), title: ep.title || `Episode ${ep.number || 1}`,
+          synopsis: ep.synopsis || ep.overview || '',
+          image: optimizeImageUrl(ep.image?.original || ep.image?.medium || ep.image || '', 'w500') || '',
+          duration: Number(ep.runtime || ep.duration || 0) || undefined,
+          rating: Number(ep.rating ?? ep.vote_average ?? 0) || undefined
+        }))
+        .sort((a, b) => a.number - b.number)
     };
   },
 

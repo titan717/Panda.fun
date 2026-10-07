@@ -1,7 +1,7 @@
 import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { Footer } from '../components/ui/Footer';
 import { useLocation, useRoute, useSearch } from 'wouter';
-import { Play, Plus, Check, ChevronRight, Film, Tv, Clock3, Share2, List, Grid2X2, Search, ArrowUpDown, Star } from 'lucide-react';
+import { Play, Plus, Check, Film, Tv, Clock3, Share2, List, Grid2X2, Search, ArrowUpDown, Star } from 'lucide-react';
 import { api, resolveMediaIdFromSlug } from '../lib/api';
 import type { AnimeItem, Episode, AnimeSeasonItem } from '../types';
 import { DEFAULT_POSTER, DEFAULT_BANNER } from '../types';
@@ -284,18 +284,25 @@ export function Details() {
                 }}
               >
                 <div className="kinoma-episode-art">
-                  {ep.image ? <img src={ep.image} alt="" loading={ep.number === (historyUtil.getAnimeProgress(id)?.episodeNumber || 0) ? 'eager' : 'lazy'} decoding="async" /> : <span><Play size={20} /></span>}
+                  {ep.image ? <img
+                    src={ep.image}
+                    alt=""
+                    loading={ep.number <= 3 ? 'eager' : 'lazy'}
+                    fetchPriority={ep.number <= 2 ? 'high' : 'auto'}
+                    decoding="async"
+                  /> : <span><Play size={20} /></span>}
                 </div>
                 <div className="kinoma-episode-copy">
                   <span className="kinoma-episode-kicker">EPISODE {ep.number}</span>
-                  <strong className="kinoma-episode-number">{ep.title || 'Episode ' + ep.number}</strong>
+                  <strong className="kinoma-episode-number">Episode {ep.number}</strong>
+                  {ep.title && !/^Episode\s+\d+$/i.test(ep.title) && <span className="kinoma-episode-name">{ep.title}</span>}
                   {ep.synopsis && <p>{ep.synopsis}</p>}
                   <div className="kinoma-episode-meta">
                     <span>{ep.duration ? <><Play size={10} fill="currentColor" /> {formatDuration(ep.duration)}</> : <><Play size={10} fill="currentColor" /> Play</>}</span>
                     {ep.rating != null && <span><Star size={10} fill="currentColor" aria-hidden="true" /> {Number(ep.rating).toFixed(1)}</span>}
                   </div>
                 </div>
-                <ChevronRight className="kinoma-episode-arrow" size={19} aria-hidden="true" />
+
               </button>
             ))}
             {showEpisodeRailHint && <div className="kinoma-episode-rail-hint" aria-hidden="true"><span><ChevronRight size={19} /></span></div>}
