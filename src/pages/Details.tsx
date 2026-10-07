@@ -277,21 +277,6 @@ export function Details() {
           <div className="kinoma-details-section__heading kinoma-details-section__heading--episodes">
             <div className="kinoma-season-heading">
               <span className="kinoma-section-accent" aria-hidden="true" />
-              <div className="kinoma-season-picker">
-              <button type="button" className="kinoma-season-picker__trigger" onClick={() => setSeasonMenuOpen(value => !value)} aria-expanded={seasonMenuOpen} aria-haspopup="listbox">
-                <span>Season {selectedSeason}</span><span className="kinoma-season-picker__chevron">⌄</span>
-              </button>
-              {seasonMenuOpen && (
-                <div className="kinoma-season-picker__menu" role="listbox" aria-label="Choose season">
-                  {modelSeasons.map(season => (
-                    <button type="button" key={season.number} role="option" aria-selected={selectedSeason === season.number} className={selectedSeason === season.number ? 'is-selected' : ''} onClick={() => { setSelectedSeason(season.number); setSeasonMenuOpen(false); }}>
-                      Season {season.number}
-                    </button>
-                  ))}
-                </div>
-              )}
-              <small className="kinoma-season-count">{seasonItems.find(s => s.seasonNumber === selectedSeason)?.episodeCount || seasonEpisodes.length} {((seasonItems.find(s => s.seasonNumber === selectedSeason)?.episodeCount || seasonEpisodes.length) === 1) ? 'episode' : 'episodes'}</small>
-              </div>
             </div>
             <div className="kinoma-details-section__controls">
               <div className="kinoma-episode-search"><Search size={14} /><input id="episode-search" name="episode-search" autoComplete="off" value={episodeSearch} onChange={e => setEpisodeSearch(e.target.value)} placeholder="Search episodes" aria-label="Search episodes" /></div>
