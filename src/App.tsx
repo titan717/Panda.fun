@@ -80,6 +80,7 @@ function AnimatedRoutes() {
               <Route path="/browse" component={Home} />
               <Route path="/home" component={Home} />
               <Route path="/terms" component={Terms} />
+              <Route path="/privacy-policy" component={Privacy} />
               <Route path="/privacy" component={Privacy} />
               <Route path="/contact" component={Contact} />
               <Route path="/docs" component={Docs} />
