@@ -10,6 +10,7 @@ import { historyUtil } from '../lib/history';
 import { updateSEO } from '../lib/seo';
 import { trackGAEvent } from '../lib/analytics';
 import { buildDetailsHref, buildWatchHref, parseDetailsRouteSearch } from '../lib/mediaRoute';
+import { createEpisodeRailObserver } from '../lib/safeResizeObserver';
 
 function cleanText(value: unknown) { return typeof value === 'string' ? value.replace(/<[^>]*>/g, '').trim() : ''; }
 function titleOf(data: any, fallback: string) { return typeof data?.title === 'string' ? data.title : data?.title?.english || data?.title?.romaji || data?.title?.native || fallback; }
@@ -164,13 +165,15 @@ export function Details() {
 
     updateHint();
     rail.addEventListener('scroll', updateHint, { passive: true });
-    const resizeObserver = typeof ResizeObserver !== 'undefined' ? new ResizeObserver(updateHint) : null;
-    resizeObserver?.observe(rail);
-    Array.from(rail.children).forEach(child => resizeObserver?.observe(child));
+    const stopObserving = createEpisodeRailObserver(
+      typeof ResizeObserver !== 'undefined' ? ResizeObserver : undefined,
+      rail,
+      updateHint
+    );
 
     return () => {
       rail.removeEventListener('scroll', updateHint);
-      resizeObserver?.disconnect();
+      stopObserving();
     };
   }, [kind, episodeView, selectedSeason, seasonEpisodes, episodeSearch, episodeSort]);
 
