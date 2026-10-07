@@ -9,13 +9,13 @@
 export const tokens = {
   colors: {
     // Canvas & Surfaces
-    background: '#08090d',
-    backgroundElevated: '#0e1017',
-    surface: '#141620',
-    surfaceHover: '#1c1f2e',
-    surfaceActive: '#24273a',
-    card: '#12141c',
-    cardHover: '#191b26',
+    background: '#000000',
+    backgroundElevated: '#050505',
+    surface: '#070707',
+    surfaceHover: '#0b0b0b',
+    surfaceActive: '#101010',
+    card: '#050505',
+    cardHover: '#0a0a0a',
 
     // Borders & Dividers
     borderSubtle: 'rgba(255, 255, 255, 0.05)',
@@ -43,8 +43,8 @@ export const tokens = {
     info: '#3b82f6',
 
     // Glass & Overlay
-    overlayDark: 'rgba(8, 9, 13, 0.85)',
-    glassBackground: 'rgba(18, 20, 28, 0.75)',
+    overlayDark: 'rgba(0, 0, 0, 0.88)',
+    glassBackground: 'rgba(5, 5, 5, 0.82)',
     glassBorder: 'rgba(255, 255, 255, 0.08)',
   },
 
