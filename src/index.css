@@ -9281,3 +9281,72 @@ body,
   .kinoma-details-seasons .kinoma-details-section__heading--episodes .kinoma-season-count{font-size:9px !important}
   .kinoma-details-seasons .kinoma-details-section__heading--episodes .kinoma-section-accent{height:26px}
 }
+
+/* Legal pages: editorial document treatment, never a floating card. */
+.kinoma-privacy-page {
+  display: block;
+  min-height: 100dvh;
+  padding: 0 0 40px;
+  background: #000;
+}
+.kinoma-privacy-page .kinoma-terms__main,
+.kinoma-terms .kinoma-terms__main { width: min(100% - 48px, 1080px); }
+.kinoma-privacy-page .kinoma-terms__document,
+.kinoma-terms .kinoma-terms__document {
+  border-top: 1px solid rgba(246,242,238,.13);
+  background: transparent;
+  box-shadow: none;
+}
+.kinoma-privacy-page .kinoma-terms__section,
+.kinoma-terms .kinoma-terms__section {
+  grid-template-columns: 64px minmax(0, 760px);
+  gap: 34px;
+  padding: 42px 0 46px;
+}
+.kinoma-privacy-page .kinoma-privacy-page__body h3 {
+  margin: 24px 0 8px;
+  color: rgba(246,242,238,.78);
+  font-size: 12px;
+  line-height: 1.4;
+  letter-spacing: .02em;
+}
+.kinoma-privacy-page .kinoma-privacy-page__body h3:first-child { margin-top: 0; }
+.kinoma-privacy-page .kinoma-privacy-page__body ul {
+  max-width: 720px;
+  margin: 4px 0 0;
+  padding-left: 18px;
+  color: rgba(246,242,238,.52);
+  font-size: 13px;
+  line-height: 1.9;
+}
+.kinoma-privacy-page .kinoma-privacy-page__body li { padding-left: 5px; margin: 5px 0; }
+.kinoma-privacy-page .kinoma-privacy-page__body p { margin-top: 12px; }
+.kinoma-privacy-page .kinoma-privacy-page__body p:first-child { margin-top: 0; }
+.kinoma-privacy-page__brand-mark {
+  display: inline-grid;
+  place-items: center;
+  width: 34px;
+  height: 34px;
+  margin-right: 9px;
+  border: 1px solid rgba(232,208,192,.14);
+  border-radius: 10px;
+  color: var(--kinoma-accent-soft);
+  background: rgba(184,77,65,.08);
+}
+.kinoma-privacy-page__brand-name {
+  color: rgba(246,242,238,.84);
+  font-size: 12px;
+  font-weight: 900;
+  letter-spacing: .18em;
+}
+@media (max-width: 640px) {
+  .kinoma-privacy-page .kinoma-terms__main,
+  .kinoma-terms .kinoma-terms__main { width: min(100% - 28px, 1080px); }
+  .kinoma-privacy-page .kinoma-terms__section,
+  .kinoma-terms .kinoma-terms__section {
+    grid-template-columns: 30px minmax(0, 1fr);
+    gap: 12px;
+    padding: 30px 0 34px;
+  }
+  .kinoma-privacy-page .kinoma-privacy-page__body ul { font-size: 12px; }
+}
