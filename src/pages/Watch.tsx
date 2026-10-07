@@ -1,6 +1,6 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import { Footer } from '../components/ui/Footer';
-import { useLocation, useRoute } from 'wouter';
+import { useLocation, useRoute, useSearch } from 'wouter';
 import { ArrowLeft, ChevronLeft, ChevronRight, Film, Play, Plus, Check, Share2, Tv } from 'lucide-react';
 import { api } from '../lib/api';
 import { historyUtil } from '../lib/history';
@@ -23,9 +23,10 @@ function mediaType(id: string, queryType: string | null, data: any): 'movie' | '
 
 export function Watch() {
   const [, params] = useRoute<{ id: string }>('/watch/:id');
-  const [location, setLocation] = useLocation();
+  const [, setLocation] = useLocation();
+  const search = useSearch();
   const raw = params?.id ? decodeURIComponent(params.id) : '';
-  const query = new URLSearchParams(location.split('?')[1] || '');
+  const query = new URLSearchParams(search || '');
   const queryType = query.get('type');
   const playbackProgress = Math.max(0, Number(query.get('t') || 0));
   const parsed = raw.match(/^(.*)\$season\$(\d+)\$episode\$(\d+)$/);
