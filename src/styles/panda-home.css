@@ -1951,3 +1951,8 @@
 .panda-watch-player{width:100vw !important;height:100dvh !important;max-width:none !important;aspect-ratio:auto !important;border:0 !important;border-radius:0 !important;box-shadow:none !important}
 .panda-watch-player iframe{width:100% !important;height:100% !important;min-height:100% !important;display:block}
 .panda-watch-player-loading,.panda-watch-player-empty{background:#000}
+
+/* Watch route: make the player itself fill the entire viewport. */
+.panda-watch-page .panda-watch-stage{width:100vw!important;max-width:none!important;height:100dvh!important;min-height:100dvh!important;margin:0!important;padding:0!important;display:flex!important;align-items:stretch!important;justify-content:stretch!important}
+.panda-watch-page .panda-watch-player{width:100vw!important;height:100dvh!important;min-height:100dvh!important;max-height:none!important;aspect-ratio:auto!important;border:0!important;border-radius:0!important;box-shadow:none!important}
+.panda-watch-page .panda-watch-player iframe{width:100%!important;height:100%!important}
