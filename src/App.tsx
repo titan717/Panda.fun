@@ -43,7 +43,7 @@ import { PWAUpdatePrompt } from './components/ui/PWAUpdatePrompt';
 import { trackPageView } from './lib/analytics';
 import { usePWAUpdate } from './lib/usePWAUpdate';
 import { PandaIntro, shouldShowPandaIntro } from './components/intro/PandaIntro';
-import { isRecoverableChunkLoadError, shouldResetErrorBoundary } from './lib/appReliability';
+import { isRecoverableChunkLoadError } from './lib/appReliability';
 import './components/intro/panda-intro.css';
 
 function AnimatedRoutes() {
@@ -105,14 +105,9 @@ function AnimatedRoutes() {
   );
 }
 
-class AppErrorBoundary extends Component<{ children: React.ReactNode; resetKey?: string }, { hasError: boolean }> {
+class AppErrorBoundary extends Component<{ children: React.ReactNode }, { hasError: boolean }> {
   state = { hasError: false };
   static getDerivedStateFromError() { return { hasError: true }; }
-  componentDidUpdate(previousProps: { children: React.ReactNode; resetKey?: string }) {
-    if (shouldResetErrorBoundary(previousProps.resetKey, this.props.resetKey, this.state.hasError)) {
-      this.setState({ hasError: false });
-    }
-  }
   componentDidCatch(error: unknown) { console.error('[Panda.fun] App render error:', error); }
   render() {
     if (!this.state.hasError) return this.props.children;
@@ -141,7 +136,7 @@ function MainAppShell() {
     return <PandaIntro onComplete={() => setShowIntro(false)} />;
   }
 
-  return <AppErrorBoundary resetKey={location}><AnimatedRoutes /></AppErrorBoundary>;
+  return <AppErrorBoundary key={location}><AnimatedRoutes /></AppErrorBoundary>;
 }
 
 export default function App() {
