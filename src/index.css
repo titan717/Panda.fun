@@ -9139,3 +9139,41 @@ body,
   .kinoma-details-seasons .kinoma-details-section__heading--episodes .kinoma-season-count{font-size:9px}
   .kinoma-details-seasons .kinoma-details-section__heading--episodes .kinoma-section-accent{height:32px}
 }
+
+
+/* Season selector — final oversized editorial treatment. */
+.kinoma-details-seasons .kinoma-details-section__heading--episodes .kinoma-season-picker__trigger{
+  font-family:"Arial Black","Google Sans",Arial,sans-serif !important;
+  font-size:clamp(4.25rem,6vw,5.75rem) !important;
+  font-weight:950 !important;
+  color:#fff !important;
+  letter-spacing:-.065em !important;
+  line-height:.86 !important;
+  gap:16px;
+  -webkit-font-smoothing:antialiased;
+}
+.kinoma-details-seasons .kinoma-details-section__heading--episodes .kinoma-season-picker__chevron{
+  font-size:.42em !important;
+  font-weight:950 !important;
+  color:#fff !important;
+}
+.kinoma-details-seasons .kinoma-details-section__heading--episodes .kinoma-season-count{
+  margin-top:11px;
+  font-size:11px;
+  font-weight:800;
+  color:rgba(255,255,255,.48);
+}
+.kinoma-details-seasons .kinoma-details-section__heading--episodes .kinoma-section-accent{
+  width:5px;
+  flex-basis:5px;
+  height:48px;
+  margin-top:3px;
+}
+@media(max-width:640px){
+  .kinoma-details-seasons .kinoma-details-section__heading--episodes .kinoma-season-picker__trigger{
+    font-size:clamp(3.25rem,14vw,4.5rem) !important;
+    gap:11px;
+  }
+  .kinoma-details-seasons .kinoma-details-section__heading--episodes .kinoma-season-count{font-size:10px}
+  .kinoma-details-seasons .kinoma-details-section__heading--episodes .kinoma-section-accent{height:39px}
+}
