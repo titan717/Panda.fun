@@ -17,6 +17,12 @@ describe('title-based detail routes', () => {
     } as any, 'series')).toBe('/details/the-last-of-us?type=series&mediaId=tmdb_tv_100088');
   });
 
+  it('does not carry a movie ID into a series details route', () => {
+    expect(buildDetailsHref('The Last of Us', 'series', 'tmdb_movie_1405932')).toBe(
+      '/details/the-last-of-us?type=series'
+    );
+  });
+
   it('preserves an explicit media ID for collision-safe details navigation', () => {
     expect(buildDetailsHref('The Last of Us', 'series', 'tmdb_tv_100088')).toBe(
       '/details/the-last-of-us?type=series&mediaId=tmdb_tv_100088'
