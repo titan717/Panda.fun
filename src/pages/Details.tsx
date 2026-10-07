@@ -1,7 +1,7 @@
 import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { Footer } from '../components/ui/Footer';
 import { useLocation, useRoute, useSearch } from 'wouter';
-import { Play, Plus, Check, Film, Tv, Clock3, Share2, List, Grid2X2, Search, ArrowUpDown, Star } from 'lucide-react';
+import { Play, Plus, Check, Film, Tv, Clock3, Share2, List, Grid2X2, Search, ArrowUpDown, Star, ChevronRight } from 'lucide-react';
 import { api, resolveMediaIdFromSlug } from '../lib/api';
 import type { AnimeItem, Episode, AnimeSeasonItem } from '../types';
 import { DEFAULT_POSTER, DEFAULT_BANNER } from '../types';
