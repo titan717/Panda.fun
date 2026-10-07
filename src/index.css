@@ -9019,18 +9019,15 @@ body,
   padding:16px 22px 54px 18px;
 }
 .kinoma-details-seasons .kinoma-episode-list--grid .kinoma-episode-kicker{
-  font-family:"Roboto",Arial,sans-serif;
   font-size:10px;
   font-weight:700;
   letter-spacing:.15em;
 }
 .kinoma-details-seasons .kinoma-episode-list--grid .kinoma-episode-number{
-  font-family:"Roboto",Arial,sans-serif;
   font-size:20px !important;
   font-weight:700 !important;
 }
 .kinoma-details-seasons .kinoma-episode-list--grid .kinoma-episode-copy p{
-  font-family:"Roboto",Arial,sans-serif;
   font-size:11px;
   line-height:1.5;
   -webkit-line-clamp:2;

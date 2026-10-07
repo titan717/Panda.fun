@@ -75,6 +75,8 @@ export function SearchBar() {
             setIsOpen(true);
           }}
           onFocus={() => setIsOpen(true)}
+          id="global-search"
+          name="search"
           placeholder="Search anime..."
           className="w-full rounded-xl bg-[#18181f] border border-[#272733] focus:border-[#9c27b0] focus:ring-2 focus:ring-[#9c27b0]/20 hover:border-[#383848] py-2.5 pl-10 pr-12 text-sm text-white placeholder-gray-500 outline-none transition-all duration-200"
           autoComplete="off"
