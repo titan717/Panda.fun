@@ -29,8 +29,15 @@ function mediaRouteId(raw: string) {
   return null;
 }
 
-async function fetchSeoMedia(rawId: string, selectedMediaId?: string | null) {
-  const media = mediaRouteId(selectedMediaId || '') || mediaRouteId(rawId);
+async function fetchSeoMedia(rawId: string, selectedMediaId?: string | null, requestedType?: string | null) {
+  const selected = mediaRouteId(selectedMediaId || '');
+  const raw = mediaRouteId(rawId);
+  const requestedMediaType = requestedType === "movie" ? "movie" : requestedType === "series" ? "tv" : null;
+  const media = selected && (!requestedMediaType || selected.type === requestedMediaType)
+    ? selected
+    : raw && (!requestedMediaType || raw.type === requestedMediaType)
+      ? raw
+      : null;
   try {
     if (media) {
       const endpoint = media.provider === "tvmaze"
@@ -41,14 +48,18 @@ async function fetchSeoMedia(rawId: string, selectedMediaId?: string | null) {
       return unwrapApiPayload(await response.json());
     }
     const query = decodeURIComponent(rawId).replace(/-/g, " ");
-    const [movieResponse, tvResponse] = await Promise.all([
-      fetch(MOVIE_API + "/api/v1/tmdb/search/movie?q=" + encodeURIComponent(query) + "&page=1", { headers: { Accept: "application/json" } }),
-      fetch(MOVIE_API + "/api/v1/tmdb/search/tv?q=" + encodeURIComponent(query) + "&page=1", { headers: { Accept: "application/json" } })
-    ]);
-    const movie = movieResponse.ok ? unwrapApiPayload(await movieResponse.json()) : {};
-    const tv = tvResponse.ok ? unwrapApiPayload(await tvResponse.json()) : {};
-    const results = [...(movie?.results || []), ...(tv?.results || [])];
-    return results.find((item: any) => slugifyTitle(item.title || item.name || "") === rawId) || results[0] || null;
+    const endpoints = requestedMediaType === "movie"
+      ? ["/api/v1/tmdb/search/movie"]
+      : requestedMediaType === "tv"
+        ? ["/api/v1/tmdb/search/tv"]
+        : ["/api/v1/tmdb/search/movie", "/api/v1/tmdb/search/tv"];
+    const responses = await Promise.all(endpoints.map((endpoint) =>
+      fetch(MOVIE_API + endpoint + "?q=" + encodeURIComponent(query) + "&page=1", { headers: { Accept: "application/json" } })
+    ));
+    const payloads = await Promise.all(responses.map(async (response) => response.ok ? unwrapApiPayload(await response.json()) : {}));
+    const results = payloads.flatMap((payload: any) => payload?.results || []);
+    const exact = results.find((item: any) => slugifyTitle(item.title || item.name || "") === slugifyTitle(decodeURIComponent(rawId)));
+    return exact || results[0] || null;
   } catch {
     return null;
   }
@@ -71,7 +82,12 @@ async function renderSeoHtml(distPath: string, req: express.Request) {
   const rawRouteId = route.slice(route.startsWith("/details/") ? 9 : 7).split("/")[0];
   const rawId = route.startsWith("/watch/") ? rawRouteId.split("$season$")[0] : rawRouteId;
   const selectedMediaId = Array.isArray(req.query.mediaId) ? req.query.mediaId[0] : req.query.mediaId;
-  const data = await fetchSeoMedia(rawId, typeof selectedMediaId === "string" ? selectedMediaId : null);
+  const requestedType = Array.isArray(req.query.type) ? req.query.type[0] : req.query.type;
+  const data = await fetchSeoMedia(
+    rawId,
+    typeof selectedMediaId === "string" ? selectedMediaId : null,
+    typeof requestedType === "string" ? requestedType : null
+  );
   if (!data) return html;
   const origin = req.protocol + "://" + req.get("host");
   const title = seoTitle(data, decodeURIComponent(rawId));

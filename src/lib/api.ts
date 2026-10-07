@@ -325,6 +325,38 @@ async function searchAll(query: string, page = 1, signal?: AbortSignal) {
   };
 }
 
+export function pickCanonicalMediaId(
+  tmdbResults: MovieApiMedia[],
+  tvmazeMatches: Array<{ id: string; title: string }>,
+  normalizedTitle: string,
+  type?: string
+) {
+  const tmdbExact = tmdbResults.find(item =>
+    slugifyTitle(item.title) === normalizedTitle &&
+    (!type || (type === 'movie' ? item.type === 'movie' : type === 'series' ? item.type === 'tv' : true))
+  );
+  if (tmdbExact) return tmdbExact.id;
+
+  const tmdbFallback = tmdbResults.find(item =>
+    !type || (type === 'movie' ? item.type === 'movie' : type === 'series' ? item.type === 'tv' : true)
+  );
+  if (tmdbFallback) return tmdbFallback.id;
+
+  const tvmazeExact = tvmazeMatches.find(item => slugifyTitle(item.title) === normalizedTitle);
+  if ((type === 'series' || !type) && tvmazeExact) {
+    const id = String(tvmazeExact.id);
+    return id.startsWith('kinoma_tvmaze_') ? id : 'kinoma_tvmaze_' + id;
+  }
+
+  const tvmazeFallback = tvmazeMatches[0];
+  if ((type === 'series' || !type) && tvmazeFallback) {
+    const id = String(tvmazeFallback.id);
+    return id.startsWith('kinoma_tvmaze_') ? id : 'kinoma_tvmaze_' + id;
+  }
+
+  return null;
+}
+
 export async function resolveMediaIdFromSlug(slug: string, type?: string) {
   const decoded = decodeURIComponent(slug);
   const legacy = mediaFromId(decoded);
@@ -365,23 +397,8 @@ export async function resolveMediaIdFromSlug(slug: string, type?: string) {
   ]);
 
   const tmdbResults = providerMatches.flat();
-  const tmdbExact = tmdbResults.find(item => slugifyTitle(item.title) === normalized);
-  const tvmazeExact = tvmazeMatches.find(item => slugifyTitle(item.title) === normalized);
-
-  // TVMaze is the preferred metadata source for series, while MovieAPI maps
-  // its records to TMDB IDs for trailers and Vidy playback.
-  if ((type === 'series' || !type) && tvmazeExact) {
-    const id = String(tvmazeExact.id);
-    return id.startsWith('kinoma_tvmaze_') ? id : 'kinoma_tvmaze_' + id;
-  }
-
-  if (tmdbExact) return tmdbExact.id;
-  if (tmdbResults[0]) return tmdbResults[0].id;
-
-  if ((type === 'series' || !type) && tvmazeMatches[0]) {
-    const id = String(tvmazeMatches[0].id);
-    return id.startsWith('kinoma_tvmaze_') ? id : 'kinoma_tvmaze_' + id;
-  }
+  const resolved = pickCanonicalMediaId(tmdbResults, tvmazeMatches, normalized, type);
+  if (resolved) return resolved;
 
   throw new MovieApiError('Unable to resolve this title.', 404, 'TITLE_NOT_FOUND');
 }

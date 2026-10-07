@@ -68,7 +68,9 @@ export function Details() {
     let active = true;
     const controller = new AbortController();
     setLoading(true); setError(null); setData(null); setSeasonItems([]); setSeasonEpisodes([]); setRecommendations([]);
-    const resolveSelectedMedia = routeMediaId
+    const routeMedia = routeMediaId ? api.getDetailsMediaId(routeMediaId) : null;
+    const routeTypeMatches = !routeMedia || !type || (type === 'movie' ? routeMedia.type === 'movie' : routeMedia.type === 'tv');
+    const resolveSelectedMedia = routeMediaId && routeTypeMatches
       ? Promise.resolve(routeMediaId)
       : resolveMediaIdFromSlug(routeSlug, type || undefined);
 

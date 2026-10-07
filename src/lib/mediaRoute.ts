@@ -26,7 +26,12 @@ export function buildDetailsHref(
   const slug = slugifyTitle(rawTitle);
   const params = new URLSearchParams({ type });
   const normalizedMediaId = String(media ? media.id || '' : mediaId || '').trim();
-  if (normalizedMediaId) params.set('mediaId', normalizedMediaId);
+  if (normalizedMediaId) {
+    const tmdb = normalizedMediaId.match(/^(?:kinoma_)?tmdb_(movie|tv)_\d+$/);
+    const isTvmaze = /^kinoma_tvmaze_\d+$/.test(normalizedMediaId);
+    const mediaType = tmdb ? (tmdb[1] === 'movie' ? 'movie' : 'series') : isTvmaze ? 'series' : null;
+    if (!mediaType || mediaType === type) params.set('mediaId', normalizedMediaId);
+  }
   return '/details/' + encodeURIComponent(slug) + '?' + params.toString();
 }
 
