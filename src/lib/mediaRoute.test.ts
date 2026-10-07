@@ -1,5 +1,18 @@
 import { describe, expect, it } from 'vitest';
-import { buildDetailsHref } from './mediaRoute';
+import { buildDetailsHref, parseDetailsRouteSearch } from './mediaRoute';
+
+describe('details route parsing', () => {
+  it('reads the media identity and type from the query string', () => {
+    expect(parseDetailsRouteSearch('?type=series&mediaId=tmdb_tv_100088')).toEqual({
+      type: 'series',
+      mediaId: 'tmdb_tv_100088',
+    });
+  });
+
+  it('does not confuse an absent query with a canonical media id', () => {
+    expect(parseDetailsRouteSearch('')).toEqual({ type: null, mediaId: null });
+  });
+});
 
 describe('title-based detail routes', () => {
   it('builds a movie details route from its title slug', () => {

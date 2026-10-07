@@ -2,6 +2,21 @@ import { slugifyTitle } from './slug';
 
 export type MediaRouteType = 'movie' | 'series';
 
+export type DetailsRouteSearch = {
+  type: MediaRouteType | null;
+  mediaId: string | null;
+};
+
+export function parseDetailsRouteSearch(search: string): DetailsRouteSearch {
+  const params = new URLSearchParams(String(search || '').replace(/^\?/, ''));
+  const rawType = params.get('type');
+  const type = rawType === 'movie' || rawType === 'series' ? rawType : null;
+  return {
+    type,
+    mediaId: params.get('mediaId') || null,
+  };
+}
+
 /**
  * Builds the Details URL from the displayed title while optionally carrying
  * the exact MovieApi media ID selected from search/discovery.

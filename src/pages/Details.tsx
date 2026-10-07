@@ -1,6 +1,6 @@
 import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { Footer } from '../components/ui/Footer';
-import { useLocation, useRoute } from 'wouter';
+import { useLocation, useRoute, useSearch } from 'wouter';
 import { Play, Plus, Check, ChevronRight, Film, Tv, Clock3, Share2, List, Grid2X2, Search, ArrowUpDown, Star } from 'lucide-react';
 import { api, resolveMediaIdFromSlug } from '../lib/api';
 import type { AnimeItem, Episode, AnimeSeasonItem } from '../types';
@@ -9,7 +9,7 @@ import { libraryManager } from '../lib/library';
 import { historyUtil } from '../lib/history';
 import { updateSEO } from '../lib/seo';
 import { trackGAEvent } from '../lib/analytics';
-import { buildDetailsHref, buildWatchHref } from '../lib/mediaRoute';
+import { buildDetailsHref, buildWatchHref, parseDetailsRouteSearch } from '../lib/mediaRoute';
 
 function cleanText(value: unknown) { return typeof value === 'string' ? value.replace(/<[^>]*>/g, '').trim() : ''; }
 function titleOf(data: any, fallback: string) { return typeof data?.title === 'string' ? data.title : data?.title?.english || data?.title?.romaji || data?.title?.native || fallback; }
@@ -40,11 +40,10 @@ function formatDuration(value: unknown) { const n = Number(value); if (!Number.i
 
 export function Details() {
   const [, params] = useRoute<{ id: string }>('/details/:id');
-  const [location, setLocation] = useLocation();
+  const [, setLocation] = useLocation();
+  const search = useSearch();
   const routeSlug = params?.id ? decodeURIComponent(params.id) : '';
-  const searchParams = new URLSearchParams(location.split('?')[1] || '');
-  const type = searchParams.get('type');
-  const routeMediaId = searchParams.get('mediaId');
+  const { type, mediaId: routeMediaId } = parseDetailsRouteSearch(search);
   const [id, setId] = useState(routeMediaId || routeSlug);
   const [data, setData] = useState<any>(null);
   const [trailer, setTrailer] = useState<any>(null);
