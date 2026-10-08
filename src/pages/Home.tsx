@@ -45,9 +45,13 @@ function preloadHomeImages(home: any) {
   };
 
   addImage(home.featured?.backdrop, 'w1280');
-  for (const item of (home.sections?.trending || []).slice(0, 5)) {
+  const topItems = [
+    ...(home.sections?.trending || []),
+    ...(home.sections?.popularMovies || []),
+    ...(home.sections?.popularTv || []),
+  ];
+  for (const item of topItems.slice(0, 10)) {
     addImage(item?.poster, 'w342');
-    addImage(item?.backdrop, 'w342');
   }
 
   urls.forEach((src) => {
