@@ -1,6 +1,6 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import { useLocation } from 'wouter';
-import { collection, getDocs, limit, orderBy, query, where } from 'firebase/firestore';
+import { collection, getDocs, limit, orderBy, query } from 'firebase/firestore';
 import { db } from '../lib/firebase';
 import { useAuth } from '../lib/AuthContext';
 import {
@@ -30,10 +30,6 @@ function formatDuration(seconds: number): string {
   return h ? `${h}h ${m}m` : `${m}m ${s}s`;
 }
 
-function isAdminProfile(value: any): boolean {
-  return value?.role === 'admin' || value?.isAdmin === true;
-}
-
 export function Admin() {
   const [, setLocation] = useLocation();
   const { user, loading: authLoading, signOut } = useAuth();
@@ -47,9 +43,8 @@ export function Admin() {
     if (!user) return;
     setLoading(true);
     try {
-      const profile = await getDocs(query(collection(db, 'users'), where('uid', '==', user.uid), limit(1)));
-      const profileData = profile.docs[0]?.data();
-      if (!isAdminProfile(profileData)) {
+      const token = await user.getIdTokenResult(true);
+      if (token.claims.admin !== true) {
         setAuthorized(false);
         return;
       }
@@ -111,7 +106,7 @@ export function Admin() {
   }
 
   if (!authorized) {
-    return <div className="min-h-screen bg-[#f4f6f8] flex items-center justify-center p-6"><div className="bg-white rounded-3xl p-8 shadow-xl text-center"><ShieldAlert className="mx-auto mb-3 text-red-500"/><h1 className="text-2xl font-bold">Access denied</h1><p className="text-gray-500 mt-2">Set <b>role: admin</b> on this account's users document in Firebase.</p><button onClick={() => setLocation('/')} className="mt-5 px-5 py-3 rounded-xl bg-[#0b0d17] text-white">Back to Kinoma</button></div></div>;
+    return <div className="min-h-screen bg-[#f4f6f8] flex items-center justify-center p-6"><div className="bg-white rounded-3xl p-8 shadow-xl text-center"><ShieldAlert className="mx-auto mb-3 text-red-500"/><h1 className="text-2xl font-bold">Access denied</h1><p className="text-gray-500 mt-2">This account does not have the Firebase <b>admin</b> custom claim.</p><button onClick={() => setLocation('/')} className="mt-5 px-5 py-3 rounded-xl bg-[#0b0d17] text-white">Back to Kinoma</button></div></div>;
   }
 
   const cards = [
