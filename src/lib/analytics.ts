@@ -8,10 +8,15 @@ export type AnalyticsEventType =
   | 'watch_complete'
   | 'search'
   | 'anime_open'
+  | 'content_select'
   | 'episode_start'
+  | 'episode_select'
   | 'library_action'
   | 'error'
-  | 'api_failure';
+  | 'api_failure'
+  | 'share'
+  | 'login'
+  | 'sign_up';
 
 interface AnalyticsEvent {
   type: AnalyticsEventType;
@@ -31,9 +36,7 @@ export function trackGAEvent(name: string, params: Record<string, string | numbe
   try {
     const gtag = (window as Window & { gtag?: (...args: unknown[]) => void }).gtag;
     if (!gtag) return;
-    const cleanParams = Object.fromEntries(
-      Object.entries(params).filter(([, value]) => value !== undefined)
-    );
+    const cleanParams = Object.fromEntries(Object.entries(params).filter(([, value]) => value !== undefined));
     gtag('event', name, cleanParams);
   } catch {
     // GA must never affect the application.
@@ -44,17 +47,20 @@ export async function trackEvent(event: AnalyticsEvent): Promise<void> {
   if (typeof window === 'undefined') return;
   try {
     const user = auth.currentUser;
-    await addDoc(collection(db, 'analytics_events'), {
+    const payload: Record<string, unknown> = {
       ...event,
-      uid: user?.uid ?? undefined,
-      userEmail: user?.email ?? undefined,
       sessionId: getSessionId(),
       createdAt: serverTimestamp(),
-      clientTimestamp: Date.now()
-    });
+      clientTimestamp: Date.now(),
+    };
+
+    if (user?.uid) payload.uid = user.uid;
+    if (user?.email) payload.userEmail = user.email;
+
+    await addDoc(collection(db, 'analytics_events'), payload);
   } catch (error) {
     // Analytics must never break playback or navigation.
-    console.warn('[Kinoma analytics]', error);
+    console.warn('[Panda.fun analytics]', error);
   }
 }
 
@@ -65,7 +71,7 @@ export function trackPageView(path: string): void {
   trackGAEvent('page_view', {
     page_location: window.location.href,
     page_path: path,
-    page_title: document.title
+    page_title: document.title,
   });
 }
 
@@ -74,17 +80,27 @@ export function trackApiFailure(path: string, status?: number, code?: string): v
   void trackEvent({ type: 'api_failure', path, metadata: { status, code } });
 }
 
+export function trackLogin(method: string): void {
+  trackGAEvent('login', { method });
+  void trackEvent({ type: 'login', metadata: { method } });
+}
+
+export function trackSignUp(method: string): void {
+  trackGAEvent('sign_up', { method });
+  void trackEvent({ type: 'sign_up', metadata: { method } });
+}
+
 export function getSessionId(): string {
-  const key = 'kinoma_analytics_session';
+  const key = 'panda_analytics_session';
   try {
     const existing = sessionStorage.getItem(key);
     if (existing) return existing;
     const value = typeof crypto !== 'undefined' && 'randomUUID' in crypto
       ? crypto.randomUUID()
-      : `${Date.now()}-${Math.random().toString(36).slice(2)}`;
+      : Date.now() + '-' + Math.random().toString(36).slice(2);
     sessionStorage.setItem(key, value);
     return value;
   } catch {
-    return `${Date.now()}`;
+    return String(Date.now());
   }
 }
