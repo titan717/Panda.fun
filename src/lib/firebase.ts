@@ -4,6 +4,7 @@ import {
   GoogleAuthProvider, 
   signInWithPopup, 
   signInWithEmailAndPassword, 
+  sendPasswordResetEmail, 
   createUserWithEmailAndPassword, 
   signOut as fbSignOut, 
   onAuthStateChanged, 
@@ -51,6 +52,7 @@ export async function testFirestoreConnection() {
 export {
   signInWithPopup,
   signInWithEmailAndPassword,
+  sendPasswordResetEmail,
   createUserWithEmailAndPassword,
   fbSignOut,
   onAuthStateChanged,
