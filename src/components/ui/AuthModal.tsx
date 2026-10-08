@@ -11,7 +11,8 @@ export function AuthModal() {
     signInWithGoogle, 
     signInWithEmail, 
     signUpWithEmail,
-    openAuthModal 
+    openAuthModal,
+    sendPasswordReset
   } = useAuth();
 
   const [email, setEmail] = useState('');
@@ -19,6 +20,7 @@ export function AuthModal() {
   const [displayName, setDisplayName] = useState('');
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
+  const [resetSent, setResetSent] = useState(false);
 
   if (!isAuthModalOpen) return null;
 
@@ -27,6 +29,7 @@ export function AuthModal() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError(null);
+    setResetSent(false);
     setLoading(true);
 
     try {
@@ -54,6 +57,10 @@ export function AuthModal() {
         msg = 'Password is too weak. Please use at least 6 characters.';
       } else if (err.code === 'auth/invalid-email') {
         msg = 'Invalid email address.';
+      } else if (err.code === 'auth/too-many-requests') {
+        msg = 'Too many attempts. Please wait a moment and try again.';
+      } else if (err.code === 'auth/network-request-failed') {
+        msg = 'Network error. Check your connection and try again.';
       }
       setError(msg);
     } finally {
@@ -67,7 +74,14 @@ export function AuthModal() {
     try {
       await signInWithGoogle();
     } catch (err: any) {
-      setError(err.message || 'Google Sign-In failed.');
+      if (err.code === 'auth/popup-closed-by-user') return;
+      if (err.code === 'auth/popup-blocked') {
+        setError('Your browser blocked the Google sign-in popup. Please allow popups for Panda.fun and try again.');
+      } else if (err.code === 'auth/network-request-failed') {
+        setError('Network error. Check your connection and try again.');
+      } else {
+        setError(err.message || 'Google Sign-In failed.');
+      }
     } finally {
       setLoading(false);
     }
@@ -218,6 +232,49 @@ export function AuthModal() {
               <span>{isSignUp ? 'Create Account' : 'Sign In'}</span>
             </button>
           </form>
+
+          {!isSignUp && (
+            <div className="mt-4 text-center">
+              <button
+                type="button"
+                disabled={loading}
+                onClick={async () => {
+                  const normalizedEmail = email.trim();
+                  if (!normalizedEmail) {
+                    setError('Enter your email address first.');
+                    return;
+                  }
+                  setError(null);
+                  setResetSent(false);
+                  setLoading(true);
+                  try {
+                    await sendPasswordReset(normalizedEmail);
+                    setResetSent(true);
+                  } catch (err: any) {
+                    if (err.code === 'auth/invalid-email') {
+                      setError('Invalid email address.');
+                    } else if (err.code === 'auth/user-not-found') {
+                      setError('No account was found for that email address.');
+                    } else if (err.code === 'auth/too-many-requests') {
+                      setError('Too many attempts. Please wait a moment and try again.');
+                    } else {
+                      setError(err.message || 'Unable to send the reset email.');
+                    }
+                  } finally {
+                    setLoading(false);
+                  }
+                }}
+                className="text-xs font-semibold text-white/55 hover:text-white transition-colors disabled:opacity-50"
+              >
+                Forgot password?
+              </button>
+              {resetSent && (
+                <p className="mt-2 text-xs text-emerald-300" role="status">
+                  Password reset email sent. Check your inbox.
+                </p>
+              )}
+            </div>
+          )}
 
           {/* Footer toggle */}
           <div className="mt-6 text-center text-xs text-gray-400">
