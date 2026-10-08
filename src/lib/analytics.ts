@@ -20,7 +20,8 @@ export type AnalyticsEventType =
   | 'profile_create'
   | 'profile_select'
   | 'profile_switch'
-  | 'profile_delete';
+  | 'profile_delete'
+  | 'profile_update';
 
 interface AnalyticsEvent {
   type: AnalyticsEventType;
