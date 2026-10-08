@@ -27,6 +27,8 @@ export type AdminMetrics = {
   searchToSelectionRate: number;
   avgWatchSecondsPerSession: number;
   viewsPerSession: number;
+  liveSessions: number;
+  liveUsers: number;
 };
 
 export type AdminMetricKey =
@@ -103,6 +105,10 @@ export function getAdminMetrics(events: AdminEvent[]): AdminMetrics {
     .reduce((sum, event) => sum + Math.max(0, Number(event.durationSeconds) || 0), 0);
   const uniqueUsers = new Set(events.map((event) => event.uid).filter(Boolean)).size;
   const uniqueSessions = new Set(events.map((event) => event.sessionId).filter(Boolean)).size;
+  const liveCutoff = Date.now() - 15 * 60 * 1000;
+  const liveEvents = events.filter((event) => Number(event.clientTimestamp || 0) >= liveCutoff);
+  const liveSessions = new Set(liveEvents.map((event) => event.sessionId).filter(Boolean)).size;
+  const liveUsers = new Set(liveEvents.map((event) => event.uid).filter(Boolean)).size;
 
   return {
     pageViews,
@@ -118,6 +124,8 @@ export function getAdminMetrics(events: AdminEvent[]): AdminMetrics {
     searchToSelectionRate: ratio(contentSelections, searches),
     avgWatchSecondsPerSession: uniqueSessions ? watchSeconds / uniqueSessions : 0,
     viewsPerSession: uniqueSessions ? pageViews / uniqueSessions : 0,
+    liveSessions,
+    liveUsers,
   };
 }
 
