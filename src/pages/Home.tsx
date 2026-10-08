@@ -214,8 +214,15 @@ function HomeProfileGate({
               },
             });
             setProfiles([saved, ...profiles]);
-            setGateState('hidden');
-            onReady();
+            setTransitionProfileId(saved.id);
+            setGateState('leaving');
+            if (selectionTimer.current) window.clearTimeout(selectionTimer.current);
+            selectionTimer.current = window.setTimeout(() => {
+              selectionTimer.current = null;
+              setTransitionProfileId('');
+              setGateState('hidden');
+              onReady();
+            }, 380);
           }}
           onBack={() => setGateState('chooser')}
         />
@@ -490,8 +497,7 @@ function HomeContent() {
   const [error, setError] = useState<string | null>(null);
   const [trailer, setTrailer] = useState<any>(null);
   const [isInList, setIsInList] = useState(false);
-  // Hero trailers autoplay muted so browser autoplay policies do not block playback.
-  const soundEnabled = false;
+  // The featured trailer is intentionally unmuted. The profile choice is the entry interaction before Home mounts.
   const [trailerReady, setTrailerReady] = useState(false);
   const trailerFrameRef = useRef<HTMLIFrameElement | null>(null);
   
