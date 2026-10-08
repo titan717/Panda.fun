@@ -485,7 +485,8 @@ function HomeContent() {
   const [error, setError] = useState<string | null>(null);
   const [trailer, setTrailer] = useState<any>(null);
   const [isInList, setIsInList] = useState(false);
-  const soundEnabled = true;
+  // Hero trailers autoplay muted so browser autoplay policies do not block playback.
+  const soundEnabled = false;
   const [trailerReady, setTrailerReady] = useState(false);
   const trailerFrameRef = useRef<HTMLIFrameElement | null>(null);
   
@@ -608,7 +609,6 @@ function HomeContent() {
 
   return (
     <>
-      <HomeProfileGate />
       <main className="kinoma-home">
       <div className="kinoma-home__ambient" aria-hidden="true">
         <span className="kinoma-home__ambient-orb kinoma-home__ambient-orb--one" />
