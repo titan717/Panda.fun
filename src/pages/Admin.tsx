@@ -173,7 +173,7 @@ function MetricChart({ rows, metric, onMetricChange }: {
       <div className="panda-admin-chart__toolbar">
         <div className="panda-admin-chart__metrics" role="tablist" aria-label="Chart metric">
           {ADMIN_METRICS.map((item) => (
-            <button key={item.key} type="button" role="tab" aria-selected={metric === item.key} className={metric === item.key ? 'is-active' : ''} onClick={() => setMetric(item.key)}>
+            <button key={item.key} type="button" role="tab" aria-selected={metric === item.key} className={metric === item.key ? 'is-active' : ''} onClick={() => onMetricChange(item.key)}>
               {item.label}
             </button>
           ))}
@@ -463,7 +463,7 @@ function SettingsView({ autoRefresh, setAutoRefresh }: { autoRefresh: boolean; s
         <label><div><strong>Auto-refresh</strong><small>Refresh analytics every 60 seconds while the console is open.</small></div><button type="button" className={'panda-admin-toggle ' + (autoRefresh ? 'is-on' : '')} onClick={() => setAutoRefresh(!autoRefresh)} role="switch" aria-checked={autoRefresh}><span /></button></label>
         <div><div><strong>Google Analytics 4</strong><small>Measurement ID used by Panda.fun.</small></div><code>G-9CEEHSHNHJ</code></div>
         <div><div><strong>Operational mirror</strong><small>Firestore collection used by this dashboard.</small></div><code>analytics_events</code></div>
-        <div><div><strong>Admin access</strong><small>Firestore marker at admins/{uid} or a Firebase admin claim.</small></div><code>admin</code></div>
+        <div><div><strong>Admin access</strong><small>Firestore marker at admins/{'{'}uid{'}'} or a Firebase admin claim.</small></div><code>admin</code></div>
       </section>
       <div className="panda-admin-note"><Shield size={15} /><span>Google owns the canonical GA4 reporting interface. This dashboard uses the same GA4 event vocabulary and a Firestore mirror for fast product operations.</span></div>
     </div>
