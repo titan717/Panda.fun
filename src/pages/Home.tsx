@@ -32,7 +32,7 @@ function KindIcon({ kind }: { kind: RailKind }) {
   return <Sparkles size={14} strokeWidth={1.9} />;
 }
 
-function HomeProfileGate() {
+function HomeProfileGate({ onReady }: { onReady: () => void }) {
   const { user, loading } = useAuth();
   const [profiles, setProfiles] = useState<PandaProfile[]>([]);
   const [gateState, setGateState] = useState<'loading' | 'chooser' | 'setup' | 'hidden'>('loading');
@@ -68,7 +68,8 @@ function HomeProfileGate() {
 
     setGateState('hidden');
     setPinProfile(null);
-  }, [user]);
+    onReady();
+  }, [onReady, user]);
 
   const chooseProfile = React.useCallback((profile: PandaProfile, reason: 'auto' | 'manual' = 'manual') => {
     setCountdownEnabled(false);
@@ -89,6 +90,7 @@ function HomeProfileGate() {
       setProfiles([]);
       setPinProfile(null);
       setGateState('hidden');
+      onReady();
       return;
     }
 
@@ -120,7 +122,7 @@ function HomeProfileGate() {
     return () => {
       cancelled = true;
     };
-  }, [loading, user?.uid]);
+  }, [loading, onReady, user?.uid]);
 
   useEffect(() => {
     if (gateState !== 'chooser' || !autoProfileId || !countdownEnabled) return;
@@ -200,6 +202,7 @@ function HomeProfileGate() {
             });
             setProfiles([saved, ...profiles]);
             setGateState('hidden');
+            onReady();
           }}
           onBack={() => setGateState('hidden')}
         />
@@ -460,7 +463,7 @@ function PandaRail({
   );
 }
 
-export function Home() {
+function HomeContent() {
   const [home, setHome] = useState<any>(null);
   const [newOnNetflix, setNewOnNetflix] = useState<MovieApiMedia[]>([]);
   const [newOnDisneyPlus, setNewOnDisneyPlus] = useState<MovieApiMedia[]>([]);
@@ -743,6 +746,17 @@ export function Home() {
         </div>
       </div>
     </main>
+    </>
+  );
+}
+
+export function Home() {
+  const [profileReady, setProfileReady] = useState(false);
+
+  return (
+    <>
+      <HomeProfileGate onReady={() => setProfileReady(true)} />
+      {profileReady && <HomeContent />}
     </>
   );
 }
