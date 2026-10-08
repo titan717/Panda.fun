@@ -60,18 +60,6 @@ export default defineConfig(() => {
                 cacheableResponse: { statuses: [0, 200] },
               },
             },
-            {
-              urlPattern: ({ url }) => url.origin === self.location.origin && url.pathname.startsWith('/api/'),
-              handler: 'StaleWhileRevalidate',
-              options: {
-                cacheName: 'panda-api-v1',
-                expiration: {
-                  maxEntries: 80,
-                  maxAgeSeconds: 60 * 60 * 24,
-                },
-                cacheableResponse: { statuses: [0, 200] },
-              },
-            },
           ],
         },
         devOptions: {
