@@ -5,6 +5,7 @@ import {
   googleProvider, 
   signInWithPopup, 
   signInWithEmailAndPassword, 
+  sendPasswordResetEmail,
   createUserWithEmailAndPassword, 
   fbSignOut, 
   onAuthStateChanged, 
@@ -24,6 +25,7 @@ interface AuthContextType {
   closeAuthModal: () => void;
   signInWithGoogle: () => Promise<void>;
   signInWithEmail: (email: string, pass: string) => Promise<void>;
+  sendPasswordReset: (email: string) => Promise<void>;
   signUpWithEmail: (email: string, pass: string, name?: string) => Promise<void>;
   signOut: () => Promise<void>;
 }
@@ -107,6 +109,15 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     }
   };
 
+  const sendPasswordReset = async (email: string) => {
+    try {
+      await sendPasswordResetEmail(auth, email.trim());
+    } catch (err: any) {
+      console.error("Password reset error:", err);
+      throw err;
+    }
+  };
+
   const signUpWithEmail = async (email: string, pass: string, name?: string) => {
     try {
       const cred = await createUserWithEmailAndPassword(auth, email, pass);
@@ -150,6 +161,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         closeAuthModal,
         signInWithGoogle,
         signInWithEmail,
+        sendPasswordReset,
         signUpWithEmail,
         signOut
       }}
