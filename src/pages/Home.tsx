@@ -694,7 +694,7 @@ function HomeContent({
         {/* PRESERVED HERO/TRAILER — intentionally unchanged */}
         <section className="kinoma-home-hero kinoma-home-hero--trailer" aria-labelledby="kinoma-home-title">
           <div className="kinoma-home-hero__trailer-bg" aria-label={featured?.title ? featured.title + ' trailer' : 'Featured trailer'}>
-            {featured?.backdrop && <img src={featured.backdrop} alt="" className="kinoma-home-hero__banner-image kinoma-home-hero__banner-image--underlay" loading="eager" fetchPriority="high" decoding="async" />}
+            {featured?.backdrop && <img src={featuredBackdrop || featured.backdrop} alt="" className="kinoma-home-hero__banner-image kinoma-home-hero__banner-image--underlay" loading="eager" fetchPriority="high" decoding="async" />}
             {trailer?.trailer?.embedUrl ? (
               <iframe ref={trailerFrameRef} src={trailerSrc(trailer.trailer.embedUrl)} title={featured?.title ? featured.title + ' trailer' : 'Featured trailer'} className={`kinoma-home-hero__trailer-video${trailerReady ? ' is-ready' : ''}`} onLoad={() => setTrailerReady(true)} allow="autoplay; encrypted-media; picture-in-picture" allowFullScreen loading="eager" />
             ) : featured?.backdrop ? (
@@ -748,6 +748,10 @@ function HomeContent({
                                   className="panda-home-top10__poster"
                                   src={(optimizeImageUrl((item.poster || item.backdrop) as string, 'w342') || (item.poster || item.backdrop)) as string}
                                   alt=""
+                                  onError={(event) => {
+                                    const original = (item.poster || item.backdrop) as string;
+                                    if (event.currentTarget.src !== original) event.currentTarget.src = original;
+                                  }}
                                   loading={index < 3 ? 'eager' : 'lazy'}
                                   fetchPriority={index < 3 ? 'high' : 'auto'}
                                   decoding="async"
