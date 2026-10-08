@@ -10,7 +10,7 @@
   min-height: 100dvh;
   overflow: hidden;
   color: #f7f3ef;
-  background: #000;
+  background: #05070a;
 }
 
 .panda-profile-selector__ambient,
@@ -49,48 +49,41 @@
 }
 
 .panda-profile-selector__inner {
+  width: min(100%, 820px);
   min-height: 100dvh;
-  display: grid;
-  place-items: center;
-  align-content: center;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding-top: 14px;
   text-align: center;
 }
 
-.panda-profile-selector__inner > h1,
-.panda-profile-flow__copy h1,
-.panda-profile-manage__inner > h1 {
-  margin: 13px 0 8px;
-  color: #fff;
-  font-size: clamp(40px, 6vw, 64px);
-  line-height: .9;
-  letter-spacing: -.07em;
-  font-weight: 900;
-}
-
-.panda-profile-selector__inner > p,
-.panda-profile-manage__inner > p {
-  margin: 0 auto;
-  max-width: 470px;
-  color: rgba(247,243,239,.38);
-  font-size: 12px;
-  line-height: 1.65;
+.panda-profile-selector__inner > h1 {
+  margin: 0;
+  color: rgba(255,255,255,.98);
+  font-size: clamp(32px, 4.2vw, 42px);
+  line-height: 1;
+  letter-spacing: -.055em;
+  font-weight: 760;
 }
 
 .panda-profile-selector__grid {
-  width: min(100%, 760px);
+  width: min(100%, 700px);
   display: flex;
   flex-wrap: wrap;
+  align-items: flex-start;
   justify-content: center;
-  gap: 24px 26px;
-  margin-top: 46px;
+  gap: 24px;
+  margin-top: 48px;
 }
 
 .panda-profile-tile {
-  width: 126px;
-  min-width: 112px;
+  width: 128px;
+  min-width: 96px;
   display: grid;
   justify-items: center;
-  gap: 9px;
+  gap: 12px;
   border: 0;
   padding: 0;
   color: inherit;
@@ -100,7 +93,7 @@
 }
 
 .panda-profile-tile > span:nth-child(2) {
-  max-width: 126px;
+  max-width: 128px;
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
@@ -109,10 +102,7 @@
   font-weight: 700;
 }
 
-.panda-profile-tile > small {
-  color: rgba(247,243,239,.25);
-  font-size: 8px;
-}
+
 
 .panda-profile-avatar {
   position: relative;
@@ -130,7 +120,7 @@
 
 .panda-profile-avatar--sm { width: 30px; height: 30px; font-size: 16px; }
 .panda-profile-avatar--md { width: 64px; height: 64px; font-size: 31px; }
-.panda-profile-avatar--lg { width: 100px; height: 100px; font-size: 48px; }
+.panda-profile-avatar--lg { width: 128px; height: 128px; font-size: 58px; }
 
 .panda-profile-avatar.is-interactive {
   border-color: rgba(247,243,239,.12);
@@ -158,8 +148,8 @@
 }
 
 .panda-profile-add-avatar {
-  width: 100px;
-  height: 100px;
+  width: 128px;
+  height: 128px;
   display: grid;
   place-items: center;
   border: 1px dashed rgba(247,243,239,.15);
@@ -180,23 +170,23 @@
   align-items: center;
   justify-content: center;
   gap: 10px;
-  margin-top: 45px;
+  margin-top: 48px;
 }
 
 .panda-profile-selector__footer button,
 .panda-profile-selector__footer a {
   display: inline-flex;
   align-items: center;
-  gap: 7px;
-  min-height: 39px;
-  padding: 0 14px;
-  border: 1px solid rgba(247,243,239,.09);
+  justify-content: center;
+  min-height: 40px;
+  padding: 0 24px;
+  border: 1px solid rgba(255,255,255,.08);
   border-radius: 999px;
-  color: rgba(247,243,239,.48);
+  color: rgba(247,243,239,.56);
   background: rgba(255,255,255,.02);
   font: inherit;
-  font-size: 9px;
-  font-weight: 800;
+  font-size: 12px;
+  font-weight: 520;
   text-decoration: none;
   cursor: pointer;
   transition: color .18s ease, border-color .18s ease, background .18s ease;
@@ -1320,27 +1310,31 @@
     padding: 28px 14px 50px;
   }
 
-  .panda-profile-selector__inner > h1,
-  .panda-profile-flow__copy h1,
-  .panda-profile-manage__inner > h1 {
-    font-size: 39px;
+  .panda-profile-selector__inner {
+    padding-top: 8px;
+  }
+
+  .panda-profile-selector__inner > h1 {
+    font-size: 32px;
   }
 
   .panda-profile-selector__grid {
-    gap: 20px 14px;
-    margin-top: 37px;
+    width: 100%;
+    gap: 22px 12px;
+    margin-top: 36px;
   }
 
   .panda-profile-tile {
     width: 96px;
-    min-width: 88px;
+    min-width: 84px;
+    gap: 10px;
   }
 
   .panda-profile-avatar--lg,
   .panda-profile-add-avatar {
-    width: 82px;
-    height: 82px;
-    font-size: 39px;
+    width: 96px;
+    height: 96px;
+    font-size: 43px;
   }
 
   .panda-profile-avatar__lock {
