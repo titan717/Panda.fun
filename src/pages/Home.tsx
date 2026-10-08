@@ -234,11 +234,9 @@ function HomeProfileGate({
         <ProfileSetup
           defaultName={defaultName}
           initialProfile={null}
-          onComplete={async (profile) => {
-            const saved = await saveProfile(user.uid, {
-              ...profile,
-              id: profile.id,
-            });
+          onComplete={(profile) => {
+            const saved = profile;
+            void saveProfile(user.uid, saved).catch(() => undefined);
             initializeProfileStorage(user.uid, saved.id, profiles.length === 0, [
               'kinoma_history',
               'kinoma_watchlist',
