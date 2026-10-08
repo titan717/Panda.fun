@@ -56,7 +56,7 @@ function AnimatedRoutes() {
 
   if (location === '/') return <Landing />;
   if (location === '/admin') return <Admin />;
-  if (location === '/profile') return <Profile />;
+  if (location.startsWith('/profile')) return <Profile />;
 
   return (
     <Layout>
