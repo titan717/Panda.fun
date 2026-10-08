@@ -1,8 +1,9 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import { AnimatePresence, motion } from 'motion/react';
 import {
-  ArrowLeft, ArrowRight, Check, Edit3, History, Library, Lock, LogIn, LogOut,
-  Mail, Plus, Settings, ShieldCheck, Sparkles, Trash2, UserRound, X
+  ArrowLeft, ArrowRight, Check, Compass, Drama, Edit3, Fingerprint, Ghost, History,
+  Heart, Library, Laugh, Lock, LogIn, LogOut, Mail, Plus, Rocket, Search,
+  Settings, ShieldCheck, Sparkles, Trash2, UserRound, X, Zap
 } from 'lucide-react';
 import { Link } from 'wouter';
 import { useAuth } from '../lib/AuthContext';
@@ -31,10 +32,6 @@ import { initializeProfileStorage } from '../lib/profileScope';
 import '../styles/panda-profile.css';
 
 type SetupStep = 1 | 2 | 3 | 4 | 5;
-
-const PROFILE_ICON_MAP: Record<string, string> = Object.fromEntries(
-  PROFILE_AVATARS.map((avatar) => [avatar.id, avatar.emoji])
-);
 
 function ProfileAvatar({
   profile,
@@ -70,6 +67,35 @@ function ProgressDots({ step }: { step: SetupStep }) {
       ))}
     </div>
   );
+}
+
+function GenreIcon({ genre }: { genre: string }) {
+  switch (genre) {
+    case 'Comedy':
+      return <Laugh size={15} strokeWidth={1.75} aria-hidden="true" />;
+    case 'Action':
+    case 'Action & Adventure':
+      return <Zap size={15} strokeWidth={1.75} aria-hidden="true" />;
+    case 'Drama':
+      return <Drama size={15} strokeWidth={1.75} aria-hidden="true" />;
+    case 'Horror':
+      return <Ghost size={15} strokeWidth={1.75} aria-hidden="true" />;
+    case 'Romance':
+      return <Heart size={15} strokeWidth={1.75} aria-hidden="true" />;
+    case 'Adventure':
+      return <Compass size={15} strokeWidth={1.75} aria-hidden="true" />;
+    case 'Science Fiction':
+    case 'Sci-Fi & Fantasy':
+    case 'Fantasy':
+      return <Rocket size={15} strokeWidth={1.75} aria-hidden="true" />;
+    case 'Mystery':
+      return <Search size={15} strokeWidth={1.75} aria-hidden="true" />;
+    case 'Thriller':
+    case 'Crime':
+      return <Fingerprint size={15} strokeWidth={1.75} aria-hidden="true" />;
+    default:
+      return <Sparkles size={15} strokeWidth={1.75} aria-hidden="true" />;
+  }
 }
 
 function ChoiceButton({
@@ -123,7 +149,7 @@ function ProfileSetup({
     step === 1
       ? 'Create your profile'
       : step === 2
-        ? 'Choose your avatar'
+        ? 'Choose your look'
         : step === 3
           ? 'Lock it with a PIN?'
           : step === 4
@@ -134,7 +160,7 @@ function ProfileSetup({
     step === 1
       ? "Give it a name — this is who's watching"
       : step === 2
-        ? 'Pick a look that feels like you.'
+        ? 'Pick an avatar that feels like this profile'
         : step === 3
           ? 'Only someone with this 4-digit PIN can use the profile. Leave it empty to skip — you can add one later.'
           : step === 4
@@ -257,34 +283,49 @@ function ProfileSetup({
 
             {step === 1 && (
               <label className="panda-profile-name-field">
-                <span>Profile name</span>
+                <span className="sr-only">Profile name</span>
                 <input
                   value={name}
                   maxLength={20}
                   onChange={(event) => setName(event.target.value)}
                   autoFocus
                   placeholder="Profile name"
+                  aria-label="Profile name"
                 />
               </label>
             )}
 
             {step === 2 && (
-              <div className="panda-profile-avatar-grid">
-                {PROFILE_AVATARS.map((item) => {
-                  const selected = avatar === item.id;
-                  return (
-                    <button
-                      key={item.id}
-                      type="button"
-                      className={'panda-profile-avatar-choice' + (selected ? ' is-selected' : '')}
-                      onClick={() => setAvatar(item.id)}
-                      aria-label={item.label}
-                    >
-                      <span>{item.emoji}</span>
-                      {selected && <i><Check size={13} /></i>}
-                    </button>
-                  );
-                })}
+              <div className="panda-profile-avatar-browser">
+                <h3>Classics</h3>
+                <div className="panda-profile-avatar-grid">
+                  {PROFILE_AVATARS.map((item) => {
+                    const selected = avatar === item.id;
+                    const avatarId = item.id === 'panda' || item.id === 'fox' || item.id === 'cat'
+                      || item.id === 'bear' || item.id === 'koala' || item.id === 'rabbit'
+                      || item.id === 'tiger' || item.id === 'dog'
+                      ? item.id
+                      : 'panda';
+                    return (
+                      <button
+                        key={item.id}
+                        type="button"
+                        className={'panda-profile-avatar-choice' + (selected ? ' is-selected' : '')}
+                        onClick={() => setAvatar(item.id)}
+                        aria-label={item.label}
+                        aria-pressed={selected}
+                      >
+                        <img
+                          src={'/profile-avatars/' + avatarId + '.svg'}
+                          alt=""
+                          draggable={false}
+                          aria-hidden="true"
+                        />
+                        {selected && <i><Check size={13} /></i>}
+                      </button>
+                    );
+                  })}
+                </div>
               </div>
             )}
 
@@ -292,7 +333,13 @@ function ProfileSetup({
               <div className="panda-profile-pin-wrap">
                 <div className="panda-profile-pin">
                   {[0, 1, 2, 3].map((index) => (
-                    <span key={index} className={pin[index] ? 'is-filled' : ''}>
+                    <span
+                      key={index}
+                      className={[
+                        pin[index] ? 'is-filled' : '',
+                        index === pin.length && pin.length < 4 ? 'is-current' : '',
+                      ].filter(Boolean).join(' ')}
+                    >
                       {pin[index] ? '•' : ''}
                     </span>
                   ))}
@@ -369,25 +416,14 @@ function ProfileSetup({
             {error && <div className="panda-profile-flow__error">{error}</div>}
 
             <div className="panda-profile-flow__actions">
-              <button
-                type="button"
-                className="panda-profile-flow__button panda-profile-flow__button--ghost"
-                onClick={back}
-                disabled={saving}
-              >
-                <ArrowLeft size={15} /> Back
-              </button>
-
-              {step === 3 && !initialProfile?.pinHash && (
+              {(step > 1 || Boolean(initialProfile)) && (
                 <button
                   type="button"
-                  className="panda-profile-flow__skip"
-                  onClick={() => {
-                    setPin('');
-                    setStep(4);
-                  }}
+                  className="panda-profile-flow__button panda-profile-flow__button--ghost"
+                  onClick={back}
+                  disabled={saving}
                 >
-                  Skip
+                  <ArrowLeft size={15} /> Back
                 </button>
               )}
 
@@ -406,7 +442,13 @@ function ProfileSetup({
                 type="button"
                 className="panda-profile-flow__button panda-profile-flow__button--primary"
                 onClick={() => void next()}
-                disabled={saving || (step === 3 && pin.length > 0 && pin.length < 4)}
+                disabled={
+                  saving ||
+                  (step === 1 && !name.trim()) ||
+                  (step === 3 && pin.length > 0 && pin.length < 4) ||
+                  (step === 4 && movieGenres.length === 0) ||
+                  (step === 5 && seriesGenres.length === 0)
+                }
               >
                 {saving && <span className="panda-profile-spinner" />}
                 {!saving && step === 5 && 'Start watching'}
