@@ -846,6 +846,8 @@ export function Profile() {
     ]);
     setActiveProfile(saved);
     setActiveProfileId(user.uid, saved.id);
+    void historyUtil.syncFromFirestore(user.uid);
+    void libraryManager.syncFromFirestore(user.uid);
     setEditingProfile(null);
     void trackEvent({
       type: 'profile_create',
@@ -876,6 +878,8 @@ export function Profile() {
     ]);
     setActiveProfile(profile);
     setActiveProfileId(user.uid, profile.id);
+    void historyUtil.syncFromFirestore(user.uid);
+    void libraryManager.syncFromFirestore(user.uid);
     void trackEvent({ type: 'profile_select', metadata: { profileId: profile.id, locked: false } });
     setView('dashboard');
   };
@@ -894,6 +898,8 @@ export function Profile() {
     ]);
     setActiveProfile(pinProfile);
     setActiveProfileId(user.uid, pinProfile.id);
+    void historyUtil.syncFromFirestore(user.uid);
+    void libraryManager.syncFromFirestore(user.uid);
     void trackEvent({
       type: 'profile_select',
       metadata: { profileId: pinProfile.id, locked: true, pinUnlocked: true },
