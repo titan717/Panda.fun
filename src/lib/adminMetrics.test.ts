@@ -68,7 +68,7 @@ describe('admin metrics', () => {
     expect(getMetricValue(daily.at(-1)!, 'watchSeconds')).toBe(90);
   });
 
-  it('ranks content using opens first and watch time as a tie breaker', () => {
+  it('ranks content using watch time first and opens as a tie breaker', () => {
     const rankingEvents: AdminEvent[] = [
       { id: '1', type: 'watch_start', animeId: 'a', animeTitle: 'Alpha', durationSeconds: 0 },
       { id: '2', type: 'watch_progress', animeId: 'a', animeTitle: 'Alpha', durationSeconds: 10 },
