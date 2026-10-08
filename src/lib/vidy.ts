@@ -1,6 +1,6 @@
 export type VidyMediaType = 'movie' | 'tv';
 
-const VIDY_BASE_URL = 'https://www.vidy.st';
+export const VIDY_BASE_URL = 'https://www.vidy.st';
 
 export function buildVidyUrl(
   tmdbId: number,
