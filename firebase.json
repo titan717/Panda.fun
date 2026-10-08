@@ -4,7 +4,11 @@
     "providers": {
       "emailPassword": true,
       "googleSignIn": {
-        "oAuthBrandDisplayName": "Panda.fun"
+        "oAuthBrandDisplayName": "Panda.fun",
+        "authorizedRedirectUris": [
+          "https://kinoma.onrender.com",
+          "http://localhost:5173"
+        ]
       }
     }
   },
