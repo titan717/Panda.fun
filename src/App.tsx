@@ -1,4 +1,4 @@
-import React, { lazy, Suspense, useEffect, useState, Component } from 'react';
+import React, { lazy, Suspense, useEffect, useState } from 'react';
 import { Route, Switch, useLocation } from 'wouter';
 import { AnimatePresence, motion } from 'motion/react';
 import { SWRConfig } from 'swr';
@@ -106,13 +106,18 @@ function AnimatedRoutes() {
   );
 }
 
-class AppErrorBoundary extends Component<{ children: React.ReactNode }, { hasError: boolean }> {
+class AppErrorBoundary extends React.Component<{ children: React.ReactNode; resetKey?: string }, { hasError: boolean }> {
   constructor(props: { children: React.ReactNode }) {
     super(props);
     this.state = { hasError: false };
   }
   static getDerivedStateFromError() { return { hasError: true }; }
   componentDidCatch(error: unknown) { console.error('[Panda.fun] App render error:', error); }
+  componentDidUpdate(prevProps: { children: React.ReactNode; resetKey?: string }) {
+    if (this.state.hasError && prevProps.resetKey !== this.props.resetKey) {
+      this.setState({ hasError: false });
+    }
+  }
   render() {
     if (!this.state.hasError) return this.props.children;
     return (
@@ -140,7 +145,7 @@ function MainAppShell() {
     return <PandaIntro onComplete={() => setShowIntro(false)} />;
   }
 
-  return <AppErrorBoundary key={location}><AnimatedRoutes /></AppErrorBoundary>;
+  return <AppErrorBoundary resetKey={location}><AnimatedRoutes /></AppErrorBoundary>;
 }
 
 export default function App() {
