@@ -1,0 +1,578 @@
+:root {
+  --panda-auth-bg: #0a0909;
+  --panda-auth-panel: #11100f;
+  --panda-auth-line: rgba(246,242,238,.09);
+  --panda-auth-text: #f6f2ee;
+  --panda-auth-muted: rgba(246,242,238,.5);
+  --panda-auth-faint: rgba(246,242,238,.31);
+  --panda-auth-red: #b84d41;
+  --panda-auth-red-soft: rgba(184,77,65,.13);
+  --panda-auth-warm: #d8b08f;
+}
+
+.panda-auth {
+  position: fixed;
+  inset: 0;
+  z-index: var(--z-modal, 60);
+  display: grid;
+  place-items: center;
+  padding: 18px;
+}
+
+.panda-auth__backdrop {
+  position: absolute;
+  inset: 0;
+  background: rgba(0,0,0,.78);
+  backdrop-filter: blur(14px);
+}
+
+.panda-auth__dialog {
+  position: relative;
+  width: min(940px, 100%);
+  min-height: 590px;
+  display: grid;
+  grid-template-columns: .82fr 1.18fr;
+  overflow: hidden;
+  border: 1px solid rgba(246,242,238,.11);
+  border-radius: 26px;
+  background: #0f0e0e;
+  box-shadow: 0 35px 120px rgba(0,0,0,.7), 0 0 0 1px rgba(255,255,255,.015);
+}
+
+.panda-auth__art {
+  position: relative;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  padding: 34px 30px 28px;
+  background:
+    radial-gradient(circle at 22% 18%, rgba(193,147,95,.22), transparent 19rem),
+    radial-gradient(circle at 84% 82%, rgba(184,77,65,.19), transparent 17rem),
+    linear-gradient(145deg, #1a1412, #0a0909 72%);
+}
+
+.panda-auth__art::before,
+.panda-auth__art::after {
+  content: "";
+  position: absolute;
+  border: 1px solid rgba(246,242,238,.05);
+  border-radius: 50%;
+  pointer-events: none;
+}
+
+.panda-auth__art::before {
+  width: 440px;
+  height: 440px;
+  left: -245px;
+  top: 110px;
+}
+
+.panda-auth__art::after {
+  width: 260px;
+  height: 260px;
+  right: -150px;
+  bottom: 90px;
+}
+
+.panda-auth__glow {
+  position: absolute;
+  border-radius: 50%;
+  filter: blur(40px);
+  pointer-events: none;
+}
+
+.panda-auth__glow--one {
+  width: 180px;
+  height: 180px;
+  top: -70px;
+  right: 18px;
+  background: rgba(216,176,143,.12);
+}
+
+.panda-auth__glow--two {
+  width: 150px;
+  height: 150px;
+  left: 18%;
+  bottom: -70px;
+  background: rgba(184,77,65,.18);
+}
+
+.panda-auth__art-mark {
+  position: relative;
+  z-index: 1;
+  width: 57px;
+  height: 57px;
+  display: grid;
+  place-items: center;
+  border: 1px solid rgba(246,242,238,.12);
+  border-radius: 17px;
+  background: rgba(255,255,255,.045);
+  font-size: 26px;
+  box-shadow: 0 14px 34px rgba(0,0,0,.24);
+}
+
+.panda-auth__art-copy,
+.panda-auth__art-meta,
+.panda-auth__art-line {
+  position: relative;
+  z-index: 1;
+}
+
+.panda-auth__art-copy span,
+.panda-auth__art-meta span {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+}
+
+.panda-auth__art-copy span {
+  color: rgba(246,242,238,.46);
+  font-size: 8px;
+  font-weight: 900;
+  letter-spacing: .2em;
+}
+
+.panda-auth__art-copy strong {
+  display: block;
+  margin-top: 11px;
+  color: #fffaf6;
+  font-size: clamp(28px, 3vw, 43px);
+  line-height: .93;
+  letter-spacing: -.055em;
+  font-weight: 900;
+}
+
+.panda-auth__art-line {
+  width: 58px;
+  height: 3px;
+  margin-top: 25px;
+  border-radius: 99px;
+  background: var(--panda-auth-red);
+}
+
+.panda-auth__art-meta span {
+  color: rgba(246,242,238,.67);
+  font-size: 9px;
+  font-weight: 800;
+}
+
+.panda-auth__art-meta small {
+  display: block;
+  margin-top: 7px;
+  color: rgba(246,242,238,.34);
+  font-size: 9px;
+}
+
+.panda-auth__form-side {
+  position: relative;
+  min-width: 0;
+  padding: 41px clamp(25px, 5vw, 58px) 29px;
+  background: #11100f;
+}
+
+.panda-auth__close {
+  position: absolute;
+  top: 17px;
+  right: 17px;
+  width: 35px;
+  height: 35px;
+  display: grid;
+  place-items: center;
+  border: 1px solid var(--panda-auth-line);
+  border-radius: 10px;
+  color: var(--panda-auth-muted);
+  background: rgba(255,255,255,.03);
+  cursor: pointer;
+  transition: color .18s ease, background .18s ease, transform .18s ease;
+}
+
+.panda-auth__close:hover {
+  color: #fff;
+  background: rgba(255,255,255,.07);
+  transform: rotate(2deg);
+}
+
+.panda-auth__heading {
+  max-width: 520px;
+}
+
+.panda-auth__eyebrow {
+  color: var(--panda-auth-red);
+  font-size: 8px;
+  font-weight: 900;
+  letter-spacing: .2em;
+}
+
+.panda-auth__heading h2 {
+  margin: 8px 40px 8px 0;
+  color: #fffaf6;
+  font-size: clamp(25px, 3vw, 35px);
+  line-height: 1.02;
+  letter-spacing: -.045em;
+  font-weight: 850;
+}
+
+.panda-auth__heading p {
+  max-width: 480px;
+  color: var(--panda-auth-muted);
+  font-size: 11px;
+  line-height: 1.65;
+}
+
+.panda-auth__notice {
+  display: flex;
+  gap: 9px;
+  align-items: flex-start;
+  margin-top: 17px;
+  padding: 10px 11px;
+  border-radius: 10px;
+  font-size: 10px;
+  line-height: 1.45;
+}
+
+.panda-auth__notice svg {
+  flex: 0 0 auto;
+  margin-top: 1px;
+}
+
+.panda-auth__notice--error {
+  color: #ffc0ba;
+  border: 1px solid rgba(255,105,94,.22);
+  background: rgba(184,77,65,.08);
+}
+
+.panda-auth__notice--success {
+  color: #b6e7bf;
+  border: 1px solid rgba(104,199,125,.2);
+  background: rgba(104,199,125,.07);
+}
+
+.panda-auth__google,
+.panda-auth__primary {
+  width: 100%;
+  min-height: 47px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 9px;
+  border-radius: 12px;
+  font: inherit;
+  font-size: 11px;
+  font-weight: 850;
+  cursor: pointer;
+  transition: transform .18s ease, background .18s ease, border-color .18s ease, opacity .18s ease;
+}
+
+.panda-auth__google {
+  position: relative;
+  margin-top: 22px;
+  border: 1px solid rgba(246,242,238,.11);
+  color: #fff;
+  background: #191817;
+}
+
+.panda-auth__google svg:last-child {
+  position: absolute;
+  right: 14px;
+  opacity: .48;
+}
+
+.panda-auth__google:hover {
+  background: #201f1d;
+  border-color: rgba(246,242,238,.18);
+}
+
+.panda-auth__primary {
+  border: 1px solid rgba(184,77,65,.48);
+  color: #fff;
+  background: var(--panda-auth-red);
+  box-shadow: 0 12px 32px rgba(184,77,65,.15);
+}
+
+.panda-auth__primary:hover {
+  background: #c45a4e;
+}
+
+.panda-auth__google:active,
+.panda-auth__primary:active {
+  transform: translateY(1px);
+}
+
+.panda-auth__google:disabled,
+.panda-auth__primary:disabled {
+  opacity: .48;
+  cursor: not-allowed;
+  transform: none;
+}
+
+.panda-auth__divider {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin: 20px 0 16px;
+  color: var(--panda-auth-faint);
+  font-size: 8px;
+  font-weight: 800;
+  letter-spacing: .12em;
+  text-transform: uppercase;
+}
+
+.panda-auth__divider::before,
+.panda-auth__divider::after {
+  content: "";
+  height: 1px;
+  flex: 1;
+  background: var(--panda-auth-line);
+}
+
+.panda-auth__fields {
+  display: grid;
+  gap: 12px;
+}
+
+.panda-auth__field {
+  display: block;
+}
+
+.panda-auth__field > span {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  margin-bottom: 6px;
+  color: rgba(246,242,238,.73);
+  font-size: 9px;
+  font-weight: 800;
+}
+
+.panda-auth__field em {
+  color: var(--panda-auth-faint);
+  font-style: normal;
+  font-weight: 600;
+}
+
+.panda-auth__field > div {
+  position: relative;
+}
+
+.panda-auth__field > div > svg {
+  position: absolute;
+  left: 12px;
+  top: 50%;
+  transform: translateY(-50%);
+  color: var(--panda-auth-faint);
+  pointer-events: none;
+}
+
+.panda-auth__field input {
+  width: 100%;
+  min-height: 44px;
+  padding: 0 41px 0 36px;
+  border: 1px solid rgba(246,242,238,.09);
+  border-radius: 11px;
+  outline: none;
+  color: #fff;
+  background: rgba(255,255,255,.035);
+  font-size: 11px;
+  transition: border-color .18s ease, background .18s ease, box-shadow .18s ease;
+}
+
+.panda-auth__field input::placeholder {
+  color: rgba(246,242,238,.22);
+}
+
+.panda-auth__field input:focus {
+  border-color: rgba(184,77,65,.52);
+  background: rgba(255,255,255,.045);
+  box-shadow: 0 0 0 3px rgba(184,77,65,.08);
+}
+
+.panda-auth__field button {
+  position: absolute;
+  top: 50%;
+  right: 6px;
+  width: 32px;
+  height: 32px;
+  display: grid;
+  place-items: center;
+  transform: translateY(-50%);
+  border: 0;
+  border-radius: 8px;
+  color: var(--panda-auth-faint);
+  background: transparent;
+  cursor: pointer;
+}
+
+.panda-auth__field button:hover {
+  color: #fff;
+  background: rgba(255,255,255,.06);
+}
+
+.panda-auth__strength {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-top: -3px;
+}
+
+.panda-auth__strength > div {
+  display: flex;
+  gap: 4px;
+}
+
+.panda-auth__strength span {
+  width: 24px;
+  height: 3px;
+  border-radius: 99px;
+  background: rgba(255,255,255,.1);
+}
+
+.panda-auth__strength span.is-on {
+  background: var(--panda-auth-red);
+}
+
+.panda-auth__strength small {
+  color: var(--panda-auth-faint);
+  font-size: 8px;
+}
+
+.panda-auth__forgot,
+.panda-auth__text-button {
+  display: block;
+  margin: 12px auto 0;
+  padding: 0;
+  border: 0;
+  color: var(--panda-auth-muted);
+  background: transparent;
+  font: inherit;
+  font-size: 9px;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.panda-auth__forgot:hover,
+.panda-auth__text-button:hover {
+  color: #fff;
+}
+
+.panda-auth__switch {
+  margin-top: 19px;
+  color: var(--panda-auth-faint);
+  font-size: 9px;
+  text-align: center;
+}
+
+.panda-auth__switch button {
+  padding: 0;
+  border: 0;
+  color: var(--panda-auth-warm);
+  background: transparent;
+  font: inherit;
+  font-weight: 850;
+  cursor: pointer;
+}
+
+.panda-auth__switch button:hover {
+  color: #fff;
+}
+
+.panda-auth__privacy {
+  margin-top: 18px;
+  color: rgba(246,242,238,.24);
+  font-size: 8px;
+  line-height: 1.55;
+  text-align: center;
+}
+
+.panda-auth__privacy a {
+  color: rgba(246,242,238,.47);
+  text-decoration: none;
+}
+
+.panda-auth__privacy a:hover {
+  color: #fff;
+}
+
+.panda-auth__reset {
+  display: grid;
+  gap: 12px;
+  margin-top: 21px;
+}
+
+@media (max-width: 760px) {
+  .panda-auth {
+    padding: 9px;
+  }
+
+  .panda-auth__dialog {
+    min-height: 0;
+    grid-template-columns: 1fr;
+    max-height: calc(100dvh - 18px);
+    overflow-y: auto;
+    border-radius: 20px;
+  }
+
+  .panda-auth__art {
+    min-height: 155px;
+    padding: 18px 19px;
+  }
+
+  .panda-auth__art-mark {
+    width: 42px;
+    height: 42px;
+    flex-basis: 42px;
+    border-radius: 13px;
+    font-size: 20px;
+  }
+
+  .panda-auth__art-copy strong {
+    margin-top: 7px;
+    font-size: 25px;
+  }
+
+  .panda-auth__art-line {
+    margin-top: 13px;
+  }
+
+  .panda-auth__form-side {
+    padding: 28px 18px 22px;
+  }
+
+  .panda-auth__heading h2 {
+    margin-right: 25px;
+    font-size: 25px;
+  }
+
+  .panda-auth__google {
+    margin-top: 18px;
+  }
+}
+
+@media (max-width: 430px) {
+  .panda-auth__art {
+    min-height: 134px;
+  }
+
+  .panda-auth__art-meta {
+    display: none;
+  }
+
+  .panda-auth__heading p {
+    font-size: 10px;
+  }
+
+  .panda-auth__field input,
+  .panda-auth__google,
+  .panda-auth__primary {
+    min-height: 46px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .panda-auth *,
+  .panda-auth *::before,
+  .panda-auth *::after {
+    transition: none !important;
+    animation: none !important;
+  }
+}
