@@ -10,7 +10,8 @@
     "preview": "vite preview",
     "clean": "rm -rf dist server.js",
     "lint": "tsc --noEmit",
-    "test": "vitest run"
+    "test": "vitest run",
+    "auth:set-admin": "node scripts/set-firebase-admin.mjs"
   },
   "dependencies": {
     "@consumet/extensions": "^1.8.8",
@@ -25,7 +26,6 @@
     "idb-keyval": "^6.3.0",
     "lucide-react": "^0.546.0",
     "motion": "^12.23.24",
-    "node-cache": "^5.1.2",
     "react": "^19.0.1",
     "react-dom": "^19.0.1",
     "react-window": "^2.3.2",
@@ -45,6 +45,7 @@
     "tsx": "^4.21.0",
     "typescript": "~5.8.2",
     "vite-plugin-pwa": "^1.3.0",
-    "vitest": "^3.2.4"
+    "vitest": "^3.2.4",
+    "firebase-admin": "^14.5.0"
   }
-}
+}\n
