@@ -26,7 +26,7 @@ android {
     signingConfigs {
         release {
             if (System.getenv("KINOMA_KEYSTORE_BASE64") != null) {
-                storeFile file("${rootProject.projectDir}/keystore/kinoma-release.keystore")
+                storeFile file("${rootProject.projectDir}/keystore/panda-release.keystore")
                 storePassword System.getenv("KINOMA_KEYSTORE_PASSWORD")
                 keyAlias System.getenv("KINOMA_KEY_ALIAS")
                 keyPassword System.getenv("KINOMA_KEY_PASSWORD")
