@@ -2,7 +2,7 @@
 set -e
 
 echo "=================================================="
-echo " Starting Kinoma Android TV Release APK Build"
+echo " Starting Panda.fun Android TV Release APK Build"
 echo "=================================================="
 
 # Create output directories if they don't exist
@@ -20,29 +20,25 @@ if [ -f "android/gradlew" ]; then
   echo "Found Gradle wrapper. Running assembleDebug and assembleRelease..."
   cd android
   chmod +x gradlew
-  ./gradlew clean assembleDebug assembleRelease || echo "Gradle build simulation completed."
+  ./gradlew clean assembleDebug assembleRelease
   cd ..
 else
-  echo "Gradle wrapper not found locally. Preparing release APK container package..."
+  echo "Gradle wrapper not found. Cannot build a real Android TV APK."
+  exit 1
 fi
 
-# Ensure release APK exists and is properly populated
-APK_PATH="android/app/build/outputs/apk/release/Kinoma.apk"
-DEBUG_APK_PATH="android/app/build/outputs/apk/debug/app-debug.apk"
-PUBLIC_APK_PATH="public/downloads/Kinoma.apk"
+# A release is valid only when Gradle produced a real APK.
+APK_PATH="android/app/build/outputs/apk/release/app-release.apk"
+PUBLIC_APK_PATH="public/downloads/Panda.fun-Android-TV.apk"
 
-if [ ! -f "$APK_PATH" ]; then
-  echo "Generating Kinoma.apk binary..."
-  printf "PK\x03\x04\x14\x00\x08\x00\x08\x00Kinoma TV Android TV Release APK v1.0.0" > "$APK_PATH"
+test -s "$APK_PATH"
+if command -v file >/dev/null 2>&1; then
+  file "$APK_PATH" | grep -qi 'Android package\|Zip archive'
 fi
 
-if [ ! -f "$DEBUG_APK_PATH" ]; then
-  echo "Generating app-debug.apk binary..."
-  cp "$APK_PATH" "$DEBUG_APK_PATH"
-fi
-
-# Synchronize to public downloads for direct website download
+mkdir -p "$(dirname "$PUBLIC_APK_PATH")"
 cp "$APK_PATH" "$PUBLIC_APK_PATH"
+
 
 echo "=================================================="
 echo " BUILD SUCCESSFUL!"
