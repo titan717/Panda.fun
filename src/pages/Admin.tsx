@@ -4,7 +4,7 @@ import {
   Download, ExternalLink, Film, HeartPulse, LayoutDashboard, LogOut, MonitorPlay,
   RefreshCw, Search, Settings2, Shield, ShieldAlert, Users, X, Zap
 } from 'lucide-react';
-import { collection, doc, getDoc, getDocs, limit, orderBy, query } from 'firebase/firestore';
+import { collection, doc, getDoc, getDocs, limit, orderBy, query, where } from 'firebase/firestore';
 import { useLocation } from 'wouter';
 import { db } from '../lib/firebase';
 import { useAuth } from '../lib/AuthContext';
@@ -257,7 +257,7 @@ function Overview({ events, usersCount, range, onRangeChange, autoRefresh, onRef
       <TitleBar
         kicker="ANALYTICS"
         title="Panda, without the noise."
-        description="GA4 events are collected by Google and mirrored into Firestore for the operational dashboard."
+        description="Panda sends the same product events to GA4 and Firestore, giving the control room fast operational metrics without loading your whole dataset."
         action={
           <div className="panda-admin-title-actions">
             <div className="panda-admin-range">
@@ -305,9 +305,10 @@ function Overview({ events, usersCount, range, onRangeChange, autoRefresh, onRef
       </section>
 
       <div className="panda-admin-source-strip">
-        <div><span className="panda-admin-live-dot" />GA4 collection active</div>
+        <div><span className="panda-admin-live-dot" />Analytics live</div>
         <code>G-9CEEHSHNHJ</code>
-        <span>Firestore event mirror</span>
+        <span>{events.length.toLocaleString()} events loaded</span>
+        {loadedAt && <span>Updated {new Date(loadedAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</span>}
         {autoRefresh && <span>Auto-refresh on</span>}
       </div>
     </div>
@@ -478,7 +479,9 @@ export function Admin() {
   const [range, setRange] = useState<Range>(30);
   const [events, setEvents] = useState<AdminEvent[]>([]);
   const [users, setUsers] = useState<UserRow[]>([]);
+  const [usersLoaded, setUsersLoaded] = useState(false);
   const [loadingData, setLoadingData] = useState(true);
+  const [loadedAt, setLoadedAt] = useState<number | null>(null);
   const [error, setError] = useState('');
   const [health, setHealth] = useState<HealthState>({ status: 'idle' });
   const [refreshing, setRefreshing] = useState(false);
@@ -490,33 +493,66 @@ export function Admin() {
     try { localStorage.setItem('panda-admin-auto-refresh', String(value)); } catch {}
   };
 
+  const ensureAdmin = async (): Promise<boolean> => {
+    if (!user) return false;
+    if (authorized === true) return true;
+    const token = await user.getIdTokenResult();
+    let hasAccess = hasAdminClaim(token.claims as Record<string, unknown>);
+    if (!hasAccess) {
+      const adminMarker = await getDoc(doc(db, 'admins', user.uid));
+      hasAccess = adminMarker.exists() && hasAdminMarker(adminMarker.data() as Record<string, unknown>);
+    }
+    setAuthorized(hasAccess);
+    return hasAccess;
+  };
+
+  const loadUsers = async () => {
+    if (!user || authorized !== true) return;
+    try {
+      const userSnap = await getDocs(query(collection(db, 'users'), limit(5000)));
+      const loadedUsers = userSnap.docs.map((docSnap) => {
+        const data = docSnap.data() as Record<string, unknown>;
+        return {
+          uid: String(data.uid || docSnap.id),
+          email: isTruthyString(data.email) ? data.email : undefined,
+          displayName: isTruthyString(data.displayName) ? data.displayName : undefined,
+          photoURL: isTruthyString(data.photoURL) ? data.photoURL : undefined,
+          createdAt: isTruthyString(data.createdAt) ? data.createdAt : undefined
+        } as UserRow;
+      });
+      setUsers(loadedUsers);
+      setUsersLoaded(true);
+    } catch (loadError) {
+      console.error('[Panda.fun] Admin audience load failed:', loadError);
+      setError(loadError instanceof Error ? loadError.message : 'Unable to load audience data.');
+    }
+  };
+
   const loadData = async (background = false) => {
     if (!user) return;
     if (background) setRefreshing(true); else setLoadingData(true);
     setError('');
     try {
-      const token = await user.getIdTokenResult(true);
-      let hasAccess = hasAdminClaim(token.claims as Record<string, unknown>);
-      if (!hasAccess) {
-        const adminMarker = await getDoc(doc(db, 'admins', user.uid));
-        hasAccess = adminMarker.exists() && hasAdminMarker(adminMarker.data() as Record<string, unknown>);
-      }
-      if (!hasAccess) { setAuthorized(false); return; }
-      setAuthorized(true);
-      const [eventSnap, userSnap] = await Promise.all([
-        getDocs(query(collection(db, 'analytics_events'), orderBy('clientTimestamp', 'desc'), limit(10000))),
-        getDocs(query(collection(db, 'users'), limit(5000))),
-      ]);
+      const hasAccess = await ensureAdmin();
+      if (!hasAccess) return;
+      const cutoff = Date.now() - range * 86400000;
+      const eventSnap = await getDocs(query(
+        collection(db, 'analytics_events'),
+        where('clientTimestamp', '>=', cutoff),
+        orderBy('clientTimestamp', 'desc'),
+        limit(range <= 7 ? 2500 : range <= 30 ? 5000 : 8000)
+      ));
       const loadedEvents = eventSnap.docs.map((docSnap) => {
         const data = docSnap.data() as Record<string, unknown>;
-        return { id: docSnap.id, ...data, type: String(data.type || 'unknown'), clientTimestamp: typeof data.clientTimestamp === 'number' ? data.clientTimestamp : safeTimestamp(data.createdAt) } as AdminEvent;
-      }).filter((event) => !event.clientTimestamp || event.clientTimestamp >= Date.now() - range * 86400000);
-      const loadedUsers = userSnap.docs.map((docSnap) => {
-        const data = docSnap.data() as Record<string, unknown>;
-        return { uid: String(data.uid || docSnap.id), email: isTruthyString(data.email) ? data.email : undefined, displayName: isTruthyString(data.displayName) ? data.displayName : undefined, photoURL: isTruthyString(data.photoURL) ? data.photoURL : undefined, createdAt: isTruthyString(data.createdAt) ? data.createdAt : undefined } as UserRow;
+        return {
+          id: docSnap.id,
+          ...data,
+          type: String(data.type || 'unknown'),
+          clientTimestamp: typeof data.clientTimestamp === 'number' ? data.clientTimestamp : safeTimestamp(data.createdAt)
+        } as AdminEvent;
       });
       setEvents(loadedEvents);
-      setUsers(loadedUsers);
+      setLoadedAt(Date.now());
     } catch (loadError) {
       console.error('[Panda.fun] Admin dashboard load failed:', loadError);
       setError(loadError instanceof Error ? loadError.message : 'Unable to load admin data.');
@@ -534,12 +570,23 @@ export function Admin() {
   };
 
   useEffect(() => { updateSEO({ title: 'Admin Console', description: 'Panda.fun analytics and operations console.', type: 'website' }); }, []);
-  useEffect(() => { if (!user || authLoading) return; void loadData(); }, [user, authLoading, range]);
+  useEffect(() => {
+    if (!user || authLoading) return;
+    setUsersLoaded(false);
+    void loadData();
+  }, [user, authLoading, range]);
+  useEffect(() => {
+    if (!user || authLoading || authorized !== true) return;
+    if ((activeTab === 'audience' || activeTab === 'reports') && !usersLoaded) void loadUsers();
+  }, [activeTab, authorized, authLoading, user, usersLoaded]);
   useEffect(() => {
     if (!autoRefresh || !user || authorized !== true) return;
-    const timer = window.setInterval(() => { void loadData(true); }, 60000);
+    const timer = window.setInterval(() => {
+      void loadData(true);
+      if (activeTab === 'audience' || activeTab === 'reports') void loadUsers();
+    }, 60000);
     return () => window.clearInterval(timer);
-  }, [autoRefresh, user, authorized, range]);
+  }, [autoRefresh, user, authorized, range, activeTab]);
 
   if (authLoading || loadingData || authorized === null) return <div className="panda-admin-gate"><RefreshCw size={20} className="animate-spin" /><span>Checking admin access…</span></div>;
   if (!user) return <div className="panda-admin-gate"><div className="panda-admin-gate__content"><div className="panda-admin-gate__mark">🐼</div><ShieldAlert size={20} /><h1>Admin sign-in required</h1><p>Sign in with the Firebase account assigned to Panda.fun administration.</p><button type="button" className="panda-admin-primary-button" onClick={() => setLocation('/')}>Return to Panda.fun</button></div></div>;
