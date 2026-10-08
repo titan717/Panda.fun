@@ -146,7 +146,7 @@ function ProfileSetup({
     if (selected.length < 3) setter([...selected, genre]);
   };
 
-  const next = async () => {
+  const next = async (skipCurrent = false) => {
     setError('');
 
     if (step === 1) {
@@ -180,6 +180,8 @@ function ProfileSetup({
       setStep(5);
       return;
     }
+
+    if (step === 5 && skipCurrent) setSeriesGenres([]);
 
     setSaving(true);
     try {
@@ -385,7 +387,8 @@ function ProfileSetup({
                 <button
                   type="button"
                   className="panda-profile-flow__skip"
-                  onClick={() => setStep((step + 1) as SetupStep)}
+                  onClick={() => step === 5 ? void next(true) : setStep(5)}
+                  disabled={saving}
                 >
                   Skip
                 </button>
