@@ -313,13 +313,13 @@ function HomeProfileGate({
   );
 }
 
-function trailerSrc(url: unknown, soundEnabled = true) {
+function trailerSrc(url: unknown) {
   if (typeof url !== 'string' || !url) return '';
   try {
     const parsed = new URL(url);
     const isYouTube = /(^|\.)youtube(?:-nocookie)?\.com$/.test(parsed.hostname) || parsed.hostname === 'youtu.be';
     parsed.searchParams.set('autoplay', '1');
-    parsed.searchParams.set('mute', soundEnabled ? '0' : '1');
+    parsed.searchParams.set('mute', '0');
     parsed.searchParams.set('playsinline', '1');
     parsed.searchParams.set('controls', '0');
     parsed.searchParams.set('disablekb', '1');
@@ -588,7 +588,7 @@ function HomeContent() {
       if (requestId !== hoverTrailerRequest.current) return;
       const embedUrl = result?.trailer?.embedUrl;
       if (embedUrl) {
-        const url = trailerSrc(embedUrl, true);
+        const url = trailerSrc(embedUrl);
         trailerCache.current.set(item.id, url);
         setHoverTrailerUrl(url);
       }
@@ -625,7 +625,7 @@ function HomeContent() {
           <div className="kinoma-home-hero__trailer-bg" aria-label={featured?.title ? featured.title + ' trailer' : 'Featured trailer'}>
             {featured?.backdrop && <img src={featured.backdrop} alt="" className="kinoma-home-hero__banner-image kinoma-home-hero__banner-image--underlay" loading="eager" fetchPriority="high" decoding="async" />}
             {trailer?.trailer?.embedUrl ? (
-              <iframe ref={trailerFrameRef} src={trailerSrc(trailer.trailer.embedUrl, soundEnabled)} title={featured?.title ? featured.title + ' trailer' : 'Featured trailer'} className={`kinoma-home-hero__trailer-video${trailerReady ? ' is-ready' : ''}`} onLoad={() => setTrailerReady(true)} allow="autoplay; encrypted-media; picture-in-picture" allowFullScreen />
+              <iframe ref={trailerFrameRef} src={trailerSrc(trailer.trailer.embedUrl)} title={featured?.title ? featured.title + ' trailer' : 'Featured trailer'} className={`kinoma-home-hero__trailer-video${trailerReady ? ' is-ready' : ''}`} onLoad={() => setTrailerReady(true)} allow="autoplay; encrypted-media; picture-in-picture" allowFullScreen loading="eager" />
             ) : featured?.backdrop ? (
               <img src={featured.backdrop} alt="" className="kinoma-home-hero__banner-image" loading="eager" fetchPriority="high" decoding="async" />
             ) : (
