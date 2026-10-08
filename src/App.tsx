@@ -106,18 +106,18 @@ function AnimatedRoutes() {
   );
 }
 
-class AppErrorBoundary extends React.Component<{ children: React.ReactNode; resetKey?: string }, { hasError: boolean }> {
-  constructor(props: { children: React.ReactNode }) {
-    super(props);
-    this.state = { hasError: false };
+class AppErrorBoundary extends React.Component<{ children: React.ReactNode }, { hasError: boolean }> {
+  declare readonly props: { children: React.ReactNode };
+  state = { hasError: false };
+
+  static getDerivedStateFromError() {
+    return { hasError: true };
   }
-  static getDerivedStateFromError() { return { hasError: true }; }
-  componentDidCatch(error: unknown) { console.error('[Panda.fun] App render error:', error); }
-  componentDidUpdate(prevProps: { children: React.ReactNode; resetKey?: string }) {
-    if (this.state.hasError && prevProps.resetKey !== this.props.resetKey) {
-      this.setState({ hasError: false });
-    }
+
+  componentDidCatch(error: unknown) {
+    console.error('[Panda.fun] App render error:', error);
   }
+
   render() {
     if (!this.state.hasError) return this.props.children;
     return (
@@ -145,7 +145,7 @@ function MainAppShell() {
     return <PandaIntro onComplete={() => setShowIntro(false)} />;
   }
 
-  return <AppErrorBoundary resetKey={location}><AnimatedRoutes /></AppErrorBoundary>;
+  return <React.Fragment key={location}><AppErrorBoundary><AnimatedRoutes /></AppErrorBoundary></React.Fragment>;
 }
 
 export default function App() {
