@@ -5,8 +5,6 @@ import {
   signInWithPopup,
   signInWithRedirect,
   getRedirectResult,
-  signInWithRedirect,
-  getRedirectResult,
   signInWithEmailAndPassword, 
   sendPasswordResetEmail, 
   createUserWithEmailAndPassword, 
@@ -55,6 +53,8 @@ export async function testFirestoreConnection() {
 
 export {
   signInWithPopup,
+  signInWithRedirect,
+  getRedirectResult,
   signInWithEmailAndPassword,
   sendPasswordResetEmail,
   createUserWithEmailAndPassword,
