@@ -286,13 +286,20 @@ function Overview({ events, usersCount, range, onRangeChange, autoRefresh, onRef
 
       <section className="panda-admin-kpi-grid" aria-label="Key metrics">
         <Kpi label="Page views" value={metrics.pageViews.toLocaleString()} detail={range + ' days'} />
-        <Kpi label="Unique users" value={metrics.uniqueUsers.toLocaleString()} detail="Signed-in analytics" />
+        <Kpi label="Sessions" value={metrics.uniqueSessions.toLocaleString()} detail="Anonymous + signed-in" />
         <Kpi label="Watch starts" value={metrics.starts.toLocaleString()} detail="Movies + episodes" />
         <Kpi label="Watch time" value={formatAdminDuration(metrics.watchSeconds)} detail="Stored playback seconds" />
       </section>
 
       <section className="panda-admin-chart-panel">
         <MetricChart rows={daily} metric={metric} onMetricChange={setMetric} />
+      </section>
+
+      <section className="panda-admin-insight-strip" aria-label="Engagement metrics">
+        <div><span>Completion rate</span><strong>{metrics.completionRate.toFixed(1)}%</strong><small>starts that reached completion</small></div>
+        <div><span>Search → open</span><strong>{metrics.searchToSelectionRate.toFixed(1)}%</strong><small>searches leading to content opens</small></div>
+        <div><span>Open → start</span><strong>{metrics.selectionToStartRate.toFixed(1)}%</strong><small>content opens leading to playback</small></div>
+        <div><span>Avg watch / session</span><strong>{formatAdminDuration(metrics.avgWatchSecondsPerSession)}</strong><small>{metrics.uniqueSessions.toLocaleString()} sessions</small></div>
       </section>
 
       <section className="panda-admin-overview-grid">
