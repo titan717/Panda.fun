@@ -1488,10 +1488,6 @@
     width: min(100%, 448px);
   }
 
-  .panda-profile-flow__actions {
-    margin-top: 28px;
-  }
-
   .panda-profile-flow__actions .panda-profile-flow__button {
     min-width: 0;
   }
@@ -1598,5 +1594,283 @@
 
   .panda-profile-pin-input {
     height: 64px;
+  }
+}
+
+
+/* Home profile gate */
+
+.panda-home-profile-gate {
+  position: fixed;
+  inset: 0;
+  z-index: 70;
+  overflow: hidden;
+  color: #f7f3ef;
+  background: #05070a;
+}
+
+.panda-home-profile-gate__ambient {
+  position: absolute;
+  inset: -18rem 0 auto;
+  height: 45rem;
+  pointer-events: none;
+  background: radial-gradient(
+    ellipse at 50% 0%,
+    rgba(220, 38, 38, .12) 0%,
+    rgba(220, 38, 38, .07) 34%,
+    rgba(220, 38, 38, .025) 58%,
+    transparent 74%
+  );
+}
+
+.panda-home-profile-gate__inner {
+  position: relative;
+  z-index: 1;
+  width: min(100%, 768px);
+  min-height: 100dvh;
+  margin: 0 auto;
+  padding: 24px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+}
+
+.panda-home-profile-gate__inner h1 {
+  margin: 0;
+  color: rgba(255,255,255,.98);
+  font-size: clamp(32px, 4.2vw, 42px);
+  line-height: 1;
+  letter-spacing: -.055em;
+  font-weight: 760;
+}
+
+.panda-home-profile-gate__profiles {
+  position: relative;
+  width: min(100%, 768px);
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-start;
+  justify-content: center;
+  gap: 32px;
+  margin-top: 48px;
+}
+
+.panda-home-profile-gate__tile {
+  width: 128px;
+  min-width: 96px;
+  display: grid;
+  justify-items: center;
+  align-content: start;
+  gap: 12px;
+  padding: 0;
+  border: 0;
+  color: inherit;
+  background: transparent;
+  font: inherit;
+  cursor: pointer;
+  outline: none;
+}
+
+.panda-home-profile-gate__tile > span:last-child {
+  width: 100%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  color: rgba(247,243,239,.58);
+  font-size: 13px;
+  font-weight: 500;
+  transition: color .18s ease;
+}
+
+.panda-home-profile-gate__tile:hover > span:last-child,
+.panda-home-profile-gate__tile:focus-visible > span:last-child {
+  color: rgba(247,243,239,.96);
+}
+
+.panda-home-profile-gate__avatar {
+  position: relative;
+  width: 140px;
+  height: 140px;
+  display: grid;
+  place-items: center;
+}
+
+.panda-home-profile-gate__avatar .panda-profile-avatar {
+  width: 128px;
+  height: 128px;
+  border-color: rgba(247,243,239,.08);
+  background: rgba(255,255,255,.04);
+  transition: border-color .2s ease;
+}
+
+.panda-home-profile-gate__tile:hover .panda-profile-avatar,
+.panda-home-profile-gate__tile:focus-visible .panda-profile-avatar {
+  border-color: rgba(247,243,239,.4);
+}
+
+.panda-home-profile-gate__countdown {
+  position: absolute;
+  inset: 0;
+  width: 140px;
+  height: 140px;
+  pointer-events: none;
+  transform: rotate(-90deg);
+}
+
+.panda-home-profile-gate__countdown-track,
+.panda-home-profile-gate__countdown-progress {
+  fill: none;
+  stroke-linecap: round;
+}
+
+.panda-home-profile-gate__countdown-track {
+  stroke: rgba(255,255,255,.10);
+  stroke-width: 1.25;
+}
+
+.panda-home-profile-gate__countdown-progress {
+  stroke: rgba(255,255,255,.88);
+  stroke-width: 2.25;
+  stroke-dasharray: 1;
+  transition: stroke-dashoffset .05s linear;
+  filter: drop-shadow(0 0 5px rgba(255,255,255,.1));
+}
+
+.panda-home-profile-gate__tile.is-autoselect .panda-profile-avatar {
+  border-color: rgba(255,255,255,.15);
+}
+
+.panda-home-profile-gate__add-avatar {
+  width: 128px;
+  height: 128px;
+  display: grid;
+  place-items: center;
+  border: 1px dashed rgba(247,243,239,.14);
+  border-radius: 50%;
+  color: rgba(247,243,239,.30);
+  background: rgba(255,255,255,.02);
+  transition: border-color .2s ease, color .2s ease, background .2s ease;
+}
+
+.panda-home-profile-gate__tile--add:hover .panda-home-profile-gate__add-avatar,
+.panda-home-profile-gate__tile--add:focus-visible .panda-home-profile-gate__add-avatar {
+  border-color: rgba(247,243,239,.32);
+  color: rgba(247,243,239,.72);
+  background: rgba(255,255,255,.05);
+}
+
+.panda-home-profile-gate__footer {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  margin-top: 48px;
+}
+
+.panda-home-profile-gate__footer a {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 40px;
+  padding: 0 24px;
+  border: 1px solid rgba(255,255,255,.08);
+  border-radius: 999px;
+  color: rgba(247,243,239,.58);
+  background: rgba(255,255,255,.02);
+  font: inherit;
+  font-size: 13px;
+  font-weight: 500;
+  text-decoration: none;
+  transition: color .18s ease, border-color .18s ease, background .18s ease;
+}
+
+.panda-home-profile-gate__footer a:hover,
+.panda-home-profile-gate__footer a:focus-visible {
+  color: #fff;
+  border-color: rgba(247,243,239,.17);
+  background: rgba(255,255,255,.05);
+}
+
+.panda-home-profile-gate__loading {
+  min-height: 100dvh;
+  display: grid;
+  place-items: center;
+}
+
+.panda-home-profile-gate__loading-mark {
+  width: 66px;
+  height: 66px;
+  overflow: hidden;
+  border: 1px solid rgba(247,243,239,.10);
+  border-radius: 50%;
+  background: rgba(255,255,255,.04);
+  animation: panda-home-profile-breathe 1.6s ease-in-out infinite;
+}
+
+.panda-home-profile-gate__loading-mark img {
+  width: 100%;
+  height: 100%;
+  display: block;
+  object-fit: cover;
+}
+
+.panda-home-profile-gate--setup .panda-profile-flow {
+  min-height: 100dvh;
+}
+
+@keyframes panda-home-profile-breathe {
+  50% { opacity: .62; transform: scale(.985); }
+}
+
+@media (max-width: 620px) {
+  .panda-home-profile-gate__inner {
+    padding: 24px 14px;
+  }
+
+  .panda-home-profile-gate__profiles {
+    gap: 24px;
+    margin-top: 40px;
+  }
+
+  .panda-home-profile-gate__tile {
+    width: 96px;
+  }
+
+  .panda-home-profile-gate__avatar {
+    width: 108px;
+    height: 108px;
+  }
+
+  .panda-home-profile-gate__avatar .panda-profile-avatar {
+    width: 96px;
+    height: 96px;
+  }
+
+  .panda-home-profile-gate__countdown {
+    width: 108px;
+    height: 108px;
+  }
+
+  .panda-home-profile-gate__add-avatar {
+    width: 96px;
+    height: 96px;
+  }
+
+  .panda-home-profile-gate__inner h1 {
+    font-size: 32px;
+  }
+
+  .panda-home-profile-gate__footer {
+    margin-top: 40px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .panda-home-profile-gate *,
+  .panda-home-profile-gate__loading-mark {
+    animation-duration: .001ms !important;
+    transition: none !important;
   }
 }
