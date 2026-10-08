@@ -52,7 +52,8 @@ service cloud.firestore {
     }
 
     // Internal analytics is append-only for clients and readable only by admins.
-    // Client-written events are treated as untrusted telemetry, not an auth source.
+    // Identity fields are optional for anonymous telemetry but must match the
+    // authenticated Firebase token when present.
     match /analytics_events/{eventId} {
       allow create: if request.resource.data.keys().hasOnly([
         'type',
@@ -68,7 +69,14 @@ service cloud.firestore {
         'clientTimestamp',
         'uid',
         'userEmail'
-      ]);
+      ]) && (
+        (request.auth == null
+          && !request.resource.data.keys().hasAny(['uid', 'userEmail']))
+        ||
+        (request.auth != null
+          && request.resource.data.get('uid', '') == request.auth.uid
+          && request.resource.data.get('userEmail', '') == request.auth.token.email)
+      );
       allow read, update, delete: if isAdmin();
     }
 
