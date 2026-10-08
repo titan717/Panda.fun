@@ -9,6 +9,7 @@ import { useAuth } from '../lib/AuthContext';
 import { libraryManager } from '../lib/library';
 import { historyUtil, type HistoryItem } from '../lib/history';
 import { buildWatchHref } from '../lib/mediaRoute';
+import { trackEvent } from '../lib/analytics';
 import '../styles/panda-profile.css';
 
 function getProviderLabel(user: { providerData: Array<{ providerId: string }> }): string {
