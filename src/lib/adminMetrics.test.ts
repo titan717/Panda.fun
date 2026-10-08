@@ -36,6 +36,8 @@ describe('admin metrics', () => {
       selectionToStartRate: 0,
       searchToSelectionRate: 0,
       viewsPerSession: 1,
+      liveSessions: 2,
+      liveUsers: 2,
     });
   });
 
