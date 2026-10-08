@@ -34,7 +34,34 @@ service cloud.firestore {
     }
 
     match /users/{userId}/profiles/{profileId} {
-      allow read, write: if ownsUser(userId) || isAdmin();
+      allow read: if ownsUser(userId) || isAdmin();
+      allow delete: if ownsUser(userId) || isAdmin();
+
+      allow create, update: if (ownsUser(userId) || isAdmin())
+        && request.resource.data.keys().hasOnly([
+          'id',
+          'name',
+          'avatar',
+          'pinHash',
+          'movieGenres',
+          'seriesGenres',
+          'createdAt',
+          'updatedAt'
+        ])
+        && request.resource.data.id == profileId
+        && request.resource.data.name is string
+        && request.resource.data.name.size() > 0
+        && request.resource.data.name.size() <= 20
+        && request.resource.data.avatar is string
+        && request.resource.data.avatar in ['panda', 'fox', 'cat', 'bear', 'koala', 'rabbit', 'tiger', 'dog']
+        && request.resource.data.movieGenres is list
+        && request.resource.data.movieGenres.size() <= 3
+        && request.resource.data.seriesGenres is list
+        && request.resource.data.seriesGenres.size() <= 3
+        && request.resource.data.createdAt is string
+        && request.resource.data.updatedAt is string
+        && (!request.resource.data.keys().hasAny(['pinHash'])
+          || (request.resource.data.pinHash is string && request.resource.data.pinHash.size() == 64));      
     }
 
     match /users/{userId} {
