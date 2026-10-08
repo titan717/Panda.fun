@@ -555,6 +555,53 @@
   cursor: crosshair;
 }
 
+.panda-admin-insight-strip {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  margin-top: 10px;
+  border-top: 1px solid var(--panda-admin-border);
+  border-bottom: 1px solid var(--panda-admin-border);
+}
+
+.panda-admin-insight-strip > div {
+  min-width: 0;
+  padding: 14px 16px 15px 0;
+}
+
+.panda-admin-insight-strip > div + div {
+  padding-left: 16px;
+  border-left: 1px solid var(--panda-admin-border);
+}
+
+.panda-admin-insight-strip span,
+.panda-admin-insight-strip strong,
+.panda-admin-insight-strip small {
+  display: block;
+}
+
+.panda-admin-insight-strip span {
+  color: var(--panda-admin-faint);
+  font-size: 8px;
+  font-weight: 900;
+  letter-spacing: .11em;
+  text-transform: uppercase;
+}
+
+.panda-admin-insight-strip strong {
+  margin-top: 6px;
+  color: #fff;
+  font-size: 19px;
+  line-height: 1;
+  letter-spacing: -.04em;
+}
+
+.panda-admin-insight-strip small {
+  margin-top: 6px;
+  color: var(--panda-admin-faint);
+  font-size: 8px;
+  line-height: 1.45;
+}
+
 .panda-admin-overview-grid {
   display: grid;
   grid-template-columns: 1.15fr .85fr;
@@ -1421,6 +1468,7 @@
   .panda-admin-kpi:nth-child(3) { border-top: 1px solid var(--panda-admin-border); padding-left: 0; }
   .panda-admin-kpi:nth-child(4) { border-top: 1px solid var(--panda-admin-border); }
   .panda-admin-overview-grid { grid-template-columns: 1fr; }
+  .panda-admin-insight-strip { grid-template-columns: repeat(2, minmax(0, 1fr)); }
 }
 
 @media (max-width: 780px) {
@@ -1524,6 +1572,11 @@
 
   .panda-admin-chart__metrics button {
     flex: 0 0 auto;
+  }
+
+  .panda-admin-insight-strip > div:nth-child(3),
+  .panda-admin-insight-strip > div:nth-child(4) {
+    border-top: 1px solid var(--panda-admin-border);
   }
 
   .panda-admin-toolbar {
