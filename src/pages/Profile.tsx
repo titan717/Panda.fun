@@ -851,7 +851,7 @@ export function Profile() {
     void libraryManager.syncFromFirestore(user.uid);
     setEditingProfile(null);
     void trackEvent({
-      type: 'profile_create',
+      type: editingProfile ? 'profile_update' : 'profile_create',
       metadata: {
         profileId: saved.id,
         avatar: saved.avatar,
