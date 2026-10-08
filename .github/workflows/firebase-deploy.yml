@@ -1,0 +1,47 @@
+name: Deploy Firebase Authentication and Firestore
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  deploy:
+    name: Deploy Panda.fun Firebase config
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Panda.fun
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+
+      - name: Install Firebase CLI
+        run: npm install --global firebase-tools
+
+      - name: Deploy Authentication and Firestore
+        env:
+          FIREBASE_SERVICE_ACCOUNT_JSON: ${{ secrets.FIREBASE_SERVICE_ACCOUNT_JSON }}
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          if [[ -z "${FIREBASE_SERVICE_ACCOUNT_JSON}" ]]; then
+            echo "Missing required GitHub secret: FIREBASE_SERVICE_ACCOUNT_JSON"
+            exit 1
+          fi
+
+          SERVICE_ACCOUNT="${RUNNER_TEMP}/firebase-service-account.json"
+          printf '%s' "${FIREBASE_SERVICE_ACCOUNT_JSON}" > "${SERVICE_ACCOUNT}"
+          export GOOGLE_APPLICATION_CREDENTIALS="${SERVICE_ACCOUNT}"
+
+          firebase deploy \
+            --project=cogent-subset-8lcf1 \
+            --config=firebase.json \
+            --only auth,firestore \
+            --non-interactive
+
+          rm -f "${SERVICE_ACCOUNT}"
