@@ -167,6 +167,16 @@ function MetricChart({ rows, metric, onMetricChange }: {
     return (index === 0 ? 'M ' : 'L ') + x.toFixed(2) + ' ' + y.toFixed(2);
   }).join(' ');
   const area = rows.length ? path + ' L ' + (left + innerW).toFixed(2) + ' ' + (top + innerH).toFixed(2) + ' L ' + left + ' ' + (top + innerH).toFixed(2) + ' Z' : '';
+  const hoveredRow = hovered == null ? null : rows[hovered] || null;
+  const hoveredPercent = rows.length <= 1 || hovered == null ? 50 : (hovered / (rows.length - 1)) * 100;
+  const selectFromPointer = (clientX: number, element: SVGSVGElement) => {
+    if (!rows.length) return;
+    const rect = element.getBoundingClientRect();
+    const relative = ((clientX - rect.left) / Math.max(1, rect.width)) * width;
+    const clamped = Math.min(width - right, Math.max(left, relative));
+    const ratio = innerW ? (clamped - left) / innerW : 0;
+    setHovered(Math.min(rows.length - 1, Math.max(0, Math.round(ratio * Math.max(0, rows.length - 1)))));
+  };
 
   return (
     <div className="panda-admin-chart">
@@ -181,7 +191,7 @@ function MetricChart({ rows, metric, onMetricChange }: {
         <span className="panda-admin-chart__hint">{getMetricLabel(metric)} · daily</span>
       </div>
       <div className="panda-admin-chart__plot">
-        <svg viewBox={'0 0 ' + width + ' ' + height} role="img" aria-label={getMetricLabel(metric) + ' over time'} preserveAspectRatio="none">
+        <svg viewBox={'0 0 ' + width + ' ' + height} role="img" aria-label={getMetricLabel(metric) + ' over time'} preserveAspectRatio="none" onPointerMove={(event) => selectFromPointer(event.clientX, event.currentTarget)} onPointerLeave={() => setHovered(null)}>
           {[0, .25, .5, .75, 1].map((ratio) => {
             const y = top + innerH - ratio * innerH;
             const value = ratio * max;
@@ -190,6 +200,7 @@ function MetricChart({ rows, metric, onMetricChange }: {
           {hovered != null && rows[hovered] && <line x1={left + (rows.length <= 1 ? innerW / 2 : hovered * (innerW / (rows.length - 1)))} x2={left + (rows.length <= 1 ? innerW / 2 : hovered * (innerW / (rows.length - 1)))} y1={top} y2={top + innerH} className="panda-admin-chart__guide" />}
           <path d={area} className="panda-admin-chart__area" />
           <path d={path} className="panda-admin-chart__line" />
+          <rect x={left} y={top} width={innerW} height={innerH} fill="transparent" aria-hidden="true" className="panda-admin-chart__hitarea" />
           {values.map((value, index) => {
             const x = left + (rows.length <= 1 ? innerW / 2 : index * (innerW / (rows.length - 1)));
             const y = top + innerH - (value / max) * innerH;
@@ -202,7 +213,6 @@ function MetricChart({ rows, metric, onMetricChange }: {
                 className="panda-admin-chart__point"
                 tabIndex={0}
                 aria-label={(rows[index]?.label || '') + ': ' + value}
-                onMouseEnter={() => setHovered(index)}
                 onFocus={() => setHovered(index)}
               />
             );
@@ -212,15 +222,19 @@ function MetricChart({ rows, metric, onMetricChange }: {
           ) : null)}
         </svg>
         {!hasData && <div className="panda-admin-chart__empty">No stored {getMetricLabel(metric).toLowerCase()} in this range.</div>}
-        {hovered != null && rows[hovered] && (
-          <div
-            className="panda-admin-chart__tooltip"
-            style={{ left: (rows.length <= 1 ? 50 : (hovered / (rows.length - 1)) * 100) + '%' }}
-            role="status"
-          >
-            <strong>{rows[hovered].label}</strong>
-            <span>{getMetricLabel(metric)}</span>
-            <b>{metric === 'watchSeconds' ? formatAdminDuration(getMetricValue(rows[hovered], metric)) : getMetricValue(rows[hovered], metric).toLocaleString()}</b>
+        {hoveredRow && (
+          <div className="panda-admin-chart__tooltip" style={{ left: Math.min(88, Math.max(12, hoveredPercent)) + '%' }} role="status">
+            <strong>{hoveredRow.label}</strong>
+            <div className="panda-admin-chart__tooltip-primary">
+              <span>{getMetricLabel(metric)}</span>
+              <b>{metric === 'watchSeconds' ? formatAdminDuration(getMetricValue(hoveredRow, metric)) : getMetricValue(hoveredRow, metric).toLocaleString()}</b>
+            </div>
+            <div className="panda-admin-chart__tooltip-grid">
+              <span>Views <b>{hoveredRow.pageViews.toLocaleString()}</b></span>
+              <span>Sessions <b>{hoveredRow.uniqueSessions.toLocaleString()}</b></span>
+              <span>Starts <b>{hoveredRow.watchStarts.toLocaleString()}</b></span>
+              <span>Complete <b>{hoveredRow.completions.toLocaleString()}</b></span>
+            </div>
           </div>
         )}
       </div>
