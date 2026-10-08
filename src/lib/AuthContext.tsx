@@ -18,6 +18,7 @@ import { doc, setDoc, getDoc } from 'firebase/firestore';
 import { historyUtil } from './history';
 import { libraryManager } from './library';
 import { getAuthErrorMessage, getProfileName, toUserProfile } from './authHelpers';
+import { trackLogin, trackSignUp } from './analytics';
 
 interface AuthContextType {
   user: User | null;
@@ -99,6 +100,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     try {
       const cred = await signInWithPopup(auth, googleProvider);
       await syncUserProfile(cred.user);
+      trackLogin('Google');
       closeAuthModal();
     } catch (error: any) {
       if (error?.code === 'auth/popup-blocked' || error?.code === 'auth/operation-not-supported-in-this-environment') {
@@ -119,6 +121,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
     const cred = await signInWithEmailAndPassword(auth, normalizedEmail, pass);
     await syncUserProfile(cred.user);
+    trackLogin('Email');
     closeAuthModal();
   };
 
@@ -143,6 +146,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     }
 
     await syncUserProfile(cred.user, preferredName);
+    trackSignUp('Email');
     closeAuthModal();
   };
 
