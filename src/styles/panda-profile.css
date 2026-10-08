@@ -1721,6 +1721,43 @@
   color: rgba(247,243,239,.96);
 }
 
+
+.panda-home-profile-gate--leaving {
+  pointer-events: none;
+  animation: panda-home-profile-gate-out .38s cubic-bezier(.22, 1, .36, 1) forwards;
+}
+
+.panda-home-profile-gate--leaving .panda-home-profile-gate__inner {
+  animation: panda-home-profile-inner-out .38s cubic-bezier(.22, 1, .36, 1) forwards;
+}
+
+.panda-home-profile-gate__tile.is-selected .panda-profile-avatar {
+  border-color: rgba(255,255,255,.42);
+  box-shadow:
+    0 24px 70px rgba(0,0,0,.46),
+    0 0 46px rgba(220,38,38,.15);
+  transform: scale(1.055);
+}
+
+.panda-home-profile-gate__tile.is-selected > span:last-child {
+  color: rgba(255,255,255,.98);
+  font-weight: 620;
+}
+
+.panda-home-profile-gate__tile.is-dimmed {
+  opacity: .28;
+  transform: scale(.96);
+}
+
+@keyframes panda-home-profile-gate-out {
+  to { opacity: 0; visibility: hidden; }
+}
+
+@keyframes panda-home-profile-inner-out {
+  70% { opacity: 1; transform: translateY(-6px) scale(1.012); }
+  100% { opacity: 0; transform: translateY(-18px) scale(.985); }
+}
+
 .panda-home-profile-gate__avatar {
   position: relative;
   width: 140px;
@@ -1917,5 +1954,10 @@
   .panda-home-profile-gate__loading-mark {
     animation-duration: .001ms !important;
     transition: none !important;
+  }
+  .panda-home-profile-gate--leaving {
+    animation: none !important;
+    opacity: 0;
+    visibility: hidden;
   }
 }
