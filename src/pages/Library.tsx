@@ -184,14 +184,15 @@ export function Library() {
         ) : filtered.length ? (
           <section className="kinoma-library-grid">
             {(filtered as LibraryItem[]).map(item => (
-              <LibraryPosterCard
-                key={item.id}
-                item={item}
-                onRemove={() => removeLibrary(
-                  item.id,
-                  active === 'watchlist' ? 'watchlist' : active === 'favorites' ? 'favorites' : 'completed'
-                )}
-              />
+              <React.Fragment key={item.id}>
+                <LibraryPosterCard
+                  item={item}
+                  onRemove={() => removeLibrary(
+                    item.id,
+                    active === 'watchlist' ? 'watchlist' : active === 'favorites' ? 'favorites' : 'completed'
+                  )}
+                />
+              </React.Fragment>
             ))}
           </section>
         ) : <EmptyState tab={active} onBrowse={browse} />}
