@@ -203,7 +203,7 @@ export function Details() {
     }
     const season = resume?.seasonNumber && seasonItems.some(s => s.seasonNumber === resume.seasonNumber) ? resume.seasonNumber : selectedSeason;
     const episode = Math.max(1, Number(resume?.episodeNumber || 1));
-    setLocation(buildWatchHref(id, 'series', season, episode));
+    setLocation(buildWatchHref(id, 'series', season, episode, resume?.playbackTimestamp || 0));
   };
 
   useEffect(() => {
