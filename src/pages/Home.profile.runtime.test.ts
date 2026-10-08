@@ -10,6 +10,14 @@ describe('Home profile gate and trailer autoplay', () => {
     expect(source).toMatch(/\{profileReady && <HomeContent \/>\}/);
   });
 
+
+  it('mounts the hero during the profile exit with prefetched home media', () => {
+    expect(source).toMatch(/const \[prefetchedHome, setPrefetchedHome\] = useState/);
+    expect(source).toMatch(/const \[prefetchedTrailer, setPrefetchedTrailer\] = useState/);
+    expect(source).toMatch(/onReady\(\{ home: prefetchedHome, trailer: prefetchedTrailer \}\)/);
+    expect(source).toMatch(/initialHome=\{homePrefetch\.home\} initialTrailer=\{homePrefetch\.trailer\}/);
+  });
+
   it('does not expose profile PIN locking and keeps the featured trailer unmuted', () => {
     const profileSource = readFileSync(new URL('./Profile.tsx', import.meta.url), 'utf8');
 
