@@ -47,7 +47,12 @@ function ProfileAvatar({
 }) {
   return (
     <div className={'panda-profile-avatar panda-profile-avatar--' + size + (interactive ? ' is-interactive' : '')}>
-      <span aria-hidden="true">{PROFILE_ICON_MAP[profile.avatar] || '🐼'}</span>
+      <img
+        src={'/profile-avatars/' + (PROFILE_AVATARS.some((avatar) => avatar.id === profile.avatar) ? profile.avatar : 'panda') + '.svg'}
+        alt=""
+        draggable={false}
+        aria-hidden="true"
+      />
       {profile.pinHash && (
         <span className="panda-profile-avatar__lock" aria-label="Profile locked">
           <Lock size={size === 'lg' ? 13 : 10} />
