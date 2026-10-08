@@ -4,7 +4,7 @@ import {
   Download, ExternalLink, Film, Gauge, HeartPulse, LayoutDashboard, LogOut, MonitorPlay,
   RefreshCw, Search, Settings2, Shield, ShieldAlert, Users, X, Zap
 } from 'lucide-react';
-import { collection, getDocs, limit, orderBy, query } from 'firebase/firestore';
+import { collection, doc, getDoc, getDocs, limit, orderBy, query } from 'firebase/firestore';
 import { useLocation } from 'wouter';
 import { db } from '../lib/firebase';
 import { useAuth } from '../lib/AuthContext';
@@ -12,6 +12,7 @@ import { api, type MovieApiMedia } from '../lib/api';
 import { buildDetailsHref } from '../lib/mediaRoute';
 import { updateSEO } from '../lib/seo';
 import { formatAdminDuration, getAdminMetrics, getRecentDays, getTopContent, type AdminEvent } from '../lib/adminMetrics';
+import { hasAdminClaim, hasAdminMarker } from '../lib/adminAccess';
 import '../styles/admin.css';
 
 type AdminTab = 'overview' | 'audience' | 'content' | 'activity' | 'health' | 'reports' | 'settings';
@@ -125,7 +126,7 @@ function Overview({ events, usersCount, range, onRangeChange }: { events: AdminE
     <section className="panda-admin-grid panda-admin-grid--three">
       <article className="panda-admin-panel"><div className="panda-admin-mini-icon"><Users size={16} /></div><span className="panda-admin-panel__eyebrow">AUDIENCE</span><strong className="panda-admin-panel__big">{usersCount.toLocaleString()}</strong><p>Registered accounts currently stored in Firestore.</p></article>
       <article className="panda-admin-panel"><div className="panda-admin-mini-icon"><Clock3 size={16} /></div><span className="panda-admin-panel__eyebrow">SESSION QUALITY</span><strong className="panda-admin-panel__big">{formatAdminDuration(metrics.avgWatchSecondsPerSession)}</strong><p>Average tracked watch time per analytics session.</p></article>
-      <article className="panda-admin-panel panda-admin-panel--accent"><div className="panda-admin-mini-icon"><Shield size={16} /></div><span className="panda-admin-panel__eyebrow">SECURITY</span><strong className="panda-admin-panel__big">ADMIN</strong><p>The current account is operating with the Firebase admin claim.</p></article>
+      <article className="panda-admin-panel panda-admin-panel--accent"><div className="panda-admin-mini-icon"><Shield size={16} /></div><span className="panda-admin-panel__eyebrow">SECURITY</span><strong className="panda-admin-panel__big">ADMIN</strong><p>The current account is operating with the Firebase admin marker.</p></article>
     </section>
   </div>;
 }
@@ -142,7 +143,7 @@ function Audience({ users }: { users: UserRow[] }) {
     <TitleBar kicker="AUDIENCE" title="Know who is using Panda." description="Search registered accounts and inspect profile metadata without exposing it publicly." action={<div className="panda-admin-count-chip"><Users size={15} />{users.length.toLocaleString()} users</div>} />
     <div className="panda-admin-toolbar"><label className="panda-admin-search"><Search size={16} /><input value={search} onChange={(event) => setSearch(event.target.value)} placeholder="Search by name, email or UID" />{search && <button type="button" onClick={() => setSearch('')} aria-label="Clear search"><X size={15} /></button>}</label></div>
     <section className="panda-admin-panel panda-admin-table-panel">{filtered.length ? <div className="panda-admin-table-wrap"><table className="panda-admin-table"><thead><tr><th>User</th><th>Email</th><th>Created</th><th>Role</th><th /></tr></thead><tbody>{filtered.map((row) => <tr key={row.uid}><td><div className="panda-admin-user">{row.photoURL ? <img src={row.photoURL} alt="" /> : <span>{(row.displayName || row.email || 'U').slice(0, 1).toUpperCase()}</span>}<div><strong>{row.displayName || 'Unnamed user'}</strong><small>{row.uid}</small></div></div></td><td>{row.email || '—'}</td><td>{row.createdAt ? new Date(row.createdAt).toLocaleDateString() : '—'}</td><td><span className="panda-admin-badge panda-admin-badge--neutral">Member</span></td><td><button type="button" className="panda-admin-icon-button" onClick={() => setSelected(row)} aria-label={'Inspect ' + (row.email || row.uid)}><ChevronRight size={16} /></button></td></tr>)}</tbody></table></div> : <EmptyState icon={Users} title="No matching users" description="Try a different email, name or UID." />}</section>
-    {selected && <div className="panda-admin-drawer-backdrop" role="presentation" onClick={() => setSelected(null)}><aside className="panda-admin-drawer" onClick={(event) => event.stopPropagation()}><div className="panda-admin-drawer__head"><div><span>USER PROFILE</span><h2>{selected.displayName || 'Unnamed user'}</h2></div><button type="button" onClick={() => setSelected(null)} aria-label="Close user profile"><X size={18} /></button></div><div className="panda-admin-detail-list"><div><span>Email</span><strong>{selected.email || '—'}</strong></div><div><span>UID</span><strong>{selected.uid}</strong></div><div><span>Created</span><strong>{selected.createdAt ? new Date(selected.createdAt).toLocaleString() : '—'}</strong></div><div><span>Role</span><strong>Member</strong></div></div><button type="button" className="panda-admin-secondary-button" onClick={() => void navigator.clipboard?.writeText(selected.uid)}><Copy size={15} />Copy UID</button><p className="panda-admin-note">Firebase Auth role changes remain a privileged server-side operation, so this browser console does not attempt to mutate admin claims.</p></aside></div>}
+    {selected && <div className="panda-admin-drawer-backdrop" role="presentation" onClick={() => setSelected(null)}><aside className="panda-admin-drawer" onClick={(event) => event.stopPropagation()}><div className="panda-admin-drawer__head"><div><span>USER PROFILE</span><h2>{selected.displayName || 'Unnamed user'}</h2></div><button type="button" onClick={() => setSelected(null)} aria-label="Close user profile"><X size={18} /></button></div><div className="panda-admin-detail-list"><div><span>Email</span><strong>{selected.email || '—'}</strong></div><div><span>UID</span><strong>{selected.uid}</strong></div><div><span>Created</span><strong>{selected.createdAt ? new Date(selected.createdAt).toLocaleString() : '—'}</strong></div><div><span>Role</span><strong>Member</strong></div></div><button type="button" className="panda-admin-secondary-button" onClick={() => void navigator.clipboard?.writeText(selected.uid)}><Copy size={15} />Copy UID</button><p className="panda-admin-note">Admin access is managed directly in Firestore. Add or remove the user's admins/{uid} marker from the Firebase console.</p></aside></div>}
   </div>;
 }
 
@@ -212,12 +213,12 @@ function Reports({ events, usersCount, range }: { events: AdminEvent[]; usersCou
 }
 
 function SettingsView({ autoRefresh, setAutoRefresh }: { autoRefresh: boolean; setAutoRefresh: (value: boolean) => void }) {
-  const rows = [['Active provider', 'Vidy', 'Playback is routed via MovieAPI.'], ['Analytics store', 'Firestore', 'Client events are stored in analytics_events.'], ['Admin authorization', 'Firebase custom claim', 'The dashboard requires admin === true.'], ['Production frontend', 'Render', 'Panda.fun production is hosted on Render.']];
+  const rows = [['Active provider', 'Vidy', 'Playback is routed via MovieAPI.'], ['Analytics store', 'Firestore', 'Client events are stored in analytics_events.'], ['Admin authorization', 'Firestore admin marker', 'Create admins/{uid} with role: admin in the Firebase console.'], ['Production frontend', 'Render', 'Panda.fun production is hosted on Render.']];
   return <div className="panda-admin-view"><TitleBar kicker="ADMIN SETTINGS" title="Quiet controls for the people running Panda." description="These preferences change the admin console only; they do not alter public playback or account policy." />
     <section className="panda-admin-settings-grid"><article className="panda-admin-panel"><div className="panda-admin-panel__head"><div><span>CONSOLE BEHAVIOUR</span><h2>Refresh policy</h2></div><RefreshCw size={17} /></div><label className="panda-admin-toggle-row"><span><strong>Auto-refresh data</strong><small>Refresh Firestore analytics every 60 seconds while this console is open.</small></span><button type="button" className={'panda-admin-toggle ' + (autoRefresh ? 'is-on' : '')} onClick={() => setAutoRefresh(!autoRefresh)} role="switch" aria-checked={autoRefresh}><span /></button></label></article>
       <article className="panda-admin-panel"><div className="panda-admin-panel__head"><div><span>STACK CONFIGURATION</span><h2>Current wiring</h2></div><BookOpen size={17} /></div><div className="panda-admin-config-list">{rows.map(([label, value, detail]) => <div key={label}><span>{label}</span><strong>{value}</strong><small>{detail}</small></div>)}</div></article>
     </section>
-    <div className="panda-admin-note panda-admin-note--large"><Shield size={16} /><div><strong>Privileged changes stay off the client.</strong><p>Creating or revoking admin custom claims still belongs in the credentialed Firebase Admin environment. This dashboard intentionally avoids pretending it can perform those operations safely from a public browser.</p></div></div>
+    <div className="panda-admin-note panda-admin-note--large"><Shield size={16} /><div><strong>Privileged changes stay off the client.</strong><p>Admin access is managed in Firestore instead of from the public browser. Create or delete the matching admins/{uid} document from the Firebase console.</p></div></div>
   </div>;
 }
 
@@ -233,7 +234,12 @@ export function Admin() {
     if (!user) return; setLoadingData(true); setError('');
     try {
       const token = await user.getIdTokenResult(true);
-      if (token.claims.admin !== true) { setAuthorized(false); return; }
+      let hasAccess = hasAdminClaim(token.claims as Record<string, unknown>);
+      if (!hasAccess) {
+        const adminMarker = await getDoc(doc(db, 'admins', user.uid));
+        hasAccess = adminMarker.exists() && hasAdminMarker(adminMarker.data() as Record<string, unknown>);
+      }
+      if (!hasAccess) { setAuthorized(false); return; }
       setAuthorized(true);
       const since = Date.now() - range * 86400000;
       const [eventSnap, userSnap] = await Promise.all([
@@ -266,8 +272,8 @@ export function Admin() {
   useEffect(() => { if (!autoRefresh || !user || authorized !== true) return; const timer = window.setInterval(() => { void loadData(); }, 60000); return () => window.clearInterval(timer); }, [autoRefresh, user, authorized, range]);
 
   if (authLoading || loadingData || authorized === null) return <div className="panda-admin-gate"><RefreshCw size={22} className="animate-spin" /><span>Checking Panda admin access…</span></div>;
-  if (!user) return <div className="panda-admin-gate"><div className="panda-admin-gate__card"><div className="panda-admin-gate__mark">🐼</div><ShieldAlert size={21} /><h1>Admin sign-in required</h1><p>Sign in with the Firebase account that has the Panda.fun <code>admin</code> custom claim.</p><button type="button" className="panda-admin-primary-button" onClick={() => setLocation('/')}>Return to Panda.fun</button></div></div>;
-  if (!authorized) return <div className="panda-admin-gate"><div className="panda-admin-gate__card"><div className="panda-admin-gate__mark">🐼</div><ShieldAlert size={21} /><h1>Access denied</h1><p>{error || 'This Firebase account does not have the required admin custom claim.'}</p><div className="panda-admin-gate__actions"><button type="button" className="panda-admin-primary-button" onClick={() => setLocation('/home')}>Back to Panda</button><button type="button" className="panda-admin-secondary-button" onClick={() => void signOut()}>Sign out</button></div></div></div>;
+  if (!user) return <div className="panda-admin-gate"><div className="panda-admin-gate__card"><div className="panda-admin-gate__mark">🐼</div><ShieldAlert size={21} /><h1>Admin sign-in required</h1><p>Sign in with the Firebase account whose UID has an <code>admins/{'{'}uid{'}'}</code> marker document.</p><button type="button" className="panda-admin-primary-button" onClick={() => setLocation('/')}>Return to Panda.fun</button></div></div>;
+  if (!authorized) return <div className="panda-admin-gate"><div className="panda-admin-gate__card"><div className="panda-admin-gate__mark">🐼</div><ShieldAlert size={21} /><h1>Access denied</h1><p>{error || 'This Firebase account does not have the required admin marker document.'}</p><div className="panda-admin-gate__actions"><button type="button" className="panda-admin-primary-button" onClick={() => setLocation('/home')}>Back to Panda</button><button type="button" className="panda-admin-secondary-button" onClick={() => void signOut()}>Sign out</button></div></div></div>;
 
   let activeView: React.ReactNode;
   switch (activeTab) {
