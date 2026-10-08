@@ -6,7 +6,7 @@ const source = readFileSync(new URL('./Home.tsx', import.meta.url), 'utf8');
 describe('Home profile gate and trailer autoplay', () => {
   it('mounts the home content only after the profile gate and has one gate owner', () => {
     expect(source).not.toMatch(/function HomeContent\(\)[\\s\\S]*?<HomeProfileGate\s*\/>/);
-    expect(source).toMatch(/export function Home\(\)[\\s\\S]*?<HomeProfileGate onReady=\{handleProfileReady\} onBlock=\{handleProfileBlock\} \/>/);
+    expect(source).toMatch(/export function Home\(\)[\s\S]*?<HomeProfileGate onReady=\{handleProfileReady\} onBlock=\{handleProfileBlock\} \/>/);
     expect(source).toMatch(/\{profileReady && <HomeContent \/>\}/);
   });
 
