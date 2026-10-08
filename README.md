@@ -439,16 +439,14 @@ npm run preview
 
 ## 🚀 Deployment
 
-The project is designed for Vercel deployment.
-
-The frontend is a client-side React application with Vite build output and SPA rewrites configured in `vercel.json`.
+The project is deployed to Render as the primary production host. The frontend is a client-side React application with Vite build output and SPA behavior served by the Express wrapper in `server.ts`. `vercel.json` remains available for alternate Vercel deployments and CSP configuration.
 
 Important deployment requirements:
 
-1. Configure the required Vite environment variables.
-2. Configure Firebase for the production domain.
+1. Configure the required Vite environment variables in the production host.
+2. Deploy the Firebase Authentication provider configuration and Firestore rules.
 3. Ensure the MovieAPI endpoint is reachable from the deployed site.
-4. Keep the CSP/frame configuration aligned with the active playback embed provider.
+4. Keep the CSP/frame configuration aligned with the active Vidy playback provider.
 5. Deploy the frontend after successful type checking/build verification.
 
 ---
