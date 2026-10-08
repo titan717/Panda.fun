@@ -8,7 +8,7 @@ import { DEFAULT_POSTER, DEFAULT_BANNER } from '../types';
 import { libraryManager } from '../lib/library';
 import { historyUtil } from '../lib/history';
 import { updateSEO } from '../lib/seo';
-import { trackGAEvent } from '../lib/analytics';
+import { trackEvent, trackGAEvent } from '../lib/analytics';
 import { buildDetailsHref, buildWatchHref, parseDetailsRouteSearch } from '../lib/mediaRoute';
 import { createEpisodeRailObserver } from '../lib/safeResizeObserver';
 import { calculateEpisodeRailStep, sortEpisodesForDisplay } from '../lib/episodeRail';
@@ -196,7 +196,8 @@ export function Details() {
   };
 
   const watch = () => {
-    trackGAEvent('select_content', { content_type: kind });
+    trackGAEvent('select_content', { content_type: kind, item_id: id, title });
+    void trackEvent({ type: 'content_select', animeId: id, animeTitle: title, metadata: { source: 'details', contentType: kind } });
     if (kind === 'movie') {
       setLocation(buildWatchHref(id, 'movie', 1, 1, resume?.playbackTimestamp || 0));
       return;
@@ -231,7 +232,8 @@ export function Details() {
   const toggleList = () => {
     const next = libraryManager.toggleWatchlist({ id, title, image: poster });
     setIsInList(next);
-    trackGAEvent(next ? 'add_to_list' : 'remove_from_list', { content_type: kind });
+    trackGAEvent(next ? 'add_to_list' : 'remove_from_list', { content_type: kind, item_id: id, title });
+    void trackEvent({ type: 'library_action', animeId: id, animeTitle: title, metadata: { action: next ? 'add' : 'remove', source: 'details' } });
   };
 
   return (
