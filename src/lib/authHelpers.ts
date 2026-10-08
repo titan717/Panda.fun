@@ -44,6 +44,12 @@ export function getAuthErrorMessage(code: unknown, mode: 'signin' | 'signup'): s
       return 'Google sign-in was blocked by the browser.';
     case 'auth/popup-closed-by-user':
       return 'Google sign-in was cancelled.';
+    case 'auth/unauthorized-domain':
+      return 'This Panda.fun address is not authorized in Firebase Authentication. Add the current site domain under Firebase Authentication → Settings → Authorized domains.';
+    case 'auth/configuration-not-found':
+      return 'Firebase Authentication is not configured for this project yet. Enable the sign-in provider in Firebase and deploy the authentication configuration.';
+    case 'auth/invalid-api-key':
+      return 'Firebase rejected the web API key. Check the Firebase web app configuration for Panda.fun.';
     case 'auth/operation-not-allowed':
       return mode === 'signup'
         ? 'Email/password sign-up is not enabled in Firebase yet.'
