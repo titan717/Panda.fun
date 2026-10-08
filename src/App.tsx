@@ -55,6 +55,7 @@ function AnimatedRoutes() {
   }, [location]);
 
   if (location === '/') return <Landing />;
+  if (location === '/admin') return <Admin />;
 
   return (
     <Layout>
@@ -86,7 +87,6 @@ function AnimatedRoutes() {
               <Route path="/docs" component={Docs} />
               <Route path="/profile" component={Profile} />
               <Route path="/about" component={About} />
-              <Route path="/admin" component={Admin} />
               <Route path="/settings" component={SettingsPage} />
               <Route path="/search" component={Search} />
               <Route path="/explore" component={Search} />
