@@ -1,7 +1,6 @@
 import type { AnimeDetails, AnimeItem, Episode, AnimeSeasonItem, MediaTrailer } from '../types';
 import { slugifyTitle } from './slug';
 import { trackApiFailure } from './analytics';
-import { buildVidyUrl } from './vidy';
 import { optimizeImageUrl } from './mediaImages';
 
 export type MovieApiMedia = {
@@ -597,17 +596,24 @@ export const api = {
     const tmdbId = await resolveTmdbId(media, signal);
     if (!tmdbId) throw new MovieApiError('Unable to resolve this title to a TMDB ID for Vidy playback.', 503, 'TMDB_ID_UNAVAILABLE');
 
-    const url = buildVidyUrl(tmdbId, media.type === 'movie' ? 'movie' : 'tv', season, episode, progress);
-    const source: MovieApiPlaybackSource = {
-      id: `vidy-${media.type}-${tmdbId}-${season}-${episode}`,
-      provider: 'vidy',
-      type: 'embed',
-      url,
-      title: 'Vidy',
-      quality: 'auto',
-      requiresClientPlayback: true,
-    };
-    return { url, source };
+    const safeProgress = Math.max(0, Math.floor(Number(progress) || 0));
+    const path = media.type === 'movie'
+      ? `/api/v1/movie/${tmdbId}/play`
+      : `/api/v1/tv/${tmdbId}/season/${Math.max(1, season)}/episode/${Math.max(1, episode)}/play`;
+    const data = await request<{ source: MovieApiPlaybackSource | null }>(
+      path,
+      media.type === 'movie'
+        ? { progress: safeProgress }
+        : { tmdbId, progress: safeProgress },
+      { signal },
+      30_000
+    );
+
+    if (!data.source?.url) {
+      throw new MovieApiError('Playback source unavailable.', 503, 'PLAYBACK_UNAVAILABLE');
+    }
+
+    return { url: data.source.url, source: data.source };
   },
 
   async getServers(id: string, episode = 1) {
