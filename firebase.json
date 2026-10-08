@@ -1,0 +1,17 @@
+{
+  "$schema": "https://raw.githubusercontent.com/firebase/firebase-tools/master/schema/firebase-config.json",
+  "auth": {
+    "providers": {
+      "emailPassword": true,
+      "googleSignIn": {
+        "oAuthBrandDisplayName": "Panda.fun"
+      }
+    }
+  },
+  "firestore": [
+    {
+      "database": "ai-studio-animora-088fb012-7d14-4efc-9995-ae864c966071",
+      "rules": "firestore.rules"
+    }
+  ]
+}
