@@ -53,8 +53,8 @@ export function ProfileAvatar({
 
 function ProgressDots({ step }: { step: SetupStep }) {
   return (
-    <div className="panda-profile-progress" aria-label={'Step ' + step + ' of 5'}>
-      {([1, 2, 3, 4, 5] as SetupStep[]).map((item) => (
+    <div className="panda-profile-progress" aria-label={'Step ' + step + ' of 4'}>
+      {([1, 2, 3, 4] as SetupStep[]).map((item) => (
         <span key={item} className={item === step ? 'is-active' : item < step ? 'is-done' : ''} />
       ))}
     </div>
@@ -202,7 +202,7 @@ export function ProfileSetup({
 
     setSaving(true);
     try {
-      const selectedSeriesGenres = step === 5 && skipCurrent ? [] : seriesGenres;
+      const selectedSeriesGenres = step === 4 && skipCurrent ? [] : seriesGenres;
       const base = normalizeProfile({
         id: initialProfile?.id || createProfileId(),
         name: name.trim(),
