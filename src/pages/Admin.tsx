@@ -326,7 +326,7 @@ function Overview({ events, usersCount, range, onRangeChange, autoRefresh, onRef
       </section>
 
       <div className="panda-admin-source-strip">
-        <div><span className="panda-admin-live-dot" />Analytics live</div>
+        <div><span className="panda-admin-live-dot" />{metrics.liveSessions.toLocaleString()} live sessions</div>
         <code>G-9CEEHSHNHJ</code>
         <span>{events.length.toLocaleString()} events loaded</span>
         {loadedAt && <span>Updated {new Date(loadedAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</span>}
