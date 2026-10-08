@@ -577,7 +577,7 @@ export function Admin() {
     } catch (loadError) {
       console.error('[Panda.fun] Admin dashboard load failed:', loadError);
       setError(loadError instanceof Error ? loadError.message : 'Unable to load admin data.');
-      setAuthorized(false);
+      if (authorized !== true) setAuthorized(false);
     } finally {
       setLoadingData(false);
       setRefreshing(false);
