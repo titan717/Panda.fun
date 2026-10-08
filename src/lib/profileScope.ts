@@ -1,3 +1,4 @@
+import { auth } from './firebase';
 const ACTIVE_PROFILE_PREFIX = 'panda_active_profile_';
 const INITIALIZED_PREFIX = 'panda_profile_initialized_';
 
@@ -20,7 +21,7 @@ export function setActiveProfileId(userId: string, profileId: string): void {
 
 export function getActiveProfileStorageKey(baseKey: string): string {
   try {
-    const userId = localStorage.getItem('panda_profile_user_hint') || '';
+    const userId = auth.currentUser?.uid || '';
     const profileId = userId ? getActiveProfileId(userId) : '';
     return profileId ? baseKey + '__profile_' + profileId : baseKey;
   } catch {
