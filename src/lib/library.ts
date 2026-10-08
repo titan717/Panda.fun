@@ -1,4 +1,5 @@
 import { auth, db } from './firebase';
+import { getActiveProfileId, getActiveProfileStorageKey } from './profileScope';
 import { doc, setDoc, deleteDoc, getDocs, collection } from 'firebase/firestore';
 
 export interface LibraryItem {
@@ -13,13 +14,14 @@ const WATCHLIST_KEY = 'kinoma_watchlist';
 const COMPLETED_KEY = 'kinoma_completed';
 const FAVORITES_KEY = 'kinoma_favorites';
 const SEARCH_HISTORY_KEY = 'kinoma_search_history';
+const activeKey = (base: string) => getActiveProfileStorageKey(base);
 
 // Default fallback poster
 const DEFAULT_POSTER = 'https://images.unsplash.com/photo-1578632767115-351597cf2477?w=600&auto=format&fit=crop&q=80';
 
 function safeGet(key: string, fallbackKey?: string): LibraryItem[] {
   try {
-    const data = localStorage.getItem(key) || (fallbackKey ? localStorage.getItem(fallbackKey) : null);
+    const data = localStorage.getItem(activeKey(key)) || (activeKey(key) === key && fallbackKey ? localStorage.getItem(fallbackKey) : null);
     if (!data) return [];
     const parsed = JSON.parse(data);
     if (Array.isArray(parsed)) {
@@ -39,7 +41,7 @@ function safeGet(key: string, fallbackKey?: string): LibraryItem[] {
 
 function safeSet(key: string, items: LibraryItem[]): void {
   try {
-    localStorage.setItem(key, JSON.stringify(items));
+    localStorage.setItem(activeKey(key), JSON.stringify(items));
     window.dispatchEvent(new CustomEvent('kinoma_library_update', { detail: { key, count: items.length } }));
   } catch (e) {
     console.error('Failed to save library data', e);
@@ -50,7 +52,10 @@ function syncItemToCloud(item: LibraryItem) {
   if (!auth.currentUser) return;
   try {
     const cleanId = `${item.type}_${item.id.replace(/[^a-zA-Z0-9_-]/g, '_')}`;
-    const itemRef = doc(db, 'users', auth.currentUser.uid, 'library', cleanId);
+    const profileId = getActiveProfileId(auth.currentUser.uid);
+    const itemRef = profileId
+      ? doc(db, 'users', auth.currentUser.uid, 'profiles', profileId, 'library', cleanId)
+      : doc(db, 'users', auth.currentUser.uid, 'library', cleanId);
     setDoc(itemRef, {
       id: item.id,
       title: item.title,
@@ -69,7 +74,10 @@ function deleteItemFromCloud(id: string, type: string) {
   if (!auth.currentUser) return;
   try {
     const cleanId = `${type}_${id.replace(/[^a-zA-Z0-9_-]/g, '_')}`;
-    const itemRef = doc(db, 'users', auth.currentUser.uid, 'library', cleanId);
+    const profileId = getActiveProfileId(auth.currentUser.uid);
+    const itemRef = profileId
+      ? doc(db, 'users', auth.currentUser.uid, 'profiles', profileId, 'library', cleanId)
+      : doc(db, 'users', auth.currentUser.uid, 'library', cleanId);
     deleteDoc(itemRef).catch(() => {});
   } catch {}
 }
@@ -189,7 +197,7 @@ export const libraryManager = {
 
   getSearchHistory: (): string[] => {
     try {
-      const data = localStorage.getItem(SEARCH_HISTORY_KEY) || localStorage.getItem('animora_search_history');
+      const data = localStorage.getItem(activeKey(SEARCH_HISTORY_KEY)) || (activeKey(SEARCH_HISTORY_KEY) === SEARCH_HISTORY_KEY ? localStorage.getItem('animora_search_history') : null);
       return data ? JSON.parse(data) : [];
     } catch {
       return [];
@@ -202,7 +210,7 @@ export const libraryManager = {
       const trimmed = query.trim();
       let list = libraryManager.getSearchHistory();
       list = [trimmed, ...list.filter(q => q.toLowerCase() !== trimmed.toLowerCase())].slice(0, 15);
-      localStorage.setItem(SEARCH_HISTORY_KEY, JSON.stringify(list));
+      localStorage.setItem(activeKey(SEARCH_HISTORY_KEY), JSON.stringify(list));
       window.dispatchEvent(new CustomEvent('kinoma_search_update'));
     } catch {}
   },
@@ -217,7 +225,7 @@ export const libraryManager = {
 
   clearSearchHistory: (): void => {
     try {
-      localStorage.removeItem(SEARCH_HISTORY_KEY);
+      localStorage.removeItem(activeKey(SEARCH_HISTORY_KEY));
       localStorage.removeItem('animora_search_history');
       window.dispatchEvent(new CustomEvent('kinoma_search_update'));
     } catch {}
@@ -225,7 +233,10 @@ export const libraryManager = {
 
   syncFromFirestore: async (userId: string): Promise<void> => {
     try {
-      const colRef = collection(db, 'users', userId, 'library');
+      const profileId = getActiveProfileId(userId);
+      const colRef = profileId
+        ? collection(db, 'users', userId, 'profiles', profileId, 'library')
+        : collection(db, 'users', userId, 'library');
       const snap = await getDocs(colRef);
       if (snap.empty) return;
 
