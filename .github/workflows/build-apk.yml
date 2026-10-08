@@ -129,7 +129,9 @@ jobs:
           } >> "$GITHUB_ENV"
 
       - name: Install web dependencies
-        run: npm ci
+        # package-lock.json is currently being reconciled with package.json; npm
+        # install keeps the release build aligned with the checked-in manifest.
+        run: npm install --no-audit --no-fund
 
       - name: Build web application
         run: npm run build
