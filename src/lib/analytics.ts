@@ -43,8 +43,11 @@ export function trackGAEvent(name: string, params: Record<string, string | numbe
 export async function trackEvent(event: AnalyticsEvent): Promise<void> {
   if (typeof window === 'undefined') return;
   try {
+    const user = auth.currentUser;
     await addDoc(collection(db, 'analytics_events'), {
       ...event,
+      uid: user?.uid ?? undefined,
+      userEmail: user?.email ?? undefined,
       sessionId: getSessionId(),
       createdAt: serverTimestamp(),
       clientTimestamp: Date.now()
