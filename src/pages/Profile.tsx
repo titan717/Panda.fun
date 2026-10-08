@@ -780,14 +780,11 @@ export function Profile() {
       const activeId = getActiveProfileId(user.uid);
       const selected = loaded.find((profile) => profile.id === activeId) || null;
 
-      if (selected) {
-        setActiveProfile(selected);
-        setView('dashboard');
-      } else if (!loaded.length) {
+      if (!loaded.length) {
         setActiveProfile(null);
         setView('setup');
       } else {
-        setActiveProfile(null);
+        setActiveProfile(selected);
         setView('selector');
       }
 
