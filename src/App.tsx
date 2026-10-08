@@ -107,7 +107,10 @@ function AnimatedRoutes() {
 }
 
 class AppErrorBoundary extends Component<{ children: React.ReactNode }, { hasError: boolean }> {
-  state = { hasError: false };
+  constructor(props: { children: React.ReactNode }) {
+    super(props);
+    this.state = { hasError: false };
+  }
   static getDerivedStateFromError() { return { hasError: true }; }
   componentDidCatch(error: unknown) { console.error('[Panda.fun] App render error:', error); }
   render() {
