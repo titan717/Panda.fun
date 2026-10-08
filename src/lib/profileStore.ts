@@ -11,7 +11,6 @@ export type PandaProfile = {
   id: string;
   name: string;
   avatar: string;
-  pinHash?: string;
   movieGenres: string[];
   seriesGenres: string[];
   createdAt: string;
@@ -58,38 +57,11 @@ export function normalizeProfile(profile: Partial<PandaProfile> & Pick<PandaProf
     id: profile.id,
     name: String(profile.name || 'Panda').trim().slice(0, 20) || 'Panda',
     avatar: String(profile.avatar || 'panda'),
-    pinHash: profile.pinHash || undefined,
     movieGenres: Array.isArray(profile.movieGenres) ? profile.movieGenres.slice(0, 3) : [],
     seriesGenres: Array.isArray(profile.seriesGenres) ? profile.seriesGenres.slice(0, 3) : [],
     createdAt: profile.createdAt || now,
     updatedAt: profile.updatedAt || now,
   };
-}
-
-export function isValidProfilePin(pin: string): boolean {
-  return /^\d{4}$/.test(pin);
-}
-
-async function hashPin(pin: string): Promise<string> {
-  if (!isValidProfilePin(pin)) throw new Error('PIN must be exactly 4 digits.');
-  if (typeof crypto === 'undefined' || !crypto.subtle) throw new Error('PIN locking is unavailable in this browser.');
-  const bytes = new TextEncoder().encode(pin);
-  const digest = await crypto.subtle.digest('SHA-256', bytes);
-  return Array.from(new Uint8Array(digest), byte => byte.toString(16).padStart(2, '0')).join('');
-}
-
-export async function verifyProfilePin(profile: PandaProfile, pin: string): Promise<boolean> {
-  if (!profile.pinHash) return true;
-  return (await hashPin(pin)) === profile.pinHash;
-}
-
-export async function setProfilePin(profile: PandaProfile, pin: string): Promise<PandaProfile> {
-  const trimmed = pin.trim();
-  return normalizeProfile({ ...profile, pinHash: await hashPin(trimmed), updatedAt: new Date().toISOString() });
-}
-
-export function clearProfilePin(profile: PandaProfile): PandaProfile {
-  return normalizeProfile({ ...profile, pinHash: undefined, updatedAt: new Date().toISOString() });
 }
 
 function localKey(userId: string): string {
