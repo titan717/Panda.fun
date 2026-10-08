@@ -73,3 +73,12 @@ export function Layout({ children }: { children: React.ReactNode }) {
     </div>
   );
 }
+
+
+export const ABOUT_ITEMS = [
+  { href: '/about', label: 'About' },
+  { href: '/docs', label: 'Docs' },
+  { href: '/terms', label: 'Terms' },
+  { href: '/privacy', label: 'Privacy' },
+  { href: '/contact', label: 'Contact' },
+];
