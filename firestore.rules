@@ -33,6 +33,10 @@ service cloud.firestore {
       allow write: if false;
     }
 
+    match /users/{userId}/profiles/{profileId} {
+      allow read, write: if ownsUser(userId) || isAdmin();
+    }
+
     match /users/{userId} {
       // Admins may read/manage users for the protected dashboard.
       allow read, delete: if isAdmin();
