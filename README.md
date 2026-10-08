@@ -346,7 +346,7 @@ The responsive web interface is intentionally shared across desktop, mobile and 
 
 ## 📺 Native Android TV
 
-The repository also contains a native Android TV application under `/android`.
+The repository also contains a native Android TV application under `/android`. Production Android TV releases are published manually through the `Build and Release Panda.fun Android TV APK` GitHub Actions workflow.
 
 It uses:
 
