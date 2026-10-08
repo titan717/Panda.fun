@@ -16,6 +16,7 @@ export type AdminEvent = {
 export type AdminMetrics = {
   pageViews: number;
   searches: number;
+  contentSelections: number;
   starts: number;
   completions: number;
   watchSeconds: number;
@@ -73,6 +74,7 @@ export function formatAdminDuration(seconds: number): string {
 export function getAdminMetrics(events: AdminEvent[]): AdminMetrics {
   const pageViews = events.filter((event) => event.type === 'page_view').length;
   const searches = events.filter((event) => event.type === 'search').length;
+  const contentSelections = events.filter((event) => event.type === 'content_select').length;
   const starts = events.filter((event) => event.type === 'watch_start' || event.type === 'episode_start').length;
   const completions = events.filter((event) => event.type === 'watch_complete').length;
   const watchSeconds = events
@@ -84,6 +86,7 @@ export function getAdminMetrics(events: AdminEvent[]): AdminMetrics {
   return {
     pageViews,
     searches,
+    contentSelections,
     starts,
     completions,
     watchSeconds,
