@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { isValidProfilePin, normalizeProfile } from './profileStore';
+import { normalizeProfile } from './profileStore';
 
 describe('profile store', () => {
   it('normalizes profile fields and limits genres', () => {
@@ -16,11 +16,16 @@ describe('profile store', () => {
     expect(profile.seriesGenres).toEqual(['Comedy', 'Drama', 'Crime']);
   });
 
-  it('accepts only four-digit profile PINs', () => {
-    expect(isValidProfilePin('1234')).toBe(true);
-    expect(isValidProfilePin('0000')).toBe(true);
-    expect(isValidProfilePin('123')).toBe(false);
-    expect(isValidProfilePin('12345')).toBe(false);
-    expect(isValidProfilePin('12a4')).toBe(false);
+  it('strips legacy profile PIN data while normalizing', () => {
+    const legacy = normalizeProfile({
+      id: 'legacy',
+      name: 'Legacy',
+      avatar: 'panda',
+      movieGenres: [],
+      seriesGenres: [],
+      ...( { pinHash: 'legacy-lock' } as Record<string, unknown> ),
+    } as Parameters<typeof normalizeProfile>[0]);
+
+    expect('pinHash' in legacy).toBe(false);
   });
 });
