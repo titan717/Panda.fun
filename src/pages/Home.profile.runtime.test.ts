@@ -11,8 +11,12 @@ describe('Home profile gate and trailer autoplay', () => {
   });
 
   it('does not expose profile PIN locking and keeps the featured trailer unmuted', () => {
+    const profileSource = readFileSync(new URL('./Profile.tsx', import.meta.url), 'utf8');
+
     expect(source).not.toMatch(/PinPrompt|pinProfile|pinHash/);
+    expect(profileSource).not.toMatch(/PinPrompt|pinHash|Lock it with a PIN|Locked profile|Profile PIN/);
     expect(source).toMatch(/parsed\.searchParams\.set\('autoplay', '1'\)/);
-    expect(source).toMatch(/parsed\.searchParams\.set\('mute', soundEnabled \? '0' : '1'\)/);
+    expect(source).toMatch(/parsed\.searchParams\.set\('mute', '0'\)/);
+    expect(source).not.toMatch(/searchParams\.set\('mute', '1'\)/);
   });
 });
