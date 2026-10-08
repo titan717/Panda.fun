@@ -38,7 +38,7 @@ service cloud.firestore {
       allow update: if (
         ownsUser(userId)
         && request.resource.data.uid == resource.data.uid
-        && request.resource.data.keys().hasOnly(userProfileKeys())
+        && request.resource.data.diff(resource.data).affectedKeys().hasOnly(userProfileKeys())
         && request.resource.data.email == (request.auth.token.email == null ? '' : request.auth.token.email)
       ) || isAdmin();
 
@@ -54,7 +54,19 @@ service cloud.firestore {
     // Internal analytics is append-only for clients and readable only by admins.
     // Client-written events are treated as untrusted telemetry, not an auth source.
     match /analytics_events/{eventId} {
-      allow create: if true;
+      allow create: if request.resource.data.keys().hasOnly([
+        'type',
+        'path',
+        'animeId',
+        'animeTitle',
+        'episodeId',
+        'episodeNumber',
+        'durationSeconds',
+        'metadata',
+        'sessionId',
+        'createdAt',
+        'clientTimestamp'
+      ]);
       allow read, update, delete: if isAdmin();
     }
 
