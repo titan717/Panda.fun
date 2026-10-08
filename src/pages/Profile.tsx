@@ -2,7 +2,7 @@ import React, { useEffect, useMemo, useState } from 'react';
 import { AnimatePresence, motion } from 'motion/react';
 import {
   ArrowLeft, ArrowRight, Check, Compass, Drama, Edit3, Fingerprint, Ghost, History,
-  Heart, Library, Laugh, Lock, LogIn, LogOut, Mail, Plus, Rocket, Search,
+  Heart, Library, Laugh, LogIn, LogOut, Mail, Plus, Rocket, Search,
   Settings, ShieldCheck, Sparkles, Trash2, UserRound, X, Zap
 } from 'lucide-react';
 import { Link, useLocation } from 'wouter';
@@ -10,28 +10,24 @@ import { useAuth } from '../lib/AuthContext';
 import { libraryManager } from '../lib/library';
 import { historyUtil, type HistoryItem } from '../lib/history';
 import {
-  clearProfilePin,
   createProfileId,
   deleteProfile,
   getActiveProfileId,
-  isValidProfilePin,
   listProfiles,
   MOVIE_GENRES,
   normalizeProfile,
   PROFILE_AVATARS,
   saveProfile,
   setActiveProfileId,
-  setProfilePin,
   SERIES_GENRES,
   type PandaProfile,
-  verifyProfilePin,
 } from '../lib/profileStore';
 import { buildWatchHref } from '../lib/mediaRoute';
 import { trackEvent } from '../lib/analytics';
 import { initializeProfileStorage } from '../lib/profileScope';
 import '../styles/panda-profile.css';
 
-type SetupStep = 1 | 2 | 3 | 4 | 5;
+type SetupStep = 1 | 2 | 3 | 4;
 
 export function ProfileAvatar({
   profile,
@@ -50,11 +46,7 @@ export function ProfileAvatar({
         draggable={false}
         aria-hidden="true"
       />
-      {profile.pinHash && (
-        <span className="panda-profile-avatar__lock" aria-label="Profile locked">
-          <Lock size={size === 'lg' ? 13 : 10} />
-        </span>
-      )}
+
     </div>
   );
 }
@@ -139,8 +131,6 @@ export function ProfileSetup({
   const [step, setStep] = useState<SetupStep>(1);
   const [name, setName] = useState(initialProfile?.name || '');
   const [avatar, setAvatar] = useState(initialProfile?.avatar || '');
-  const [pin, setPin] = useState('');
-  const [removePin, setRemovePin] = useState(false);
   const [movieGenres, setMovieGenres] = useState<string[]>(initialProfile?.movieGenres || []);
   const [seriesGenres, setSeriesGenres] = useState<string[]>(initialProfile?.seriesGenres || []);
   const [saving, setSaving] = useState(false);
@@ -150,7 +140,6 @@ export function ProfileSetup({
     id: initialProfile?.id || 'preview',
     name: name.trim() || defaultName || 'Panda',
     avatar: avatar || 'panda',
-    pinHash: initialProfile?.pinHash,
     movieGenres,
     seriesGenres,
     createdAt: initialProfile?.createdAt || '',
@@ -163,10 +152,8 @@ export function ProfileSetup({
       : step === 2
         ? 'Choose your look'
         : step === 3
-          ? 'Lock it with a PIN?'
-          : step === 4
-            ? 'What movies do you love?'
-            : 'What series do you love?';
+          ? 'What movies do you love?'
+        : 'What series do you love?';
 
   const subtitle =
     step === 1
@@ -174,10 +161,8 @@ export function ProfileSetup({
       : step === 2
         ? 'Pick an avatar that feels like this profile'
         : step === 3
-          ? 'Only someone with this 4-digit PIN can use the profile. Leave it empty to skip — you can add one later.'
-          : step === 4
-            ? 'Pick up to 3 film genres — half of your first For You comes from these.'
-            : 'Now pick up to 3 TV genres. The other half of For You is built from these.';
+          ? 'Pick up to 3 film genres — half of your first For You comes from these.'
+        : 'Now pick up to 3 TV genres. The other half of For You is built from these.';
 
   const toggleGenre = (genre: string, kind: 'movie' | 'series') => {
     const selected = kind === 'movie' ? movieGenres : seriesGenres;
@@ -209,24 +194,11 @@ export function ProfileSetup({
     }
 
     if (step === 3) {
-      if (pin && !isValidProfilePin(pin)) {
-        setError('PIN must be exactly 4 digits.');
-        return;
-      }
-      if (pin === '0000') {
-        setError('Choose a PIN other than 0000.');
-        return;
-      }
       setStep(4);
       return;
     }
 
-    if (step === 4) {
-      setStep(5);
-      return;
-    }
-
-    if (step === 5 && skipCurrent) setSeriesGenres([]);
+    if (step === 4 && skipCurrent) setSeriesGenres([]);
 
     setSaving(true);
     try {
@@ -237,19 +209,11 @@ export function ProfileSetup({
         avatar: avatar || 'panda',
         movieGenres,
         seriesGenres: selectedSeriesGenres,
-        pinHash: initialProfile?.pinHash,
         createdAt: initialProfile?.createdAt,
         updatedAt: new Date().toISOString(),
       });
 
-      let nextProfile = base;
-      if (removePin) {
-        nextProfile = clearProfilePin(base);
-      } else if (pin) {
-        nextProfile = await setProfilePin(base, pin);
-      }
-
-      onComplete(nextProfile);
+      onComplete(base);
     } catch (saveError) {
       setError(saveError instanceof Error ? saveError.message : 'Unable to save this profile.');
     } finally {
@@ -348,60 +312,6 @@ export function ProfileSetup({
             )}
 
             {step === 3 && (
-              <div className="panda-profile-pin-wrap">
-                <div className="panda-profile-pin">
-                  {[0, 1, 2, 3].map((index) => (
-                    <span
-                      key={index}
-                      className={[
-                        pin[index] ? 'is-filled' : '',
-                        index === pin.length && pin.length < 4 ? 'is-current' : '',
-                      ].filter(Boolean).join(' ')}
-                    >
-                      {pin[index] ? '•' : ''}
-                    </span>
-                  ))}
-                </div>
-
-                <input
-                  className="panda-profile-pin-input"
-                  aria-label="Four digit profile PIN"
-                  inputMode="numeric"
-                  pattern="[0-9]*"
-                  maxLength={4}
-                  value={pin}
-                  onChange={(event) => {
-                    setRemovePin(false);
-                    setPin(event.target.value.replace(/\\D/g, '').slice(0, 4));
-                  }}
-                  autoFocus
-                />
-
-                {initialProfile?.pinHash && !pin && !removePin && (
-                  <div className="panda-profile-pin-links">
-                    <span>Leave empty to keep the current PIN.</span>
-                    <button type="button" onClick={() => setRemovePin(true)}>Remove PIN</button>
-                  </div>
-                )}
-
-                {initialProfile?.pinHash && removePin && (
-                  <div className="panda-profile-pin-links">
-                    <span>This profile will become unlocked.</span>
-                    <button
-                      type="button"
-                      onClick={() => {
-                        setRemovePin(false);
-                        setPin('');
-                      }}
-                    >
-                      Keep PIN
-                    </button>
-                  </div>
-                )}
-              </div>
-            )}
-
-            {step === 4 && (
               <div className="panda-profile-choices">
                 {MOVIE_GENRES.map((genre) => (
                   <ChoiceButton
@@ -416,7 +326,7 @@ export function ProfileSetup({
               </div>
             )}
 
-            {step === 5 && (
+            {step === 4 && (
               <div className="panda-profile-choices">
                 {SERIES_GENRES.map((genre) => (
                   <ChoiceButton
@@ -445,11 +355,11 @@ export function ProfileSetup({
                 </button>
               )}
 
-              {(step === 4 || step === 5) && (
+              {(step === 3 || step === 4) && (
                 <button
                   type="button"
                   className="panda-profile-flow__skip"
-                  onClick={() => step === 5 ? void next(true) : setStep(5)}
+                  onClick={() => step === 4 ? void next(true) : setStep(4)}
                   disabled={saving}
                 >
                   Skip
@@ -464,14 +374,13 @@ export function ProfileSetup({
                   saving ||
                   (step === 1 && !name.trim()) ||
                   (step === 2 && !avatar) ||
-                  (step === 3 && pin.length > 0 && pin.length < 4) ||
-                  (step === 4 && movieGenres.length === 0) ||
-                  (step === 5 && seriesGenres.length === 0)
+                  (step === 3 && movieGenres.length === 0) ||
+                  (step === 4 && seriesGenres.length === 0)
                 }
               >
                 {saving && <span className="panda-profile-spinner" />}
-                {!saving && step === 5 && 'Start watching'}
-                {!saving && step !== 5 && 'Continue'}
+                {!saving && step === 4 && 'Start watching'}
+                {!saving && step !== 4 && 'Continue'}
                 {!saving && <ArrowRight size={15} />}
               </button>
             </div>
@@ -479,87 +388,6 @@ export function ProfileSetup({
         </AnimatePresence>
       </div>
     </main>
-  );
-}
-
-export function PinPrompt({
-  profile,
-  onUnlock,
-  onCancel,
-}: {
-  profile: PandaProfile;
-  onUnlock: () => void;
-  onCancel: () => void;
-}) {
-  const [pin, setPin] = useState('');
-  const [error, setError] = useState('');
-
-  const submit = async () => {
-    if (pin.length !== 4) {
-      setError('Enter the 4-digit PIN.');
-      return;
-    }
-
-    const valid = await verifyProfilePin(profile, pin);
-    if (!valid) {
-      setError('That PIN is not right.');
-      setPin('');
-      return;
-    }
-
-    onUnlock();
-  };
-
-  return (
-    <div className="panda-profile-overlay">
-      <div className="panda-profile-overlay__backdrop" onClick={onCancel} />
-      <motion.div
-        className="panda-profile-pin-dialog"
-        initial={{ opacity: 0, scale: .97, y: 10 }}
-        animate={{ opacity: 1, scale: 1, y: 0 }}
-      >
-        <button type="button" className="panda-profile-overlay__close" onClick={onCancel} aria-label="Close">
-          <X size={17} />
-        </button>
-
-        <ProfileAvatar profile={profile} size="md" />
-        <span className="panda-profile-mini-label"><Lock size={11} /> Locked profile</span>
-        <h2>{profile.name}</h2>
-        <p>Enter the 4-digit PIN to continue.</p>
-
-        <div className="panda-profile-pin panda-profile-pin--dialog">
-          {[0, 1, 2, 3].map((index) => (
-            <span key={index} className={pin[index] ? 'is-filled' : ''}>
-              {pin[index] ? '•' : ''}
-            </span>
-          ))}
-        </div>
-
-        <input
-          className="panda-profile-pin-input"
-          aria-label="Profile PIN"
-          inputMode="numeric"
-          maxLength={4}
-          value={pin}
-          onChange={(event) => setPin(event.target.value.replace(/\\D/g, '').slice(0, 4))}
-          autoFocus
-          onKeyDown={(event) => {
-            if (event.key === 'Enter') void submit();
-          }}
-        />
-
-        {error && <div className="panda-profile-flow__error">{error}</div>}
-
-        <button
-          type="button"
-          className="panda-profile-flow__button panda-profile-flow__button--primary panda-profile-pin-submit"
-          onClick={() => void submit()}
-          disabled={pin.length !== 4}
-        >
-          Unlock profile
-        </button>
-      </motion.div>
-    </div>
   );
 }
 
@@ -626,7 +454,7 @@ function ProfileDashboard({
 
         <div className="panda-profile-dashboard__rule">
           <span />
-          {profile.pinHash ? 'Private profile' : 'Personal profile'}
+          Personal profile
           <b />
           Firebase account connected
         </div>
@@ -795,8 +623,6 @@ export function ManageProfiles({
               <div>
                 <strong>{profile.name}</strong>
                 <small>
-                  {profile.pinHash ? 'PIN protected' : 'No PIN'}
-                  {' · '}
                   {profile.movieGenres.length + profile.seriesGenres.length} taste signals
                 </small>
               </div>
@@ -826,7 +652,6 @@ export function Profile() {
   const [activeProfile, setActiveProfile] = useState<PandaProfile | null>(null);
   const [view, setView] = useState<'selector' | 'setup' | 'dashboard' | 'manage'>('selector');
   const [editingProfile, setEditingProfile] = useState<PandaProfile | null>(null);
-  const [pinProfile, setPinProfile] = useState<PandaProfile | null>(null);
   const [ready, setReady] = useState(false);
   const [confirmDelete, setConfirmDelete] = useState<PandaProfile | null>(null);
 
@@ -930,11 +755,6 @@ export function Profile() {
   };
 
   const selectProfile = (profile: PandaProfile) => {
-    if (profile.pinHash) {
-      setPinProfile(profile);
-      return;
-    }
-
     initializeProfileStorage(user.uid, profile.id, false, [
       'kinoma_history',
       'kinoma_watchlist',
@@ -949,30 +769,6 @@ export function Profile() {
     void historyUtil.syncFromFirestore(user.uid);
     void libraryManager.syncFromFirestore(user.uid);
     void trackEvent({ type: 'profile_select', metadata: { profileId: profile.id, locked: false } });
-    setView('dashboard');
-  };
-
-  const unlockProfile = () => {
-    if (!pinProfile) return;
-
-    initializeProfileStorage(user.uid, pinProfile.id, false, [
-      'kinoma_history',
-      'kinoma_watchlist',
-      'kinoma_completed',
-      'kinoma_favorites',
-      'kinoma_ep_progress',
-      'kinoma_meta_cache',
-      'kinoma_search_history',
-    ]);
-    setActiveProfile(pinProfile);
-    setActiveProfileId(user.uid, pinProfile.id);
-    void historyUtil.syncFromFirestore(user.uid);
-    void libraryManager.syncFromFirestore(user.uid);
-    void trackEvent({
-      type: 'profile_select',
-      metadata: { profileId: pinProfile.id, locked: true, pinUnlocked: true },
-    });
-    setPinProfile(null);
     setView('dashboard');
   };
 
@@ -1068,7 +864,7 @@ export function Profile() {
           onEdit={() => editProfile(activeProfile)}
           onSignOut={() => void handleSignOut()}
         />
-        {pinProfile && <PinPrompt profile={pinProfile} onUnlock={unlockProfile} onCancel={() => setPinProfile(null)} />}
+
       </>
     );
   }
@@ -1084,7 +880,7 @@ export function Profile() {
         }}
         onManage={() => setView('manage')}
       />
-      {pinProfile && <PinPrompt profile={pinProfile} onUnlock={unlockProfile} onCancel={() => setPinProfile(null)} />}
+
     </>
   );
 }
