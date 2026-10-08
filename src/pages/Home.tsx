@@ -390,13 +390,24 @@ function trailerSrc(url: unknown) {
   }
 }
 
+function requestTrailerPlayback(frame: HTMLIFrameElement | null) {
+  if (!frame?.contentWindow) return;
+  const message = JSON.stringify({
+    event: 'command',
+    func: 'playVideo',
+    args: [],
+  });
+  frame.contentWindow.postMessage(message, '*');
+}
+
 function PandaPoster({ item, priority = false }: { item: MovieApiMedia; priority?: boolean }) {
   const candidates = Array.from(new Set(
     [item.poster, item.backdrop]
       .filter((value): value is string => typeof value === 'string' && value.length > 0)
       .flatMap(value => {
-        const optimized = optimizeImageUrl(value, 'w342') || value;
-        return optimized === value ? [value] : [optimized, value];
+        const w342 = optimizeImageUrl(value, 'w342') || value;
+        const w500 = optimizeImageUrl(value, 'w500') || value;
+        return [w342, w500, value];
       })
   ));
   const [sourceIndex, setSourceIndex] = useState(0);
@@ -557,6 +568,7 @@ function HomeContent({
   const [isInList, setIsInList] = useState(false);
   // The featured trailer is intentionally unmuted. The profile choice is the entry interaction before Home mounts.
   const [trailerReady, setTrailerReady] = useState(false);
+  const [heroBackdropFailed, setHeroBackdropFailed] = useState(false);
   const trailerFrameRef = useRef<HTMLIFrameElement | null>(null);
   
   const [hoverTrailer, setHoverTrailer] = useState<MovieApiMedia | null>(null);
@@ -627,6 +639,9 @@ function HomeContent({
   const featuredBackdrop = featured?.backdrop
     ? (optimizeImageUrl(featured.backdrop, 'w1280') || featured.backdrop)
     : null;
+  const featuredBackdropSmall = featured?.backdrop
+    ? (optimizeImageUrl(featured.backdrop, 'w780') || featured.backdrop)
+    : null;
   const topTen = useMemo(() => [...trending, ...popularMovies, ...popularTv].filter((item, index, list) => item?.id && list.findIndex(candidate => candidate.id === item.id) === index).slice(0, 10), [trending, popularMovies, popularTv]);
 
   const toggleFeaturedList = () => {
@@ -641,6 +656,7 @@ function HomeContent({
 
   useEffect(() => {
     setTrailerReady(false);
+    setHeroBackdropFailed(false);
     if (featured?.id) setIsInList(libraryManager.isInWatchlist(featured.id));
   }, [featured?.id]);
 
@@ -696,11 +712,49 @@ function HomeContent({
         {/* PRESERVED HERO/TRAILER — intentionally unchanged */}
         <section className="kinoma-home-hero kinoma-home-hero--trailer" aria-labelledby="kinoma-home-title">
           <div className="kinoma-home-hero__trailer-bg" aria-label={featured?.title ? featured.title + ' trailer' : 'Featured trailer'}>
-            {featured?.backdrop && <img src={featuredBackdrop || featured.backdrop} alt="" className="kinoma-home-hero__banner-image kinoma-home-hero__banner-image--underlay" loading="eager" fetchPriority="high" decoding="async" />}
+            {featured?.backdrop && !heroBackdropFailed && (
+              <img
+                src={featuredBackdrop || featured.backdrop}
+                srcSet={featuredBackdropSmall && featuredBackdrop ? `${featuredBackdropSmall} 780w, ${featuredBackdrop} 1280w` : undefined}
+                sizes="100vw"
+                alt=""
+                className="kinoma-home-hero__banner-image kinoma-home-hero__banner-image--underlay"
+                loading="eager"
+                fetchPriority="high"
+                decoding="async"
+                referrerPolicy="no-referrer"
+                onError={() => setHeroBackdropFailed(true)}
+              />
+            )}
             {trailer?.trailer?.embedUrl ? (
-              <iframe ref={trailerFrameRef} src={trailerSrc(trailer.trailer.embedUrl)} title={featured?.title ? featured.title + ' trailer' : 'Featured trailer'} className={`kinoma-home-hero__trailer-video${trailerReady ? ' is-ready' : ''}`} onLoad={() => setTrailerReady(true)} allow="autoplay; encrypted-media; picture-in-picture" allowFullScreen loading="eager" />
+              <iframe
+                ref={trailerFrameRef}
+                src={trailerSrc(trailer.trailer.embedUrl)}
+                title={featured?.title ? featured.title + ' trailer' : 'Featured trailer'}
+                className={`kinoma-home-hero__trailer-video${trailerReady ? ' is-ready' : ''}`}
+                onLoad={() => {
+                  setTrailerReady(true);
+                  requestTrailerPlayback(trailerFrameRef.current);
+                  window.setTimeout(() => requestTrailerPlayback(trailerFrameRef.current), 0);
+                }}
+                referrerPolicy="strict-origin-when-cross-origin"
+                allow="autoplay; encrypted-media; picture-in-picture"
+                allowFullScreen
+                loading="eager"
+              />
             ) : featured?.backdrop ? (
-              <img src={featuredBackdrop || featured.backdrop} alt="" className="kinoma-home-hero__banner-image" loading="eager" fetchPriority="high" decoding="async" />
+              <img
+                src={featuredBackdrop || featured.backdrop}
+                srcSet={featuredBackdropSmall && featuredBackdrop ? `${featuredBackdropSmall} 780w, ${featuredBackdrop} 1280w` : undefined}
+                sizes="100vw"
+                alt=""
+                className="kinoma-home-hero__banner-image"
+                loading="eager"
+                fetchPriority="high"
+                decoding="async"
+                referrerPolicy="no-referrer"
+                onError={() => setHeroBackdropFailed(true)}
+              />
             ) : (
               <div className="kinoma-home-hero__banner-grid" />
             )}
@@ -749,6 +803,19 @@ function HomeContent({
                                 <img
                                   className="panda-home-top10__poster"
                                   src={(optimizeImageUrl((item.poster || item.backdrop) as string, 'w342') || (item.poster || item.backdrop)) as string}
+                                  srcSet={
+                                    item.poster || item.backdrop
+                                      ? [
+                                          optimizeImageUrl((item.poster || item.backdrop) as string, 'w342'),
+                                          optimizeImageUrl((item.poster || item.backdrop) as string, 'w500')
+                                        ]
+                                          .filter((value): value is string => Boolean(value))
+                                          .filter((value, sourceIndex, list) => list.indexOf(value) === sourceIndex)
+                                          .map((value, sourceIndex) => `${value} ${sourceIndex === 0 ? '342w' : '500w'}`)
+                                          .join(', ') || undefined
+                                      : undefined
+                                  }
+                                  sizes="(max-width: 700px) 42vw, 18vw"
                                   alt=""
                                   onError={(event) => {
                                     const original = (item.poster || item.backdrop) as string;
