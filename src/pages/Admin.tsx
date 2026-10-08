@@ -159,6 +159,8 @@ function MetricChart({ rows, metric, onMetricChange }: {
   const innerH = height - top - bottom;
   const values = rows.map((row) => getMetricValue(row, metric));
   const max = Math.max(1, ...values);
+  const hasData = values.some((value) => value > 0);
+  const formatChartValue = (value: number) => metric === 'watchSeconds' ? formatAdminDuration(value) : value.toLocaleString();
   const path = values.map((value, index) => {
     const x = left + (rows.length <= 1 ? innerW / 2 : index * (innerW / (rows.length - 1)));
     const y = top + innerH - (value / max) * innerH;
@@ -182,8 +184,10 @@ function MetricChart({ rows, metric, onMetricChange }: {
         <svg viewBox={'0 0 ' + width + ' ' + height} role="img" aria-label={getMetricLabel(metric) + ' over time'} preserveAspectRatio="none">
           {[0, .25, .5, .75, 1].map((ratio) => {
             const y = top + innerH - ratio * innerH;
-            return <line key={ratio} x1={left} x2={width - right} y1={y} y2={y} className="panda-admin-chart__gridline" />;
+            const value = ratio * max;
+            return <React.Fragment key={ratio}><line x1={left} x2={width - right} y1={y} y2={y} className="panda-admin-chart__gridline" /><text x={left - 8} y={y + 3} textAnchor="end" className="panda-admin-chart__y-label">{formatChartValue(value)}</text></React.Fragment>;
           })}
+          {hovered != null && rows[hovered] && <line x1={left + (rows.length <= 1 ? innerW / 2 : hovered * (innerW / (rows.length - 1)))} x2={left + (rows.length <= 1 ? innerW / 2 : hovered * (innerW / (rows.length - 1)))} y1={top} y2={top + innerH} className="panda-admin-chart__guide" />}
           <path d={area} className="panda-admin-chart__area" />
           <path d={path} className="panda-admin-chart__line" />
           {values.map((value, index) => {
@@ -207,6 +211,7 @@ function MetricChart({ rows, metric, onMetricChange }: {
             <text key={rows[index].key} x={left + (rows.length <= 1 ? innerW / 2 : index * (innerW / (rows.length - 1)))} y={height - 12} textAnchor={index === 0 ? 'start' : index === rows.length - 1 ? 'end' : 'middle'} className="panda-admin-chart__label">{rows[index].label}</text>
           ) : null)}
         </svg>
+        {!hasData && <div className="panda-admin-chart__empty">No stored {getMetricLabel(metric).toLowerCase()} in this range.</div>}
         {hovered != null && rows[hovered] && (
           <div
             className="panda-admin-chart__tooltip"
