@@ -4,7 +4,7 @@ import { Link } from 'wouter';
 import { KinomaLogo } from '../components/ui/KinomaLogo';
 import { ArrowRight, Check, Film, Github, Play, Plus, Search, Sparkles, Tv } from 'lucide-react';
 import { api, MovieApiError, MovieApiMedia } from '../lib/api';
-import { trackGAEvent } from '../lib/analytics';
+import { trackEvent, trackGAEvent } from '../lib/analytics';
 import { libraryManager } from '../lib/library';
 import { updateSEO } from '../lib/seo';
 import { buildDetailsHref, buildWatchHref } from '../lib/mediaRoute';
@@ -129,7 +129,10 @@ function PandaContentCard({
         aria-label={`Open ${item.title}`}
         onFocus={() => onHover(item)}
         onBlur={onLeave}
-        onClick={() => trackGAEvent('select_content', { content_type: item.type === 'movie' ? 'movie' : 'series', item_id: item.id, section: analyticsSection, title: item.title })}
+        onClick={() => {
+          trackGAEvent('select_content', { content_type: item.type === 'movie' ? 'movie' : 'series', item_id: item.id, section: analyticsSection, title: item.title });
+          void trackEvent({ type: 'content_select', animeId: item.id, animeTitle: item.title, metadata: { source: analyticsSection || 'home' } });
+        }}
       >
         <div className="panda-content-card__media">
           <PandaPoster item={item} priority={priority} />
@@ -369,7 +372,10 @@ export function Home() {
                             href={buildDetailsHref(item.title, item.type === 'movie' ? 'movie' : 'series', item.id)}
                             className="panda-home-top10__link"
                             aria-label={"Open " + item.title + ", Top 10 rank " + (index + 1)}
-                            onClick={() => trackGAEvent('home_top10_select', { rank: index + 1, item_id: item.id, title: item.title })}
+                            onClick={() => {
+                              trackGAEvent('home_top10_select', { rank: index + 1, item_id: item.id, title: item.title });
+                              void trackEvent({ type: 'content_select', animeId: item.id, animeTitle: item.title, metadata: { source: 'home_top10', rank: index + 1 } });
+                            }}
                           >
                             {item.poster || item.backdrop ? (
                               <div className="panda-home-top10__poster-wrap">
