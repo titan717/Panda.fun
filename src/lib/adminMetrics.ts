@@ -25,6 +25,18 @@ export type AdminMetrics = {
   avgWatchSecondsPerSession: number;
 };
 
+export type AdminMetricKey = 'pageViews' | 'watchStarts' | 'searches' | 'completions' | 'watchSeconds';
+
+export type DailyMetricRow = {
+  key: string;
+  label: string;
+  pageViews: number;
+  watchStarts: number;
+  searches: number;
+  completions: number;
+  watchSeconds: number;
+};
+
 export type TopContentRow = {
   key: string;
   title: string;
@@ -32,14 +44,30 @@ export type TopContentRow = {
   watchSeconds: number;
 };
 
+export const ADMIN_METRICS: Array<{ key: AdminMetricKey; label: string; shortLabel: string }> = [
+  { key: 'pageViews', label: 'Page views', shortLabel: 'Views' },
+  { key: 'watchStarts', label: 'Watch starts', shortLabel: 'Starts' },
+  { key: 'searches', label: 'Searches', shortLabel: 'Search' },
+  { key: 'completions', label: 'Completions', shortLabel: 'Complete' },
+  { key: 'watchSeconds', label: 'Watch time', shortLabel: 'Watch time' },
+];
+
+export function getMetricLabel(key: AdminMetricKey): string {
+  return ADMIN_METRICS.find((metric) => metric.key === key)?.label || key;
+}
+
+export function getMetricValue(row: DailyMetricRow, key: AdminMetricKey): number {
+  return Math.max(0, Number(row[key]) || 0);
+}
+
 export function formatAdminDuration(seconds: number): string {
   const total = Math.max(0, Math.floor(Number(seconds) || 0));
   const hours = Math.floor(total / 3600);
   const minutes = Math.floor((total % 3600) / 60);
   const remaining = total % 60;
   if (hours) return minutes ? hours + 'h ' + minutes + 'm' : hours + 'h';
-  if (minutes) return remaining ? `${minutes}m ${remaining}s` : `${minutes}m`;
-  return `${remaining}s`;
+  if (minutes) return remaining ? minutes + 'm ' + remaining + 's' : minutes + 'm';
+  return remaining + 's';
 }
 
 export function getAdminMetrics(events: AdminEvent[]): AdminMetrics {
@@ -80,7 +108,7 @@ export function getTopContent(events: AdminEvent[], limit = 10): TopContentRow[]
       watchSeconds: 0,
     };
 
-    if (event.type === 'anime_open' || event.type === 'episode_start' || event.type === 'watch_start') {
+    if (event.type === 'anime_open' || event.type === 'episode_start' || event.type === 'watch_start' || event.type === 'content_select') {
       row.opens += 1;
     }
     if (event.type === 'watch_progress') {
@@ -94,7 +122,7 @@ export function getTopContent(events: AdminEvent[], limit = 10): TopContentRow[]
     .slice(0, Math.max(1, limit));
 }
 
-export function getRecentDays(events: AdminEvent[], days: number): Array<{ label: string; views: number; starts: number }> {
+export function getRecentDays(events: AdminEvent[], days: number): DailyMetricRow[] {
   const count = Math.max(1, Math.floor(days));
   const now = new Date();
   now.setHours(0, 0, 0, 0);
@@ -103,22 +131,28 @@ export function getRecentDays(events: AdminEvent[], days: number): Array<{ label
     const date = new Date(now);
     date.setDate(now.getDate() - (count - index - 1));
     return {
-      date,
+      key: date.toISOString().slice(0, 10),
       label: date.toLocaleDateString(undefined, { month: 'short', day: 'numeric' }),
-      views: 0,
-      starts: 0,
+      pageViews: 0,
+      watchStarts: 0,
+      searches: 0,
+      completions: 0,
+      watchSeconds: 0,
     };
   });
 
-  const byDay = new Map(output.map((row) => [row.date.toISOString().slice(0, 10), row]));
+  const byDay = new Map(output.map((row) => [row.key, row]));
   for (const event of events) {
     if (!event.clientTimestamp) continue;
     const key = new Date(event.clientTimestamp).toISOString().slice(0, 10);
     const row = byDay.get(key);
     if (!row) continue;
-    if (event.type === 'page_view') row.views += 1;
-    if (event.type === 'watch_start' || event.type === 'episode_start') row.starts += 1;
+    if (event.type === 'page_view') row.pageViews += 1;
+    if (event.type === 'search') row.searches += 1;
+    if (event.type === 'watch_start' || event.type === 'episode_start') row.watchStarts += 1;
+    if (event.type === 'watch_complete') row.completions += 1;
+    if (event.type === 'watch_progress') row.watchSeconds += Math.max(0, Number(event.durationSeconds) || 0);
   }
 
-  return output.map(({ label, views, starts }) => ({ label, views, starts }));
+  return output;
 }
