@@ -261,6 +261,34 @@ Anonymous browsing remains possible for the core catalog experience.
 
 ---
 
+## 🔐 Firebase Authentication
+
+Panda.fun uses Firebase Authentication for optional user accounts. Google Sign-In and email/password authentication are configured in `firebase.json`, while account data, watch progress and library sync use the named Firestore database configured by the Firebase web app.
+
+### Production Firebase setup
+
+Deploy the version-controlled Authentication provider configuration and Firestore rules with the manual GitHub Actions workflow:
+
+```
+Actions → Deploy Firebase Authentication and Firestore → Run workflow
+```
+
+The workflow expects a GitHub Actions secret named `FIREBASE_SERVICE_ACCOUNT_JSON` containing a Firebase service-account JSON document. Firebase's Admin SDK is server-side only and is never bundled into the web client.
+
+To grant the protected admin dashboard to an existing Firebase user:
+
+```
+npm run auth:set-admin -- <uid-or-email>
+```
+
+To revoke it:
+
+```
+npm run auth:set-admin -- --revoke <uid-or-email>
+```
+
+The admin command requires either `FIREBASE_SERVICE_ACCOUNT_JSON` or Application Default Credentials. Admin status is stored as the Firebase Authentication `admin` custom claim, not as a user-editable Firestore field.
+
 ## 📊 Analytics
 
 Panda.fun has an application analytics layer backed by Firestore.
