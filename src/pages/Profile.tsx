@@ -118,7 +118,8 @@ function ChoiceButton({
       disabled={disabled}
       aria-pressed={selected}
     >
-      {children}
+      <GenreIcon genre={String(children)} />
+      <span>{children}</span>
       {selected && <Check size={13} />}
     </button>
   );
@@ -175,8 +176,8 @@ function ProfileSetup({
         : step === 3
           ? 'Only someone with this 4-digit PIN can use the profile. Leave it empty to skip — you can add one later.'
           : step === 4
-            ? 'Pick up to 3 film genres — Panda uses these to shape your recommendations.'
-            : 'Pick up to 3 TV genres — Panda uses these to shape your recommendations.';
+            ? 'Pick up to 3 film genres — half of your first For You comes from these.'
+            : 'Now pick up to 3 TV genres. The other half of For You is built from these.';
 
   const toggleGenre = (genre: string, kind: 'movie' | 'series') => {
     const selected = kind === 'movie' ? movieGenres : seriesGenres;
