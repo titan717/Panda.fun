@@ -1,20 +1,23 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
-import { 
-  auth, 
+import {
+  auth,
   db,
-  googleProvider, 
-  signInWithPopup, 
-  signInWithEmailAndPassword, 
+  googleProvider,
+  signInWithPopup,
+  signInWithRedirect,
+  getRedirectResult,
+  signInWithEmailAndPassword,
   sendPasswordResetEmail,
-  createUserWithEmailAndPassword, 
-  fbSignOut, 
-  onAuthStateChanged, 
+  createUserWithEmailAndPassword,
+  fbSignOut,
+  onAuthStateChanged,
   updateProfile,
-  User 
+  User
 } from './firebase';
 import { doc, setDoc, getDoc } from 'firebase/firestore';
 import { historyUtil } from './history';
 import { libraryManager } from './library';
+import { getAuthErrorMessage, getProfileName, toUserProfile } from './authHelpers';
 
 interface AuthContextType {
   user: User | null;
@@ -27,10 +30,30 @@ interface AuthContextType {
   signInWithEmail: (email: string, pass: string) => Promise<void>;
   sendPasswordReset: (email: string) => Promise<void>;
   signUpWithEmail: (email: string, pass: string, name?: string) => Promise<void>;
+  updateDisplayName: (name: string) => Promise<void>;
   signOut: () => Promise<void>;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
+
+async function syncUserProfile(currentUser: User, preferredName?: string): Promise<void> {
+  try {
+    const userRef = doc(db, 'users', currentUser.uid);
+    const existing = await getDoc(userRef);
+    const createdAt = typeof existing.data()?.createdAt === 'string'
+      ? String(existing.data()?.createdAt)
+      : new Date().toISOString();
+
+    const profileUser = preferredName?.trim()
+      ? { ...currentUser, displayName: preferredName.trim() }
+      : currentUser;
+
+    await setDoc(userRef, toUserProfile(profileUser, createdAt), { merge: true });
+  } catch (error) {
+    // Authentication must not be reported as failed when optional profile persistence is unavailable.
+    console.warn('[Panda.fun] Firebase profile sync unavailable:', error);
+  }
+}
 
 export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
@@ -39,35 +62,28 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [authModalMode, setAuthModalMode] = useState<'signin' | 'signup'>('signin');
 
   useEffect(() => {
-    const unsubscribe = onAuthStateChanged(auth, async (currentUser) => {
+    let mounted = true;
+
+    void getRedirectResult(auth).catch((error) => {
+      console.warn('[Panda.fun] Firebase redirect sign-in failed:', getAuthErrorMessage(error?.code, 'signin'));
+    });
+
+    const unsubscribe = onAuthStateChanged(auth, (currentUser) => {
+      if (!mounted) return;
       setUser(currentUser);
       setLoading(false);
 
       if (currentUser) {
-        // Save user profile to Firestore
-        try {
-          const userRef = doc(db, 'users', currentUser.uid);
-          const snap = await getDoc(userRef);
-          if (!snap.exists()) {
-            await setDoc(userRef, {
-              uid: currentUser.uid,
-              email: currentUser.email || '',
-              displayName: currentUser.displayName || currentUser.email?.split('@')[0] || 'User',
-              photoURL: currentUser.photoURL || '',
-              createdAt: new Date().toISOString()
-            }, { merge: true });
-          }
-        } catch (e) {
-          console.error("Failed to sync user profile to Firestore:", e);
-        }
-
-        // Sync watch progress and library from Firestore
-        historyUtil.syncFromFirestore(currentUser.uid);
-        libraryManager.syncFromFirestore(currentUser.uid);
+        void syncUserProfile(currentUser);
+        void historyUtil.syncFromFirestore(currentUser.uid);
+        void libraryManager.syncFromFirestore(currentUser.uid);
       }
     });
 
-    return () => unsubscribe();
+    return () => {
+      mounted = false;
+      unsubscribe();
+    };
   }, []);
 
   const openAuthModal = (mode: 'signin' | 'signup' = 'signin') => {
@@ -82,72 +98,67 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const signInWithGoogle = async () => {
     try {
       const cred = await signInWithPopup(auth, googleProvider);
-      if (cred.user) {
-        const userRef = doc(db, 'users', cred.user.uid);
-        await setDoc(userRef, {
-          uid: cred.user.uid,
-          email: cred.user.email || '',
-          displayName: cred.user.displayName || '',
-          photoURL: cred.user.photoURL || '',
-          createdAt: new Date().toISOString()
-        }, { merge: true });
-      }
+      await syncUserProfile(cred.user);
       closeAuthModal();
-    } catch (err: any) {
-      console.error("Google sign in error:", err);
-      throw err;
+    } catch (error: any) {
+      if (error?.code === 'auth/popup-blocked' || error?.code === 'auth/operation-not-supported-in-this-environment') {
+        await signInWithRedirect(auth, googleProvider);
+        return;
+      }
+      throw error;
     }
   };
 
   const signInWithEmail = async (email: string, pass: string) => {
-    try {
-      await signInWithEmailAndPassword(auth, email, pass);
-      closeAuthModal();
-    } catch (err: any) {
-      console.error("Email sign in error:", err);
-      throw err;
+    const normalizedEmail = email.trim();
+    if (!normalizedEmail || !pass) {
+      const error = new Error('Email and password are required.');
+      (error as Error & { code?: string }).code = 'auth/invalid-credential';
+      throw error;
     }
+
+    const cred = await signInWithEmailAndPassword(auth, normalizedEmail, pass);
+    await syncUserProfile(cred.user);
+    closeAuthModal();
   };
 
   const sendPasswordReset = async (email: string) => {
-    try {
-      await sendPasswordResetEmail(auth, email.trim());
-    } catch (err: any) {
-      console.error("Password reset error:", err);
-      throw err;
-    }
+    await sendPasswordResetEmail(auth, email.trim());
   };
 
   const signUpWithEmail = async (email: string, pass: string, name?: string) => {
-    try {
-      const cred = await createUserWithEmailAndPassword(auth, email, pass);
-      if (name && cred.user) {
-        await updateProfile(cred.user, { displayName: name });
-      }
-      if (cred.user) {
-        const userRef = doc(db, 'users', cred.user.uid);
-        await setDoc(userRef, {
-          uid: cred.user.uid,
-          email: cred.user.email || '',
-          displayName: name || cred.user.email?.split('@')[0] || 'User',
-          photoURL: '',
-          createdAt: new Date().toISOString()
-        }, { merge: true });
-      }
-      closeAuthModal();
-    } catch (err: any) {
-      console.error("Sign up error:", err);
-      throw err;
+    const normalizedEmail = email.trim();
+    const preferredName = name?.trim();
+
+    if (!normalizedEmail || !pass) {
+      const error = new Error('Email and password are required.');
+      (error as Error & { code?: string }).code = 'auth/invalid-credential';
+      throw error;
     }
+
+    const cred = await createUserWithEmailAndPassword(auth, normalizedEmail, pass);
+
+    if (preferredName) {
+      await updateProfile(cred.user, { displayName: preferredName });
+    }
+
+    await syncUserProfile(cred.user, preferredName);
+    closeAuthModal();
+  };
+
+  const updateDisplayName = async (name: string) => {
+    if (!auth.currentUser) throw new Error('You must be signed in to update your profile.');
+    const trimmed = name.trim();
+    if (!trimmed) throw new Error('Display name cannot be empty.');
+
+    await updateProfile(auth.currentUser, { displayName: trimmed });
+    await syncUserProfile(auth.currentUser, trimmed);
+    setUser({ ...auth.currentUser });
   };
 
   const signOut = async () => {
-    try {
-      await fbSignOut(auth);
-    } catch (err: any) {
-      console.error("Sign out error:", err);
-      throw err;
-    }
+    await fbSignOut(auth);
+    setUser(null);
   };
 
   return (
@@ -163,6 +174,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         signInWithEmail,
         sendPasswordReset,
         signUpWithEmail,
+        updateDisplayName,
         signOut
       }}
     >
@@ -173,8 +185,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
 export function useAuth() {
   const context = useContext(AuthContext);
-  if (!context) {
-    throw new Error('useAuth must be used within an AuthProvider');
-  }
+  if (!context) throw new Error('useAuth must be used within an AuthProvider');
   return context;
 }
