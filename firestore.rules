@@ -1,24 +1,70 @@
 rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
-    // Connection test document
-    match /test/{docId} {
-      allow read, write: if true;
+    function signedIn() {
+      return request.auth != null;
     }
 
-    // User profile: only the authenticated user can access their own document
+    function isAdmin() {
+      return signedIn() && request.auth.token.admin == true;
+    }
+
+    function ownsUser(userId) {
+      return signedIn() && request.auth.uid == userId;
+    }
+
+    function userProfileKeys() {
+      return [
+        'uid',
+        'email',
+        'displayName',
+        'photoURL',
+        'createdAt'
+      ];
+    }
+
     match /users/{userId} {
-      allow read, write: if request.auth != null && request.auth.uid == userId;
+      // Admins may read/manage users for the protected dashboard.
+      allow read, delete: if isAdmin();
 
-      // Watch progress subcollection
+      // A user may create their own profile, but cannot assign privileged fields.
+      allow create: if ownsUser(userId)
+        && request.resource.data.uid == request.auth.uid
+        && request.resource.data.keys().hasOnly(userProfileKeys())
+        && request.resource.data.email == (request.auth.token.email == null ? '' : request.auth.token.email);
+
+      // Users may update only ordinary profile fields. Privileged fields are not
+      // accepted even if legacy documents still contain them.
+      allow update: if (
+        ownsUser(userId)
+        && request.resource.data.uid == resource.data.uid
+        && request.resource.data.keys().hasOnly(userProfileKeys())
+        && request.resource.data.email == (request.auth.token.email == null ? '' : request.auth.token.email)
+      ) || isAdmin();
+
       match /progress/{animeId} {
-        allow read, write: if request.auth != null && request.auth.uid == userId;
+        allow read, write: if ownsUser(userId) || isAdmin();
       }
 
-      // Library items (watchlist, completed, favorites)
       match /library/{itemId} {
-        allow read, write: if request.auth != null && request.auth.uid == userId;
+        allow read, write: if ownsUser(userId) || isAdmin();
       }
+    }
+
+    // Internal analytics is append-only for clients and readable only by admins.
+    // Client-written events are treated as untrusted telemetry, not an auth source.
+    match /analytics_events/{eventId} {
+      allow create: if true;
+      allow read, update, delete: if isAdmin();
+    }
+
+    // No public test collection in production.
+    match /test/{docId} {
+      allow read, write: if false;
+    }
+
+    match /{document=**} {
+      allow read, write: if false;
     }
   }
 }
