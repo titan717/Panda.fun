@@ -8,7 +8,6 @@ import { trackEvent, trackGAEvent } from '../lib/analytics';
 import { libraryManager } from '../lib/library';
 import { useAuth } from '../lib/AuthContext';
 import {
-  createProfileId,
   getActiveProfileId,
   listProfiles,
   saveProfile,
@@ -257,7 +256,6 @@ function HomeProfileGate() {
                     )}
                   </span>
                   <span>{profile.name}</span>
-                  {profile.pinHash && <Lock size={13} aria-label="PIN protected" />}
                 </button>
               );
             })}
