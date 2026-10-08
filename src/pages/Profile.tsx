@@ -1,239 +1,985 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import { AnimatePresence, motion } from 'motion/react';
 import {
-  ArrowRight, CheckCircle2, Clock3, Edit3, ExternalLink, Heart, History, Library,
-  LogIn, LogOut, Mail, Save, Settings, ShieldCheck, Sparkles, UserRound, X
+  ArrowLeft, ArrowRight, Check, Edit3, History, Library, Lock, LogIn, LogOut,
+  Mail, Plus, Settings, ShieldCheck, Sparkles, Trash2, UserRound, X
 } from 'lucide-react';
 import { Link } from 'wouter';
 import { useAuth } from '../lib/AuthContext';
 import { libraryManager } from '../lib/library';
 import { historyUtil, type HistoryItem } from '../lib/history';
+import {
+  clearProfilePin,
+  createProfileId,
+  deleteProfile,
+  getActiveProfileId,
+  isValidProfilePin,
+  listProfiles,
+  MOVIE_GENRES,
+  normalizeProfile,
+  PROFILE_AVATARS,
+  saveProfile,
+  setActiveProfileId,
+  setProfilePin,
+  SERIES_GENRES,
+  type PandaProfile,
+  verifyProfilePin,
+} from '../lib/profileStore';
 import { buildWatchHref } from '../lib/mediaRoute';
 import { trackEvent } from '../lib/analytics';
 import '../styles/panda-profile.css';
 
-function getProviderLabel(user: { providerData: Array<{ providerId: string }> }): string {
-  const providers = user.providerData.map((provider) => provider.providerId);
-  if (providers.includes('google.com')) return 'Google';
-  if (providers.includes('password')) return 'Email & password';
-  return 'Firebase account';
-}
+type SetupStep = 1 | 2 | 3 | 4 | 5;
 
-function ProfileEditModal({
-  name,
-  onSave,
-  onClose,
-  saving,
+const PROFILE_ICON_MAP: Record<string, string> = Object.fromEntries(
+  PROFILE_AVATARS.map((avatar) => [avatar.id, avatar.emoji])
+);
+
+function ProfileAvatar({
+  profile,
+  size = 'md',
+  interactive = false,
 }: {
-  name: string;
-  onSave: (name: string) => Promise<void>;
-  onClose: () => void;
-  saving: boolean;
+  profile: PandaProfile;
+  size?: 'sm' | 'md' | 'lg';
+  interactive?: boolean;
 }) {
-  const [value, setValue] = useState(name);
-  const [error, setError] = useState('');
-
-  const submit = async (event: React.FormEvent) => {
-    event.preventDefault();
-    const next = value.trim();
-    if (!next) {
-      setError('Please enter a display name.');
-      return;
-    }
-    setError('');
-    try {
-      await onSave(next);
-      onClose();
-    } catch (saveError) {
-      setError(saveError instanceof Error ? saveError.message : 'Unable to update your profile.');
-    }
-  };
-
   return (
-    <AnimatePresence>
-      <div className="panda-profile-modal" role="presentation">
-        <motion.div className="panda-profile-modal__backdrop" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} onClick={onClose} />
-        <motion.div
-          className="panda-profile-modal__dialog"
-          role="dialog"
-          aria-modal="true"
-          aria-labelledby="panda-profile-edit-title"
-          initial={{ opacity: 0, y: 16, scale: .985 }}
-          animate={{ opacity: 1, y: 0, scale: 1 }}
-          exit={{ opacity: 0, y: 16, scale: .985 }}
-        >
-          <button type="button" className="panda-profile-modal__close" onClick={onClose} aria-label="Close profile editor"><X size={18} /></button>
-          <span className="panda-profile-modal__eyebrow"><Edit3 size={12} /> Account</span>
-          <h2 id="panda-profile-edit-title">Make your Panda yours.</h2>
-          <p>Update the name shown across your Panda.fun profile.</p>
-          {error && <div className="panda-profile-modal__error">{error}</div>}
-          <form onSubmit={(event) => void submit(event)}>
-            <label><span>Display name</span><div><UserRound size={15} /><input value={value} maxLength={60} onChange={(event) => setValue(event.target.value)} autoFocus autoComplete="name" /></div></label>
-            <div className="panda-profile-modal__actions">
-              <button type="button" className="panda-profile-button" onClick={onClose} disabled={saving}>Cancel</button>
-              <button type="submit" className="panda-profile-button panda-profile-button--primary" disabled={saving}>{saving ? <span className="panda-profile-spinner" /> : <Save size={15} />}Save changes</button>
-            </div>
-          </form>
-        </motion.div>
-      </div>
-    </AnimatePresence>
+    <div className={'panda-profile-avatar panda-profile-avatar--' + size + (interactive ? ' is-interactive' : '')}>
+      <span aria-hidden="true">{PROFILE_ICON_MAP[profile.avatar] || '🐼'}</span>
+      {profile.pinHash && (
+        <span className="panda-profile-avatar__lock" aria-label="Profile locked">
+          <Lock size={size === 'lg' ? 13 : 10} />
+        </span>
+      )}
+    </div>
   );
 }
 
-export function Profile() {
-  const { user, loading, openAuthModal, signOut, updateDisplayName } = useAuth();
-  const [history, setHistory] = useState<HistoryItem[]>([]);
-  const [watchlistCount, setWatchlistCount] = useState(0);
-  const [favoriteCount, setFavoriteCount] = useState(0);
-  const [completedCount, setCompletedCount] = useState(0);
-  const [genrePreferences, setGenrePreferences] = useState<string[]>([]);
-  const [editOpen, setEditOpen] = useState(false);
-  const [saving, setSaving] = useState(false);
+function ProgressDots({ step }: { step: SetupStep }) {
+  return (
+    <div className="panda-profile-progress" aria-label={'Step ' + step + ' of 5'}>
+      {([1, 2, 3, 4, 5] as SetupStep[]).map((item) => (
+        <span key={item} className={item === step ? 'is-active' : item < step ? 'is-done' : ''} />
+      ))}
+    </div>
+  );
+}
 
-  const refreshProfile = () => {
-    setHistory(historyUtil.getHistory());
-    setWatchlistCount(libraryManager.getWatchlist().length);
-    setFavoriteCount(libraryManager.getFavorites().length);
-    setCompletedCount(libraryManager.getCompleted().length);
-    setGenrePreferences(preferencesUtil.getTopUserGenres(6));
+function ChoiceButton({
+  selected,
+  children,
+  onClick,
+  disabled,
+}: {
+  selected: boolean;
+  children: React.ReactNode;
+  onClick: () => void;
+  disabled?: boolean;
+}) {
+  return (
+    <button
+      type="button"
+      className={'panda-profile-choice' + (selected ? ' is-selected' : '')}
+      onClick={onClick}
+      disabled={disabled}
+      aria-pressed={selected}
+    >
+      {children}
+      {selected && <Check size={13} />}
+    </button>
+  );
+}
+
+function ProfileSetup({
+  initialProfile,
+  defaultName,
+  onComplete,
+  onBack,
+}: {
+  initialProfile?: PandaProfile | null;
+  defaultName: string;
+  onComplete: (profile: PandaProfile) => void;
+  onBack: () => void;
+}) {
+  const [step, setStep] = useState<SetupStep>(1);
+  const [name, setName] = useState(initialProfile?.name || defaultName);
+  const [avatar, setAvatar] = useState(initialProfile?.avatar || 'panda');
+  const [pin, setPin] = useState('');
+  const [removePin, setRemovePin] = useState(false);
+  const [movieGenres, setMovieGenres] = useState<string[]>(initialProfile?.movieGenres || []);
+  const [seriesGenres, setSeriesGenres] = useState<string[]>(initialProfile?.seriesGenres || []);
+  const [saving, setSaving] = useState(false);
+  const [error, setError] = useState('');
+
+  const title =
+    step === 1
+      ? 'Create your profile'
+      : step === 2
+        ? 'Choose your avatar'
+        : step === 3
+          ? 'Lock it with a PIN?'
+          : step === 4
+            ? 'What movies do you love?'
+            : 'What series do you love?';
+
+  const subtitle =
+    step === 1
+      ? "Give it a name — this is who's watching"
+      : step === 2
+        ? 'Pick a look that feels like you.'
+        : step === 3
+          ? 'Only someone with this 4-digit PIN can use the profile. Leave it empty to skip — you can add one later.'
+          : step === 4
+            ? 'Pick up to 3 film genres — Panda uses these to shape your recommendations.'
+            : 'Pick up to 3 TV genres — Panda uses these to shape your recommendations.';
+
+  const toggleGenre = (genre: string, kind: 'movie' | 'series') => {
+    const selected = kind === 'movie' ? movieGenres : seriesGenres;
+    const setter = kind === 'movie' ? setMovieGenres : setSeriesGenres;
+
+    if (selected.includes(genre)) {
+      setter(selected.filter((item) => item !== genre));
+      return;
+    }
+
+    if (selected.length < 3) setter([...selected, genre]);
   };
 
-  useEffect(() => {
-    refreshProfile();
-    const onUpdate = () => refreshProfile();
-    window.addEventListener('kinoma_progress_update', onUpdate);
-    window.addEventListener('kinoma_library_update', onUpdate);
-    window.addEventListener('storage', onUpdate);
-    return () => {
-      window.removeEventListener('kinoma_progress_update', onUpdate);
-      window.removeEventListener('kinoma_library_update', onUpdate);
-      window.removeEventListener('storage', onUpdate);
-    };
-  }, [user?.uid]);
+  const next = async () => {
+    setError('');
 
-  const recent = useMemo(() => history.slice(0, 4), [history]);
+    if (step === 1) {
+      if (!name.trim()) {
+        setError('Give this profile a name.');
+        return;
+      }
+      setStep(2);
+      return;
+    }
 
-  if (loading) {
-    return <main className="panda-profile-v3 panda-profile-v3--loading"><div className="panda-profile-v3__inner"><div className="panda-profile-v3__loading-line" /><div className="panda-profile-v3__loading-line panda-profile-v3__loading-line--large" /><div className="panda-profile-v3__loading-grid"><span /><span /><span /></div></div></main>;
-  }
+    if (step === 2) {
+      setStep(3);
+      return;
+    }
 
-  if (!user) {
-    return (
-      <main className="panda-profile-v3">
-        <div className="panda-profile-v3__inner panda-profile-v3__guest">
-          <div className="panda-profile-v3__guest-mark">🐼</div>
-          <span className="panda-profile-v3__eyebrow"><Sparkles size={12} /> MY PANDA</span>
-          <h1>Your Panda space<br /><em>is waiting.</em></h1>
-          <p>Keep your library, watch progress and favourites connected with a free Firebase account.</p>
-          <div className="panda-profile-v3__guest-actions">
-            <button type="button" className="panda-profile-v3__cta panda-profile-v3__cta--primary" onClick={() => openAuthModal('signup')}><Sparkles size={16} /> Create account</button>
-            <button type="button" className="panda-profile-v3__cta" onClick={() => openAuthModal('signin')}><LogIn size={16} /> Sign in</button>
-          </div>
-          <div className="panda-profile-v3__guest-note"><ShieldCheck size={14} /> Powered by Firebase Authentication</div>
-        </div>
-      </main>
-    );
-  }
+    if (step === 3) {
+      if (pin && !isValidProfilePin(pin)) {
+        setError('PIN must be exactly 4 digits.');
+        return;
+      }
+      if (pin === '0000') {
+        setError('Choose a PIN other than 0000.');
+        return;
+      }
+      setStep(4);
+      return;
+    }
 
-  const displayName = user.displayName?.trim() || user.email?.split('@')[0] || 'Panda';
-  const provider = getProviderLabel(user);
+    if (step === 4) {
+      setStep(5);
+      return;
+    }
 
-  const saveName = async (name: string) => {
     setSaving(true);
     try {
-      await updateDisplayName(name);
+      const base = normalizeProfile({
+        id: initialProfile?.id || createProfileId(),
+        name: name.trim(),
+        avatar,
+        movieGenres,
+        seriesGenres,
+        pinHash: initialProfile?.pinHash,
+        createdAt: initialProfile?.createdAt,
+        updatedAt: new Date().toISOString(),
+      });
+
+      let nextProfile = base;
+      if (removePin) {
+        nextProfile = clearProfilePin(base);
+      } else if (pin) {
+        nextProfile = await setProfilePin(base, pin);
+      }
+
+      onComplete(nextProfile);
+    } catch (saveError) {
+      setError(saveError instanceof Error ? saveError.message : 'Unable to save this profile.');
     } finally {
       setSaving(false);
     }
   };
 
-  const handleSignOut = async () => {
-    try {
-      await signOut();
-    } catch (error) {
-      console.error('[Panda.fun] Sign out failed:', error);
+  const back = () => {
+    setError('');
+    if (step === 1) {
+      onBack();
+      return;
     }
+    setStep((step - 1) as SetupStep);
   };
 
   return (
-    <main className="panda-profile-v3">
-      <div className="panda-profile-v3__ambient" aria-hidden="true" />
-      <div className="panda-profile-v3__inner">
-        <header className="panda-profile-v3__header">
-          <div className="panda-profile-v3__identity">
-            <div className="panda-profile-v3__avatar">
-              {user.photoURL ? <img src={user.photoURL} alt="" referrerPolicy="no-referrer" /> : <span>{displayName.slice(0, 1).toUpperCase()}</span>}
+    <main className="panda-profile-flow">
+      <div className="panda-profile-flow__ambient" aria-hidden="true" />
+      <div className="panda-profile-flow__inner">
+        <ProgressDots step={step} />
+
+        {step !== 1 && initialProfile && (
+          <div className="panda-profile-flow__user-pill">
+            <ProfileAvatar profile={initialProfile} size="sm" />
+            <span>{initialProfile.name}</span>
+          </div>
+        )}
+
+        <AnimatePresence mode="wait">
+          <motion.section
+            key={step}
+            className="panda-profile-flow__step"
+            initial={{ opacity: 0, x: 18 }}
+            animate={{ opacity: 1, x: 0 }}
+            exit={{ opacity: 0, x: -18 }}
+            transition={{ duration: .2, ease: [0.16, 1, 0.3, 1] }}
+          >
+            <div className="panda-profile-flow__copy">
+              <h1>{title}</h1>
+              <p>{subtitle}</p>
             </div>
+
+            {step === 1 && (
+              <label className="panda-profile-name-field">
+                <span>Profile name</span>
+                <input
+                  value={name}
+                  maxLength={20}
+                  onChange={(event) => setName(event.target.value)}
+                  autoFocus
+                  placeholder="Profile name"
+                />
+              </label>
+            )}
+
+            {step === 2 && (
+              <div className="panda-profile-avatar-grid">
+                {PROFILE_AVATARS.map((item) => {
+                  const selected = avatar === item.id;
+                  return (
+                    <button
+                      key={item.id}
+                      type="button"
+                      className={'panda-profile-avatar-choice' + (selected ? ' is-selected' : '')}
+                      onClick={() => setAvatar(item.id)}
+                      aria-label={item.label}
+                    >
+                      <span>{item.emoji}</span>
+                      {selected && <i><Check size={13} /></i>}
+                    </button>
+                  );
+                })}
+              </div>
+            )}
+
+            {step === 3 && (
+              <div className="panda-profile-pin-wrap">
+                <div className="panda-profile-pin">
+                  {[0, 1, 2, 3].map((index) => (
+                    <span key={index} className={pin[index] ? 'is-filled' : ''}>
+                      {pin[index] ? '•' : ''}
+                    </span>
+                  ))}
+                </div>
+
+                <input
+                  className="panda-profile-pin-input"
+                  aria-label="Four digit profile PIN"
+                  inputMode="numeric"
+                  pattern="[0-9]*"
+                  maxLength={4}
+                  value={pin}
+                  onChange={(event) => {
+                    setRemovePin(false);
+                    setPin(event.target.value.replace(/\\D/g, '').slice(0, 4));
+                  }}
+                  autoFocus
+                />
+
+                {initialProfile?.pinHash && !pin && !removePin && (
+                  <div className="panda-profile-pin-links">
+                    <span>Leave empty to keep the current PIN.</span>
+                    <button type="button" onClick={() => setRemovePin(true)}>Remove PIN</button>
+                  </div>
+                )}
+
+                {initialProfile?.pinHash && removePin && (
+                  <div className="panda-profile-pin-links">
+                    <span>This profile will become unlocked.</span>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setRemovePin(false);
+                        setPin('');
+                      }}
+                    >
+                      Keep PIN
+                    </button>
+                  </div>
+                )}
+              </div>
+            )}
+
+            {step === 4 && (
+              <div className="panda-profile-choices">
+                {MOVIE_GENRES.map((genre) => (
+                  <ChoiceButton
+                    key={genre}
+                    selected={movieGenres.includes(genre)}
+                    disabled={!movieGenres.includes(genre) && movieGenres.length >= 3}
+                    onClick={() => toggleGenre(genre, 'movie')}
+                  >
+                    {genre}
+                  </ChoiceButton>
+                ))}
+              </div>
+            )}
+
+            {step === 5 && (
+              <div className="panda-profile-choices">
+                {SERIES_GENRES.map((genre) => (
+                  <ChoiceButton
+                    key={genre}
+                    selected={seriesGenres.includes(genre)}
+                    disabled={!seriesGenres.includes(genre) && seriesGenres.length >= 3}
+                    onClick={() => toggleGenre(genre, 'series')}
+                  >
+                    {genre}
+                  </ChoiceButton>
+                ))}
+              </div>
+            )}
+
+            {error && <div className="panda-profile-flow__error">{error}</div>}
+
+            <div className="panda-profile-flow__actions">
+              <button
+                type="button"
+                className="panda-profile-flow__button panda-profile-flow__button--ghost"
+                onClick={back}
+                disabled={saving}
+              >
+                <ArrowLeft size={15} /> Back
+              </button>
+
+              {step === 3 && !initialProfile?.pinHash && (
+                <button
+                  type="button"
+                  className="panda-profile-flow__skip"
+                  onClick={() => {
+                    setPin('');
+                    setStep(4);
+                  }}
+                >
+                  Skip
+                </button>
+              )}
+
+              {(step === 4 || step === 5) && (
+                <button
+                  type="button"
+                  className="panda-profile-flow__skip"
+                  onClick={() => setStep((step + 1) as SetupStep)}
+                >
+                  Skip
+                </button>
+              )}
+
+              <button
+                type="button"
+                className="panda-profile-flow__button panda-profile-flow__button--primary"
+                onClick={() => void next()}
+                disabled={saving || (step === 3 && pin.length > 0 && pin.length < 4)}
+              >
+                {saving && <span className="panda-profile-spinner" />}
+                {!saving && step === 5 && 'Start watching'}
+                {!saving && step !== 5 && 'Continue'}
+                {!saving && <ArrowRight size={15} />}
+              </button>
+            </div>
+          </motion.section>
+        </AnimatePresence>
+      </div>
+    </main>
+  );
+}
+
+function PinPrompt({
+  profile,
+  onUnlock,
+  onCancel,
+}: {
+  profile: PandaProfile;
+  onUnlock: () => void;
+  onCancel: () => void;
+}) {
+  const [pin, setPin] = useState('');
+  const [error, setError] = useState('');
+
+  const submit = async () => {
+    if (pin.length !== 4) {
+      setError('Enter the 4-digit PIN.');
+      return;
+    }
+
+    const valid = await verifyProfilePin(profile, pin);
+    if (!valid) {
+      setError('That PIN is not right.');
+      setPin('');
+      return;
+    }
+
+    onUnlock();
+  };
+
+  return (
+    <div className="panda-profile-overlay">
+      <div className="panda-profile-overlay__backdrop" onClick={onCancel} />
+      <motion.div
+        className="panda-profile-pin-dialog"
+        initial={{ opacity: 0, scale: .97, y: 10 }}
+        animate={{ opacity: 1, scale: 1, y: 0 }}
+      >
+        <button type="button" className="panda-profile-overlay__close" onClick={onCancel} aria-label="Close">
+          <X size={17} />
+        </button>
+
+        <ProfileAvatar profile={profile} size="md" />
+        <span className="panda-profile-mini-label"><Lock size={11} /> Locked profile</span>
+        <h2>{profile.name}</h2>
+        <p>Enter the 4-digit PIN to continue.</p>
+
+        <div className="panda-profile-pin panda-profile-pin--dialog">
+          {[0, 1, 2, 3].map((index) => (
+            <span key={index} className={pin[index] ? 'is-filled' : ''}>
+              {pin[index] ? '•' : ''}
+            </span>
+          ))}
+        </div>
+
+        <input
+          className="panda-profile-pin-input"
+          aria-label="Profile PIN"
+          inputMode="numeric"
+          maxLength={4}
+          value={pin}
+          onChange={(event) => setPin(event.target.value.replace(/\\D/g, '').slice(0, 4))}
+          autoFocus
+          onKeyDown={(event) => {
+            if (event.key === 'Enter') void submit();
+          }}
+        />
+
+        {error && <div className="panda-profile-flow__error">{error}</div>}
+
+        <button
+          type="button"
+          className="panda-profile-flow__button panda-profile-flow__button--primary panda-profile-pin-submit"
+          onClick={() => void submit()}
+          disabled={pin.length !== 4}
+        >
+          Unlock profile
+        </button>
+      </motion.div>
+    </div>
+  );
+}
+
+function ProfileDashboard({
+  profile,
+  user,
+  onSwitch,
+  onEdit,
+  onSignOut,
+}: {
+  profile: PandaProfile;
+  user: { email?: string | null };
+  onSwitch: () => void;
+  onEdit: () => void;
+  onSignOut: () => void;
+}) {
+  const [history, setHistory] = useState<HistoryItem[]>([]);
+  const [watchlistCount, setWatchlistCount] = useState(0);
+  const [favoriteCount, setFavoriteCount] = useState(0);
+  const [completedCount, setCompletedCount] = useState(0);
+
+  const refresh = () => {
+    setHistory(historyUtil.getHistory());
+    setWatchlistCount(libraryManager.getWatchlist().length);
+    setFavoriteCount(libraryManager.getFavorites().length);
+    setCompletedCount(libraryManager.getCompleted().length);
+  };
+
+  useEffect(() => {
+    refresh();
+    const update = () => refresh();
+    window.addEventListener('kinoma_progress_update', update);
+    window.addEventListener('kinoma_library_update', update);
+    return () => {
+      window.removeEventListener('kinoma_progress_update', update);
+      window.removeEventListener('kinoma_library_update', update);
+    };
+  }, [profile.id]);
+
+  const recent = useMemo(() => history.slice(0, 5), [history]);
+  const tastes = [...new Set([...profile.movieGenres, ...profile.seriesGenres])].slice(0, 6);
+
+  return (
+    <main className="panda-profile-dashboard">
+      <div className="panda-profile-dashboard__ambient" aria-hidden="true" />
+      <div className="panda-profile-dashboard__inner">
+        <header className="panda-profile-dashboard__header">
+          <div className="panda-profile-dashboard__identity">
+            <ProfileAvatar profile={profile} size="lg" />
             <div>
-              <span className="panda-profile-v3__eyebrow"><Sparkles size={12} /> MY PANDA</span>
-              <h1>{displayName}</h1>
+              <span className="panda-profile-mini-label"><Sparkles size={11} /> MY PANDA</span>
+              <h1>{profile.name}</h1>
               <p><Mail size={12} /> {user.email || 'Firebase account'}</p>
             </div>
           </div>
-          <div className="panda-profile-v3__header-actions">
-            <button type="button" onClick={() => setEditOpen(true)}><Edit3 size={14} /> Edit profile</button>
+
+          <div className="panda-profile-dashboard__actions">
+            <button type="button" onClick={onSwitch}><UserRound size={14} /> Switch profile</button>
+            <button type="button" onClick={onEdit}><Edit3 size={14} /> Edit</button>
             <Link href="/settings"><Settings size={14} /> Settings</Link>
-            <button type="button" onClick={() => void handleSignOut()} className="is-danger"><LogOut size={14} /> Sign out</button>
+            <button type="button" onClick={onSignOut} className="is-danger"><LogOut size={14} /> Sign out</button>
           </div>
         </header>
 
-        <div className="panda-profile-v3__account-strip">
-          <span><ShieldCheck size={14} /> Firebase account active</span>
-          <span>{provider}</span>
-          <span>UID · {user.uid.slice(0, 12)}…</span>
+        <div className="panda-profile-dashboard__rule">
+          <span />
+          {profile.pinHash ? 'Private profile' : 'Personal profile'}
+          <b />
+          Firebase account connected
         </div>
 
-        <section className="panda-profile-v3__stats" aria-label="Panda account stats">
+        <section className="panda-profile-dashboard__stats" aria-label="Profile activity">
           <div><strong>{watchlistCount}</strong><span>My List</span></div>
           <div><strong>{history.length}</strong><span>Watching</span></div>
           <div><strong>{favoriteCount}</strong><span>Favourites</span></div>
           <div><strong>{completedCount}</strong><span>Completed</span></div>
         </section>
 
-        <div className="panda-profile-v3__columns">
-          <section className="panda-profile-v3__section">
-            <div className="panda-profile-v3__section-heading"><div><span>01 · KEEP WATCHING</span><h2>Recent watching</h2></div><Link href="/history">View all <ArrowRight size={13} /></Link></div>
-            {recent.length ? (
-              <div className="panda-profile-v3__watch-list">
-                {recent.map((item) => {
-                  const mediaId = item.animeId || item.slug;
-                  const type = mediaId.startsWith('tmdb_movie_') ? 'movie' : 'series';
-                  const season = Math.max(1, Number(item.seasonNumber) || 1);
-                  const episode = Math.max(1, Number(item.episodeNumber) || 1);
-                  return <Link key={item.slug + '-' + item.episodeNumber} href={buildWatchHref(mediaId, type, season, episode, item.playbackTimestamp)} className="panda-profile-v3__watch-item">
-                    <div className="panda-profile-v3__watch-thumb">{item.image ? <img src={item.image} alt="" loading="lazy" /> : <Clock3 size={18} />}</div>
-                    <div><strong>{item.title}</strong><span>{type === 'movie' ? 'Movie' : 'Season ' + season + ' · Episode ' + episode} · {Math.round(item.completionPercentage || 0)}%</span></div>
+        <section className="panda-profile-dashboard__section panda-profile-dashboard__section--watching">
+          <div className="panda-profile-section-head">
+            <div><span>01 · KEEP WATCHING</span><h2>Recent watching</h2></div>
+            <Link href="/history">View all <ArrowRight size={13} /></Link>
+          </div>
+
+          {recent.length ? (
+            <div className="panda-profile-watch-list">
+              {recent.map((item) => {
+                const mediaId = item.animeId || item.slug;
+                const type = mediaId.startsWith('tmdb_movie_') ? 'movie' : 'series';
+                const season = Math.max(1, Number(item.seasonNumber) || 1);
+                const episode = Math.max(1, Number(item.episodeNumber) || 1);
+
+                return (
+                  <Link
+                    key={item.slug + '-' + item.episodeNumber}
+                    href={buildWatchHref(mediaId, type, season, episode, item.playbackTimestamp)}
+                    className="panda-profile-watch-row"
+                  >
+                    <div className="panda-profile-watch-row__thumb">
+                      {item.image ? <img src={item.image} alt="" loading="lazy" /> : <span>🐼</span>}
+                    </div>
+                    <div>
+                      <strong>{item.title}</strong>
+                      <small>
+                        {type === 'movie' ? 'Movie' : 'Season ' + season + ' · Episode ' + episode}
+                        {' · '}
+                        {Math.round(item.completionPercentage || 0)}%
+                      </small>
+                    </div>
                     <ArrowRight size={15} />
-                  </Link>;
-                })}
+                  </Link>
+                );
+              })}
+            </div>
+          ) : (
+            <div className="panda-profile-empty">
+              <span className="panda-profile-clock">◷</span>
+              <strong>No recent watching yet.</strong>
+              <p>Start something and Panda will remember your place.</p>
+              <Link href="/home">Browse titles <ArrowRight size={13} /></Link>
+            </div>
+          )}
+        </section>
+
+        <section className="panda-profile-dashboard__split">
+          <div className="panda-profile-dashboard__section">
+            <div className="panda-profile-section-head">
+              <div><span>02 · YOUR SPACE</span><h2>Quick links</h2></div>
+            </div>
+            <div className="panda-profile-quick-links">
+              <Link href="/library"><Library size={15} /><span><b>My List</b><small>Saved titles & favourites</small></span><ArrowRight size={14} /></Link>
+              <Link href="/history"><History size={15} /><span><b>Watch history</b><small>Everything Panda remembers</small></span><ArrowRight size={14} /></Link>
+              <Link href="/settings"><Settings size={15} /><span><b>Preferences</b><small>Player & appearance settings</small></span><ArrowRight size={14} /></Link>
+            </div>
+          </div>
+
+          <div className="panda-profile-dashboard__section">
+            <div className="panda-profile-section-head">
+              <div><span>03 · TASTE</span><h2>What you love</h2></div>
+            </div>
+            {tastes.length ? (
+              <div className="panda-profile-tastes">
+                {tastes.map((taste, index) => (
+                  <span key={taste}><i>{String(index + 1).padStart(2, '0')}</i>{taste}</span>
+                ))}
               </div>
             ) : (
-              <div className="panda-profile-v3__empty"><Clock3 size={19} /><strong>No recent watching yet.</strong><p>Start something and Panda will remember your place.</p><Link href="/home">Browse titles <ArrowRight size={13} /></Link></div>
+              <p className="panda-profile-muted">Complete your taste setup and Panda will use it to shape For You.</p>
             )}
-          </section>
+          </div>
+        </section>
 
-          <section className="panda-profile-v3__section">
-            <div className="panda-profile-v3__section-heading"><div><span>02 · YOUR SPACE</span><h2>Quick links</h2></div></div>
-            <div className="panda-profile-v3__quick-links">
-              <Link href="/library"><span><Library size={15} /><b>My List</b><small>Saved titles & favourites</small></span><ArrowRight size={14} /></Link>
-              <Link href="/history"><span><History size={15} /><b>Watch history</b><small>Everything Panda remembers</small></span><ArrowRight size={14} /></Link>
-              <Link href="/settings"><span><Settings size={15} /><b>Preferences</b><small>Player & appearance settings</small></span><ArrowRight size={14} /></Link>
-            </div>
-          </section>
+        <footer className="panda-profile-dashboard__footer">
+          <div>
+            <span>ACCOUNT</span>
+            <strong>{profile.name}</strong>
+            <small>Profile settings are synced to Firebase when Firestore is available.</small>
+          </div>
+          <Link href="/privacy-policy">Privacy <ArrowRight size={12} /></Link>
+        </footer>
+      </div>
+    </main>
+  );
+}
+
+function ProfileSelector({
+  profiles,
+  onSelect,
+  onAdd,
+  onManage,
+}: {
+  profiles: PandaProfile[];
+  onSelect: (profile: PandaProfile) => void;
+  onAdd: () => void;
+  onManage: () => void;
+}) {
+  const atLimit = profiles.length >= 6;
+
+  return (
+    <main className="panda-profile-selector">
+      <div className="panda-profile-selector__ambient" aria-hidden="true" />
+      <div className="panda-profile-selector__inner">
+        <span className="panda-profile-mini-label"><Sparkles size={11} /> PANDA.FUN</span>
+        <h1>Who's watching?</h1>
+        <p>Choose a profile and keep Panda tuned to you.</p>
+
+        <div className="panda-profile-selector__grid">
+          {profiles.map((profile) => (
+            <button key={profile.id} type="button" className="panda-profile-tile" onClick={() => onSelect(profile)}>
+              <ProfileAvatar profile={profile} size="lg" interactive />
+              <span>{profile.name}</span>
+              <small>{profile.movieGenres.length + profile.seriesGenres.length ? 'Personalized' : 'Not set up'}</small>
+            </button>
+          ))}
+
+          {!atLimit && (
+            <button type="button" className="panda-profile-tile panda-profile-tile--add" onClick={onAdd}>
+              <span className="panda-profile-add-avatar"><Plus size={28} /></span>
+              <span>Add profile</span>
+              <small>New Panda</small>
+            </button>
+          )}
         </div>
 
-        <section className="panda-profile-v3__section panda-profile-v3__section--wide">
-          <div className="panda-profile-v3__section-heading"><div><span>03 · TASTE</span><h2>What Panda thinks you like.</h2></div></div>
-          {genrePreferences.length ? <div className="panda-profile-v3__genres">{genrePreferences.map((genre, index) => <span key={genre}><i>{String(index + 1).padStart(2, '0')}</i>{genre}</span>)}</div> : <p className="panda-profile-v3__muted">Browse a few titles and Panda will build lightweight genre signals on this device.</p>}
-        </section>
-
-        <section className="panda-profile-v3__footer-callout">
-          <div><span>ACCOUNT FOUNDATION</span><h2>Your Panda account is connected.</h2><p>Sign-in state is handled by Firebase Authentication. Your saved profile is mirrored to Firestore when available, while authentication itself remains independent from optional profile syncing.</p></div>
-          <Link href="/privacy-policy">Privacy <ExternalLink size={13} /></Link>
-        </section>
+        <div className="panda-profile-selector__footer">
+          <button type="button" onClick={onManage}><Settings size={14} /> Manage profiles</button>
+          <Link href="/settings"><Settings size={14} /> Settings</Link>
+        </div>
       </div>
-
-      {editOpen && <ProfileEditModal name={displayName} saving={saving} onSave={saveName} onClose={() => setEditOpen(false)} />}
     </main>
+  );
+}
+
+function ManageProfiles({
+  profiles,
+  onDone,
+  onEdit,
+  onDelete,
+}: {
+  profiles: PandaProfile[];
+  onDone: () => void;
+  onEdit: (profile: PandaProfile) => void;
+  onDelete: (profile: PandaProfile) => void;
+}) {
+  return (
+    <main className="panda-profile-manage">
+      <div className="panda-profile-manage__inner">
+        <button type="button" className="panda-profile-back" onClick={onDone}><ArrowLeft size={15} /> Back</button>
+        <span className="panda-profile-mini-label"><Settings size={11} /> PROFILES</span>
+        <h1>Manage profiles</h1>
+        <p>Edit how each Panda looks, feels and behaves.</p>
+
+        <div className="panda-profile-manage__list">
+          {profiles.map((profile) => (
+            <div className="panda-profile-manage__row" key={profile.id}>
+              <ProfileAvatar profile={profile} size="md" />
+              <div>
+                <strong>{profile.name}</strong>
+                <small>
+                  {profile.pinHash ? 'PIN protected' : 'No PIN'}
+                  {' · '}
+                  {profile.movieGenres.length + profile.seriesGenres.length} taste signals
+                </small>
+              </div>
+              <button type="button" onClick={() => onEdit(profile)} aria-label={'Edit ' + profile.name}><Edit3 size={14} /></button>
+              <button
+                type="button"
+                className="is-danger"
+                onClick={() => onDelete(profile)}
+                disabled={profiles.length <= 1}
+                aria-label={'Delete ' + profile.name}
+              >
+                <Trash2 size={14} />
+              </button>
+            </div>
+          ))}
+        </div>
+      </div>
+    </main>
+  );
+}
+
+export function Profile() {
+  const { user, loading, openAuthModal, signOut } = useAuth();
+  const [profiles, setProfiles] = useState<PandaProfile[]>([]);
+  const [activeProfile, setActiveProfile] = useState<PandaProfile | null>(null);
+  const [view, setView] = useState<'selector' | 'setup' | 'dashboard' | 'manage'>('selector');
+  const [editingProfile, setEditingProfile] = useState<PandaProfile | null>(null);
+  const [pinProfile, setPinProfile] = useState<PandaProfile | null>(null);
+  const [ready, setReady] = useState(false);
+  const [confirmDelete, setConfirmDelete] = useState<PandaProfile | null>(null);
+
+  useEffect(() => {
+    let cancelled = false;
+
+    if (!user) {
+      setProfiles([]);
+      setActiveProfile(null);
+      setView('selector');
+      setReady(true);
+      return;
+    }
+
+    void listProfiles(user.uid).then((loaded) => {
+      if (cancelled) return;
+
+      setProfiles(loaded);
+      const activeId = getActiveProfileId(user.uid);
+      const selected = loaded.find((profile) => profile.id === activeId) || null;
+
+      if (selected) {
+        setActiveProfile(selected);
+        setView('dashboard');
+      } else if (!loaded.length) {
+        setActiveProfile(null);
+        setView('setup');
+      } else {
+        setActiveProfile(null);
+        setView('selector');
+      }
+
+      setReady(true);
+    });
+
+    return () => {
+      cancelled = true;
+    };
+  }, [user?.uid]);
+
+  if (loading || !ready) {
+    return (
+      <main className="panda-profile-loading">
+        <div className="panda-profile-loading__orb">🐼</div>
+        <span>Preparing your Panda…</span>
+      </main>
+    );
+  }
+
+  if (!user) {
+    return (
+      <main className="panda-profile-guest">
+        <div className="panda-profile-guest__ambient" aria-hidden="true" />
+        <div className="panda-profile-guest__inner">
+          <div className="panda-profile-guest__mark">🐼</div>
+          <span className="panda-profile-mini-label"><Sparkles size={11} /> MY PANDA</span>
+          <h1>Your Panda space<br /><em>is waiting.</em></h1>
+          <p>Create an account to keep profiles, watch progress and your taste connected across your Panda sessions.</p>
+          <div className="panda-profile-guest__actions">
+            <button type="button" className="is-primary" onClick={() => openAuthModal('signup')}><Plus size={15} /> Create account</button>
+            <button type="button" onClick={() => openAuthModal('signin')}><LogIn size={15} /> Sign in</button>
+          </div>
+          <div className="panda-profile-guest__note"><ShieldCheck size={13} /> Firebase Authentication</div>
+        </div>
+      </main>
+    );
+  }
+
+  const defaultName = user.displayName?.trim() || user.email?.split('@')[0] || 'Panda';
+
+  const completeSetup = async (profile: PandaProfile) => {
+    const saved = await saveProfile(user.uid, profile);
+    setProfiles((current) => [saved, ...current.filter((item) => item.id !== saved.id)].slice(0, 6));
+    setActiveProfile(saved);
+    setActiveProfileId(user.uid, saved.id);
+    setEditingProfile(null);
+    void trackEvent({
+      type: 'profile_create',
+      metadata: {
+        profileId: saved.id,
+        avatar: saved.avatar,
+        movieGenres: saved.movieGenres,
+        seriesGenres: saved.seriesGenres,
+      },
+    });
+    setView('dashboard');
+  };
+
+  const selectProfile = (profile: PandaProfile) => {
+    if (profile.pinHash) {
+      setPinProfile(profile);
+      return;
+    }
+
+    setActiveProfile(profile);
+    setActiveProfileId(user.uid, profile.id);
+    void trackEvent({ type: 'profile_select', metadata: { profileId: profile.id, locked: false } });
+    setView('dashboard');
+  };
+
+  const unlockProfile = () => {
+    if (!pinProfile) return;
+
+    setActiveProfile(pinProfile);
+    setActiveProfileId(user.uid, pinProfile.id);
+    void trackEvent({
+      type: 'profile_select',
+      metadata: { profileId: pinProfile.id, locked: true, pinUnlocked: true },
+    });
+    setPinProfile(null);
+    setView('dashboard');
+  };
+
+  const deleteProfileItem = async (profile: PandaProfile) => {
+    if (profiles.length <= 1) return;
+
+    await deleteProfile(user.uid, profile.id);
+    const remaining = profiles.filter((item) => item.id !== profile.id);
+    setProfiles(remaining);
+    void trackEvent({ type: 'profile_delete', metadata: { profileId: profile.id } });
+
+    if (activeProfile?.id === profile.id) {
+      setActiveProfile(null);
+      setActiveProfileId(user.uid, '');
+    }
+
+    setConfirmDelete(null);
+  };
+
+  const changeProfile = () => {
+    void trackEvent({
+      type: 'profile_switch',
+      metadata: { fromProfileId: activeProfile?.id || '' },
+    });
+    setView('selector');
+    setActiveProfile(null);
+    setActiveProfileId(user.uid, '');
+  };
+
+  const handleSignOut = async () => {
+    await signOut();
+    setActiveProfile(null);
+  };
+
+  const editProfile = (profile: PandaProfile) => {
+    setEditingProfile(profile);
+    setView('setup');
+  };
+
+  if (view === 'setup') {
+    return (
+      <ProfileSetup
+        defaultName={defaultName}
+        initialProfile={editingProfile}
+        onComplete={(profile) => void completeSetup(profile)}
+        onBack={() => {
+          setEditingProfile(null);
+          setView(activeProfile ? 'dashboard' : 'selector');
+        }}
+      />
+    );
+  }
+
+  if (view === 'manage') {
+    return (
+      <>
+        <ManageProfiles
+          profiles={profiles}
+          onDone={() => setView('selector')}
+          onEdit={editProfile}
+          onDelete={(profile) => setConfirmDelete(profile)}
+        />
+        {confirmDelete && (
+          <div className="panda-profile-overlay">
+            <div className="panda-profile-overlay__backdrop" onClick={() => setConfirmDelete(null)} />
+            <motion.div
+              className="panda-profile-pin-dialog"
+              initial={{ opacity: 0, scale: .97, y: 10 }}
+              animate={{ opacity: 1, scale: 1, y: 0 }}
+            >
+              <button type="button" className="panda-profile-overlay__close" onClick={() => setConfirmDelete(null)} aria-label="Close"><X size={17} /></button>
+              <ProfileAvatar profile={confirmDelete} size="md" />
+              <span className="panda-profile-mini-label"><Trash2 size={11} /> Delete profile</span>
+              <h2>Remove {confirmDelete.name}?</h2>
+              <p>This removes the profile and its personalization. This cannot be undone.</p>
+              <div className="panda-profile-flow__actions" style={{ width: '100%', marginTop: 18 }}>
+                <button type="button" className="panda-profile-flow__button" onClick={() => setConfirmDelete(null)}>Cancel</button>
+                <button type="button" className="panda-profile-flow__button panda-profile-flow__button--primary" onClick={() => void deleteProfileItem(confirmDelete)}><Trash2 size={14} /> Delete</button>
+              </div>
+            </motion.div>
+          </div>
+        )}
+      </>
+    );
+  }
+
+  if (view === 'dashboard' && activeProfile) {
+    return (
+      <>
+        <ProfileDashboard
+          profile={activeProfile}
+          user={user}
+          onSwitch={changeProfile}
+          onEdit={() => editProfile(activeProfile)}
+          onSignOut={() => void handleSignOut()}
+        />
+        {pinProfile && <PinPrompt profile={pinProfile} onUnlock={unlockProfile} onCancel={() => setPinProfile(null)} />}
+      </>
+    );
+  }
+
+  return (
+    <>
+      <ProfileSelector
+        profiles={profiles}
+        onSelect={selectProfile}
+        onAdd={() => {
+          setEditingProfile(null);
+          setView('setup');
+        }}
+        onManage={() => setView('manage')}
+      />
+      {pinProfile && <PinPrompt profile={pinProfile} onUnlock={unlockProfile} onCancel={() => setPinProfile(null)} />}
+    </>
   );
 }
