@@ -27,6 +27,7 @@ import {
 } from '../lib/profileStore';
 import { buildWatchHref } from '../lib/mediaRoute';
 import { trackEvent } from '../lib/analytics';
+import { initializeProfileStorage } from '../lib/profileScope';
 import '../styles/panda-profile.css';
 
 type SetupStep = 1 | 2 | 3 | 4 | 5;
@@ -832,8 +833,17 @@ export function Profile() {
   const defaultName = user.displayName?.trim() || user.email?.split('@')[0] || 'Panda';
 
   const completeSetup = async (profile: PandaProfile) => {
+    const isFirstProfile = profiles.length === 0 && !editingProfile;
     const saved = await saveProfile(user.uid, profile);
-    setProfiles((current) => [saved, ...current.filter((item) => item.id !== saved.id)].slice(0, 6));
+    initializeProfileStorage(user.uid, saved.id, isFirstProfile, [
+      'kinoma_history',
+      'kinoma_watchlist',
+      'kinoma_completed',
+      'kinoma_favorites',
+      'kinoma_ep_progress',
+      'kinoma_meta_cache',
+      'kinoma_search_history',
+    ]);
     setActiveProfile(saved);
     setActiveProfileId(user.uid, saved.id);
     setEditingProfile(null);
@@ -855,6 +865,15 @@ export function Profile() {
       return;
     }
 
+    initializeProfileStorage(user.uid, profile.id, false, [
+      'kinoma_history',
+      'kinoma_watchlist',
+      'kinoma_completed',
+      'kinoma_favorites',
+      'kinoma_ep_progress',
+      'kinoma_meta_cache',
+      'kinoma_search_history',
+    ]);
     setActiveProfile(profile);
     setActiveProfileId(user.uid, profile.id);
     void trackEvent({ type: 'profile_select', metadata: { profileId: profile.id, locked: false } });
@@ -864,6 +883,15 @@ export function Profile() {
   const unlockProfile = () => {
     if (!pinProfile) return;
 
+    initializeProfileStorage(user.uid, pinProfile.id, false, [
+      'kinoma_history',
+      'kinoma_watchlist',
+      'kinoma_completed',
+      'kinoma_favorites',
+      'kinoma_ep_progress',
+      'kinoma_meta_cache',
+      'kinoma_search_history',
+    ]);
     setActiveProfile(pinProfile);
     setActiveProfileId(user.uid, pinProfile.id);
     void trackEvent({
