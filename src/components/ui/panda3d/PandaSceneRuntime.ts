@@ -389,12 +389,6 @@ export function createPandaSceneRuntime(options: PandaSceneRuntimeOptions): Pand
         rig.head.rotation.z = Math.sin(t * 4.8) * 0.04;
       }
 
-      // Organic blink timing, with slight pupil movement so the face never feels frozen.
-      const blinkPhase = elapsed % 4.3;
-      const blinking = state === 'sleep' || (blinkPhase > 3.84 && blinkPhase < 3.98) || (blinkPhase > 0.18 && blinkPhase < 0.24);
-      const eyeScale = blinking ? 0.08 : 1;
-      rig.leftEye.scale.y = THREE.MathUtils.lerp(rig.leftEye.scale.y, eyeScale, 0.55);
-      rig.rightEye.scale.y = THREE.MathUtils.lerp(rig.rightEye.scale.y, eyeScale, 0.55);
       const blinkPhase = elapsed % 4.7;
       const blinkOne = blinkPhase > 3.95 && blinkPhase < 4.08;
       const blinkTwo = blinkPhase > 1.05 && blinkPhase < 1.16;
