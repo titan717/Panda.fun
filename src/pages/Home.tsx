@@ -204,7 +204,7 @@ function HomeProfileGate({ onReady }: { onReady: () => void }) {
             setGateState('hidden');
             onReady();
           }}
-          onBack={() => setGateState('hidden')}
+          onBack={() => setGateState('chooser')}
         />
       </div>
     );
@@ -752,10 +752,11 @@ function HomeContent() {
 
 export function Home() {
   const [profileReady, setProfileReady] = useState(false);
+  const handleProfileReady = React.useCallback(() => setProfileReady(true), []);
 
   return (
     <>
-      <HomeProfileGate onReady={() => setProfileReady(true)} />
+      <HomeProfileGate onReady={handleProfileReady} />
       {profileReady && <HomeContent />}
     </>
   );
