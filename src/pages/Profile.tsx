@@ -5,7 +5,7 @@ import {
   Heart, Library, Laugh, Lock, LogIn, LogOut, Mail, Plus, Rocket, Search,
   Settings, ShieldCheck, Sparkles, Trash2, UserRound, X, Zap
 } from 'lucide-react';
-import { Link } from 'wouter';
+import { Link, useLocation } from 'wouter';
 import { useAuth } from '../lib/AuthContext';
 import { libraryManager } from '../lib/library';
 import { historyUtil, type HistoryItem } from '../lib/history';
@@ -33,7 +33,7 @@ import '../styles/panda-profile.css';
 
 type SetupStep = 1 | 2 | 3 | 4 | 5;
 
-function ProfileAvatar({
+export function ProfileAvatar({
   profile,
   size = 'md',
   interactive = false,
@@ -125,7 +125,7 @@ function ChoiceButton({
   );
 }
 
-function ProfileSetup({
+export function ProfileSetup({
   initialProfile,
   defaultName,
   onComplete,
@@ -137,7 +137,7 @@ function ProfileSetup({
   onBack: () => void;
 }) {
   const [step, setStep] = useState<SetupStep>(1);
-  const [name, setName] = useState(initialProfile?.name || defaultName);
+  const [name, setName] = useState(initialProfile?.name || '');
   const [avatar, setAvatar] = useState(initialProfile?.avatar || '');
   const [pin, setPin] = useState('');
   const [removePin, setRemovePin] = useState(false);
@@ -482,7 +482,7 @@ function ProfileSetup({
   );
 }
 
-function PinPrompt({
+export function PinPrompt({
   profile,
   onUnlock,
   onCancel,
@@ -769,7 +769,7 @@ function ProfileSelector({
   );
 }
 
-function ManageProfiles({
+export function ManageProfiles({
   profiles,
   onDone,
   onEdit,
@@ -820,6 +820,8 @@ function ManageProfiles({
 
 export function Profile() {
   const { user, loading, openAuthModal, signOut } = useAuth();
+  const [location] = useLocation();
+  const manageRequested = location.includes('?manage=1');
   const [profiles, setProfiles] = useState<PandaProfile[]>([]);
   const [activeProfile, setActiveProfile] = useState<PandaProfile | null>(null);
   const [view, setView] = useState<'selector' | 'setup' | 'dashboard' | 'manage'>('selector');
@@ -849,8 +851,14 @@ export function Profile() {
       if (!loaded.length) {
         setActiveProfile(null);
         setView('setup');
-      } else {
+      } else if (manageRequested) {
         setActiveProfile(selected);
+        setView('manage');
+      } else if (selected) {
+        setActiveProfile(selected);
+        setView('dashboard');
+      } else {
+        setActiveProfile(null);
         setView('selector');
       }
 
@@ -860,7 +868,7 @@ export function Profile() {
     return () => {
       cancelled = true;
     };
-  }, [user?.uid]);
+  }, [user?.uid, manageRequested]);
 
   if (loading || !ready) {
     return (
@@ -977,8 +985,9 @@ export function Profile() {
     void trackEvent({ type: 'profile_delete', metadata: { profileId: profile.id } });
 
     if (activeProfile?.id === profile.id) {
-      setActiveProfile(null);
-      setActiveProfileId(user.uid, '');
+      const nextProfile = remaining[0] || null;
+      setActiveProfile(nextProfile);
+      setActiveProfileId(user.uid, nextProfile?.id || '');
     }
 
     setConfirmDelete(null);
@@ -990,8 +999,6 @@ export function Profile() {
       metadata: { fromProfileId: activeProfile?.id || '' },
     });
     setView('selector');
-    setActiveProfile(null);
-    setActiveProfileId(user.uid, '');
   };
 
   const handleSignOut = async () => {
