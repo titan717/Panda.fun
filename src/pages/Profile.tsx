@@ -187,12 +187,13 @@ function ProfileSetup({
 
     setSaving(true);
     try {
+      const selectedSeriesGenres = step === 5 && skipCurrent ? [] : seriesGenres;
       const base = normalizeProfile({
         id: initialProfile?.id || createProfileId(),
         name: name.trim(),
         avatar,
         movieGenres,
-        seriesGenres,
+        seriesGenres: selectedSeriesGenres,
         pinHash: initialProfile?.pinHash,
         createdAt: initialProfile?.createdAt,
         updatedAt: new Date().toISOString(),
