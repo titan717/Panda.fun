@@ -1,0 +1,1568 @@
+:root {
+  --panda-admin-bg: #090a0b;
+  --panda-admin-panel: #111315;
+  --panda-admin-panel-2: #151718;
+  --panda-admin-border: rgba(255,255,255,.075);
+  --panda-admin-border-strong: rgba(255,255,255,.13);
+  --panda-admin-text: #f7f4ef;
+  --panda-admin-muted: rgba(247,244,239,.52);
+  --panda-admin-faint: rgba(247,244,239,.32);
+  --panda-admin-red: #e4574d;
+  --panda-admin-red-soft: rgba(228,87,77,.14);
+}
+
+.panda-admin,
+.panda-admin-gate {
+  min-height: 100dvh;
+  background:
+    radial-gradient(circle at 74% 3%, rgba(228,87,77,.08), transparent 30rem),
+    var(--panda-admin-bg);
+  color: var(--panda-admin-text);
+  font-family: "Roboto", "Google Sans", Arial, sans-serif;
+}
+
+.panda-admin {
+  display: flex;
+}
+
+.panda-admin-sidebar {
+  position: fixed;
+  inset: 0 auto 0 0;
+  z-index: 30;
+  width: 252px;
+  display: flex;
+  flex-direction: column;
+  padding: 23px 14px 15px;
+  border-right: 1px solid var(--panda-admin-border);
+  background: rgba(9,10,11,.96);
+  backdrop-filter: blur(18px);
+}
+
+.panda-admin-brand {
+  display: flex;
+  align-items: center;
+  gap: 11px;
+  min-width: 0;
+  padding: 0 9px;
+}
+
+.panda-admin-brand__mark {
+  width: 38px;
+  height: 38px;
+  display: grid;
+  place-items: center;
+  flex: 0 0 38px;
+  border: 1px solid rgba(255,255,255,.1);
+  border-radius: 12px;
+  background: linear-gradient(145deg, rgba(255,255,255,.09), rgba(255,255,255,.025));
+  box-shadow: 0 8px 24px rgba(0,0,0,.28);
+  font-size: 19px;
+}
+
+.panda-admin-brand strong,
+.panda-admin-brand span {
+  display: block;
+}
+
+.panda-admin-brand strong {
+  font-size: 13px;
+  font-weight: 900;
+  letter-spacing: .16em;
+}
+
+.panda-admin-brand span {
+  margin-top: 2px;
+  color: var(--panda-admin-muted);
+  font-size: 11px;
+}
+
+.panda-admin-sidebar__section-label {
+  margin: 31px 12px 9px;
+  color: var(--panda-admin-faint);
+  font-size: 9px;
+  font-weight: 800;
+  letter-spacing: .18em;
+  text-transform: uppercase;
+}
+
+.panda-admin-nav {
+  display: grid;
+  gap: 3px;
+}
+
+.panda-admin-nav button,
+.panda-admin-signout {
+  width: 100%;
+  min-height: 42px;
+  display: flex;
+  align-items: center;
+  gap: 11px;
+  padding: 0 11px;
+  border: 1px solid transparent;
+  border-radius: 11px;
+  color: var(--panda-admin-muted);
+  background: transparent;
+  font: inherit;
+  font-size: 12px;
+  font-weight: 650;
+  text-align: left;
+  cursor: pointer;
+  transition: background .18s ease, color .18s ease, transform .18s ease, border-color .18s ease;
+}
+
+.panda-admin-nav button svg:last-child {
+  margin-left: auto;
+  opacity: .6;
+}
+
+.panda-admin-nav button:hover,
+.panda-admin-signout:hover {
+  color: var(--panda-admin-text);
+  background: rgba(255,255,255,.045);
+}
+
+.panda-admin-nav button:active,
+.panda-admin-signout:active {
+  transform: translateY(1px);
+}
+
+.panda-admin-nav button.is-active {
+  color: #fff;
+  border-color: rgba(255,255,255,.07);
+  background: linear-gradient(90deg, rgba(228,87,77,.16), rgba(255,255,255,.045));
+}
+
+.panda-admin-nav button.is-active svg:first-child {
+  color: var(--panda-admin-red);
+}
+
+.panda-admin-sidebar__bottom {
+  margin-top: auto;
+  display: grid;
+  gap: 10px;
+}
+
+.panda-admin-session {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-width: 0;
+  padding: 11px;
+  border: 1px solid var(--panda-admin-border);
+  border-radius: 13px;
+  background: rgba(255,255,255,.025);
+}
+
+.panda-admin-session img,
+.panda-admin-session > span {
+  width: 32px;
+  height: 32px;
+  flex: 0 0 32px;
+  border-radius: 50%;
+  object-fit: cover;
+  display: grid;
+  place-items: center;
+  background: #232526;
+  color: #fff;
+  font-size: 11px;
+  font-weight: 800;
+}
+
+.panda-admin-session div {
+  min-width: 0;
+}
+
+.panda-admin-session strong,
+.panda-admin-session small {
+  display: block;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.panda-admin-session strong {
+  font-size: 11px;
+}
+
+.panda-admin-session small {
+  margin-top: 2px;
+  color: var(--panda-admin-faint);
+  font-size: 9px;
+}
+
+.panda-admin-signout {
+  justify-content: flex-start;
+}
+
+.panda-admin-main {
+  width: calc(100% - 252px);
+  min-width: 0;
+  margin-left: 252px;
+  padding: 34px clamp(20px, 3.4vw, 54px) 60px;
+}
+
+.panda-admin-view {
+  width: min(1500px, 100%);
+  margin: 0 auto;
+}
+
+.panda-admin-titlebar {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-end;
+  gap: 30px;
+  margin-bottom: 28px;
+}
+
+.panda-admin-titlebar > div:first-child {
+  min-width: 0;
+}
+
+.panda-admin-kicker {
+  display: inline-block;
+  color: var(--panda-admin-red);
+  font-size: 9px;
+  font-weight: 900;
+  letter-spacing: .19em;
+  text-transform: uppercase;
+}
+
+.panda-admin-titlebar h1 {
+  max-width: 760px;
+  margin: 8px 0 7px;
+  font-size: clamp(30px, 4vw, 48px);
+  line-height: 1.01;
+  letter-spacing: -.045em;
+  font-weight: 850;
+}
+
+.panda-admin-titlebar p {
+  max-width: 720px;
+  margin: 0;
+  color: var(--panda-admin-muted);
+  font-size: 13px;
+  line-height: 1.65;
+}
+
+.panda-admin-range {
+  display: flex;
+  padding: 3px;
+  border: 1px solid var(--panda-admin-border);
+  border-radius: 12px;
+  background: rgba(255,255,255,.03);
+  white-space: nowrap;
+}
+
+.panda-admin-range button {
+  min-width: 45px;
+  height: 32px;
+  border: 0;
+  border-radius: 9px;
+  color: var(--panda-admin-muted);
+  background: transparent;
+  font: inherit;
+  font-size: 10px;
+  font-weight: 800;
+  cursor: pointer;
+}
+
+.panda-admin-range button:hover {
+  color: #fff;
+}
+
+.panda-admin-range button.is-active {
+  color: #fff;
+  background: rgba(255,255,255,.1);
+}
+
+.panda-admin-count-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  padding: 9px 12px;
+  border: 1px solid var(--panda-admin-border);
+  border-radius: 999px;
+  color: var(--panda-admin-muted);
+  background: rgba(255,255,255,.035);
+  font-size: 10px;
+  font-weight: 800;
+  white-space: nowrap;
+}
+
+.panda-admin-stat-grid {
+  display: grid;
+  grid-template-columns: repeat(6, minmax(0, 1fr));
+  gap: 10px;
+  margin-bottom: 12px;
+}
+
+.panda-admin-stat {
+  position: relative;
+  min-width: 0;
+  padding: 15px 15px 16px;
+  overflow: hidden;
+  border: 1px solid var(--panda-admin-border);
+  border-radius: 16px;
+  background: linear-gradient(145deg, rgba(255,255,255,.043), rgba(255,255,255,.018));
+}
+
+.panda-admin-stat::after {
+  content: "";
+  position: absolute;
+  width: 72px;
+  height: 72px;
+  right: -32px;
+  bottom: -44px;
+  border-radius: 50%;
+  background: rgba(228,87,77,.11);
+  filter: blur(4px);
+}
+
+.panda-admin-stat__icon {
+  width: 28px;
+  height: 28px;
+  display: grid;
+  place-items: center;
+  margin-bottom: 15px;
+  border-radius: 9px;
+  color: rgba(255,255,255,.75);
+  background: rgba(255,255,255,.06);
+}
+
+.panda-admin-stat__label {
+  display: block;
+  color: var(--panda-admin-faint);
+  font-size: 9px;
+  font-weight: 800;
+  letter-spacing: .1em;
+  text-transform: uppercase;
+}
+
+.panda-admin-stat strong {
+  display: block;
+  margin-top: 7px;
+  font-size: 25px;
+  line-height: 1;
+  letter-spacing: -.035em;
+}
+
+.panda-admin-stat small {
+  display: block;
+  margin-top: 7px;
+  color: var(--panda-admin-faint);
+  font-size: 9px;
+}
+
+.panda-admin-grid {
+  display: grid;
+  gap: 12px;
+}
+
+.panda-admin-grid--wide {
+  grid-template-columns: minmax(0, 1.55fr) minmax(360px, .95fr);
+  margin-bottom: 12px;
+}
+
+.panda-admin-grid--three {
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+
+.panda-admin-panel {
+  min-width: 0;
+  border: 1px solid var(--panda-admin-border);
+  border-radius: 18px;
+  background: linear-gradient(145deg, rgba(255,255,255,.038), rgba(255,255,255,.017));
+  box-shadow: 0 22px 60px rgba(0,0,0,.18);
+}
+
+.panda-admin-panel--dark {
+  background: #0b0c0d;
+}
+
+.panda-admin-panel--accent {
+  background:
+    radial-gradient(circle at 85% 15%, rgba(228,87,77,.17), transparent 12rem),
+    linear-gradient(145deg, rgba(255,255,255,.04), rgba(255,255,255,.015));
+}
+
+.panda-admin-panel--chart {
+  padding-bottom: 16px;
+}
+
+.panda-admin-panel:not(.panda-admin-panel--chart):not(.panda-admin-panel--dark) {
+  padding: 19px;
+}
+
+.panda-admin-panel__head {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 20px;
+  padding: 19px 19px 0;
+}
+
+.panda-admin-panel__head > svg {
+  flex: 0 0 auto;
+  color: var(--panda-admin-red);
+}
+
+.panda-admin-panel__head span,
+.panda-admin-panel__eyebrow {
+  display: block;
+  color: var(--panda-admin-faint);
+  font-size: 8px;
+  font-weight: 900;
+  letter-spacing: .16em;
+}
+
+.panda-admin-panel__head h2 {
+  margin: 6px 0 0;
+  font-size: 17px;
+  letter-spacing: -.02em;
+}
+
+.panda-admin-panel__big {
+  display: block;
+  margin-top: 10px;
+  font-size: 31px;
+  letter-spacing: -.05em;
+}
+
+.panda-admin-panel p {
+  color: var(--panda-admin-muted);
+  font-size: 11px;
+  line-height: 1.55;
+}
+
+.panda-admin-mini-icon {
+  width: 30px;
+  height: 30px;
+  display: grid;
+  place-items: center;
+  margin-bottom: 14px;
+  border: 1px solid var(--panda-admin-border);
+  border-radius: 9px;
+  color: var(--panda-admin-red);
+  background: var(--panda-admin-red-soft);
+}
+
+.panda-admin-bars {
+  height: 250px;
+  display: flex;
+  align-items: flex-end;
+  gap: 7px;
+  padding: 27px 19px 10px;
+  overflow-x: auto;
+}
+
+.panda-admin-bars__day {
+  min-width: 18px;
+  flex: 1 1 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  height: 100%;
+  justify-content: flex-end;
+}
+
+.panda-admin-bars__stack {
+  width: 100%;
+  height: 180px;
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+  gap: 3px;
+}
+
+.panda-admin-bars__stack span {
+  width: min(9px, 40%);
+  min-height: 3px;
+  border-radius: 4px 4px 1px 1px;
+  background: rgba(255,255,255,.75);
+  transition: height .25s ease;
+}
+
+.panda-admin-bars__stack span:last-child {
+  background: var(--panda-admin-red);
+  opacity: .9;
+}
+
+.panda-admin-bars__day small {
+  margin-top: 9px;
+  color: var(--panda-admin-faint);
+  font-size: 7px;
+  white-space: nowrap;
+  transform: rotate(-35deg);
+}
+
+.panda-admin-legend {
+  display: flex;
+  gap: 18px;
+  padding: 4px 19px 0;
+  color: var(--panda-admin-faint);
+  font-size: 8px;
+}
+
+.panda-admin-legend span {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.panda-admin-legend i {
+  width: 6px;
+  height: 6px;
+  display: inline-block;
+  border-radius: 50%;
+  background: rgba(255,255,255,.75);
+}
+
+.panda-admin-legend span:last-child i {
+  background: var(--panda-admin-red);
+}
+
+.panda-admin-ranking {
+  display: grid;
+  gap: 2px;
+  padding: 12px;
+}
+
+.panda-admin-ranking__row {
+  display: grid;
+  grid-template-columns: 28px minmax(0, 1fr);
+  gap: 10px;
+  padding: 11px 8px;
+  border-radius: 10px;
+  transition: background .18s ease;
+}
+
+.panda-admin-ranking__row:hover {
+  background: rgba(255,255,255,.04);
+}
+
+.panda-admin-ranking__row > b {
+  color: var(--panda-admin-red);
+  font-size: 10px;
+}
+
+.panda-admin-ranking__row strong,
+.panda-admin-ranking__row small {
+  display: block;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.panda-admin-ranking__row strong {
+  font-size: 11px;
+}
+
+.panda-admin-ranking__row small {
+  margin-top: 4px;
+  color: var(--panda-admin-faint);
+  font-size: 8px;
+}
+
+.panda-admin-ranking__empty {
+  padding: 36px 14px;
+  color: var(--panda-admin-faint);
+  font-size: 11px;
+  line-height: 1.55;
+  text-align: center;
+}
+
+.panda-admin-toolbar,
+.panda-admin-content-search {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  margin-bottom: 12px;
+}
+
+.panda-admin-search {
+  min-width: 0;
+  height: 42px;
+  flex: 1;
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  padding: 0 12px;
+  border: 1px solid var(--panda-admin-border);
+  border-radius: 11px;
+  background: rgba(255,255,255,.03);
+}
+
+.panda-admin-search:focus-within {
+  border-color: rgba(228,87,77,.4);
+  box-shadow: 0 0 0 3px rgba(228,87,77,.08);
+}
+
+.panda-admin-search svg {
+  flex: 0 0 auto;
+  color: var(--panda-admin-faint);
+}
+
+.panda-admin-search input {
+  min-width: 0;
+  width: 100%;
+  border: 0;
+  outline: 0;
+  color: #fff;
+  background: transparent;
+  font: inherit;
+  font-size: 12px;
+}
+
+.panda-admin-search input::placeholder {
+  color: var(--panda-admin-faint);
+}
+
+.panda-admin-search > button {
+  width: 26px;
+  height: 26px;
+  display: grid;
+  place-items: center;
+  flex: 0 0 26px;
+  border: 0;
+  border-radius: 7px;
+  color: var(--panda-admin-muted);
+  background: rgba(255,255,255,.05);
+  cursor: pointer;
+}
+
+.panda-admin-search--large {
+  height: 48px;
+}
+
+.panda-admin-select {
+  height: 42px;
+  min-width: 170px;
+  padding: 0 11px;
+  border: 1px solid var(--panda-admin-border);
+  border-radius: 11px;
+  color: var(--panda-admin-muted);
+  background: #121415;
+  outline: none;
+  font: inherit;
+  font-size: 11px;
+  font-weight: 700;
+}
+
+.panda-admin-primary-button,
+.panda-admin-secondary-button {
+  min-height: 42px;
+  display: inline-flex;
+  justify-content: center;
+  align-items: center;
+  gap: 8px;
+  padding: 0 13px;
+  border-radius: 11px;
+  font: inherit;
+  font-size: 10px;
+  font-weight: 850;
+  cursor: pointer;
+  transition: transform .18s ease, background .18s ease, opacity .18s ease, border-color .18s ease;
+  white-space: nowrap;
+}
+
+.panda-admin-primary-button {
+  color: #fff;
+  border: 1px solid rgba(228,87,77,.5);
+  background: var(--panda-admin-red);
+  box-shadow: 0 9px 24px rgba(228,87,77,.14);
+}
+
+.panda-admin-secondary-button {
+  color: #fff;
+  border: 1px solid var(--panda-admin-border-strong);
+  background: rgba(255,255,255,.045);
+}
+
+.panda-admin-primary-button:hover,
+.panda-admin-secondary-button:hover {
+  transform: translateY(-1px);
+}
+
+.panda-admin-primary-button:disabled,
+.panda-admin-secondary-button:disabled {
+  opacity: .45;
+  cursor: not-allowed;
+  transform: none;
+}
+
+.panda-admin-alert {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin: 0 0 12px;
+  padding: 11px 12px;
+  border: 1px solid rgba(228,87,77,.23);
+  border-radius: 11px;
+  color: rgba(255,255,255,.82);
+  background: rgba(228,87,77,.07);
+  font-size: 10px;
+}
+
+.panda-admin-table-panel {
+  overflow: hidden;
+}
+
+.panda-admin-table-wrap {
+  width: 100%;
+  overflow-x: auto;
+}
+
+.panda-admin-table {
+  width: 100%;
+  min-width: 760px;
+  border-collapse: collapse;
+  text-align: left;
+}
+
+.panda-admin-table th {
+  padding: 13px 15px;
+  border-bottom: 1px solid var(--panda-admin-border);
+  color: var(--panda-admin-faint);
+  font-size: 8px;
+  font-weight: 900;
+  letter-spacing: .13em;
+  text-transform: uppercase;
+}
+
+.panda-admin-table td {
+  padding: 13px 15px;
+  border-bottom: 1px solid rgba(255,255,255,.045);
+  color: rgba(255,255,255,.72);
+  font-size: 10px;
+  vertical-align: middle;
+}
+
+.panda-admin-table tbody tr:hover {
+  background: rgba(255,255,255,.025);
+}
+
+.panda-admin-table td strong,
+.panda-admin-table td small {
+  display: block;
+}
+
+.panda-admin-table td strong {
+  color: rgba(255,255,255,.92);
+  font-size: 10px;
+}
+
+.panda-admin-table td small {
+  margin-top: 3px;
+  color: var(--panda-admin-faint);
+  font-size: 8px;
+}
+
+.panda-admin-user {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-width: 200px;
+}
+
+.panda-admin-user img,
+.panda-admin-user > span {
+  width: 34px;
+  height: 34px;
+  flex: 0 0 34px;
+  display: grid;
+  place-items: center;
+  border-radius: 50%;
+  object-fit: cover;
+  background: #242627;
+  color: #fff;
+  font-size: 10px;
+  font-weight: 900;
+}
+
+.panda-admin-badge {
+  display: inline-flex;
+  width: fit-content;
+  padding: 4px 7px;
+  border: 1px solid rgba(228,87,77,.18);
+  border-radius: 999px;
+  color: #ffaaa3;
+  background: rgba(228,87,77,.08);
+  font-size: 7px;
+  font-weight: 850;
+  letter-spacing: .02em;
+  text-transform: uppercase;
+}
+
+.panda-admin-badge--neutral {
+  color: var(--panda-admin-muted);
+  border-color: var(--panda-admin-border);
+  background: rgba(255,255,255,.03);
+}
+
+.panda-admin-icon-button,
+.panda-admin-icon-link {
+  width: 32px;
+  height: 32px;
+  display: inline-grid;
+  place-items: center;
+  border: 1px solid var(--panda-admin-border);
+  border-radius: 9px;
+  color: var(--panda-admin-muted);
+  background: rgba(255,255,255,.025);
+  text-decoration: none;
+  cursor: pointer;
+}
+
+.panda-admin-icon-button:hover,
+.panda-admin-icon-link:hover {
+  color: #fff;
+  background: rgba(255,255,255,.07);
+}
+
+.panda-admin-mono {
+  max-width: 260px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  font-size: 8px !important;
+}
+
+.panda-admin-empty {
+  min-height: 240px;
+  display: grid;
+  place-items: center;
+  align-content: center;
+  padding: 30px;
+  text-align: center;
+}
+
+.panda-admin-empty > span {
+  width: 44px;
+  height: 44px;
+  display: grid;
+  place-items: center;
+  border: 1px solid var(--panda-admin-border);
+  border-radius: 13px;
+  color: var(--panda-admin-red);
+  background: var(--panda-admin-red-soft);
+}
+
+.panda-admin-empty strong {
+  margin-top: 13px;
+  font-size: 13px;
+}
+
+.panda-admin-empty p {
+  max-width: 360px;
+  margin: 6px auto 0;
+}
+
+.panda-admin-drawer-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 80;
+  display: flex;
+  justify-content: flex-end;
+  background: rgba(0,0,0,.62);
+  backdrop-filter: blur(7px);
+}
+
+.panda-admin-drawer {
+  width: min(430px, 100%);
+  height: 100%;
+  overflow-y: auto;
+  padding: 24px;
+  border-left: 1px solid var(--panda-admin-border);
+  background: #101213;
+  box-shadow: -20px 0 70px rgba(0,0,0,.4);
+}
+
+.panda-admin-drawer__head {
+  display: flex;
+  justify-content: space-between;
+  gap: 20px;
+  align-items: flex-start;
+}
+
+.panda-admin-drawer__head span {
+  color: var(--panda-admin-red);
+  font-size: 8px;
+  font-weight: 900;
+  letter-spacing: .16em;
+}
+
+.panda-admin-drawer__head h2 {
+  margin: 6px 0 0;
+  font-size: 24px;
+  letter-spacing: -.035em;
+}
+
+.panda-admin-drawer__head button {
+  width: 32px;
+  height: 32px;
+  display: grid;
+  place-items: center;
+  border: 1px solid var(--panda-admin-border);
+  border-radius: 9px;
+  color: var(--panda-admin-muted);
+  background: rgba(255,255,255,.03);
+  cursor: pointer;
+}
+
+.panda-admin-detail-list {
+  display: grid;
+  gap: 2px;
+  margin: 24px 0;
+}
+
+.panda-admin-detail-list > div {
+  padding: 12px 0;
+  border-bottom: 1px solid var(--panda-admin-border);
+}
+
+.panda-admin-detail-list span,
+.panda-admin-detail-list strong {
+  display: block;
+}
+
+.panda-admin-detail-list span {
+  color: var(--panda-admin-faint);
+  font-size: 8px;
+  text-transform: uppercase;
+}
+
+.panda-admin-detail-list strong {
+  margin-top: 4px;
+  color: rgba(255,255,255,.86);
+  font-size: 11px;
+  overflow-wrap: anywhere;
+}
+
+.panda-admin-note {
+  margin-top: 13px;
+  color: var(--panda-admin-faint);
+  font-size: 9px;
+  line-height: 1.65;
+}
+
+.panda-admin-content-search {
+  align-items: stretch;
+}
+
+.panda-admin-content-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 12px;
+}
+
+.panda-admin-content-card {
+  min-width: 0;
+  overflow: hidden;
+  border: 1px solid var(--panda-admin-border);
+  border-radius: 16px;
+  background: linear-gradient(145deg, rgba(255,255,255,.04), rgba(255,255,255,.016));
+}
+
+.panda-admin-content-card__art {
+  position: relative;
+  height: 170px;
+  overflow: hidden;
+  background: #181a1b;
+}
+
+.panda-admin-content-card__art img {
+  width: 100%;
+  height: 100%;
+  display: block;
+  object-fit: cover;
+}
+
+.panda-admin-content-card__art::after {
+  content: "";
+  position: absolute;
+  inset: 50% 0 0;
+  background: linear-gradient(180deg, transparent, rgba(0,0,0,.72));
+}
+
+.panda-admin-content-card__art > svg {
+  position: absolute;
+  inset: 0;
+  margin: auto;
+  color: var(--panda-admin-faint);
+}
+
+.panda-admin-content-card__art > span {
+  position: absolute;
+  z-index: 1;
+  left: 11px;
+  bottom: 10px;
+  padding: 4px 6px;
+  border: 1px solid rgba(255,255,255,.1);
+  border-radius: 999px;
+  color: rgba(255,255,255,.78);
+  background: rgba(0,0,0,.48);
+  font-size: 7px;
+  font-weight: 900;
+}
+
+.panda-admin-content-card__body {
+  padding: 13px;
+}
+
+.panda-admin-content-card__body > strong {
+  display: block;
+  overflow: hidden;
+  color: rgba(255,255,255,.92);
+  font-size: 12px;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.panda-admin-content-card__body > small {
+  display: block;
+  margin-top: 4px;
+  color: var(--panda-admin-faint);
+  font-size: 8px;
+}
+
+.panda-admin-content-card__body > p {
+  height: 48px;
+  overflow: hidden;
+  margin: 8px 0 12px;
+  display: -webkit-box;
+  -webkit-line-clamp: 3;
+  -webkit-box-orient: vertical;
+}
+
+.panda-admin-content-card__actions {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+}
+
+.panda-admin-content-card__actions .panda-admin-secondary-button {
+  flex: 1;
+}
+
+.panda-admin-health-grid,
+.panda-admin-report-grid,
+.panda-admin-settings-grid {
+  display: grid;
+  gap: 12px;
+}
+
+.panda-admin-health-grid {
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  margin-bottom: 12px;
+}
+
+.panda-admin-health-card {
+  min-width: 0;
+  display: grid;
+  grid-template-columns: 9px minmax(0,1fr) auto;
+  align-items: start;
+  gap: 11px;
+  padding: 17px;
+  border: 1px solid var(--panda-admin-border);
+  border-radius: 16px;
+  background: linear-gradient(145deg, rgba(255,255,255,.04), rgba(255,255,255,.016));
+}
+
+.panda-admin-health-card__status {
+  width: 9px;
+  height: 9px;
+  margin-top: 4px;
+  border-radius: 50%;
+  background: rgba(255,255,255,.2);
+  box-shadow: 0 0 0 4px rgba(255,255,255,.035);
+}
+
+.panda-admin-health-card__status.is-ok {
+  background: #68c77d;
+  box-shadow: 0 0 0 4px rgba(104,199,125,.1);
+}
+
+.panda-admin-health-card__status.is-error {
+  background: var(--panda-admin-red);
+  box-shadow: 0 0 0 4px rgba(228,87,77,.1);
+}
+
+.panda-admin-health-card > div:nth-child(2) span {
+  display: block;
+  color: var(--panda-admin-faint);
+  font-size: 8px;
+  font-weight: 900;
+  letter-spacing: .14em;
+}
+
+.panda-admin-health-card strong {
+  display: block;
+  margin-top: 5px;
+  font-size: 12px;
+}
+
+.panda-admin-health-card small {
+  display: block;
+  margin-top: 4px;
+  color: var(--panda-admin-faint);
+  font-size: 8px;
+  line-height: 1.5;
+}
+
+.panda-admin-health-card > svg {
+  color: #68c77d;
+}
+
+.panda-admin-pre {
+  max-height: 430px;
+  overflow: auto;
+  margin: 18px 19px 0;
+  padding: 14px;
+  border: 1px solid var(--panda-admin-border);
+  border-radius: 12px;
+  color: rgba(255,255,255,.68);
+  background: #0a0b0c;
+  font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  font-size: 9px;
+  line-height: 1.55;
+  white-space: pre-wrap;
+  word-break: break-word;
+}
+
+.panda-admin-last-check {
+  display: block;
+  padding: 10px 19px 18px;
+  color: var(--panda-admin-faint);
+  font-size: 8px;
+}
+
+.panda-admin-report-grid {
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+
+.panda-admin-report-card {
+  min-height: 250px;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  padding: 20px;
+  border: 1px solid var(--panda-admin-border);
+  border-radius: 18px;
+  background: linear-gradient(145deg, rgba(255,255,255,.04), rgba(255,255,255,.016));
+}
+
+.panda-admin-report-card--dark {
+  background: #0a0b0c;
+}
+
+.panda-admin-report-card > div {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  color: var(--panda-admin-red);
+  font-size: 8px;
+  font-weight: 900;
+  letter-spacing: .15em;
+}
+
+.panda-admin-report-card > strong {
+  margin-top: 30px;
+  font-size: 19px;
+  letter-spacing: -.025em;
+}
+
+.panda-admin-report-card > p {
+  margin: 8px 0 20px;
+}
+
+.panda-admin-report-card .panda-admin-primary-button,
+.panda-admin-report-card .panda-admin-secondary-button {
+  margin-top: auto;
+}
+
+.panda-admin-settings-grid {
+  grid-template-columns: minmax(0, .9fr) minmax(0, 1.1fr);
+}
+
+.panda-admin-toggle-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 18px;
+  padding-top: 19px;
+}
+
+.panda-admin-toggle-row strong,
+.panda-admin-toggle-row small {
+  display: block;
+}
+
+.panda-admin-toggle-row strong {
+  font-size: 12px;
+}
+
+.panda-admin-toggle-row small {
+  max-width: 460px;
+  margin-top: 4px;
+  color: var(--panda-admin-faint);
+  font-size: 9px;
+  line-height: 1.55;
+}
+
+.panda-admin-toggle {
+  width: 43px;
+  height: 25px;
+  position: relative;
+  flex: 0 0 43px;
+  padding: 0;
+  border: 0;
+  border-radius: 999px;
+  background: rgba(255,255,255,.12);
+  cursor: pointer;
+}
+
+.panda-admin-toggle span {
+  position: absolute;
+  top: 4px;
+  left: 4px;
+  width: 17px;
+  height: 17px;
+  border-radius: 50%;
+  background: rgba(255,255,255,.75);
+  transition: transform .18s ease, background .18s ease;
+}
+
+.panda-admin-toggle.is-on {
+  background: rgba(228,87,77,.36);
+}
+
+.panda-admin-toggle.is-on span {
+  background: var(--panda-admin-red);
+  transform: translateX(18px);
+}
+
+.panda-admin-config-list {
+  margin-top: 15px;
+}
+
+.panda-admin-config-list > div {
+  padding: 12px 0;
+  border-top: 1px solid var(--panda-admin-border);
+}
+
+.panda-admin-config-list span,
+.panda-admin-config-list strong,
+.panda-admin-config-list small {
+  display: block;
+}
+
+.panda-admin-config-list span {
+  color: var(--panda-admin-faint);
+  font-size: 8px;
+  text-transform: uppercase;
+}
+
+.panda-admin-config-list strong {
+  margin-top: 4px;
+  font-size: 11px;
+}
+
+.panda-admin-config-list small {
+  margin-top: 3px;
+  color: var(--panda-admin-faint);
+  font-size: 8px;
+}
+
+.panda-admin-note--large {
+  display: flex;
+  gap: 11px;
+  padding: 14px 0 0;
+}
+
+.panda-admin-note--large > svg {
+  flex: 0 0 auto;
+  color: var(--panda-admin-red);
+  margin-top: 2px;
+}
+
+.panda-admin-note--large strong {
+  color: rgba(255,255,255,.8);
+  font-size: 10px;
+}
+
+.panda-admin-note--large p {
+  margin: 3px 0 0;
+}
+
+.panda-admin-mobile-header {
+  display: none;
+}
+
+.panda-admin-gate {
+  display: grid;
+  place-items: center;
+  padding: 22px;
+  text-align: center;
+}
+
+.panda-admin-gate > svg {
+  color: var(--panda-admin-red);
+}
+
+.panda-admin-gate > span {
+  color: var(--panda-admin-muted);
+  font-size: 12px;
+}
+
+.panda-admin-gate__card {
+  width: min(430px, 100%);
+  padding: 32px;
+  border: 1px solid var(--panda-admin-border);
+  border-radius: 22px;
+  background: linear-gradient(145deg, rgba(255,255,255,.05), rgba(255,255,255,.02));
+  box-shadow: 0 30px 90px rgba(0,0,0,.35);
+}
+
+.panda-admin-gate__mark {
+  width: 54px;
+  height: 54px;
+  display: grid;
+  place-items: center;
+  margin: 0 auto 18px;
+  border: 1px solid var(--panda-admin-border);
+  border-radius: 15px;
+  background: rgba(255,255,255,.05);
+  font-size: 25px;
+}
+
+.panda-admin-gate__card > svg {
+  color: var(--panda-admin-red);
+}
+
+.panda-admin-gate__card h1 {
+  margin: 12px 0 7px;
+  font-size: 23px;
+  letter-spacing: -.035em;
+}
+
+.panda-admin-gate__card p {
+  margin: 0 auto 18px;
+  color: var(--panda-admin-muted);
+  font-size: 11px;
+  line-height: 1.65;
+}
+
+.panda-admin-gate__card code {
+  color: #ffaaa3;
+  font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  font-size: 10px;
+}
+
+.panda-admin-gate__card .panda-admin-primary-button {
+  width: 100%;
+}
+
+.panda-admin-gate__actions {
+  display: flex;
+  gap: 8px;
+}
+
+.panda-admin-gate__actions > * {
+  flex: 1;
+}
+
+@media (max-width: 1180px) {
+  .panda-admin-stat-grid {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+
+  .panda-admin-grid--wide {
+    grid-template-columns: 1fr;
+  }
+
+  .panda-admin-content-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .panda-admin-health-grid,
+  .panda-admin-report-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 900px) {
+  .panda-admin-sidebar {
+    display: none;
+  }
+
+  .panda-admin {
+    display: block;
+  }
+
+  .panda-admin-main {
+    width: 100%;
+    margin-left: 0;
+    padding: 76px 17px 40px;
+  }
+
+  .panda-admin-mobile-header {
+    position: fixed;
+    inset: 0 0 auto;
+    z-index: 40;
+    height: 58px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 15px;
+    padding: 0 12px;
+    border-bottom: 1px solid var(--panda-admin-border);
+    background: rgba(9,10,11,.92);
+    backdrop-filter: blur(16px);
+  }
+
+  .panda-admin-mobile-header .panda-admin-brand {
+    padding: 0;
+  }
+
+  .panda-admin-mobile-header .panda-admin-brand__mark {
+    width: 31px;
+    height: 31px;
+    flex-basis: 31px;
+    border-radius: 10px;
+    font-size: 16px;
+  }
+
+  .panda-admin-mobile-header .panda-admin-brand strong {
+    font-size: 11px;
+  }
+
+  .panda-admin-mobile-header .panda-admin-brand span {
+    font-size: 9px;
+  }
+
+  .panda-admin-mobile-actions {
+    display: flex;
+    gap: 5px;
+  }
+
+  .panda-admin-mobile-actions button {
+    width: 34px;
+    height: 34px;
+    display: grid;
+    place-items: center;
+    border: 1px solid var(--panda-admin-border);
+    border-radius: 9px;
+    color: var(--panda-admin-muted);
+    background: rgba(255,255,255,.035);
+  }
+
+  .panda-admin-titlebar {
+    align-items: flex-start;
+    flex-direction: column;
+    margin-bottom: 22px;
+  }
+
+  .panda-admin-titlebar h1 {
+    font-size: clamp(28px, 7vw, 40px);
+  }
+
+  .panda-admin-grid--three,
+  .panda-admin-settings-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .panda-admin-titlebar > .panda-admin-secondary-button,
+  .panda-admin-titlebar > .panda-admin-primary-button {
+    width: 100%;
+  }
+}
+
+@media (max-width: 640px) {
+  .panda-admin-main {
+    padding: 72px 12px 32px;
+  }
+
+  .panda-admin-stat-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .panda-admin-stat {
+    padding: 13px;
+  }
+
+  .panda-admin-stat strong {
+    font-size: 22px;
+  }
+
+  .panda-admin-grid--wide,
+  .panda-admin-grid--three,
+  .panda-admin-content-grid,
+  .panda-admin-health-grid,
+  .panda-admin-report-grid,
+  .panda-admin-settings-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .panda-admin-content-search {
+    flex-direction: column;
+  }
+
+  .panda-admin-content-search .panda-admin-primary-button {
+    width: 100%;
+  }
+
+  .panda-admin-toolbar {
+    align-items: stretch;
+    flex-direction: column;
+  }
+
+  .panda-admin-select {
+    width: 100%;
+  }
+
+  .panda-admin-bars {
+    padding-inline: 12px;
+  }
+
+  .panda-admin-panel__head {
+    padding-inline: 14px;
+  }
+
+  .panda-admin-report-card {
+    min-height: 215px;
+  }
+
+  .panda-admin-drawer {
+    padding: 18px;
+  }
+}
+
+@media (max-width: 430px) {
+  .panda-admin-stat-grid {
+    gap: 8px;
+  }
+
+  .panda-admin-stat__label {
+    font-size: 8px;
+  }
+
+  .panda-admin-stat small {
+    font-size: 8px;
+  }
+
+  .panda-admin-brand span {
+    display: none;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .panda-admin *,
+  .panda-admin *::before,
+  .panda-admin *::after {
+    scroll-behavior: auto !important;
+    transition: none !important;
+    animation-duration: .001ms !important;
+    animation-iteration-count: 1 !important;
+  }
+}
