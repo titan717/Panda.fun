@@ -128,7 +128,7 @@ export const historyUtil = {
 
   getMeta: (slug: string) => {
     try {
-      const data = localStorage.getItem(META_KEY) || localStorage.getItem(LEGACY_META_KEY);
+      const data = localStorage.getItem(activeKey(META_KEY)) || (activeKey(META_KEY) === META_KEY ? localStorage.getItem(LEGACY_META_KEY) : null);
       const metas = data ? JSON.parse(data) : {};
       return metas[slug] || null;
     } catch {
