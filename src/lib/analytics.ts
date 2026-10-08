@@ -16,7 +16,11 @@ export type AnalyticsEventType =
   | 'api_failure'
   | 'share'
   | 'login'
-  | 'sign_up';
+  | 'sign_up'
+  | 'profile_create'
+  | 'profile_select'
+  | 'profile_switch'
+  | 'profile_delete';
 
 interface AnalyticsEvent {
   type: AnalyticsEventType;
