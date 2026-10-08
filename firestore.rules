@@ -61,7 +61,15 @@ service cloud.firestore {
         && request.resource.data.createdAt is string
         && request.resource.data.updatedAt is string
         && (!request.resource.data.keys().hasAny(['pinHash'])
-          || (request.resource.data.pinHash is string && request.resource.data.pinHash.size() == 64));      
+          || (request.resource.data.pinHash is string && request.resource.data.pinHash.size() == 64));
+
+      match /progress/{animeId} {
+        allow read, write: if ownsUser(userId) || isAdmin();
+      }
+
+      match /library/{itemId} {
+        allow read, write: if ownsUser(userId) || isAdmin();
+      }
     }
 
     match /users/{userId} {
