@@ -5,7 +5,7 @@ import {
   getRecentDays,
   getTopContent,
   getMetricLabel,
-  getMetricValue,
+  getMetricValue, getDelta,
   type AdminEvent,
 } from './adminMetrics';
 
@@ -33,6 +33,9 @@ describe('admin metrics', () => {
       uniqueSessions: 2,
       completionRate: 50,
       avgWatchSecondsPerSession: 60,
+      selectionToStartRate: 0,
+      searchToSelectionRate: 0,
+      viewsPerSession: 1,
     });
   });
 
@@ -51,6 +54,9 @@ describe('admin metrics', () => {
     expect(daily).toHaveLength(3);
     expect(daily.at(-1)).toMatchObject({
       pageViews: 1,
+      uniqueUsers: 1,
+      uniqueSessions: 1,
+      contentSelections: 0,
       searches: 1,
       watchStarts: 1,
       completions: 1,
@@ -85,5 +91,13 @@ describe('admin metrics', () => {
     const rows = getRecentDays([{ id: '1', type: 'page_view', clientTimestamp: timestamp }], 3);
     expect(rows).toHaveLength(3);
     expect(rows.at(-1)?.pageViews).toBe(1);
+  });
+});
+
+
+describe('metric deltas', () => {
+  it('returns percentage change and null when there is no baseline', () => {
+    expect(getDelta(120, 100)).toBe(20);
+    expect(getDelta(10, 0)).toBeNull();
   });
 });
