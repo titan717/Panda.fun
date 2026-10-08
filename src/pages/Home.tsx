@@ -16,7 +16,7 @@ import {
 } from '../lib/profileStore';
 import { initializeProfileStorage } from '../lib/profileScope';
 import { historyUtil } from '../lib/history';
-import { ProfileAvatar, PinPrompt, ProfileSetup } from './Profile';
+import { ProfileAvatar, ProfileSetup } from './Profile';
 import { updateSEO } from '../lib/seo';
 import { buildDetailsHref, buildWatchHref } from '../lib/mediaRoute';
 import { optimizeImageUrl } from '../lib/mediaImages';
@@ -41,13 +41,14 @@ function HomeProfileGate({
 }) {
   const { user, loading } = useAuth();
   const [profiles, setProfiles] = useState<PandaProfile[]>([]);
-  const [gateState, setGateState] = useState<'loading' | 'chooser' | 'setup' | 'hidden'>('loading');
-  const [pinProfile, setPinProfile] = useState<PandaProfile | null>(null);
+  const [gateState, setGateState] = useState<'loading' | 'chooser' | 'setup' | 'leaving' | 'hidden'>('loading');
   const [autoProfileId, setAutoProfileId] = useState('');
+  const [transitionProfileId, setTransitionProfileId] = useState('');
+  const selectionTimer = useRef<number | null>(null);
   const [countdownProgress, setCountdownProgress] = useState(1);
   const [countdownEnabled, setCountdownEnabled] = useState(true);
 
-  const activateProfile = React.useCallback((profile: PandaProfile, reason: 'auto' | 'manual' | 'pin') => {
+  const activateProfile = React.useCallback((profile: PandaProfile, reason: 'auto' | 'manual') => {
     if (!user) return;
 
     initializeProfileStorage(user.uid, profile.id, false, [
@@ -67,22 +68,23 @@ function HomeProfileGate({
       type: 'profile_select',
       metadata: {
         profileId: profile.id,
-        locked: Boolean(profile.pinHash),
         selectionMode: reason,
       },
     });
 
-    setGateState('hidden');
-    setPinProfile(null);
-    onReady();
+    setTransitionProfileId(profile.id);
+    setGateState('leaving');
+    if (selectionTimer.current) window.clearTimeout(selectionTimer.current);
+    selectionTimer.current = window.setTimeout(() => {
+      selectionTimer.current = null;
+      setTransitionProfileId('');
+      setGateState('hidden');
+      onReady();
+    }, 380);
   }, [onReady, user]);
 
   const chooseProfile = React.useCallback((profile: PandaProfile, reason: 'auto' | 'manual' = 'manual') => {
     setCountdownEnabled(false);
-    if (profile.pinHash) {
-      setPinProfile(profile);
-      return;
-    }
     activateProfile(profile, reason);
   }, [activateProfile]);
 
@@ -95,7 +97,6 @@ function HomeProfileGate({
 
     if (!user) {
       setProfiles([]);
-      setPinProfile(null);
       setGateState('hidden');
       onReady();
       return;
@@ -129,6 +130,10 @@ function HomeProfileGate({
 
     return () => {
       cancelled = true;
+      if (selectionTimer.current) {
+        window.clearTimeout(selectionTimer.current);
+        selectionTimer.current = null;
+      }
     };
   }, [loading, onBlock, onReady, user?.uid]);
 
@@ -222,7 +227,7 @@ function HomeProfileGate({
 
   return (
     <>
-      <div className="panda-home-profile-gate">
+      <div className={'panda-home-profile-gate' + (gateState === 'leaving' ? ' panda-home-profile-gate--leaving' : '')}>
         <div className="panda-home-profile-gate__ambient" aria-hidden="true" />
         <div className="panda-home-profile-gate__inner">
           <div className="panda-home-profile-gate__brand" aria-label="Panda.fun">
@@ -240,8 +245,14 @@ function HomeProfileGate({
                 <button
                   key={profile.id}
                   type="button"
-                  className={'panda-home-profile-gate__tile' + (isAuto ? ' is-autoselect' : '')}
+                  className={
+                    'panda-home-profile-gate__tile' +
+                    (isAuto ? ' is-autoselect' : '') +
+                    (profile.id === transitionProfileId ? ' is-selected' : '') +
+                    (gateState === 'leaving' && profile.id !== transitionProfileId ? ' is-dimmed' : '')
+                  }
                   onClick={() => chooseProfile(profile)}
+                  disabled={gateState === 'leaving'}
                   aria-label={'Use ' + profile.name + ' profile' + (profile.pinHash ? ' (locked)' : '')}
                 >
                   <span className="panda-home-profile-gate__avatar">
@@ -280,6 +291,7 @@ function HomeProfileGate({
                 type="button"
                 className="panda-home-profile-gate__tile panda-home-profile-gate__tile--add"
                 onClick={() => {
+                  if (gateState === 'leaving') return;
                   setCountdownEnabled(false);
                   setGateState('setup');
                 }}
@@ -297,13 +309,6 @@ function HomeProfileGate({
         </div>
       </div>
 
-      {pinProfile && (
-        <PinPrompt
-          profile={pinProfile}
-          onUnlock={() => activateProfile(pinProfile, 'pin')}
-          onCancel={() => setPinProfile(null)}
-        />
-      )}
     </>
   );
 }
