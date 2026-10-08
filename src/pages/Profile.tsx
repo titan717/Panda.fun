@@ -137,13 +137,24 @@ function ProfileSetup({
 }) {
   const [step, setStep] = useState<SetupStep>(1);
   const [name, setName] = useState(initialProfile?.name || defaultName);
-  const [avatar, setAvatar] = useState(initialProfile?.avatar || 'panda');
+  const [avatar, setAvatar] = useState(initialProfile?.avatar || '');
   const [pin, setPin] = useState('');
   const [removePin, setRemovePin] = useState(false);
   const [movieGenres, setMovieGenres] = useState<string[]>(initialProfile?.movieGenres || []);
   const [seriesGenres, setSeriesGenres] = useState<string[]>(initialProfile?.seriesGenres || []);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState('');
+
+  const flowPillProfile: PandaProfile = {
+    id: initialProfile?.id || 'preview',
+    name: name.trim() || defaultName || 'Panda',
+    avatar: avatar || 'panda',
+    pinHash: initialProfile?.pinHash,
+    movieGenres,
+    seriesGenres,
+    createdAt: initialProfile?.createdAt || '',
+    updatedAt: initialProfile?.updatedAt || '',
+  };
 
   const title =
     step === 1
@@ -222,7 +233,7 @@ function ProfileSetup({
       const base = normalizeProfile({
         id: initialProfile?.id || createProfileId(),
         name: name.trim(),
-        avatar,
+        avatar: avatar || 'panda',
         movieGenres,
         seriesGenres: selectedSeriesGenres,
         pinHash: initialProfile?.pinHash,
@@ -260,10 +271,16 @@ function ProfileSetup({
       <div className="panda-profile-flow__inner">
         <ProgressDots step={step} />
 
-        {step !== 1 && initialProfile && (
+        {step !== 1 && (
           <div className="panda-profile-flow__user-pill">
-            <ProfileAvatar profile={initialProfile} size="sm" />
-            <span>{initialProfile.name}</span>
+            {step === 2 && !initialProfile ? (
+              <span className="panda-profile-flow__user-initial" aria-hidden="true">
+                {(name.trim().charAt(0) || defaultName?.charAt(0) || 'P').toUpperCase()}
+              </span>
+            ) : (
+              <ProfileAvatar profile={flowPillProfile} size="sm" />
+            )}
+            <span>{flowPillProfile.name}</span>
           </div>
         )}
 
@@ -445,6 +462,7 @@ function ProfileSetup({
                 disabled={
                   saving ||
                   (step === 1 && !name.trim()) ||
+                  (step === 2 && !avatar) ||
                   (step === 3 && pin.length > 0 && pin.length < 4) ||
                   (step === 4 && movieGenres.length === 0) ||
                   (step === 5 && seriesGenres.length === 0)
