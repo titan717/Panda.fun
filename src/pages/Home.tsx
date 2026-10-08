@@ -32,7 +32,13 @@ function KindIcon({ kind }: { kind: RailKind }) {
   return <Sparkles size={14} strokeWidth={1.9} />;
 }
 
-function HomeProfileGate({ onReady }: { onReady: () => void }) {
+function HomeProfileGate({
+  onReady,
+  onBlock,
+}: {
+  onReady: () => void;
+  onBlock: () => void;
+}) {
   const { user, loading } = useAuth();
   const [profiles, setProfiles] = useState<PandaProfile[]>([]);
   const [gateState, setGateState] = useState<'loading' | 'chooser' | 'setup' | 'hidden'>('loading');
@@ -82,6 +88,7 @@ function HomeProfileGate({ onReady }: { onReady: () => void }) {
 
   useEffect(() => {
     if (loading) {
+      onBlock();
       setGateState('loading');
       return;
     }
@@ -95,6 +102,7 @@ function HomeProfileGate({ onReady }: { onReady: () => void }) {
     }
 
     let cancelled = false;
+    onBlock();
     setGateState('loading');
     setCountdownEnabled(true);
     setCountdownProgress(1);
@@ -122,7 +130,7 @@ function HomeProfileGate({ onReady }: { onReady: () => void }) {
     return () => {
       cancelled = true;
     };
-  }, [loading, onReady, user?.uid]);
+  }, [loading, onBlock, onReady, user?.uid]);
 
   useEffect(() => {
     if (gateState !== 'chooser' || !autoProfileId || !countdownEnabled) return;
@@ -217,6 +225,12 @@ function HomeProfileGate({ onReady }: { onReady: () => void }) {
       <div className="panda-home-profile-gate">
         <div className="panda-home-profile-gate__ambient" aria-hidden="true" />
         <div className="panda-home-profile-gate__inner">
+          <div className="panda-home-profile-gate__brand" aria-label="Panda.fun">
+            <span className="panda-home-profile-gate__brand-icon">
+              <img src="/icon.svg" alt="" />
+            </span>
+            <span>PANDA.FUN</span>
+          </div>
           <h1>Who's watching?</h1>
 
           <div className="panda-home-profile-gate__profiles">
@@ -753,10 +767,11 @@ function HomeContent() {
 export function Home() {
   const [profileReady, setProfileReady] = useState(false);
   const handleProfileReady = React.useCallback(() => setProfileReady(true), []);
+  const handleProfileBlock = React.useCallback(() => setProfileReady(false), []);
 
   return (
     <>
-      <HomeProfileGate onReady={handleProfileReady} />
+      <HomeProfileGate onReady={handleProfileReady} onBlock={handleProfileBlock} />
       {profileReady && <HomeContent />}
     </>
   );
