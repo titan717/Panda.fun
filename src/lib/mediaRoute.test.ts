@@ -64,6 +64,9 @@ describe('title-based detail routes', () => {
     expect(mediaRoute.buildWatchHref('tmdb_tv_95350', 'series', 1, 2)).toBe(
       '/watch/tmdb_tv_95350%24season%241%24episode%242?type=series'
     );
+    expect(mediaRoute.buildWatchHref('tmdb_tv_95350', 'series', 1, 2, 142)).toBe(
+      '/watch/tmdb_tv_95350%24season%241%24episode%242?type=series&t=142'
+    );
   });
 
   it('preserves movie watch routes without an episode suffix', async () => {
