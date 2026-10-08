@@ -42,7 +42,6 @@ service cloud.firestore {
           'id',
           'name',
           'avatar',
-          'pinHash',
           'movieGenres',
           'seriesGenres',
           'createdAt',
@@ -59,9 +58,7 @@ service cloud.firestore {
         && request.resource.data.seriesGenres is list
         && request.resource.data.seriesGenres.size() <= 3
         && request.resource.data.createdAt is string
-        && request.resource.data.updatedAt is string
-        && (!request.resource.data.keys().hasAny(['pinHash'])
-          || (request.resource.data.pinHash is string && request.resource.data.pinHash.size() == 64));
+        && request.resource.data.updatedAt is string;
 
       match /progress/{animeId} {
         allow read, write: if ownsUser(userId) || isAdmin();
