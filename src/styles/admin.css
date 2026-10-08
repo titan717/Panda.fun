@@ -505,10 +505,54 @@
 }
 
 .panda-admin-chart__tooltip b {
-  margin-top: 6px;
   color: #fff;
   font-size: 16px;
   letter-spacing: -.03em;
+}
+
+.panda-admin-chart__tooltip-primary {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 14px;
+  margin-top: 7px;
+}
+
+.panda-admin-chart__tooltip-primary span {
+  margin-top: 0;
+}
+
+.panda-admin-chart__tooltip-primary b {
+  margin-top: 0;
+}
+
+.panda-admin-chart__tooltip-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 5px 10px;
+  margin-top: 9px;
+  padding-top: 8px;
+  border-top: 1px solid var(--panda-admin-border);
+}
+
+.panda-admin-chart__tooltip-grid span {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 8px;
+  margin-top: 0;
+  font-size: 8px;
+  text-transform: none;
+  letter-spacing: 0;
+}
+
+.panda-admin-chart__tooltip-grid b {
+  margin-top: 0;
+  font-size: 9px;
+}
+
+.panda-admin-chart__hitarea {
+  cursor: crosshair;
 }
 
 .panda-admin-overview-grid {
