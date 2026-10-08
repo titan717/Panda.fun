@@ -65,7 +65,9 @@ service cloud.firestore {
         'metadata',
         'sessionId',
         'createdAt',
-        'clientTimestamp'
+        'clientTimestamp',
+        'uid',
+        'userEmail'
       ]);
       allow read, update, delete: if isAdmin();
     }
