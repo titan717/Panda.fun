@@ -253,7 +253,7 @@ function HomeProfileGate({
                   }
                   onClick={() => chooseProfile(profile)}
                   disabled={gateState === 'leaving'}
-                  aria-label={'Use ' + profile.name + ' profile' + (profile.pinHash ? ' (locked)' : '')}
+                  aria-label={'Use ' + profile.name + ' profile'}
                 >
                   <span className="panda-home-profile-gate__avatar">
                     <ProfileAvatar profile={profile} size="lg" />
