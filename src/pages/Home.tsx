@@ -58,7 +58,7 @@ function HomeProfileGate() {
     void libraryManager.syncFromFirestore(user.uid);
 
     void trackEvent({
-      type: reason === 'auto' ? 'profile_select' : 'profile_select',
+      type: 'profile_select',
       metadata: {
         profileId: profile.id,
         locked: Boolean(profile.pinHash),
@@ -174,7 +174,7 @@ function HomeProfileGate() {
           onComplete={async (profile) => {
             const saved = await saveProfile(user.uid, {
               ...profile,
-              id: profile.id || createProfileId(),
+              id: profile.id,
             });
             initializeProfileStorage(user.uid, saved.id, profiles.length === 0, [
               'kinoma_history',
@@ -208,8 +208,6 @@ function HomeProfileGate() {
   }
 
   const autoProfile = profiles.find((profile) => profile.id === autoProfileId) || profiles[0];
-  const circumference = 2 * Math.PI * 58;
-  const dashOffset = circumference * (1 - countdownProgress);
 
   return (
     <>
