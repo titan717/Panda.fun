@@ -1103,6 +1103,21 @@
   font-weight: 750;
 }
 
+
+.panda-profile-flow__user-initial {
+  width: 28px;
+  height: 28px;
+  display: grid;
+  place-items: center;
+  flex: 0 0 auto;
+  border: 1px solid rgba(247,243,239,.1);
+  border-radius: 50%;
+  color: rgba(255,255,255,.6);
+  background: rgba(255,255,255,.06);
+  font-size: 11px;
+  font-weight: 700;
+}
+
 .panda-profile-tastes i {
   color: #b84d41;
   font-size: 7px;
@@ -1551,5 +1566,37 @@
 
   .panda-profile-manage__row {
     grid-template-columns: 54px minmax(0,1fr) 32px 32px;
+  }
+}
+
+
+@media (min-width: 768px) {
+  .panda-profile-flow__step {
+    margin-top: 40px;
+  }
+
+  .panda-profile-flow__copy h1 {
+    font-size: 36px;
+  }
+
+  .panda-profile-name-field input {
+    font-size: 36px;
+  }
+
+  .panda-profile-avatar-grid {
+    grid-template-columns: repeat(6, minmax(0,1fr));
+  }
+
+  .panda-profile-pin {
+    gap: 12px;
+  }
+
+  .panda-profile-pin span {
+    width: 52px;
+    height: 64px;
+  }
+
+  .panda-profile-pin-input {
+    height: 64px;
   }
 }
