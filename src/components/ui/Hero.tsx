@@ -10,6 +10,10 @@ interface HeroProps {
   items?: AnimeItem[];
 }
 
+function cleanText(value: unknown) {
+  return typeof value === 'string' ? value.replace(/<[^>]*>/g, '').trim() : '';
+}
+
 // Simple deterministic pseudo-random for particles
 const generateParticles = (count: number) => {
   return Array.from({ length: count }).map((_, i) => ({
@@ -139,10 +143,11 @@ export function Hero({ item, items }: HeroProps) {
               </span>
             </div>
             
-            <p 
-              className="text-sm sm:text-base text-gray-300 line-clamp-2 sm:line-clamp-3 leading-relaxed max-w-xl drop-shadow-lg" 
-              dangerouslySetInnerHTML={{ __html: currentItem.description || 'No synopsis available for this title.' }} 
-            />
+            <p
+              className="text-sm sm:text-base text-gray-300 line-clamp-2 sm:line-clamp-3 leading-relaxed max-w-xl drop-shadow-lg"
+            >
+              {cleanText(currentItem.description) || 'No synopsis available for this title.'}
+            </p>
             
             {/* Buttons */}
             <div className="mt-2 flex items-center gap-3 sm:gap-4">
