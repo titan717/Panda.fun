@@ -32,11 +32,36 @@ function KindIcon({ kind }: { kind: RailKind }) {
   return <Sparkles size={14} strokeWidth={1.9} />;
 }
 
+type HomePrefetch = { home: any | null; trailer: any | null };
+
+function preloadHomeImages(home: any) {
+  if (typeof window === 'undefined' || !home) return;
+
+  const urls = new Set<string>();
+  const addImage = (value: unknown, size: 'w342' | 'w1280') => {
+    if (typeof value !== 'string' || !value) return;
+    const optimized = optimizeImageUrl(value, size) || value;
+    if (optimized) urls.add(optimized);
+  };
+
+  addImage(home.featured?.backdrop, 'w1280');
+  for (const item of (home.sections?.trending || []).slice(0, 5)) {
+    addImage(item?.poster, 'w342');
+    addImage(item?.backdrop, 'w342');
+  }
+
+  urls.forEach((src) => {
+    const image = new window.Image();
+    image.decoding = 'async';
+    image.src = src;
+  });
+}
+
 function HomeProfileGate({
   onReady,
   onBlock,
 }: {
-  onReady: () => void;
+  onReady: (prefetch?: HomePrefetch) => void;
   onBlock: () => void;
 }) {
   const { user, loading } = useAuth();
@@ -47,6 +72,8 @@ function HomeProfileGate({
   const selectionTimer = useRef<number | null>(null);
   const [countdownProgress, setCountdownProgress] = useState(1);
   const [countdownEnabled, setCountdownEnabled] = useState(true);
+  const [prefetchedHome, setPrefetchedHome] = useState<any>(null);
+  const [prefetchedTrailer, setPrefetchedTrailer] = useState<any>(null);
 
   const activateProfile = React.useCallback((profile: PandaProfile, reason: 'auto' | 'manual') => {
     if (!user) return;
@@ -74,6 +101,7 @@ function HomeProfileGate({
 
     setTransitionProfileId(profile.id);
     setGateState('leaving');
+    onReady({ home: prefetchedHome, trailer: prefetchedTrailer });
     if (selectionTimer.current) window.clearTimeout(selectionTimer.current);
     selectionTimer.current = window.setTimeout(() => {
       selectionTimer.current = null;
@@ -107,6 +135,22 @@ function HomeProfileGate({
     setGateState('loading');
     setCountdownEnabled(true);
     setCountdownProgress(1);
+    setPrefetchedHome(null);
+    setPrefetchedTrailer(null);
+
+    void api.getHome()
+      .then((data) => {
+        if (cancelled) return;
+        setPrefetchedHome(data);
+        preloadHomeImages(data);
+        if (!data?.featured?.id) return;
+        return api.getTrailer(data.featured.id)
+          .then((result) => {
+            if (!cancelled) setPrefetchedTrailer(result);
+          })
+          .catch(() => undefined);
+      })
+      .catch(() => undefined);
 
     void listProfiles(user.uid).then((loaded) => {
       if (cancelled) return;
@@ -216,6 +260,7 @@ function HomeProfileGate({
             setProfiles([saved, ...profiles]);
             setTransitionProfileId(saved.id);
             setGateState('leaving');
+            onReady({ home: prefetchedHome, trailer: prefetchedTrailer });
             if (selectionTimer.current) window.clearTimeout(selectionTimer.current);
             selectionTimer.current = window.setTimeout(() => {
               selectionTimer.current = null;
@@ -344,9 +389,14 @@ function trailerSrc(url: unknown) {
 }
 
 function PandaPoster({ item, priority = false }: { item: MovieApiMedia; priority?: boolean }) {
-  const candidates = [item.poster, item.backdrop]
-    .filter((value): value is string => typeof value === 'string' && value.length > 0)
-    .map(value => optimizeImageUrl(value, 'w342') || value);
+  const candidates = Array.from(new Set(
+    [item.poster, item.backdrop]
+      .filter((value): value is string => typeof value === 'string' && value.length > 0)
+      .flatMap(value => {
+        const optimized = optimizeImageUrl(value, 'w342') || value;
+        return optimized === value ? [value] : [optimized, value];
+      })
+  ));
   const [sourceIndex, setSourceIndex] = useState(0);
   const [failed, setFailed] = useState(false);
 
@@ -489,13 +539,19 @@ function PandaRail({
   );
 }
 
-function HomeContent() {
-  const [home, setHome] = useState<any>(null);
+function HomeContent({
+  initialHome = null,
+  initialTrailer = null,
+}: {
+  initialHome?: any | null;
+  initialTrailer?: any | null;
+} = {}) {
+  const [home, setHome] = useState<any>(initialHome);
   const [newOnNetflix, setNewOnNetflix] = useState<MovieApiMedia[]>([]);
   const [newOnDisneyPlus, setNewOnDisneyPlus] = useState<MovieApiMedia[]>([]);
   const [airing, setAiring] = useState<MovieApiMedia[]>([]);
   const [error, setError] = useState<string | null>(null);
-  const [trailer, setTrailer] = useState<any>(null);
+  const [trailer, setTrailer] = useState<any>(initialTrailer);
   const [isInList, setIsInList] = useState(false);
   // The featured trailer is intentionally unmuted. The profile choice is the entry interaction before Home mounts.
   const [trailerReady, setTrailerReady] = useState(false);
@@ -512,22 +568,28 @@ function HomeContent() {
     let active = true;
     const featuredTrailerController = new AbortController();
 
-    api.getHome()
-      .then(data => {
-        if (!active) return;
-        setHome(data);
+    const applyHome = (data: any) => {
+      if (!active) return;
+      setHome(data);
 
-        if (data?.featured?.id) {
-          api.getTrailer(data.featured.id, featuredTrailerController.signal)
-            .then(result => {
-              if (active) setTrailer(result);
-            })
-            .catch(() => undefined);
-        }
-      })
-      .catch((err: unknown) => {
-        if (active) setError(err instanceof MovieApiError ? err.message : 'MovieApi is unavailable right now.');
-      });
+      if (!initialTrailer && data?.featured?.id) {
+        api.getTrailer(data.featured.id, featuredTrailerController.signal)
+          .then(result => {
+            if (active) setTrailer(result);
+          })
+          .catch(() => undefined);
+      }
+    };
+
+    if (initialHome) {
+      applyHome(initialHome);
+    } else {
+      api.getHome()
+        .then(applyHome)
+        .catch((err: unknown) => {
+          if (active) setError(err instanceof MovieApiError ? err.message : 'MovieApi is unavailable right now.');
+        });
+    }
 
     const loadSecondaryRails = () => {
       Promise.allSettled([
@@ -551,7 +613,7 @@ function HomeContent() {
       if (window.cancelIdleCallback && typeof idle === 'number') window.cancelIdleCallback(idle);
       else window.clearTimeout(idle as number);
     };
-  }, []);
+  }, [initialHome, initialTrailer]);
 
   const featured = home?.featured as MovieApiMedia | null | undefined;
   const sections = home?.sections;
@@ -560,6 +622,9 @@ function HomeContent() {
   const popularTv = (sections?.popularTv || []) as MovieApiMedia[];
   const featuredType = featured?.type === 'movie' ? 'movie' : 'series';
   const featuredWatchUrl = featured?.id ? buildWatchHref(featured.id, featuredType) : '/search';
+  const featuredBackdrop = featured?.backdrop
+    ? (optimizeImageUrl(featured.backdrop, 'w1280') || featured.backdrop)
+    : null;
   const topTen = useMemo(() => [...trending, ...popularMovies, ...popularTv].filter((item, index, list) => item?.id && list.findIndex(candidate => candidate.id === item.id) === index).slice(0, 10), [trending, popularMovies, popularTv]);
 
   const toggleFeaturedList = () => {
@@ -633,7 +698,7 @@ function HomeContent() {
             {trailer?.trailer?.embedUrl ? (
               <iframe ref={trailerFrameRef} src={trailerSrc(trailer.trailer.embedUrl)} title={featured?.title ? featured.title + ' trailer' : 'Featured trailer'} className={`kinoma-home-hero__trailer-video${trailerReady ? ' is-ready' : ''}`} onLoad={() => setTrailerReady(true)} allow="autoplay; encrypted-media; picture-in-picture" allowFullScreen loading="eager" />
             ) : featured?.backdrop ? (
-              <img src={featured.backdrop} alt="" className="kinoma-home-hero__banner-image" loading="eager" fetchPriority="high" decoding="async" />
+              <img src={featuredBackdrop || featured.backdrop} alt="" className="kinoma-home-hero__banner-image" loading="eager" fetchPriority="high" decoding="async" />
             ) : (
               <div className="kinoma-home-hero__banner-grid" />
             )}
@@ -726,7 +791,7 @@ function HomeContent() {
               </div>
               <div className="panda-home-v2__featured-grid">
                 <article className="panda-discovery-panel panda-discovery-panel--large">
-                  {popularTv[0]?.backdrop && <img className="panda-discovery-panel__image" src={popularTv[0].backdrop as string} alt="" loading="lazy" />}
+                  {popularTv[0]?.backdrop && <img className="panda-discovery-panel__image" src={(optimizeImageUrl(popularTv[0].backdrop as string, 'w1280') || popularTv[0].backdrop) as string} alt="" loading="lazy" />}
                   <div className="panda-discovery-panel__content">
                     <span className="panda-home-v2__eyebrow"><Tv size={13} /> TV nights</span>
                     <h3>Settle into a series.</h3>
@@ -735,7 +800,7 @@ function HomeContent() {
                   </div>
                 </article>
                 <article className="panda-discovery-panel">
-                  {popularMovies[0]?.backdrop && <img className="panda-discovery-panel__image" src={popularMovies[0].backdrop as string} alt="" loading="lazy" />}
+                  {popularMovies[0]?.backdrop && <img className="panda-discovery-panel__image" src={(optimizeImageUrl(popularMovies[0].backdrop as string, 'w1280') || popularMovies[0].backdrop) as string} alt="" loading="lazy" />}
                   <div className="panda-discovery-panel__content">
                     <span className="panda-home-v2__eyebrow"><Film size={13} /> Movie break</span>
                     <h3>One story. One sitting.</h3>
@@ -777,13 +842,22 @@ function HomeContent() {
 
 export function Home() {
   const [profileReady, setProfileReady] = useState(false);
-  const handleProfileReady = React.useCallback(() => setProfileReady(true), []);
+  const [homePrefetch, setHomePrefetch] = useState<HomePrefetch>({ home: null, trailer: null });
+  const handleProfileReady = React.useCallback((prefetch: HomePrefetch = { home: null, trailer: null }) => {
+    setHomePrefetch(prefetch);
+    setProfileReady(true);
+  }, []);
   const handleProfileBlock = React.useCallback(() => setProfileReady(false), []);
 
   return (
     <>
       <HomeProfileGate onReady={handleProfileReady} onBlock={handleProfileBlock} />
-      {profileReady && <HomeContent />}
+      {profileReady && (
+        <HomeContent
+          initialHome={homePrefetch.home}
+          initialTrailer={homePrefetch.trailer}
+        />
+      )}
     </>
   );
 }
