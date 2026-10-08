@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { Footer } from '../components/ui/Footer';
 import { useLocation, useRoute, useSearch } from 'wouter';
 import { ArrowLeft, ChevronLeft, ChevronRight, Film, Play, Plus, Check, Share2, Tv } from 'lucide-react';
@@ -10,6 +10,7 @@ import { DEFAULT_POSTER } from '../types';
 import { updateSEO } from '../lib/seo';
 import { trackGAEvent } from '../lib/analytics';
 import { buildDetailsHref, buildWatchHref } from '../lib/mediaRoute';
+import { parseVidyPlaybackMessage } from '../lib/vidyPlayerEvents';
 
 function clean(value: unknown) {
   return typeof value === 'string' ? value.replace(/<[^>]*>/g, '').trim() : '';
@@ -44,6 +45,12 @@ export function Watch() {
   const [loading, setLoading] = useState(true);
   const [inList, setInList] = useState(false);
   const [shareMessage, setShareMessage] = useState('');
+  const iframeRef = useRef<HTMLIFrameElement>(null);
+  const playbackRef = useRef({
+    currentTime: playbackProgress,
+    duration: 0,
+    dirty: playbackProgress > 0,
+  });
 
   useEffect(() => {
     const nextSeason = Number(parsed?.[2] || 1);
@@ -117,22 +124,80 @@ export function Watch() {
     return () => { active = false; controller.abort(); };
   }, [data, id, type, season, episode, playbackRetry]);
 
-  useEffect(() => {
+  const saveCurrentPlayback = useCallback((complete = false) => {
     if (!data) return;
+
+    const current = playbackRef.current;
+    const episodeDuration = Math.max(0, Number(currentEpisode?.duration) || 0);
+    const duration = complete
+      ? Math.max(current.duration, episodeDuration, current.currentTime)
+      : Math.max(current.duration, episodeDuration, 1440);
+
+    const playbackTimestamp = complete
+      ? duration
+      : Math.min(Math.max(0, current.currentTime), duration);
+
+    if (playbackTimestamp <= 0) return;
+
+    historyUtil.saveProgress(
+      id,
+      currentEpisode?.id || String(episode),
+      episode,
+      playbackTimestamp,
+      duration,
+      { title, image: poster, animeId: id, seasonNumber: type === 'series' ? season : 1 }
+    );
+    playbackRef.current.dirty = false;
+  }, [data, id, title, poster, type, season, episode, currentEpisode?.id, currentEpisode?.duration]);
+
+  useEffect(() => {
+    playbackRef.current = {
+      currentTime: playbackProgress,
+      duration: 0,
+      dirty: playbackProgress > 0,
+    };
+  }, [id, season, episode, source, playbackProgress]);
+
+  useEffect(() => {
+    if (!data || !source) return;
+
+    const handleVidyMessage = (event: MessageEvent<unknown>) => {
+      const payload = parseVidyPlaybackMessage(
+        event,
+        iframeRef.current?.contentWindow || null
+      );
+      if (!payload) return;
+
+      playbackRef.current.currentTime = payload.currentTime;
+      playbackRef.current.duration = payload.duration;
+      playbackRef.current.dirty = true;
+
+      if (payload.event === 'pause') {
+        saveCurrentPlayback();
+      } else if (payload.event === 'ended') {
+        saveCurrentPlayback(true);
+      }
+    };
+
+    window.addEventListener('message', handleVidyMessage);
+    return () => window.removeEventListener('message', handleVidyMessage);
+  }, [data, source, saveCurrentPlayback]);
+
+  useEffect(() => {
+    if (!data || !source) return;
+
     const timer = window.setInterval(() => {
-      try {
-        historyUtil.saveProgress(
-          id,
-          currentEpisode?.id || String(episode),
-          episode,
-          0,
-          currentEpisode?.duration || 1440,
-          { title, image: poster, animeId: id, seasonNumber: type === 'series' ? season : 1 }
-        );
-      } catch {}
+      if (playbackRef.current.dirty) saveCurrentPlayback();
     }, 15000);
-    return () => window.clearInterval(timer);
-  }, [data, id, title, poster, type, season, episode]);
+
+    const handlePageHide = () => saveCurrentPlayback();
+
+    window.addEventListener('pagehide', handlePageHide);
+    return () => {
+      window.clearInterval(timer);
+      window.removeEventListener('pagehide', handlePageHide);
+    };
+  }, [data, source, saveCurrentPlayback]);
 
   const navigateEpisode = (direction: number) => {
     const index = episodes.findIndex(item => item.number === episode);
@@ -228,6 +293,7 @@ export function Watch() {
         <div className="panda-watch-player">
           {source ? (
             <iframe
+              ref={iframeRef}
               key={source}
               src={source}
               title={'Watch ' + title + ' on Panda.fun'}
