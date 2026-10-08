@@ -7,15 +7,12 @@ on:
         description: "Optional version name, e.g. 0.0.3"
         required: false
         type: string
-  push:
-    branches:
-      - main
 
 permissions:
   contents: write
 
 concurrency:
-  group: kinoma-android-tv-release
+  group: panda-android-tv-release
   cancel-in-progress: true
 
 jobs:
