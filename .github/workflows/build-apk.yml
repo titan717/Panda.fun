@@ -222,8 +222,26 @@ jobs:
 
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git fetch origin main
-          git checkout main
-          git add update/latest.json
-          git commit -m "chore(update): publish Panda.fun ${VERSION_NAME} manifest [skip ci]" || echo "latest.json already up to date"
-          git push origin HEAD:main
+
+          for attempt in 1 2 3; do
+            git fetch origin main
+            git checkout -B main origin/main
+            git add update/latest.json
+
+            if git diff --cached --quiet; then
+              echo "latest.json already up to date"
+              exit 0
+            fi
+
+            git commit -m "chore(update): publish Panda.fun ${VERSION_NAME} manifest [skip ci]"
+
+            if git push origin HEAD:main; then
+              echo "Published update manifest on attempt ${attempt}"
+              exit 0
+            fi
+
+            echo "Main advanced during publish; retrying..."
+          done
+
+          echo "Unable to publish update manifest after 3 attempts."
+          exit 1
