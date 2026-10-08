@@ -420,6 +420,11 @@
   vector-effect: non-scaling-stroke;
 }
 
+.panda-admin-chart__y-label {
+  fill: rgba(246,243,238,.25);
+  font-size: 9px;
+}
+
 .panda-admin-chart__area {
   fill: rgba(226,74,67,.1);
 }
@@ -428,6 +433,13 @@
   fill: none;
   stroke: var(--panda-admin-red);
   stroke-width: 2.2;
+  vector-effect: non-scaling-stroke;
+}
+
+.panda-admin-chart__guide {
+  stroke: rgba(255,255,255,.16);
+  stroke-width: 1;
+  stroke-dasharray: 3 4;
   vector-effect: non-scaling-stroke;
 }
 
@@ -448,6 +460,16 @@
 .panda-admin-chart__label {
   fill: var(--panda-admin-faint);
   font-size: 10px;
+}
+
+.panda-admin-chart__empty {
+  position: absolute;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  color: var(--panda-admin-faint);
+  font-size: 10px;
+  pointer-events: none;
 }
 
 .panda-admin-chart__tooltip {
