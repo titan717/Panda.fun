@@ -218,7 +218,7 @@ export const libraryManager = {
   removeSearchQuery: (query: string): void => {
     try {
       const list = libraryManager.getSearchHistory().filter(q => q !== query);
-      localStorage.setItem(SEARCH_HISTORY_KEY, JSON.stringify(list));
+      localStorage.setItem(activeKey(SEARCH_HISTORY_KEY), JSON.stringify(list));
       window.dispatchEvent(new CustomEvent('kinoma_search_update'));
     } catch {}
   },
