@@ -37,6 +37,8 @@ export function trackGAEvent(name: string, params: Record<string, string | numbe
     const gtag = (window as Window & { gtag?: (...args: unknown[]) => void }).gtag;
     if (!gtag) return;
     const cleanParams = Object.fromEntries(Object.entries(params).filter(([, value]) => value !== undefined));
+    const uid = auth.currentUser?.uid;
+    if (uid && !('user_id' in cleanParams)) cleanParams.user_id = uid;
     gtag('event', name, cleanParams);
   } catch {
     // GA must never affect the application.
@@ -47,8 +49,18 @@ export async function trackEvent(event: AnalyticsEvent): Promise<void> {
   if (typeof window === 'undefined') return;
   try {
     const user = auth.currentUser;
+    const metadata: Record<string, unknown> = { ...(event.metadata || {}) };
+    if (!metadata.page) metadata.page = window.location.pathname;
+    if (!metadata.deviceType) {
+      metadata.deviceType = window.matchMedia('(max-width: 767px)').matches
+        ? 'mobile'
+        : window.matchMedia('(max-width: 1100px)').matches ? 'tablet' : 'desktop';
+    }
+    if (!metadata.referrer && document.referrer) metadata.referrer = document.referrer.slice(0, 500);
+
     const payload: Record<string, unknown> = {
       ...event,
+      metadata,
       sessionId: getSessionId(),
       createdAt: serverTimestamp(),
       clientTimestamp: Date.now(),
