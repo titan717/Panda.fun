@@ -6,7 +6,10 @@ service cloud.firestore {
     }
 
     function isAdmin() {
-      return signedIn() && request.auth.token.admin == true;
+      return signedIn() && (
+        request.auth.token.admin == true
+        || exists(/databases/$(database)/documents/admins/$(request.auth.uid))
+      );
     }
 
     function ownsUser(userId) {
@@ -21,6 +24,13 @@ service cloud.firestore {
         'photoURL',
         'createdAt'
       ];
+    }
+
+    // Console-managed administrator markers. Clients may read their own marker,
+    // but cannot create, update, or delete admin access.
+    match /admins/{userId} {
+      allow read: if ownsUser(userId);
+      allow write: if false;
     }
 
     match /users/{userId} {
