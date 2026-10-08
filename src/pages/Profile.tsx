@@ -76,6 +76,7 @@ function ChoiceButton({
   children: React.ReactNode;
   onClick: () => void;
   disabled?: boolean;
+  key?: React.Key;
 }) {
   return (
     <button
