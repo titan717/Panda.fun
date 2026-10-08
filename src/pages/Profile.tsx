@@ -676,16 +676,13 @@ function ProfileSelector({
     <main className="panda-profile-selector">
       <div className="panda-profile-selector__ambient" aria-hidden="true" />
       <div className="panda-profile-selector__inner">
-        <span className="panda-profile-mini-label"><Sparkles size={11} /> PANDA.FUN</span>
         <h1>Who's watching?</h1>
-        <p>Choose a profile and keep Panda tuned to you.</p>
 
         <div className="panda-profile-selector__grid">
           {profiles.map((profile) => (
             <button key={profile.id} type="button" className="panda-profile-tile" onClick={() => onSelect(profile)}>
               <ProfileAvatar profile={profile} size="lg" interactive />
               <span>{profile.name}</span>
-              <small>{profile.movieGenres.length + profile.seriesGenres.length ? 'Personalized' : 'Not set up'}</small>
             </button>
           ))}
 
@@ -693,14 +690,13 @@ function ProfileSelector({
             <button type="button" className="panda-profile-tile panda-profile-tile--add" onClick={onAdd}>
               <span className="panda-profile-add-avatar"><Plus size={28} /></span>
               <span>Add profile</span>
-              <small>New Panda</small>
             </button>
           )}
         </div>
 
         <div className="panda-profile-selector__footer">
-          <button type="button" onClick={onManage}><Settings size={14} /> Manage profiles</button>
-          <Link href="/settings"><Settings size={14} /> Settings</Link>
+          <button type="button" onClick={onManage}>Manage profiles</button>
+          <Link href="/settings">Settings</Link>
         </div>
       </div>
     </main>
