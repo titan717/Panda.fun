@@ -1,19 +1,27 @@
 import { describe, expect, it } from 'vitest';
-import { formatAdminDuration, getAdminMetrics, getRecentDays, getTopContent } from './adminMetrics';
+import {
+  formatAdminDuration,
+  getAdminMetrics,
+  getRecentDays,
+  getTopContent,
+  getMetricLabel,
+  getMetricValue,
+  type AdminEvent,
+} from './adminMetrics';
 
 describe('admin metrics', () => {
-  it('aggregates core dashboard metrics and completion rate', () => {
-    const events = [
-      { id: '1', type: 'page_view', uid: 'u1', sessionId: 's1', clientTimestamp: Date.now() },
-      { id: '2', type: 'page_view', uid: 'u1', sessionId: 's1', clientTimestamp: Date.now() },
-      { id: '3', type: 'search', uid: 'u1', sessionId: 's1', clientTimestamp: Date.now() },
-      { id: '4', type: 'watch_start', uid: 'u1', sessionId: 's1', clientTimestamp: Date.now() },
-      { id: '5', type: 'episode_start', uid: 'u2', sessionId: 's2', clientTimestamp: Date.now() },
-      { id: '6', type: 'watch_complete', uid: 'u1', sessionId: 's1', clientTimestamp: Date.now() },
-      { id: '7', type: 'watch_progress', uid: 'u1', sessionId: 's1', durationSeconds: 90, clientTimestamp: Date.now() },
-      { id: '8', type: 'watch_progress', uid: 'u2', sessionId: 's2', durationSeconds: 30, clientTimestamp: Date.now() },
-    ];
+  const events: AdminEvent[] = [
+    { id: '1', type: 'page_view', uid: 'u1', sessionId: 's1', clientTimestamp: Date.now() },
+    { id: '2', type: 'page_view', uid: 'u1', sessionId: 's1', clientTimestamp: Date.now() },
+    { id: '3', type: 'search', uid: 'u1', sessionId: 's1', clientTimestamp: Date.now() },
+    { id: '4', type: 'watch_start', uid: 'u1', sessionId: 's1', clientTimestamp: Date.now() },
+    { id: '5', type: 'episode_start', uid: 'u2', sessionId: 's2', clientTimestamp: Date.now() },
+    { id: '6', type: 'watch_complete', uid: 'u1', sessionId: 's1', clientTimestamp: Date.now() },
+    { id: '7', type: 'watch_progress', uid: 'u1', sessionId: 's1', durationSeconds: 90, clientTimestamp: Date.now() },
+    { id: '8', type: 'watch_progress', uid: 'u2', sessionId: 's2', durationSeconds: 30, clientTimestamp: Date.now() },
+  ];
 
+  it('aggregates core dashboard metrics and completion rate', () => {
     expect(getAdminMetrics(events)).toMatchObject({
       pageViews: 2,
       searches: 1,
@@ -27,15 +35,39 @@ describe('admin metrics', () => {
     });
   });
 
+  it('builds a chart-ready daily series for every selected day', () => {
+    const now = new Date();
+    now.setHours(0, 0, 0, 0);
+    const timestamp = now.getTime();
+    const daily = getRecentDays([
+      { id: '1', type: 'page_view', clientTimestamp: timestamp },
+      { id: '2', type: 'search', clientTimestamp: timestamp },
+      { id: '3', type: 'watch_start', clientTimestamp: timestamp },
+      { id: '4', type: 'watch_progress', durationSeconds: 90, clientTimestamp: timestamp },
+      { id: '5', type: 'watch_complete', clientTimestamp: timestamp },
+    ], 3);
+
+    expect(daily).toHaveLength(3);
+    expect(daily.at(-1)).toMatchObject({
+      pageViews: 1,
+      searches: 1,
+      watchStarts: 1,
+      completions: 1,
+      watchSeconds: 90,
+    });
+    expect(getMetricLabel('watchSeconds')).toBe('Watch time');
+    expect(getMetricValue(daily.at(-1)!, 'watchSeconds')).toBe(90);
+  });
+
   it('ranks content using opens first and watch time as a tie breaker', () => {
-    const events = [
+    const rankingEvents: AdminEvent[] = [
       { id: '1', type: 'watch_start', animeId: 'a', animeTitle: 'Alpha', durationSeconds: 0 },
       { id: '2', type: 'watch_progress', animeId: 'a', animeTitle: 'Alpha', durationSeconds: 10 },
       { id: '3', type: 'watch_start', animeId: 'b', animeTitle: 'Beta', durationSeconds: 0 },
       { id: '4', type: 'watch_start', animeId: 'b', animeTitle: 'Beta', durationSeconds: 0 },
     ];
 
-    expect(getTopContent(events, 2).map((row) => row.title)).toEqual(['Beta', 'Alpha']);
+    expect(getTopContent(rankingEvents, 2).map((row) => row.title)).toEqual(['Beta', 'Alpha']);
   });
 
   it('formats durations without losing zero values', () => {
@@ -51,6 +83,6 @@ describe('admin metrics', () => {
 
     const rows = getRecentDays([{ id: '1', type: 'page_view', clientTimestamp: timestamp }], 3);
     expect(rows).toHaveLength(3);
-    expect(rows.at(-1)?.views).toBe(1);
+    expect(rows.at(-1)?.pageViews).toBe(1);
   });
 });
