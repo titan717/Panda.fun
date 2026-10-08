@@ -236,19 +236,36 @@ async function resolveTmdbId(media: MovieApiMediaRef, signal?: AbortSignal): Pro
 }
 
 function toAnimeItem(item: MovieApiMedia): AnimeItem {
+  const raw = item as MovieApiMedia & {
+    name?: string;
+    original_name?: string;
+    poster_path?: string;
+    backdrop_path?: string;
+    first_air_date?: string;
+    release_date?: string;
+    vote_average?: number;
+    overview?: string;
+  };
+  const title = item.title || raw.name || raw.original_name || 'Untitled';
+  const poster = item.poster || (raw.poster_path ? 'https://image.tmdb.org/t/p/w500' + raw.poster_path : null);
+  const backdrop = item.backdrop || (raw.backdrop_path ? 'https://image.tmdb.org/t/p/w1280' + raw.backdrop_path : null);
+  const releaseDate = item.releaseDate || raw.release_date || raw.first_air_date || undefined;
+  const rating = item.rating ?? (Number.isFinite(Number(raw.vote_average)) ? Number(raw.vote_average) : undefined);
+  const type = item.type === 'movie' ? 'movie' : 'series';
+
   return {
     id: item.id,
-    title: item.title,
-    image: optimizeImageUrl(item.poster, 'w342') || '',
-    cover: item.backdrop || '',
-    banner: item.backdrop || '',
-    rating: item.rating ?? undefined,
+    title,
+    image: optimizeImageUrl(poster, 'w342') || '',
+    cover: backdrop || '',
+    banner: backdrop || '',
+    rating,
     type: item.type,
-    releaseDate: item.releaseDate || undefined,
-    description: item.overview || undefined,
+    releaseDate,
+    description: item.overview || raw.overview || undefined,
     genres: item.genres || [],
     status: item.status || undefined,
-    contentType: item.type === 'movie' ? 'movie' : 'series',
+    contentType: type,
   };
 }
 
