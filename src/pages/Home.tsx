@@ -6,6 +6,18 @@ import { ArrowRight, Check, Film, Github, Play, Plus, Search, Sparkles, Tv } fro
 import { api, MovieApiError, MovieApiMedia } from '../lib/api';
 import { trackEvent, trackGAEvent } from '../lib/analytics';
 import { libraryManager } from '../lib/library';
+import { useAuth } from '../lib/AuthContext';
+import {
+  createProfileId,
+  getActiveProfileId,
+  listProfiles,
+  saveProfile,
+  setActiveProfileId,
+  type PandaProfile,
+} from '../lib/profileStore';
+import { initializeProfileStorage } from '../lib/profileScope';
+import { historyUtil } from '../lib/history';
+import { ProfileAvatar, PinPrompt, ProfileSetup } from './Profile';
 import { updateSEO } from '../lib/seo';
 import { buildDetailsHref, buildWatchHref } from '../lib/mediaRoute';
 import { optimizeImageUrl } from '../lib/mediaImages';
@@ -19,6 +31,268 @@ function KindIcon({ kind }: { kind: RailKind }) {
   if (kind === 'trending' || kind === 'streamingNetflix' || kind === 'streamingDisney') return <Sparkles size={14} strokeWidth={1.9} />;
   if (kind === 'airing' || kind === 'tv') return <Tv size={14} strokeWidth={1.9} />;
   return <Sparkles size={14} strokeWidth={1.9} />;
+}
+
+function HomeProfileGate() {
+  const { user, loading } = useAuth();
+  const [profiles, setProfiles] = useState<PandaProfile[]>([]);
+  const [gateState, setGateState] = useState<'loading' | 'chooser' | 'setup' | 'hidden'>('loading');
+  const [pinProfile, setPinProfile] = useState<PandaProfile | null>(null);
+  const [autoProfileId, setAutoProfileId] = useState('');
+  const [countdownProgress, setCountdownProgress] = useState(1);
+  const [countdownEnabled, setCountdownEnabled] = useState(true);
+
+  const activateProfile = React.useCallback((profile: PandaProfile, reason: 'auto' | 'manual' | 'pin') => {
+    if (!user) return;
+
+    initializeProfileStorage(user.uid, profile.id, false, [
+      'kinoma_history',
+      'kinoma_watchlist',
+      'kinoma_completed',
+      'kinoma_favorites',
+      'kinoma_ep_progress',
+      'kinoma_meta_cache',
+      'kinoma_search_history',
+    ]);
+    setActiveProfileId(user.uid, profile.id);
+    void historyUtil.syncFromFirestore(user.uid);
+    void libraryManager.syncFromFirestore(user.uid);
+
+    void trackEvent({
+      type: reason === 'auto' ? 'profile_select' : 'profile_select',
+      metadata: {
+        profileId: profile.id,
+        locked: Boolean(profile.pinHash),
+        selectionMode: reason,
+      },
+    });
+
+    setGateState('hidden');
+    setPinProfile(null);
+  }, [user]);
+
+  const chooseProfile = React.useCallback((profile: PandaProfile, reason: 'auto' | 'manual' = 'manual') => {
+    setCountdownEnabled(false);
+    if (profile.pinHash) {
+      setPinProfile(profile);
+      return;
+    }
+    activateProfile(profile, reason);
+  }, [activateProfile]);
+
+  useEffect(() => {
+    if (loading) {
+      setGateState('loading');
+      return;
+    }
+
+    if (!user) {
+      setProfiles([]);
+      setPinProfile(null);
+      setGateState('hidden');
+      return;
+    }
+
+    let cancelled = false;
+    setGateState('loading');
+    setCountdownEnabled(true);
+    setCountdownProgress(1);
+
+    void listProfiles(user.uid).then((loaded) => {
+      if (cancelled) return;
+
+      setProfiles(loaded);
+
+      if (!loaded.length) {
+        setAutoProfileId('');
+        setGateState('setup');
+        return;
+      }
+
+      const lastUsedId = getActiveProfileId(user.uid);
+      const fallback = loaded.find((profile) => profile.id === lastUsedId) || loaded[0];
+
+      setAutoProfileId(fallback.id);
+      setCountdownProgress(1);
+      setCountdownEnabled(true);
+      setGateState('chooser');
+    });
+
+    return () => {
+      cancelled = true;
+    };
+  }, [loading, user?.uid]);
+
+  useEffect(() => {
+    if (gateState !== 'chooser' || !autoProfileId || !countdownEnabled) return;
+
+    const startedAt = performance.now();
+    let raf = 0;
+
+    const tick = (now: number) => {
+      const elapsed = now - startedAt;
+      const progress = Math.max(0, 1 - elapsed / 5000);
+      setCountdownProgress(progress);
+
+      if (elapsed >= 5000) {
+        const profile = profiles.find((item) => item.id === autoProfileId);
+        if (profile) {
+          chooseProfile(profile, 'auto');
+        }
+        return;
+      }
+
+      raf = window.requestAnimationFrame(tick);
+    };
+
+    raf = window.requestAnimationFrame(tick);
+    return () => window.cancelAnimationFrame(raf);
+  }, [gateState, autoProfileId, countdownEnabled, profiles, chooseProfile]);
+
+  if (gateState === 'hidden') return null;
+
+  if (gateState === 'loading') {
+    return (
+      <div className="panda-home-profile-gate" role="status" aria-live="polite">
+        <div className="panda-home-profile-gate__ambient" aria-hidden="true" />
+        <div className="panda-home-profile-gate__loading">
+          <div className="panda-home-profile-gate__loading-mark" aria-hidden="true">
+            <img src="/profile-avatars/panda.svg" alt="" />
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  if (gateState === 'setup' && user) {
+    const defaultName = user.displayName?.trim() || user.email?.split('@')[0] || 'Panda';
+    return (
+      <div className="panda-home-profile-gate panda-home-profile-gate--setup">
+        <div className="panda-home-profile-gate__ambient" aria-hidden="true" />
+        <ProfileSetup
+          defaultName={defaultName}
+          initialProfile={null}
+          onComplete={async (profile) => {
+            const saved = await saveProfile(user.uid, {
+              ...profile,
+              id: profile.id || createProfileId(),
+            });
+            initializeProfileStorage(user.uid, saved.id, profiles.length === 0, [
+              'kinoma_history',
+              'kinoma_watchlist',
+              'kinoma_completed',
+              'kinoma_favorites',
+              'kinoma_ep_progress',
+              'kinoma_meta_cache',
+              'kinoma_search_history',
+            ]);
+            setActiveProfileId(user.uid, saved.id);
+            void historyUtil.syncFromFirestore(user.uid);
+            void libraryManager.syncFromFirestore(user.uid);
+            void trackEvent({
+              type: 'profile_create',
+              metadata: {
+                profileId: saved.id,
+                avatar: saved.avatar,
+                movieGenres: saved.movieGenres,
+                seriesGenres: saved.seriesGenres,
+                selectionMode: 'home_setup',
+              },
+            });
+            setProfiles([saved, ...profiles]);
+            setGateState('hidden');
+          }}
+          onBack={() => setGateState('hidden')}
+        />
+      </div>
+    );
+  }
+
+  const autoProfile = profiles.find((profile) => profile.id === autoProfileId) || profiles[0];
+  const circumference = 2 * Math.PI * 58;
+  const dashOffset = circumference * (1 - countdownProgress);
+
+  return (
+    <>
+      <div className="panda-home-profile-gate">
+        <div className="panda-home-profile-gate__ambient" aria-hidden="true" />
+        <div className="panda-home-profile-gate__inner">
+          <h1>Who's watching?</h1>
+
+          <div className="panda-home-profile-gate__profiles">
+            {profiles.map((profile) => {
+              const isAuto = profile.id === autoProfile?.id && countdownEnabled;
+              return (
+                <button
+                  key={profile.id}
+                  type="button"
+                  className={'panda-home-profile-gate__tile' + (isAuto ? ' is-autoselect' : '')}
+                  onClick={() => chooseProfile(profile)}
+                  aria-label={'Use ' + profile.name + ' profile' + (profile.pinHash ? ' (locked)' : '')}
+                >
+                  <span className="panda-home-profile-gate__avatar">
+                    <ProfileAvatar profile={profile} size="lg" />
+                    {isAuto && (
+                      <svg
+                        className="panda-home-profile-gate__countdown"
+                        viewBox="0 0 132 132"
+                        aria-hidden="true"
+                      >
+                        <circle
+                          cx="66"
+                          cy="66"
+                          r="58"
+                          pathLength="1"
+                          className="panda-home-profile-gate__countdown-track"
+                        />
+                        <circle
+                          cx="66"
+                          cy="66"
+                          r="58"
+                          pathLength="1"
+                          className="panda-home-profile-gate__countdown-progress"
+                          style={{ strokeDashoffset: 1 - countdownProgress }}
+                        />
+                      </svg>
+                    )}
+                  </span>
+                  <span>{profile.name}</span>
+                  {profile.pinHash && <Lock size={13} aria-label="PIN protected" />}
+                </button>
+              );
+            })}
+
+            {profiles.length < 6 && (
+              <button
+                type="button"
+                className="panda-home-profile-gate__tile panda-home-profile-gate__tile--add"
+                onClick={() => {
+                  setCountdownEnabled(false);
+                  setGateState('setup');
+                }}
+              >
+                <span className="panda-home-profile-gate__add-avatar"><Plus size={30} /></span>
+                <span>Add profile</span>
+              </button>
+            )}
+          </div>
+
+          <div className="panda-home-profile-gate__footer">
+            <Link href="/profile?manage=1">Manage profiles</Link>
+            <Link href="/settings">Settings</Link>
+          </div>
+        </div>
+      </div>
+
+      {pinProfile && (
+        <PinPrompt
+          profile={pinProfile}
+          onUnlock={() => activateProfile(pinProfile, 'pin')}
+          onCancel={() => setPinProfile(null)}
+        />
+      )}
+    </>
+  );
 }
 
 function trailerSrc(url: unknown, soundEnabled = true) {
@@ -320,7 +594,9 @@ export function Home() {
   }, []);
 
   return (
-    <main className="kinoma-home">
+    <>
+      <HomeProfileGate />
+      <main className="kinoma-home">
       <div className="kinoma-home__ambient" aria-hidden="true">
         <span className="kinoma-home__ambient-orb kinoma-home__ambient-orb--one" />
         <span className="kinoma-home__ambient-orb kinoma-home__ambient-orb--two" />
@@ -471,5 +747,6 @@ export function Home() {
         </div>
       </div>
     </main>
+    </>
   );
 }
