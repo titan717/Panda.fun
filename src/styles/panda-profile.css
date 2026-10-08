@@ -1637,6 +1637,37 @@
   text-align: center;
 }
 
+
+.panda-home-profile-gate__brand {
+  display: inline-flex;
+  align-items: center;
+  gap: 9px;
+  margin-bottom: 28px;
+  color: rgba(247,243,239,.48);
+  font-size: 10px;
+  line-height: 1;
+  font-weight: 800;
+  letter-spacing: .22em;
+}
+
+.panda-home-profile-gate__brand-icon {
+  width: 28px;
+  height: 28px;
+  overflow: hidden;
+  display: grid;
+  place-items: center;
+  border: 1px solid rgba(255,255,255,.09);
+  border-radius: 9px;
+  background: rgba(255,255,255,.035);
+  box-shadow: 0 10px 30px rgba(0,0,0,.22);
+}
+
+.panda-home-profile-gate__brand-icon img {
+  width: 100%;
+  height: 100%;
+  display: block;
+}
+
 .panda-home-profile-gate__inner h1 {
   margin: 0;
   color: rgba(255,255,255,.98);
@@ -1658,6 +1689,7 @@
 }
 
 .panda-home-profile-gate__tile {
+  position: relative;
   width: 128px;
   min-width: 96px;
   display: grid;
@@ -1702,12 +1734,15 @@
   height: 128px;
   border-color: rgba(247,243,239,.08);
   background: rgba(255,255,255,.04);
-  transition: border-color .2s ease;
+  box-shadow: 0 16px 42px rgba(0,0,0,.22);
+  transition: border-color .2s ease, box-shadow .2s ease, transform .2s ease;
 }
 
 .panda-home-profile-gate__tile:hover .panda-profile-avatar,
 .panda-home-profile-gate__tile:focus-visible .panda-profile-avatar {
   border-color: rgba(247,243,239,.4);
+  box-shadow: 0 20px 52px rgba(0,0,0,.35), 0 0 34px rgba(184,77,65,.08);
+  transform: translateY(-2px);
 }
 
 .panda-home-profile-gate__countdown {
@@ -1731,15 +1766,16 @@
 }
 
 .panda-home-profile-gate__countdown-progress {
-  stroke: rgba(255,255,255,.88);
+  stroke: #f4f1ed;
   stroke-width: 2.25;
   stroke-dasharray: 1;
   transition: stroke-dashoffset .05s linear;
-  filter: drop-shadow(0 0 5px rgba(255,255,255,.1));
+  filter: drop-shadow(0 0 7px rgba(255,255,255,.16));
 }
 
 .panda-home-profile-gate__tile.is-autoselect .panda-profile-avatar {
-  border-color: rgba(255,255,255,.15);
+  border-color: rgba(255,255,255,.16);
+  box-shadow: 0 20px 56px rgba(0,0,0,.34), 0 0 42px rgba(220,38,38,.08);
 }
 
 .panda-home-profile-gate__add-avatar {
@@ -1831,6 +1867,11 @@
 @media (max-width: 620px) {
   .panda-home-profile-gate__inner {
     padding: 24px 14px;
+  }
+
+  .panda-home-profile-gate__brand {
+    margin-bottom: 24px;
+    font-size: 9px;
   }
 
   .panda-home-profile-gate__profiles {
