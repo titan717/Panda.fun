@@ -245,6 +245,7 @@ function Overview({ events, usersCount, range, onRangeChange, autoRefresh, onRef
   const metrics = useMemo(() => getAdminMetrics(events), [events]);
   const daily = useMemo(() => getRecentDays(events, range), [events, range]);
   const topContent = useMemo(() => getTopContent(events, 8), [events]);
+  const [metric, setMetric] = useState<AdminMetricKey>('pageViews');
 
   return (
     <div className="panda-admin-view">
@@ -272,7 +273,7 @@ function Overview({ events, usersCount, range, onRangeChange, autoRefresh, onRef
       </section>
 
       <section className="panda-admin-chart-panel">
-        <MetricChart rows={daily} metric="pageViews" onMetricChange={() => undefined} />
+        <MetricChart rows={daily} metric={metric} onMetricChange={setMetric} />
       </section>
 
       <section className="panda-admin-overview-grid">
