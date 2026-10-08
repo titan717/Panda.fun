@@ -44,11 +44,11 @@ describe('admin metrics', () => {
     now.setHours(0, 0, 0, 0);
     const timestamp = now.getTime();
     const daily = getRecentDays([
-      { id: '1', type: 'page_view', clientTimestamp: timestamp },
-      { id: '2', type: 'search', clientTimestamp: timestamp },
-      { id: '3', type: 'watch_start', clientTimestamp: timestamp },
-      { id: '4', type: 'watch_progress', durationSeconds: 90, clientTimestamp: timestamp },
-      { id: '5', type: 'watch_complete', clientTimestamp: timestamp },
+      { id: '1', type: 'page_view', uid: 'u1', sessionId: 's1', clientTimestamp: timestamp },
+      { id: '2', type: 'search', uid: 'u1', sessionId: 's1', clientTimestamp: timestamp },
+      { id: '3', type: 'watch_start', uid: 'u1', sessionId: 's1', clientTimestamp: timestamp },
+      { id: '4', type: 'watch_progress', uid: 'u1', sessionId: 's1', durationSeconds: 90, clientTimestamp: timestamp },
+      { id: '5', type: 'watch_complete', uid: 'u1', sessionId: 's1', clientTimestamp: timestamp },
     ], 3);
 
     expect(daily).toHaveLength(3);
