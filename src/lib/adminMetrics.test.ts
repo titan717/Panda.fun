@@ -25,6 +25,7 @@ describe('admin metrics', () => {
     expect(getAdminMetrics(events)).toMatchObject({
       pageViews: 2,
       searches: 1,
+      contentSelections: 0,
       starts: 2,
       completions: 1,
       watchSeconds: 120,
