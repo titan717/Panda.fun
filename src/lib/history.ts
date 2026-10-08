@@ -1,5 +1,6 @@
 import { auth, db } from './firebase';
 import { doc, setDoc, getDocs, collection } from 'firebase/firestore';
+import { getActiveProfileId, getActiveProfileStorageKey } from './profileScope';
 
 export interface HistoryItem {
   animeId: string;
@@ -49,6 +50,7 @@ const LEGACY_HISTORY_KEY = 'animora_history';
 const META_KEY = 'kinoma_meta_cache';
 const LEGACY_META_KEY = 'animora_meta_cache';
 const EPISODES_PROGRESS_KEY = 'kinoma_ep_progress';
+const activeKey = (base: string) => getActiveProfileStorageKey(base);
 
 export function formatPlaybackTimestamp(seconds: number): string {
   if (isNaN(seconds) || seconds < 0) return '0:00';
@@ -85,7 +87,7 @@ export function parseSeasonNumber(titleOrStr: any, fallback = 1): number {
 export const historyUtil = {
   getHistory: (): HistoryItem[] => {
     try {
-      const data = localStorage.getItem(HISTORY_KEY) || localStorage.getItem(LEGACY_HISTORY_KEY);
+      const data = localStorage.getItem(activeKey(HISTORY_KEY)) || (getActiveProfileStorageKey(HISTORY_KEY) === HISTORY_KEY ? localStorage.getItem(LEGACY_HISTORY_KEY) : null);
       if (!data) return [];
       const parsed: any[] = JSON.parse(data);
       return parsed.map(item => {
@@ -115,10 +117,10 @@ export const historyUtil = {
 
   saveMeta: (slug: string, meta: { title: string; image: string; animeId: string; seasonNumber?: number }) => {
     try {
-      const data = localStorage.getItem(META_KEY) || localStorage.getItem(LEGACY_META_KEY);
+      const data = localStorage.getItem(activeKey(META_KEY)) || (activeKey(META_KEY) === META_KEY ? localStorage.getItem(LEGACY_META_KEY) : null);
       const metas = data ? JSON.parse(data) : {};
       metas[slug] = meta;
-      localStorage.setItem(META_KEY, JSON.stringify(metas));
+      localStorage.setItem(activeKey(META_KEY), JSON.stringify(metas));
     } catch (e) {
       console.error('Failed to save meta', e);
     }
@@ -143,7 +145,7 @@ export const historyUtil = {
         (item.slug || '').toLowerCase() !== target &&
         (item.episodeId || '').toLowerCase() !== target
       );
-      localStorage.setItem(HISTORY_KEY, JSON.stringify(updated));
+      localStorage.setItem(activeKey(HISTORY_KEY), JSON.stringify(updated));
       window.dispatchEvent(new CustomEvent('kinoma_progress_update', {
         detail: { removed: animeIdOrSlug }
       }));
@@ -154,7 +156,7 @@ export const historyUtil = {
 
   getAllEpisodesProgressMap: (): Record<string, Record<string, EpisodeProgress>> => {
     try {
-      const raw = localStorage.getItem(EPISODES_PROGRESS_KEY);
+      const raw = localStorage.getItem(activeKey(EPISODES_PROGRESS_KEY));
       return raw ? JSON.parse(raw) : {};
     } catch {
       return {};
@@ -295,7 +297,7 @@ export const historyUtil = {
 
       history.sort((a, b) => b.lastWatchedTime - a.lastWatchedTime);
       const limitedHistory = history.slice(0, 30);
-      localStorage.setItem(HISTORY_KEY, JSON.stringify(limitedHistory));
+      localStorage.setItem(activeKey(HISTORY_KEY), JSON.stringify(limitedHistory));
 
       // Also persist to detailed per-episode map
       const allMap = historyUtil.getAllEpisodesProgressMap();
@@ -317,7 +319,7 @@ export const historyUtil = {
         if (!allMap[slug]) allMap[slug] = {};
         allMap[slug][epNumStr] = allMap[animeId][epNumStr];
       }
-      localStorage.setItem(EPISODES_PROGRESS_KEY, JSON.stringify(allMap));
+      localStorage.setItem(activeKey(EPISODES_PROGRESS_KEY), JSON.stringify(allMap));
 
       // Trigger dispatch event so all listening components update in real-time
       window.dispatchEvent(new CustomEvent('kinoma_progress_update', {
@@ -327,7 +329,10 @@ export const historyUtil = {
       // Non-blocking sync to Firebase Firestore for logged-in users
       if (auth.currentUser) {
         const cleanId = animeId.replace(/[^a-zA-Z0-9_-]/g, '_');
-        const progressRef = doc(db, 'users', auth.currentUser.uid, 'progress', cleanId);
+        const profileId = getActiveProfileId(auth.currentUser.uid);
+        const progressRef = profileId
+          ? doc(db, 'users', auth.currentUser.uid, 'profiles', profileId, 'progress', cleanId)
+          : doc(db, 'users', auth.currentUser.uid, 'progress', cleanId);
         setDoc(progressRef, {
           animeId,
           slug,
@@ -350,7 +355,10 @@ export const historyUtil = {
 
   syncFromFirestore: async (userId: string) => {
     try {
-      const colRef = collection(db, 'users', userId, 'progress');
+      const profileId = getActiveProfileId(userId);
+      const colRef = profileId
+        ? collection(db, 'users', userId, 'profiles', profileId, 'progress')
+        : collection(db, 'users', userId, 'progress');
       const snap = await getDocs(colRef);
       if (!snap.empty) {
         const history = historyUtil.getHistory();
@@ -402,8 +410,8 @@ export const historyUtil = {
         });
 
         history.sort((a, b) => b.lastWatchedTime - a.lastWatchedTime);
-        localStorage.setItem(HISTORY_KEY, JSON.stringify(history.slice(0, 30)));
-        localStorage.setItem(EPISODES_PROGRESS_KEY, JSON.stringify(allMap));
+        localStorage.setItem(activeKey(HISTORY_KEY), JSON.stringify(history.slice(0, 30)));
+        localStorage.setItem(activeKey(EPISODES_PROGRESS_KEY), JSON.stringify(allMap));
         window.dispatchEvent(new CustomEvent('kinoma_progress_update'));
       }
     } catch (e) {
@@ -567,11 +575,11 @@ export const historyUtil = {
     try {
       const history = historyUtil.getHistory();
       const filtered = history.filter(h => h.slug !== slug && h.animeId !== slug);
-      localStorage.setItem(HISTORY_KEY, JSON.stringify(filtered));
+      localStorage.setItem(activeKey(HISTORY_KEY), JSON.stringify(filtered));
 
       const allMap = historyUtil.getAllEpisodesProgressMap();
       delete allMap[slug];
-      localStorage.setItem(EPISODES_PROGRESS_KEY, JSON.stringify(allMap));
+      localStorage.setItem(activeKey(EPISODES_PROGRESS_KEY), JSON.stringify(allMap));
 
       window.dispatchEvent(new CustomEvent('kinoma_progress_update', {
         detail: { slug, removed: true }
@@ -583,8 +591,8 @@ export const historyUtil = {
 
   clearHistory: () => {
     try {
-      localStorage.removeItem(HISTORY_KEY);
-      localStorage.removeItem(EPISODES_PROGRESS_KEY);
+      localStorage.removeItem(activeKey(HISTORY_KEY));
+      localStorage.removeItem(activeKey(EPISODES_PROGRESS_KEY));
       window.dispatchEvent(new CustomEvent('kinoma_progress_update', {
         detail: { cleared: true }
       }));
