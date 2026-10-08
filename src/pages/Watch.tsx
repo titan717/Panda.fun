@@ -8,7 +8,7 @@ import { libraryManager } from '../lib/library';
 import type { AnimeItem, Episode, AnimeSeasonItem } from '../types';
 import { DEFAULT_POSTER } from '../types';
 import { updateSEO } from '../lib/seo';
-import { trackGAEvent } from '../lib/analytics';
+import { trackEvent, trackGAEvent } from '../lib/analytics';
 import { buildDetailsHref, buildWatchHref } from '../lib/mediaRoute';
 import { parseVidyPlaybackMessage } from '../lib/vidyPlayerEvents';
 
@@ -46,6 +46,7 @@ export function Watch() {
   const [inList, setInList] = useState(false);
   const [shareMessage, setShareMessage] = useState('');
   const iframeRef = useRef<HTMLIFrameElement>(null);
+  const lastAnalyticsPositionRef = useRef(playbackProgress);
   const playbackRef = useRef({
     currentTime: playbackProgress,
     duration: 0,
@@ -119,7 +120,20 @@ export function Watch() {
     setSource('');
     setError('');
     api.getWatchLink(id, type === 'series' ? season : 1, type === 'series' ? episode : 1, controller.signal, playbackProgress)
-      .then(result => { if (!active) return; setSource(result.url); setSourceLoading(true); trackGAEvent('watch_start', { content_type: type, title }); })
+      .then(result => {
+        if (!active) return;
+        setSource(result.url);
+        setSourceLoading(true);
+        trackGAEvent('watch_start', { content_type: type, item_id: id, title, season: type === 'series' ? season : 1, episode: type === 'series' ? episode : 1 });
+        void trackEvent({
+          type: 'watch_start',
+          animeId: id,
+          animeTitle: title,
+          episodeId: currentEpisode?.id,
+          episodeNumber: type === 'series' ? String(episode) : '1',
+          metadata: { contentType: type, season: type === 'series' ? season : 1, source: 'watch' },
+        });
+      })
       .catch(err => { if (!active) return; setSourceLoading(false); setError(err instanceof Error ? err.message : 'Playback source unavailable.'); });
     return () => { active = false; controller.abort(); };
   }, [data, id, type, season, episode, playbackRetry]);
@@ -139,6 +153,34 @@ export function Watch() {
 
     if (playbackTimestamp <= 0) return;
 
+    const previousAnalyticsPosition = lastAnalyticsPositionRef.current;
+    const watchedDelta = playbackTimestamp - previousAnalyticsPosition;
+    if (watchedDelta > 0 && watchedDelta <= 120) {
+      void trackEvent({
+        type: 'watch_progress',
+        animeId: id,
+        animeTitle: title,
+        episodeId: currentEpisode?.id,
+        episodeNumber: String(episode),
+        durationSeconds: watchedDelta,
+        metadata: { positionSeconds: playbackTimestamp, mediaDurationSeconds: duration, season: type === 'series' ? season : 1 },
+      });
+      trackGAEvent('watch_progress', { content_type: type, item_id: id, seconds: Math.round(watchedDelta), position: Math.round(playbackTimestamp) });
+    }
+    lastAnalyticsPositionRef.current = playbackTimestamp;
+    if (complete) {
+      void trackEvent({
+        type: 'watch_complete',
+        animeId: id,
+        animeTitle: title,
+        episodeId: currentEpisode?.id,
+        episodeNumber: String(episode),
+        durationSeconds: duration,
+        metadata: { season: type === 'series' ? season : 1, source: 'watch' },
+      });
+      trackGAEvent('watch_complete', { content_type: type, item_id: id, title, duration: Math.round(duration) });
+    }
+
     historyUtil.saveProgress(
       id,
       currentEpisode?.id || String(episode),
@@ -151,6 +193,7 @@ export function Watch() {
   }, [data, id, title, poster, type, season, episode, currentEpisode?.id, currentEpisode?.duration]);
 
   useEffect(() => {
+    lastAnalyticsPositionRef.current = playbackProgress;
     playbackRef.current = {
       currentTime: playbackProgress,
       duration: 0,
@@ -204,6 +247,7 @@ export function Watch() {
     const next = episodes[index + direction];
     if (next) {
       trackGAEvent('episode_navigate', { content_type: type, direction: direction > 0 ? 'next' : 'previous', episode: next.number, title });
+      void trackEvent({ type: 'episode_select', animeId: id, animeTitle: title, episodeId: next.id, episodeNumber: String(next.number), metadata: { direction: direction > 0 ? 'next' : 'previous', source: 'watch' } });
       setEpisode(next.number);
       setLocation(buildWatchHref(id, 'series', season, next.number));
     }
