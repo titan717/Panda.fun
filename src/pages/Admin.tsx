@@ -252,7 +252,7 @@ function Kpi({ label, value, detail }: { label: string; value: string; detail: s
   );
 }
 
-function Overview({ events, usersCount, range, onRangeChange, autoRefresh, onRefresh, refreshing }: {
+function Overview({ events, usersCount, range, onRangeChange, autoRefresh, onRefresh, refreshing, loadedAt }: {
   events: AdminEvent[];
   usersCount: number;
   range: Range;
@@ -260,6 +260,7 @@ function Overview({ events, usersCount, range, onRangeChange, autoRefresh, onRef
   autoRefresh: boolean;
   onRefresh: () => void;
   refreshing: boolean;
+  loadedAt: number | null;
 }) {
   const metrics = useMemo(() => getAdminMetrics(events), [events]);
   const daily = useMemo(() => getRecentDays(events, range), [events, range]);
@@ -615,7 +616,7 @@ export function Admin() {
 
   let activeView: React.ReactNode;
   switch (activeTab) {
-    case 'overview': activeView = <Overview events={events} usersCount={users.length} range={range} onRangeChange={setRange} autoRefresh={autoRefresh} onRefresh={() => void loadData(true)} refreshing={refreshing} />; break;
+    case 'overview': activeView = <Overview events={events} usersCount={users.length} range={range} onRangeChange={setRange} autoRefresh={autoRefresh} onRefresh={() => void loadData(true)} refreshing={refreshing} loadedAt={loadedAt} />; break;
     case 'audience': activeView = <Audience users={users} />; break;
     case 'content': activeView = <Content />; break;
     case 'activity': activeView = <ActivityView events={events} />; break;
