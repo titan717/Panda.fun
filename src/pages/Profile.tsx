@@ -8,7 +8,6 @@ import { Link } from 'wouter';
 import { useAuth } from '../lib/AuthContext';
 import { libraryManager } from '../lib/library';
 import { historyUtil, type HistoryItem } from '../lib/history';
-import { preferencesUtil } from '../lib/preferences';
 import { buildWatchHref } from '../lib/mediaRoute';
 import '../styles/panda-profile.css';
 
