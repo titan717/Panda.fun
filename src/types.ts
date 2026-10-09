@@ -47,6 +47,8 @@ export interface AnimeItem {
   contentRating?: string;
   type?: string;
   releaseDate?: string;
+  originalLanguage?: string;
+  runtime?: number;
   description?: string;
   genres?: string[];
   totalEpisodes?: number;
