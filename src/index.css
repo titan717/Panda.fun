@@ -9745,3 +9745,9 @@ html,body,#root,.panda-app-shell,.panda-app-content,.kinoma-app-main,
 .kinoma-home__ambient,.panda-home-profile-gate__ambient,
 .panda-profile-selector__ambient,.panda-profile-flow__ambient,
 .panda-profile-dashboard__ambient,.panda-profile-guest__ambient { pointer-events:none; }
+
+/* Layout regression guard: the old sidebar's desktop offset must never leak into the header shell. */
+.kinoma-app-main { width:100% !important; max-width:100%; margin-left:0 !important; padding-top:0 !important; }
+.panda-app-content { width:100% !important; margin-left:0 !important; padding-top:0 !important; }
+.panda-mobile-bottom-nav { z-index:var(--z-header,20) !important; }
+
