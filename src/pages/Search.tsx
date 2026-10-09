@@ -10,7 +10,7 @@ import { preferencesUtil } from '../lib/preferences';
 import { api, MovieApiError } from '../lib/api';
 import type { AnimeItem } from '../types';
 
-type SearchItem = { id: string; title: string; type: 'movie' | 'series'; meta: string; image?: string; href: string; rating?: number; year?: number; };
+type SearchItem = { id: string; title: string; type: 'movie' | 'series'; meta: string; image?: string; href: string; rating?: number; year?: number; genres: string[]; language?: string; duration?: number; };
 const titleOf = (item: AnimeItem) => typeof item.title === 'string' ? item.title : item.title.english || item.title.romaji || item.title.native || 'Untitled';
 const mapItem = (item: AnimeItem): SearchItem => {
   const type = item.contentType === 'movie' ? 'movie' : 'series';
@@ -22,6 +22,9 @@ const mapItem = (item: AnimeItem): SearchItem => {
     image: item.image,
     rating: Number(item.rating || 0) || 0,
     year: item.releaseDate ? Number(String(item.releaseDate).slice(0, 4)) || undefined : undefined,
+    genres: Array.isArray(item.genres) ? item.genres : [],
+    language: typeof item.originalLanguage === 'string' ? item.originalLanguage.toLowerCase() : undefined,
+    duration: typeof item.runtime === 'number' && Number.isFinite(item.runtime) && item.runtime > 0 ? item.runtime : undefined,
     href: buildDetailsHref(titleOf(item), type, item.id),
   };
 };
@@ -50,22 +53,56 @@ export function Search() {
   const [error, setError] = useState<string | null>(null);
   const [retryNonce, setRetryNonce] = useState(0);
   const [filter, setFilter] = useState<'all' | 'movie' | 'series'>('all');
+  const [genreFilter, setGenreFilter] = useState('all');
+  const [yearFilter, setYearFilter] = useState('all');
+  const [languageFilter, setLanguageFilter] = useState('all');
+  const [durationFilter, setDurationFilter] = useState<'all' | 'under90' | '90to150' | 'over150'>('all');
   const inputRef = useRef<HTMLInputElement>(null);
   const resultsRef = useRef<HTMLElement>(null);
   const isSearching = submittedQuery.length > 0;
+  const genreOptions = useMemo(
+    () => Array.from(new Set(results.flatMap((item) => item.genres))).filter(Boolean).sort((a, b) => a.localeCompare(b)),
+    [results]
+  );
+  const yearOptions = useMemo(
+    () => Array.from(new Set(results.map((item) => item.year).filter((year): year is number => Boolean(year)))).sort((a, b) => b - a),
+    [results]
+  );
+  const languageOptions = useMemo(
+    () => Array.from(new Set(results.map((item) => item.language).filter((language): language is string => Boolean(language)))).sort(),
+    [results]
+  );
+  const hasDurationData = results.some((item) => typeof item.duration === 'number' && item.duration > 0);
+  const hasAdvancedFilters = genreOptions.length > 0 || yearOptions.length > 0 || languageOptions.length > 0 || hasDurationData;
+  const hasActiveAdvancedFilters = genreFilter !== 'all' || yearFilter !== 'all' || languageFilter !== 'all' || durationFilter !== 'all';
+
   const visibleResults = useMemo(() => {
     const normalized = submittedQuery.toLocaleLowerCase();
+    const preferredGenres = preferencesUtil.getTopUserGenres();
     return results
       .filter(item => filter === 'all' || item.type === filter)
+      .filter(item => genreFilter === 'all' || item.genres.some((genre) => genre.toLowerCase() === genreFilter.toLowerCase()))
+      .filter(item => yearFilter === 'all' || String(item.year || '') === yearFilter)
+      .filter(item => languageFilter === 'all' || item.language === languageFilter)
+      .filter(item => {
+        if (durationFilter === 'all') return true;
+        if (typeof item.duration !== 'number' || item.duration <= 0) return false;
+        if (durationFilter === 'under90') return item.duration < 90;
+        if (durationFilter === '90to150') return item.duration >= 90 && item.duration <= 150;
+        return item.duration > 150;
+      })
       .sort((a, b) => {
-        if (!normalized) return b.rating - a.rating;
         const score = (item: SearchItem) => {
           const title = item.title.toLocaleLowerCase();
-          return (title === normalized ? 1000 : 0) + (title.startsWith(normalized) ? 300 : 0) + (title.includes(normalized) ? 100 : 0) + item.rating;
+          const textScore = normalized
+            ? (title === normalized ? 1000 : 0) + (title.startsWith(normalized) ? 300 : 0) + (title.includes(normalized) ? 100 : 0)
+            : 0;
+          const tasteScore = item.genres.reduce((total, genre) => total + (preferredGenres.includes(genre) ? 12 : 0), 0);
+          return textScore + tasteScore + item.rating;
         };
         return score(b) - score(a);
       });
-  }, [results, filter, submittedQuery]);
+  }, [results, filter, submittedQuery, genreFilter, yearFilter, languageFilter, durationFilter]);
 
   useEffect(() => {
     setRecentSearches(preferencesUtil.getRecentSearches());
@@ -109,7 +146,8 @@ export function Search() {
     setSubmittedQuery(clean);
     setLocation('/search?keyword=' + encodeURIComponent(clean));
   };
-  const clearSearch = () => { setQuery(''); setSubmittedQuery(''); setError(null); setFilter('all'); inputRef.current?.focus(); setLocation('/search'); };
+  const clearAdvancedFilters = () => { setGenreFilter('all'); setYearFilter('all'); setLanguageFilter('all'); setDurationFilter('all'); };
+  const clearSearch = () => { setQuery(''); setSubmittedQuery(''); setError(null); setFilter('all'); clearAdvancedFilters(); inputRef.current?.focus(); setLocation('/search'); };
   const clearQueryInput = () => { setQuery(''); inputRef.current?.focus(); };
   const clearRecent = () => { preferencesUtil.clearRecentSearches(); setRecentSearches([]); };
   const surprisePool = useMemo(() => results.filter(item => item.id && item.title), [results]);
@@ -124,7 +162,7 @@ export function Search() {
     if (event.key === 'Escape' && query) { setQuery(''); return; }
     if (event.key === 'Escape' && !query) inputRef.current?.blur();
   };
-  const chooseRecent = (value: string) => { setQuery(value); setSubmittedQuery(value); setFilter('all'); trackGAEvent('search', { content_type: 'catalog', has_query: true, source: 'recent_search' }); setLocation('/search?keyword=' + encodeURIComponent(value)); };
+  const chooseRecent = (value: string) => { setQuery(value); setSubmittedQuery(value); setFilter('all'); clearAdvancedFilters(); trackGAEvent('search', { content_type: 'catalog', has_query: true, source: 'recent_search' }); setLocation('/search?keyword=' + encodeURIComponent(value)); };
 
   return <main className={"kinoma-search-page" + (isSearching ? " is-searching" : "")}>
     <div className="kinoma-search-page__ambient" aria-hidden="true" />
@@ -169,10 +207,50 @@ export function Search() {
       <section ref={resultsRef} className="kinoma-search-results" id="search-results">
         <div className="kinoma-search-results__heading"><div><span className="kinoma-eyebrow">{isSearching ? 'Your search' : 'Live discovery'}</span><h2>{isSearching ? 'Matches' : 'Trending now'}</h2></div>{!isSearching && <Sparkles size={18} />}</div>
         {!loading && !error && results.length > 0 && <div className="kinoma-search-toolbar"><div className="kinoma-search-filters" role="tablist" aria-label="Filter search results"><button type="button" role="tab" aria-selected={filter === 'all'} className={filter === 'all' ? 'is-active' : ''} onClick={() => setFilter('all')}><Filter size={13} /> All <span>{results.length}</span></button><button type="button" role="tab" aria-selected={filter === 'movie'} className={filter === 'movie' ? 'is-active' : ''} onClick={() => setFilter('movie')}>Movies <span>{results.filter(item => item.type === 'movie').length}</span></button><button type="button" role="tab" aria-selected={filter === 'series'} className={filter === 'series' ? 'is-active' : ''} onClick={() => setFilter('series')}>Series <span>{results.filter(item => item.type === 'series').length}</span></button></div><span className="kinoma-search-toolbar__count">{visibleResults.length} {visibleResults.length === 1 ? 'title' : 'titles'}</span></div>}
+        {!loading && !error && results.length > 0 && hasAdvancedFilters && (
+          <div className="kinoma-search-advanced-filters" aria-label="Refine search results">
+            <span className="kinoma-search-advanced-filters__label"><Filter size={13} aria-hidden="true" /> Refine</span>
+            {genreOptions.length > 0 && (
+              <label>Genre
+                <select value={genreFilter} onChange={(event) => setGenreFilter(event.target.value)}>
+                  <option value="all">All genres</option>
+                  {genreOptions.map((genre) => <option key={genre} value={genre}>{genre}</option>)}
+                </select>
+              </label>
+            )}
+            {yearOptions.length > 0 && (
+              <label>Year
+                <select value={yearFilter} onChange={(event) => setYearFilter(event.target.value)}>
+                  <option value="all">Any year</option>
+                  {yearOptions.map((year) => <option key={year} value={String(year)}>{year}</option>)}
+                </select>
+              </label>
+            )}
+            {languageOptions.length > 0 && (
+              <label>Language
+                <select value={languageFilter} onChange={(event) => setLanguageFilter(event.target.value)}>
+                  <option value="all">Any language</option>
+                  {languageOptions.map((language) => <option key={language} value={language}>{language.toUpperCase()}</option>)}
+                </select>
+              </label>
+            )}
+            {hasDurationData && (
+              <label>Runtime
+                <select value={durationFilter} onChange={(event) => setDurationFilter(event.target.value as typeof durationFilter)}>
+                  <option value="all">Any length</option>
+                  <option value="under90">Under 90 min</option>
+                  <option value="90to150">90–150 min</option>
+                  <option value="over150">Over 150 min</option>
+                </select>
+              </label>
+            )}
+            {hasActiveAdvancedFilters && <button type="button" onClick={clearAdvancedFilters} className="kinoma-search-advanced-filters__clear">Clear filters</button>}
+          </div>
+        )}
         {loading ? <div className="kinoma-search-empty"><SearchIcon size={28} /><h3>Searching…</h3><p>Finding movies and series from MovieApi.</p></div>
         : error ? <div className="kinoma-search-empty"><SearchIcon size={28} /><h3>Search unavailable</h3><p>{error}</p><button type="button" onClick={() => setRetryNonce(value => value + 1)}>Try again</button></div>
         : visibleResults.length ? <div className="kinoma-search-grid">{visibleResults.map((item, index) => <React.Fragment key={item.id}><ContentCard item={item} priority={index < 5} /></React.Fragment>)}</div>
-        : <div className="kinoma-search-empty"><SearchIcon size={28} /><h3>{results.length ? 'No titles in this filter' : 'Nothing found yet'}</h3><p>{results.length ? 'Try another filter to see more matches.' : 'Try a different title, spelling, or a broader search.'}</p><button type="button" onClick={results.length ? () => setFilter('all') : clearSearch}>{results.length ? 'Show all results' : 'Back to trending'}</button></div>}
+        : <div className="kinoma-search-empty"><SearchIcon size={28} /><h3>{results.length ? 'No titles in this filter' : 'Nothing found yet'}</h3><p>{results.length ? 'Try changing a filter or clear the filters to see more matches.' : 'Try a different title, spelling, or a broader search.'}</p><button type="button" onClick={results.length ? () => setFilter('all') : clearSearch}>{results.length ? 'Show all results' : 'Back to trending'}</button></div>}
       </section>
       <Footer />
     </div>
