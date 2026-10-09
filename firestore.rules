@@ -95,8 +95,9 @@ service cloud.firestore {
     }
 
     match /users/{userId} {
-      // Admins may read/manage users for the protected dashboard.
-      allow read, delete: if isAdmin();
+      // A signed-in user can read their own profile/settings; only admins can delete users.
+      allow read: if ownsUser(userId) || isAdmin();
+      allow delete: if isAdmin();
 
       // A user may create their own profile, but cannot assign privileged fields.
       allow create: if ownsUser(userId)
