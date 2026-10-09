@@ -9750,4 +9750,22 @@ html,body,#root,.panda-app-shell,.panda-app-content,.kinoma-app-main,
 .kinoma-app-main { width:100% !important; max-width:100%; margin-left:0 !important; padding-top:0 !important; }
 .panda-app-content { width:100% !important; margin-left:0 !important; padding-top:0 !important; }
 .panda-mobile-bottom-nav { z-index:var(--z-header,20) !important; }
+/* Clear, touch-friendly discovery filters */
+.kinoma-search-advanced-filters {
+  display:flex;align-items:center;flex-wrap:wrap;gap:9px;margin:0 0 22px;padding:14px 0;
+  border-top:1px solid rgba(255,255,255,.08);border-bottom:1px solid rgba(255,255,255,.08);
+}
+.kinoma-search-advanced-filters__label { display:inline-flex;align-items:center;gap:7px;margin-right:3px;color:#ed9289;font-size:10px;font-weight:850;letter-spacing:.1em;text-transform:uppercase; }
+.kinoma-search-advanced-filters label { display:flex;align-items:center;gap:8px;min-height:38px;padding:0 10px;border:1px solid rgba(255,255,255,.1);border-radius:10px;background:#070707;color:#aaa;font-size:10px;font-weight:750; }
+.kinoma-search-advanced-filters select { max-width:min(180px,35vw);min-height:34px;border:0;outline:none;background:#070707;color:#f4f4f4;font:inherit;font-size:11px;cursor:pointer; }
+.kinoma-search-advanced-filters select:focus-visible { outline:2px solid var(--panda-accent-bright);outline-offset:2px;border-radius:4px; }
+.kinoma-search-advanced-filters__clear { min-height:36px;padding:0 11px;border:1px solid rgba(239,103,92,.24);border-radius:999px;background:rgba(197,75,67,.08);color:#f0a29a;font-size:10px;font-weight:800;cursor:pointer; }
+.kinoma-search-advanced-filters__clear:hover { background:rgba(197,75,67,.16);color:#fff; }
+@media(max-width:767px) {
+  .kinoma-search-advanced-filters { gap:7px;align-items:stretch; }
+  .kinoma-search-advanced-filters__label { width:100%;margin-bottom:2px; }
+  .kinoma-search-advanced-filters label { flex:1 1 calc(50% - 7px);justify-content:space-between;min-width:0;padding:0 8px; }
+  .kinoma-search-advanced-filters select { max-width:58%;min-width:0; }
+  .kinoma-search-advanced-filters__clear { flex:1 1 100%; }
+}
 
