@@ -9595,6 +9595,12 @@ body { background-color: #000 !important; }
 .panda-shared-footer__top { display:inline-flex;align-items:center;justify-content:center;gap:7px;min-height:34px;padding:0 11px;border:1px solid rgba(255,255,255,.13);border-radius:999px;background:#080808;color:#d1d1d1;font:inherit;font-weight:750;cursor:pointer;transition:all 150ms ease; }
 .panda-shared-footer__top:hover { color:#fff;border-color:rgba(239,103,92,.4);background:rgba(197,75,67,.1);transform:translateY(-1px); }
 
+/* Explicitly remove the legacy photographic application-shell background from every route. */
+.panda-app-shell,.panda-app-content,.kinoma-app-main {
+  background:#000 !important;
+  background-image:none !important;
+}
+
 /* Landing remains an artwork-led entry point on a genuinely black canvas. */
 .kinoma-welcome { background:#000 !important;color:#f7f5f3; }
 .kinoma-welcome__backdrop,.kinoma-welcome__reference-texture { display:none !important; }
