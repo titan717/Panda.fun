@@ -22,8 +22,33 @@ service cloud.firestore {
         'email',
         'displayName',
         'photoURL',
-        'createdAt'
+        'createdAt',
+        'playbackPreferences',
+        'playerSettings'
       ];
+    }
+
+    function validPlaybackPreferences(data) {
+      return !data.keys().hasAny(['playbackPreferences']) || (
+        data.playbackPreferences is map
+        && data.playbackPreferences.keys().hasOnly(['videoProvider', 'audioLanguage', 'subtitleLanguage', 'subtitleProvider'])
+        && data.playbackPreferences.videoProvider in ['nxsha', 'cinesrc', 'videasy']
+        && data.playbackPreferences.audioLanguage in ['en', 'ja', 'ko', 'es', 'hi', 'auto', 'off']
+        && data.playbackPreferences.subtitleLanguage in ['en', 'ja', 'ko', 'es', 'hi', 'auto', 'off']
+        && data.playbackPreferences.subtitleProvider in ['nitro', 'auto']
+      );
+    }
+
+    function validPlayerSettings(data) {
+      return !data.keys().hasAny(['playerSettings']) || (
+        data.playerSettings is map
+        && data.playerSettings.keys().hasOnly(['autoPlay', 'autoNext', 'skipIntro', 'skipOutro', 'preferredAudio'])
+        && data.playerSettings.autoPlay is bool
+        && data.playerSettings.autoNext is bool
+        && data.playerSettings.skipIntro is bool
+        && data.playerSettings.skipOutro is bool
+        && data.playerSettings.preferredAudio in ['sub', 'dub']
+      );
     }
 
     // Console-managed administrator markers. Clients may read their own marker,
@@ -77,7 +102,9 @@ service cloud.firestore {
       allow create: if ownsUser(userId)
         && request.resource.data.uid == request.auth.uid
         && request.resource.data.keys().hasOnly(userProfileKeys())
-        && request.resource.data.email == (request.auth.token.email == null ? '' : request.auth.token.email);
+        && request.resource.data.email == (request.auth.token.email == null ? '' : request.auth.token.email)
+        && validPlaybackPreferences(request.resource.data)
+        && validPlayerSettings(request.resource.data);
 
       // Users may update only ordinary profile fields. Privileged fields are not
       // accepted even if legacy documents still contain them.
@@ -86,6 +113,8 @@ service cloud.firestore {
         && request.resource.data.uid == resource.data.uid
         && request.resource.data.diff(resource.data).affectedKeys().hasOnly(userProfileKeys())
         && request.resource.data.email == (request.auth.token.email == null ? '' : request.auth.token.email)
+        && validPlaybackPreferences(request.resource.data)
+        && validPlayerSettings(request.resource.data)
       ) || isAdmin();
 
       match /progress/{animeId} {
