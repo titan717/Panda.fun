@@ -249,7 +249,7 @@ export function Search() {
           </div>
         )}
         {loading ? <div className="kinoma-search-empty"><SearchIcon size={28} /><h3>Searching…</h3><p>Finding movies and series from MovieApi.</p></div>
-        : error ? <div className="kinoma-search-empty"><SearchIcon size={28} /><h3>Search unavailable</h3><p>{error}</p><button type="button" onClick={() => setRetryNonce(value => value + 1)}>Try again</button></div>
+        : error ? <div className="kinoma-search-empty" role="alert"><SearchIcon size={28} /><h3>Search unavailable</h3><p>{error}</p><p className="kinoma-search-empty__hint">Check your connection. If other sites work, the Panda catalog service may be temporarily unavailable.</p><div className="kinoma-search-empty__actions"><button type="button" onClick={() => setRetryNonce(value => value + 1)}>Try again</button><Link href={`/contact?category=search&subject=${encodeURIComponent('Search unavailable')}`}>Contact support</Link></div></div>
         : visibleResults.length ? <div className="kinoma-search-grid">{visibleResults.map((item, index) => <React.Fragment key={item.id}><ContentCard item={item} priority={index < 5} /></React.Fragment>)}</div>
         : <div className="kinoma-search-empty"><SearchIcon size={28} /><h3>{results.length ? 'No titles in this filter' : 'Nothing found yet'}</h3><p>{results.length ? 'Try changing a filter or clear the filters to see more matches.' : 'Try a different title, spelling, or a broader search.'}</p><button type="button" onClick={results.length ? () => setFilter('all') : clearSearch}>{results.length ? 'Show all results' : 'Back to trending'}</button></div>}
       </section>
