@@ -112,7 +112,7 @@ export function Contact() {
       )}
       {error && (
         <div className="panda-support-status is-error" role="alert">
-          <AlertCircle size={18} aria-hidden="true" /><div><strong>We couldn’t send your report.</strong><br />{error}</div>
+          <AlertCircle size={18} aria-hidden="true" /><div><strong>We couldn’t send your report.</strong><br />{error}<br /><span style={{ display: 'inline-block', marginTop: 8 }}>Fallback: <a href="https://github.com/titan717/Panda.fun/issues" target="_blank" rel="noreferrer" style={{ color: '#f18a7f', fontWeight: 750 }}>open a public bug report on GitHub</a>. Don’t include passwords, private account details, or other sensitive information there.</span></div>
         </div>
       )}
 
