@@ -62,6 +62,7 @@ export const preferencesUtil = {
         }
       });
       localStorage.setItem(GENRE_AFFINITY_KEY, JSON.stringify(affinity));
+      window.dispatchEvent(new CustomEvent('panda_genre_affinity_updated', { detail: preferencesUtil.getTopUserGenres(5) }));
     } catch {}
   },
 
