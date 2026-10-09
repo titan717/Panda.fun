@@ -31,6 +31,7 @@ const mapItem = (item: AnimeItem): SearchItem => {
 
 function ContentCard({ item, priority = false }: { item: SearchItem; priority?: boolean }) {
   return <Link href={item.href} className="kinoma-search-card kinoma-focus" onClick={() => {
+      preferencesUtil.recordGenreInteraction(item.genres);
       trackGAEvent('search_result_select', { content_type: item.type, title: item.title, item_id: item.id });
       void trackEvent({ type: 'content_select', animeId: item.id, animeTitle: item.title, metadata: { source: 'search' } });
     }}>
@@ -61,15 +62,15 @@ export function Search() {
   const resultsRef = useRef<HTMLElement>(null);
   const isSearching = submittedQuery.length > 0;
   const genreOptions = useMemo(
-    () => Array.from(new Set(results.flatMap((item) => item.genres))).filter(Boolean).sort((a, b) => a.localeCompare(b)),
+    () => Array.from(new Set<string>(results.flatMap((item) => item.genres))).filter(Boolean).sort((a, b) => a.localeCompare(b)),
     [results]
   );
   const yearOptions = useMemo(
-    () => Array.from(new Set(results.map((item) => item.year).filter((year): year is number => Boolean(year)))).sort((a, b) => b - a),
+    () => Array.from(new Set<number>(results.map((item) => item.year).filter((year): year is number => Boolean(year)))).sort((a, b) => b - a),
     [results]
   );
   const languageOptions = useMemo(
-    () => Array.from(new Set(results.map((item) => item.language).filter((language): language is string => Boolean(language)))).sort(),
+    () => Array.from(new Set<string>(results.map((item) => item.language).filter((language): language is string => Boolean(language)))).sort(),
     [results]
   );
   const hasDurationData = results.some((item) => typeof item.duration === 'number' && item.duration > 0);
