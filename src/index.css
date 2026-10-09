@@ -9768,4 +9768,34 @@ html,body,#root,.panda-app-shell,.panda-app-content,.kinoma-app-main,
   .kinoma-search-advanced-filters select { max-width:58%;min-width:0; }
   .kinoma-search-advanced-filters__clear { flex:1 1 100%; }
 }
+/* Keep the predictive search palette in step with Panda's warm red identity. */
+.panda-header #global-search {
+  border-radius:999px !important;background:#070707 !important;border-color:rgba(255,255,255,.12) !important;color:#f7f5f3 !important;
+}
+.panda-header #global-search:focus {
+  border-color:rgba(239,103,92,.75) !important;box-shadow:0 0 0 3px rgba(197,75,67,.14) !important;
+}
+.panda-header .absolute.top-full {
+  background:rgba(6,6,6,.98) !important;border-color:rgba(255,255,255,.12) !important;
+}
+.panda-header .absolute.top-full a:hover,.panda-header .absolute.top-full [role="button"]:hover { background:rgba(197,75,67,.1) !important; }
+.kinoma-search-empty__hint { max-width:460px;margin:10px auto 0;color:#888;font-size:12px;line-height:1.8; }
+.kinoma-search-empty__actions { display:flex;flex-wrap:wrap;align-items:center;justify-content:center;gap:9px;margin-top:14px; }
+.kinoma-search-empty__actions a { display:inline-flex;align-items:center;justify-content:center;min-height:38px;padding:0 13px;border:1px solid rgba(255,255,255,.14);border-radius:999px;color:#f0a29a;font-size:11px;font-weight:800;text-decoration:none; }
+.kinoma-search-empty__actions a:hover { color:#fff;border-color:rgba(239,103,92,.4);background:rgba(197,75,67,.08); }
+.panda-home-error { display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:16px;margin:18px auto;padding:17px clamp(14px,3vw,26px);width:calc(100% - 28px);max-width:1440px;border:1px solid rgba(239,103,92,.28);border-radius:14px;background:#080808;color:#f3c2be; }
+.panda-home-error > div:first-child { min-width:0;max-width:760px; }
+.panda-home-error strong { display:block;color:#fff;font-size:13px;font-weight:850; }
+.panda-home-error p { margin:6px 0 0;color:#aaa;font-size:12px;line-height:1.7;overflow-wrap:anywhere; }
+.panda-home-error__actions { display:flex;align-items:center;flex-wrap:wrap;gap:8px; }
+.panda-home-error__actions button,.panda-home-error__actions a { display:inline-flex;align-items:center;justify-content:center;min-height:36px;padding:0 12px;border:1px solid rgba(255,255,255,.13);border-radius:999px;background:transparent;color:#fff;font-size:10px;font-weight:800;text-decoration:none;cursor:pointer; }
+.panda-home-error__actions button { background:#c54b43;border-color:#c54b43; }
+.panda-home-error__actions button:hover { background:#ef675c; }
+.panda-home-error__actions a:hover { background:rgba(255,255,255,.06); }
+@media(max-width:767px) {
+  .panda-home-error { align-items:flex-start;flex-direction:column; }
+  .panda-home-error__actions { width:100%; }
+  .panda-home-error__actions button,.panda-home-error__actions a { flex:1; }
+  .panda-watch-chrome { top:auto !important;bottom:max(10px,env(safe-area-inset-bottom));align-items:flex-end; }
+}
 
