@@ -244,6 +244,11 @@ function toAnimeItem(item: MovieApiMedia): AnimeItem {
     release_date?: string;
     vote_average?: number;
     overview?: string;
+    original_language?: string;
+    originalLanguage?: string;
+    language?: string;
+    runtime?: number | null;
+    duration?: number | null;
   };
   const title = item.title || raw.name || raw.original_name || 'Untitled';
   const poster = item.poster || (raw.poster_path ? 'https://image.tmdb.org/t/p/w500' + raw.poster_path : null);
@@ -261,6 +266,8 @@ function toAnimeItem(item: MovieApiMedia): AnimeItem {
     rating,
     type: item.type,
     releaseDate,
+    originalLanguage: raw.originalLanguage || raw.original_language || raw.language || undefined,
+    runtime: Number(raw.runtime ?? raw.duration) > 0 ? Number(raw.runtime ?? raw.duration) : undefined,
     description: item.overview || raw.overview || undefined,
     genres: item.genres || [],
     status: item.status || undefined,
