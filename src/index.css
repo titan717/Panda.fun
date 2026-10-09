@@ -9718,3 +9718,17 @@ h1,h2,h3,h4,h5,h6,button,input,select,textarea { font-family:inherit; }
   .kinoma-welcome__login,.kinoma-welcome__signup,.kinoma-welcome__account-link { padding:0 7px;font-size:9px; }
 }
 
+/* Enforce one pure-black canvas on every route; artwork remains inside its own media surfaces. */
+html,body,#root,.panda-app-shell,.panda-app-content,.kinoma-app-main,
+.kinoma-home,.panda-home-v2,.kinoma-simple-page,.kinoma-terms,.kinoma-privacy-page,
+.kinoma-search-page,.kinoma-details-page,.panda-library-page,.panda-watch-page,
+.panda-settings-page,.panda-profile-selector,.panda-profile-flow,.panda-profile-manage,
+.panda-profile-dashboard,.panda-profile-guest,.panda-profile-loading,
+.panda-home-profile-gate,.panda-admin,.panda-admin-main,.panda-admin-sidebar,
+.panda-admin-gate,.kinoma-welcome {
+  background-color:#000 !important;
+  background-image:none !important;
+}
+.kinoma-home__ambient,.panda-home-profile-gate__ambient,
+.panda-profile-selector__ambient,.panda-profile-flow__ambient,
+.panda-profile-dashboard__ambient,.panda-profile-guest__ambient { pointer-events:none; }
