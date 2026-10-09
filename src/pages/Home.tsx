@@ -16,6 +16,7 @@ import {
 } from '../lib/profileStore';
 import { initializeProfileStorage } from '../lib/profileScope';
 import { historyUtil } from '../lib/history';
+import { preferencesUtil } from '../lib/preferences';
 import { ProfileAvatar, ProfileSetup } from './Profile';
 import { updateSEO } from '../lib/seo';
 import { buildDetailsHref, buildWatchHref } from '../lib/mediaRoute';
@@ -23,7 +24,7 @@ import { optimizeImageUrl } from '../lib/mediaImages';
 import { ModernContinueWatching } from '../components/ui/modern/ModernContinueWatching';
 import '../styles/panda-home.css';
 
-type RailKind = 'trending' | 'streamingNetflix' | 'streamingDisney' | 'popular' | 'tv' | 'movie' | 'airing';
+type RailKind = 'trending' | 'streamingNetflix' | 'streamingDisney' | 'popular' | 'tv' | 'movie' | 'airing' | 'personalized';
 
 function KindIcon({ kind }: { kind: RailKind }) {
   if (kind === 'movie') return <Film size={14} strokeWidth={1.9} />;
@@ -492,6 +493,7 @@ function PandaContentCard({
         onFocus={() => onHover(item)}
         onBlur={onLeave}
         onClick={() => {
+          preferencesUtil.recordGenreInteraction(Array.isArray(item.genres) ? item.genres : []);
           trackGAEvent('select_content', { content_type: item.type === 'movie' ? 'movie' : 'series', item_id: item.id, section: analyticsSection, title: item.title });
           void trackEvent({ type: 'content_select', animeId: item.id, animeTitle: item.title, metadata: { source: analyticsSection || 'home' } });
         }}
@@ -560,6 +562,8 @@ function HomeContent({
   initialTrailer?: any | null;
 } = {}) {
   const [home, setHome] = useState<any>(initialHome);
+  const { user } = useAuth();
+  const [preferenceGenres, setPreferenceGenres] = useState<string[]>(() => preferencesUtil.getTopUserGenres(5));
   const [newOnNetflix, setNewOnNetflix] = useState<MovieApiMedia[]>([]);
   const [newOnDisneyPlus, setNewOnDisneyPlus] = useState<MovieApiMedia[]>([]);
   const [airing, setAiring] = useState<MovieApiMedia[]>([]);
@@ -577,6 +581,26 @@ function HomeContent({
   const hoverTrailerRequest = useRef(0);
   const hoverTrailerController = useRef<AbortController | null>(null);
   const trailerCache = useRef(new Map<string, string>());
+
+  useEffect(() => {
+    let active = true;
+    const updateLocalTaste = () => setPreferenceGenres(preferencesUtil.getTopUserGenres(5));
+    window.addEventListener('panda_genre_affinity_updated', updateLocalTaste);
+    updateLocalTaste();
+    if (user?.uid) {
+      void listProfiles(user.uid).then((profiles) => {
+        if (!active) return;
+        const activeId = getActiveProfileId(user.uid);
+        const profile = profiles.find((candidate) => candidate.id === activeId) || profiles[0];
+        const profileGenres = [...(profile?.movieGenres || []), ...(profile?.seriesGenres || [])];
+        setPreferenceGenres(Array.from(new Set([...profileGenres, ...preferencesUtil.getTopUserGenres(5)])).slice(0, 6));
+      }).catch(() => undefined);
+    }
+    return () => {
+      active = false;
+      window.removeEventListener('panda_genre_affinity_updated', updateLocalTaste);
+    };
+  }, [user?.uid]);
 
   useEffect(() => {
     let active = true;
@@ -643,6 +667,25 @@ function HomeContent({
     ? (optimizeImageUrl(featured.backdrop, 'w780') || featured.backdrop)
     : null;
   const topTen = useMemo(() => [...trending, ...popularMovies, ...popularTv].filter((item, index, list) => item?.id && list.findIndex(candidate => candidate.id === item.id) === index).slice(0, 10), [trending, popularMovies, popularTv]);
+  const personalizedPicks = useMemo(() => {
+    if (!preferenceGenres.length) return [] as MovieApiMedia[];
+    const normalizedPreferences = preferenceGenres.map((genre) => genre.toLowerCase());
+    const seen = new Set<string>();
+    return [...trending, ...popularMovies, ...popularTv]
+      .filter((item) => item?.id && !seen.has(item.id) && Boolean(seen.add(item.id)))
+      .map((item) => ({
+        item,
+        score: (Array.isArray(item.genres) ? item.genres : []).reduce(
+          (total, genre) => total + (normalizedPreferences.includes(String(genre).toLowerCase()) ? 1 : 0),
+          0
+        ),
+      }))
+      .filter((entry) => entry.score > 0)
+      .sort((a, b) => b.score - a.score || Number(b.item.rating || 0) - Number(a.item.rating || 0))
+      .slice(0, 10)
+      .map((entry) => entry.item);
+  }, [trending, popularMovies, popularTv, preferenceGenres]);
+
 
   const toggleFeaturedList = () => {
     if (featured) {
@@ -847,6 +890,9 @@ function HomeContent({
               </section>
             )}
 
+            {personalizedPicks.length > 0 && (
+              <PandaRail kind="personalized" title="Picked for your taste" subtitle="A little closer to the genres you enjoy." items={personalizedPicks} onHover={showHoverTrailer} onLeave={hideHoverTrailer} />
+            )}
             <PandaRail priority kind="trending" title="Trending now" subtitle="The titles getting attention today." items={trending} onHover={showHoverTrailer} onLeave={hideHoverTrailer} />
             <PandaRail kind="streamingNetflix" title="New on Netflix" subtitle="Freshly released movies now showing on the service." items={newOnNetflix} onHover={showHoverTrailer} onLeave={hideHoverTrailer} badge="NETFLIX" />
             <PandaRail kind="streamingDisney" title="New on Disney+" subtitle="Recently added titles surfaced from TMDB." items={newOnDisneyPlus} onHover={showHoverTrailer} onLeave={hideHoverTrailer} badge="DISNEY+" />
