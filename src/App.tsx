@@ -108,7 +108,6 @@ function AnimatedRoutes() {
 }
 
 class AppErrorBoundary extends React.Component<{ children: React.ReactNode }, { hasError: boolean; message: string }> {
-  declare readonly props: { children: React.ReactNode };
   state = { hasError: false, message: '' };
 
   static getDerivedStateFromError(error: unknown) {
