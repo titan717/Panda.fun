@@ -97,7 +97,19 @@ function AnimatedRoutes() {
               <Route path="/library" component={Library} />
               <Route path="/history" component={Library} />
               <Route>
-                <main className="flex min-h-[60vh] items-center justify-center px-6 text-center text-gray-500 font-medium" role="main"><div><h1 className="text-xl font-semibold text-white">Page not found</h1><p className="mt-2">The Panda wandered somewhere else.</p></div></main>
+                <main className="flex min-h-[60vh] items-center justify-center bg-black px-5 py-12 text-left text-white" role="main">
+                  <div className="w-full max-w-xl">
+                    <span className="text-[10px] uppercase tracking-[.18em] font-extrabold text-rose-300">404 · wrong turn</span>
+                    <h1 className="mt-3 text-2xl sm:text-3xl font-black tracking-tight">We couldn’t find this page.</h1>
+                    <p className="mt-3 text-sm leading-7 text-white/65">The address may have changed, or the link may be incomplete. Check the URL, or use Search to find the title again.</p>
+                    <p className="mt-4 break-all rounded-lg border border-white/10 bg-white/[.025] p-3 font-mono text-xs leading-6 text-white/50">Requested path: {location}</p>
+                    <div className="mt-6 flex flex-wrap gap-3">
+                      <a href="/home" className="rounded-full bg-rose-600 px-5 py-3 text-sm font-bold text-white hover:bg-rose-500">Go to Home</a>
+                      <a href="/search" className="rounded-full border border-white/15 px-5 py-3 text-sm font-bold text-white hover:bg-white/5">Search titles</a>
+                      <a href={`/contact?category=other&subject=${encodeURIComponent('Broken route: ' + location)}`} className="rounded-full border border-white/10 px-5 py-3 text-sm font-bold text-white/70 hover:text-white">Report this link</a>
+                    </div>
+                  </div>
+                </main>
               </Route>
             </Switch>
           </Suspense>
