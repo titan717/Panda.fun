@@ -43,7 +43,8 @@ const TAB_ITEMS: Array<{ id: AdminTab; label: string; icon: React.ComponentType<
   { id: 'activity', label: 'Activity', icon: Activity },
   { id: 'health', label: 'System', icon: HeartPulse },
   { id: 'reports', label: 'Reports', icon: BarChart3 },
-  { id: 'settings', label: 'Settings', icon: Settings2 },\n  { id: 'support', label: 'Support inbox', icon: MessageSquare },
+  { id: 'settings', label: 'Settings', icon: Settings2 },
+  { id: 'support', label: 'Support inbox', icon: MessageSquare },
 ];
 const RANGE_OPTIONS: Range[] = [7, 30, 90];
 
