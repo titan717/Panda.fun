@@ -46,15 +46,14 @@ export function Layout({ children }: { children: React.ReactNode }) {
         </>
       )}
       <div className="panda-app-content">
-        <main
+        <div
           id="panda-main-content"
           ref={mainRef}
           className={`kinoma-app-main ${isPlayerRoute ? 'kinoma-app-main--player' : ''}`}
           tabIndex={-1}
-          aria-label="Main content"
         >
           {children}
-        </main>
+        </div>
       </div>
     </div>
   );
