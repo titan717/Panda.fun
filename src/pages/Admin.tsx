@@ -148,6 +148,7 @@ function AdminShell({ activeTab, setActiveTab, user, onSignOut, children }: {
         <Brand />
         <div className="panda-admin-mobile-actions">
           <button type="button" onClick={() => setActiveTab('overview')} aria-label="Overview"><LayoutDashboard size={17} /></button>
+          <button type="button" onClick={() => setActiveTab('support')} aria-label="Support inbox"><MessageSquare size={17} /></button>
           <button type="button" onClick={() => void onSignOut()} aria-label="Sign out"><LogOut size={17} /></button>
         </div>
       </header>
@@ -510,11 +511,11 @@ function supportIssueKey(ticket: SupportTicketRow) {
   const normalizedSubject = ticket.subject
     .toLocaleLowerCase()
     .normalize('NFKD')
-    .replace(/[\\u0300-\\u036f]/g, '')
-    .replace(/\\b(urgent|please|help|problem|issue|bug|panda|fun)\\b/g, ' ')
+    .replace(/[\u0300-\u036f]/g, '')
+    .replace(/\b(urgent|please|help|problem|issue|bug|panda|fun)\b/g, ' ')
     .replace(/[^a-z0-9]+/g, ' ')
     .trim()
-    .replace(/\\s+/g, ' ');
+    .replace(/\s+/g, ' ');
   return ticket.category + ':' + normalizedSubject;
 }
 
