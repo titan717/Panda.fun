@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { Link, useLocation } from 'wouter';
-import { ChevronDown, CircleUserRound, Search, Shield, FileText, Info, MessageCircle, LogIn, UserPlus } from 'lucide-react';
+import { ChevronDown, CircleUserRound, Search, Shield, FileText, Info, MessageCircle, LogIn, UserPlus, Settings } from 'lucide-react';
 import { KinomaLogo } from '../KinomaLogo';
 import { SearchBar } from '../SearchBar';
 import { useAuth } from '../../../lib/AuthContext';
@@ -75,6 +75,9 @@ export function ModernNavbar() {
         </div>
 
         <div className="panda-header__actions">
+          <Link href="/settings" className="panda-header__settings" aria-label="Settings" title="Settings">
+            <Settings size={17} aria-hidden="true" />
+          </Link>
           {user ? (
             <Link href="/profile" className="panda-header__account" aria-label="Open your Panda profile">
               {user.photoURL
