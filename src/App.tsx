@@ -97,7 +97,19 @@ function AnimatedRoutes() {
               <Route path="/library" component={Library} />
               <Route path="/history" component={Library} />
               <Route>
-                <main className="flex min-h-[60vh] items-center justify-center px-6 text-center text-gray-500 font-medium" role="main"><div><h1 className="text-xl font-semibold text-white">Page not found</h1><p className="mt-2">The Panda wandered somewhere else.</p></div></main>
+                <main className="flex min-h-[60vh] items-center justify-center bg-black px-5 py-12 text-left text-white" role="main">
+                  <div className="w-full max-w-xl">
+                    <span className="text-[10px] uppercase tracking-[.18em] font-extrabold text-rose-300">404 · wrong turn</span>
+                    <h1 className="mt-3 text-2xl sm:text-3xl font-black tracking-tight">We couldn’t find this page.</h1>
+                    <p className="mt-3 text-sm leading-7 text-white/65">The address may have changed, or the link may be incomplete. Check the URL, or use Search to find the title again.</p>
+                    <p className="mt-4 break-all rounded-lg border border-white/10 bg-white/[.025] p-3 font-mono text-xs leading-6 text-white/50">Requested path: {location}</p>
+                    <div className="mt-6 flex flex-wrap gap-3">
+                      <a href="/home" className="rounded-full bg-rose-600 px-5 py-3 text-sm font-bold text-white hover:bg-rose-500">Go to Home</a>
+                      <a href="/search" className="rounded-full border border-white/15 px-5 py-3 text-sm font-bold text-white hover:bg-white/5">Search titles</a>
+                      <a href={`/contact?category=other&subject=${encodeURIComponent('Broken route: ' + location)}`} className="rounded-full border border-white/10 px-5 py-3 text-sm font-bold text-white/70 hover:text-white">Report this link</a>
+                    </div>
+                  </div>
+                </main>
               </Route>
             </Switch>
           </Suspense>
@@ -107,12 +119,15 @@ function AnimatedRoutes() {
   );
 }
 
-class AppErrorBoundary extends React.Component<{ children: React.ReactNode }, { hasError: boolean }> {
+class AppErrorBoundary extends React.Component<{ children: React.ReactNode }, { hasError: boolean; message: string }> {
   declare readonly props: { children: React.ReactNode };
-  state = { hasError: false };
+  state = { hasError: false, message: '' };
 
-  static getDerivedStateFromError() {
-    return { hasError: true };
+  static getDerivedStateFromError(error: unknown) {
+    const message = error instanceof Error && error.message
+      ? error.message.slice(0, 360)
+      : 'The application encountered an unexpected rendering error.';
+    return { hasError: true, message };
   }
 
   componentDidCatch(error: unknown) {
@@ -122,11 +137,26 @@ class AppErrorBoundary extends React.Component<{ children: React.ReactNode }, { 
   render() {
     if (!this.state.hasError) return this.props.children;
     return (
-      <main className="min-h-screen flex items-center justify-center bg-[var(--kinoma-bg)] px-6 text-center">
-        <div className="max-w-md">
-          <h1 className="text-2xl font-semibold text-white">Panda took a tiny nap.</h1>
-          <p className="mt-2 text-sm text-white/60">Something went wrong while loading this screen.</p>
-          <button type="button" className="mt-6 rounded-full border border-white/10 bg-white/10 px-5 py-2.5 text-sm font-medium text-white hover:bg-white/15" onClick={() => window.location.reload()}>Try again</button>
+      <main className="min-h-screen flex items-center justify-center bg-black px-5 py-12 text-left text-white">
+        <div className="w-full max-w-xl">
+          <span className="text-[10px] uppercase tracking-[.18em] font-extrabold text-rose-300">Panda.fun recovery</span>
+          <h1 className="mt-3 text-2xl sm:text-3xl font-black tracking-tight">This page could not load.</h1>
+          <p className="mt-3 text-sm leading-7 text-white/65">The screen hit a rendering error. Your library and viewing history have not been intentionally cleared.</p>
+          <section className="mt-5 rounded-xl border border-white/10 bg-white/[.035] p-4">
+            <h2 className="text-xs uppercase tracking-wider font-extrabold text-white/75">Technical detail</h2>
+            <p className="mt-2 break-words font-mono text-xs leading-6 text-rose-200" role="status">{this.state.message || 'Unknown render error'}</p>
+          </section>
+          <h2 className="mt-6 text-sm font-bold">Try these steps</h2>
+          <ol className="mt-2 list-decimal pl-5 text-sm leading-7 text-white/60">
+            <li>Reload this page once.</li>
+            <li>If it repeats, open Panda.fun in a fresh tab and return to the same title.</li>
+            <li>Send the technical detail and page path to support so it can be investigated.</li>
+          </ol>
+          <div className="mt-6 flex flex-wrap gap-3">
+            <button type="button" className="rounded-full bg-rose-600 px-5 py-3 text-sm font-bold text-white hover:bg-rose-500" onClick={() => window.location.reload()}>Reload page</button>
+            <a href="/contact" className="rounded-full border border-white/15 px-5 py-3 text-sm font-bold text-white hover:bg-white/5">Contact support</a>
+            <a href="/home" className="rounded-full border border-white/10 px-5 py-3 text-sm font-bold text-white/70 hover:text-white">Go to home</a>
+          </div>
         </div>
       </main>
     );

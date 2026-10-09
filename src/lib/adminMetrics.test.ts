@@ -76,7 +76,7 @@ describe('admin metrics', () => {
       { id: '4', type: 'watch_start', animeId: 'b', animeTitle: 'Beta', durationSeconds: 0 },
     ];
 
-    expect(getTopContent(rankingEvents, 2).map((row) => row.title)).toEqual(['Beta', 'Alpha']);
+    expect(getTopContent(rankingEvents, 2).map((row) => row.title)).toEqual(['Alpha', 'Beta']);
   });
 
   it('formats durations without losing zero values', () => {

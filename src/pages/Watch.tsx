@@ -1,7 +1,7 @@
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { Footer } from '../components/ui/Footer';
 import { useLocation, useRoute, useSearch } from 'wouter';
-import { ArrowLeft, ChevronLeft, ChevronRight, Film, Play, Plus, Check, Share2, Tv } from 'lucide-react';
+import { ArrowLeft, ChevronLeft, ChevronRight, Film, Play, Plus, Check, Share2, Tv, Maximize, Minimize, RotateCcw, LifeBuoy } from 'lucide-react';
 import { api } from '../lib/api';
 import { historyUtil } from '../lib/history';
 import { libraryManager } from '../lib/library';
@@ -46,6 +46,41 @@ export function Watch() {
   const [inList, setInList] = useState(false);
   const [shareMessage, setShareMessage] = useState('');
   const iframeRef = useRef<HTMLIFrameElement>(null);
+  const playerPageRef = useRef<HTMLElement | null>(null);
+  const [isFullscreen, setIsFullscreen] = useState(false);
+  const [fullscreenError, setFullscreenError] = useState('');
+  const retryPlayback = () => {
+    setError('');
+    setSource('');
+    setSourceLoading(true);
+    setPlaybackRetry((current) => current + 1);
+  };
+  const toggleFullscreen = async () => {
+    setFullscreenError('');
+    try {
+      if (document.fullscreenElement) {
+        await document.exitFullscreen();
+        return;
+      }
+      const page = playerPageRef.current;
+      if (!page?.requestFullscreen) {
+        setFullscreenError('This browser does not support full-screen mode. Use the player’s own full-screen control, or try a current version of Chrome, Edge, Firefox, or Safari.');
+        return;
+      }
+      await page.requestFullscreen();
+    } catch {
+      setFullscreenError('The browser blocked full-screen mode. Use the full-screen control inside the video, or allow full-screen access for this site and try again.');
+    }
+  };
+
+  useEffect(() => {
+    const onFullscreenChange = () => setIsFullscreen(Boolean(document.fullscreenElement && (
+      document.fullscreenElement === playerPageRef.current ||
+      document.fullscreenElement.contains(playerPageRef.current)
+    )));
+    document.addEventListener('fullscreenchange', onFullscreenChange);
+    return () => document.removeEventListener('fullscreenchange', onFullscreenChange);
+  }, []);
   const lastAnalyticsPositionRef = useRef(playbackProgress);
   const playbackRef = useRef({
     currentTime: playbackProgress,
@@ -328,12 +363,12 @@ export function Watch() {
   };
 
   if (loading) {
-    return <main className="panda-watch-page"><div className="panda-watch-loading"><span /></div></main>;
+    return <main className="panda-watch-page" ref={playerPageRef} aria-label="Video player"><div className="panda-watch-loading" role="status" aria-live="polite"><span /><span className="sr-only">Loading video and title details</span></div></main>;
   }
 
   return (
-    <main className="panda-watch-page">
-      <section className="panda-watch-stage">
+    <main className="panda-watch-page" ref={playerPageRef} aria-label="Video player" tabIndex={-1}>
+      <section className="panda-watch-stage" aria-label={`Now playing ${title}`}>
         <div className="panda-watch-player">
           {source ? (
             <iframe
@@ -341,7 +376,7 @@ export function Watch() {
               key={source}
               src={source}
               title={'Watch ' + title + ' on Panda.fun'}
-              allow="encrypted-media; autoplay *; fullscreen *"
+              allow="encrypted-media; autoplay *; fullscreen *; picture-in-picture"
               allowFullScreen
               referrerPolicy="no-referrer"
               loading="eager"
@@ -349,16 +384,39 @@ export function Watch() {
             />
           ) : sourceLoading ? (
             <div className="panda-watch-player-loading" role="status" aria-live="polite">
-              <span aria-hidden="true" />
+              <span aria-hidden="true" /><span className="sr-only">Resolving playback source</span>
             </div>
           ) : (
-            <div className="panda-watch-player-empty">
-              <strong>Playback unavailable</strong>
-              <span>{error || 'The player could not be resolved for this title.'}</span>
+            <div className="panda-watch-player-empty" role="alert">
+              <strong>We couldn’t start this video.</strong>
+              <span>{error || 'The playback provider did not return a playable source for this title.'}</span>
+              <span>Try again in a moment. If the issue continues, reopen the title details, or send support the title name and the error above.</span>
+              <div className="flex flex-wrap items-center gap-2 mt-3">
+                <button type="button" className="panda-watch-chrome__button" onClick={retryPlayback}><RotateCcw size={15} /> Retry playback</button>
+                <button type="button" className="panda-watch-chrome__button" onClick={() => setLocation(buildDetailsHref(title, type, id))}><ArrowLeft size={15} /> Title details</button>
+                <a className="panda-watch-chrome__button" href="/contact?category=playback&subject=Playback%20failed"><LifeBuoy size={15} /> Contact support</a>
+              </div>
             </div>
           )}
         </div>
       </section>
+
+      <div className="panda-watch-chrome">
+        <div className="panda-watch-chrome__group">
+          <button type="button" className="panda-watch-chrome__button" onClick={() => setLocation(buildDetailsHref(title, type, id))} aria-label="Back to title details">
+            <ArrowLeft size={16} aria-hidden="true" /><span>Back to details</span>
+          </button>
+          <span className="hidden sm:inline text-xs font-semibold text-white/65 max-w-[35vw] truncate" title={title}>{title}</span>
+        </div>
+        <div className="panda-watch-chrome__group">
+          {shareMessage && <span role="status" className="hidden sm:inline text-xs text-white/75">{shareMessage}</span>}
+          <button type="button" className="panda-watch-chrome__button" onClick={() => void toggleFullscreen()} aria-label={isFullscreen ? 'Exit full screen' : 'Enter full screen'} title={fullscreenError || (isFullscreen ? 'Exit full screen' : 'Enter full screen')}>
+            {isFullscreen ? <Minimize size={16} aria-hidden="true" /> : <Maximize size={16} aria-hidden="true" />}
+            <span>{isFullscreen ? 'Exit full screen' : 'Full screen'}</span>
+          </button>
+        </div>
+      </div>
+      {fullscreenError && <div className="panda-watch-fullscreen-error" role="status">{fullscreenError}</div>}
     </main>
   );
 }

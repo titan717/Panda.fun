@@ -7,7 +7,7 @@ describe('Home profile gate and trailer autoplay', () => {
   it('mounts the home content only after the profile gate and has one gate owner', () => {
     expect(source).not.toMatch(/function HomeContent\(\)[\s\S]*?<HomeProfileGate\s*\/>/);
     expect(source).toMatch(/export function Home\(\)[\s\S]*?<HomeProfileGate onReady=\{handleProfileReady\} onBlock=\{handleProfileBlock\} \/>/);
-    expect(source).toMatch(/\{profileReady && <HomeContent \/>\}/);
+    expect(source).toMatch(/\{profileReady && \([\s\S]*?<HomeContent[\s\S]*?initialHome=\{homePrefetch\.home\}[\s\S]*?initialTrailer=\{homePrefetch\.trailer\}[\s\S]*?\)\}/);
   });
 
   it('hands Home off in the same profile selection turn before the exit delay', () => {

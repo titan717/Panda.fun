@@ -2,9 +2,9 @@ import React, { useEffect, useMemo, useState } from 'react';
 import {
   Activity, ArrowUpRight, BarChart3, BookOpen, CheckCircle2, ChevronRight, Clock3, Copy,
   Download, ExternalLink, Film, HeartPulse, LayoutDashboard, LogOut, MonitorPlay,
-  RefreshCw, Search, Settings2, Shield, ShieldAlert, Users, X, Zap
+  RefreshCw, Search, Settings2, Shield, ShieldAlert, Users, X, Zap, MessageSquare, AlertTriangle
 } from 'lucide-react';
-import { collection, doc, getDoc, getDocs, limit, orderBy, query, where } from 'firebase/firestore';
+import { collection, doc, getDoc, getDocs, limit, orderBy, query, where, updateDoc, serverTimestamp } from 'firebase/firestore';
 import { useLocation } from 'wouter';
 import { db } from '../lib/firebase';
 import { useAuth } from '../lib/AuthContext';
@@ -18,10 +18,23 @@ import {
 import { hasAdminClaim, hasAdminMarker } from '../lib/adminAccess';
 import '../styles/admin.css';
 
-type AdminTab = 'overview' | 'audience' | 'content' | 'activity' | 'health' | 'reports' | 'settings';
+type AdminTab = 'overview' | 'audience' | 'content' | 'activity' | 'health' | 'reports' | 'settings' | 'support';
 type Range = 7 | 30 | 90;
 type UserRow = { uid: string; email?: string; displayName?: string; photoURL?: string; createdAt?: string };
 type HealthState = { status: 'idle' | 'loading' | 'ok' | 'error'; checkedAt?: number; data?: unknown; message?: string };
+type SupportTicketRow = {
+  id: string;
+  subject: string;
+  message: string;
+  category: string;
+  impact: 'low' | 'normal' | 'high' | 'critical';
+  status: string;
+  email?: string;
+  userId?: string;
+  page?: string;
+  clientTimestamp: number;
+  createdAt?: unknown;
+};
 
 const TAB_ITEMS: Array<{ id: AdminTab; label: string; icon: React.ComponentType<{ size?: number; strokeWidth?: number }> }> = [
   { id: 'overview', label: 'Overview', icon: LayoutDashboard },
@@ -31,6 +44,7 @@ const TAB_ITEMS: Array<{ id: AdminTab; label: string; icon: React.ComponentType<
   { id: 'health', label: 'System', icon: HeartPulse },
   { id: 'reports', label: 'Reports', icon: BarChart3 },
   { id: 'settings', label: 'Settings', icon: Settings2 },
+  { id: 'support', label: 'Support inbox', icon: MessageSquare },
 ];
 const RANGE_OPTIONS: Range[] = [7, 30, 90];
 
@@ -135,6 +149,7 @@ function AdminShell({ activeTab, setActiveTab, user, onSignOut, children }: {
         <Brand />
         <div className="panda-admin-mobile-actions">
           <button type="button" onClick={() => setActiveTab('overview')} aria-label="Overview"><LayoutDashboard size={17} /></button>
+          <button type="button" onClick={() => setActiveTab('support')} aria-label="Support inbox"><MessageSquare size={17} /></button>
           <button type="button" onClick={() => void onSignOut()} aria-label="Sign out"><LogOut size={17} /></button>
         </div>
       </header>
@@ -493,6 +508,136 @@ function SettingsView({ autoRefresh, setAutoRefresh }: { autoRefresh: boolean; s
   );
 }
 
+function supportIssueKey(ticket: SupportTicketRow) {
+  const normalizedSubject = ticket.subject
+    .toLocaleLowerCase()
+    .normalize('NFKD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .replace(/\b(urgent|please|help|problem|issue|bug|panda|fun)\b/g, ' ')
+    .replace(/[^a-z0-9]+/g, ' ')
+    .trim()
+    .replace(/\s+/g, ' ');
+  return ticket.category + ':' + normalizedSubject;
+}
+
+function supportComplexity(ticket: SupportTicketRow, duplicateCount = 1) {
+  const impactScore = ticket.impact === 'critical' ? 5 : ticket.impact === 'high' ? 4 : ticket.impact === 'normal' ? 2 : 1;
+  const areaScore = ['playback', 'performance'].includes(ticket.category) ? 2 : ticket.category === 'account' ? 1 : 0;
+  const technicalScore = /crash|blank|broken|fail|error|cannot|can't|won't|stuck|unavailable|every time|all pages/i.test(ticket.message) ? 2 : 0;
+  const lengthScore = ticket.message.length > 1200 ? 1 : 0;
+  const repeatScore = Math.min(3, Math.max(0, duplicateCount - 1));
+  return Math.min(10, impactScore + areaScore + technicalScore + lengthScore + repeatScore);
+}
+
+function formatSupportTime(ticket: SupportTicketRow) {
+  const timestamp = ticket.clientTimestamp || safeTimestamp(ticket.createdAt);
+  return timestamp ? new Date(timestamp).toLocaleString(undefined, { dateStyle: 'medium', timeStyle: 'short' }) : 'Time unavailable';
+}
+
+function SupportView({
+  tickets,
+  loading,
+  error,
+  onRefresh,
+  onStatusChange,
+}: {
+  tickets: SupportTicketRow[];
+  loading: boolean;
+  error: string;
+  onRefresh: () => void;
+  onStatusChange: (ticketId: string, status: string) => void;
+}) {
+  const grouped = useMemo(() => {
+    const map = new Map<string, SupportTicketRow[]>();
+    for (const ticket of tickets) {
+      const key = supportIssueKey(ticket);
+      const items = map.get(key) || [];
+      items.push(ticket);
+      map.set(key, items);
+    }
+    return Array.from(map.entries()).map(([key, items]) => ({
+      key,
+      items: items.slice().sort((a, b) => (b.clientTimestamp || safeTimestamp(b.createdAt)) - (a.clientTimestamp || safeTimestamp(a.createdAt))),
+      complexity: Math.max(...items.map((item) => supportComplexity(item, items.length))),
+      latest: Math.max(...items.map((item) => item.clientTimestamp || safeTimestamp(item.createdAt))),
+      hasActive: items.some((item) => !['resolved', 'closed'].includes(item.status)),
+    })).sort((a, b) => b.complexity - a.complexity || b.latest - a.latest);
+  }, [tickets]);
+
+  const importantGroups = grouped.filter((group) => group.items.length > 1 && group.hasActive);
+  const importantIds = new Set(importantGroups.flatMap((group) => group.items.map((ticket) => ticket.id)));
+  const ordinaryTickets = grouped
+    .flatMap((group) => group.items.filter((ticket) => !importantIds.has(ticket.id)).map((ticket) => ({ ticket, complexity: supportComplexity(ticket) })))
+    .sort((a, b) => b.complexity - a.complexity || (b.ticket.clientTimestamp || safeTimestamp(b.ticket.createdAt)) - (a.ticket.clientTimestamp || safeTimestamp(a.ticket.createdAt)));
+
+  const renderTicket = (ticket: SupportTicketRow, complexity: number, nested = false) => (
+    <article className="panda-admin-ticket" key={ticket.id}>
+      <div className="panda-admin-ticket__main">
+        <div className="panda-admin-ticket__meta">
+          <span>{formatSupportTime(ticket)}</span>
+          <span>{ticket.category}</span>
+          <span className={`panda-admin-ticket__badge ${ticket.impact === 'critical' ? 'is-critical' : ticket.impact === 'high' ? 'is-high' : ''}`}>{ticket.impact}</span>
+          <span className="panda-admin-ticket__badge">Complexity {complexity}/10</span>
+        </div>
+        <strong className="panda-admin-ticket__title">{ticket.subject}</strong>
+        <p className="panda-admin-ticket__message">{ticket.message}</p>
+        <div className="panda-admin-ticket__meta" style={{ marginTop: 10 }}>
+          {ticket.email && <span>Contact: {ticket.email}</span>}
+          {ticket.userId && ticket.userId !== 'anonymous' && <span>User: {ticket.userId}</span>}
+          {ticket.page && <span>Page: {ticket.page}</span>}
+          {nested && <span>Reference: {ticket.id}</span>}
+        </div>
+      </div>
+      <div className="panda-admin-ticket__actions">
+        <label className="sr-only" htmlFor={`ticket-status-${ticket.id}`}>Update status for {ticket.subject}</label>
+        <select id={`ticket-status-${ticket.id}`} value={ticket.status} onChange={(event) => onStatusChange(ticket.id, event.target.value)} aria-label={`Status for ${ticket.subject}`}>
+          <option value="open">Open</option>
+          <option value="investigating">Investigating</option>
+          <option value="awaiting_reply">Awaiting reply</option>
+          <option value="resolved">Resolved</option>
+          <option value="closed">Closed</option>
+        </select>
+        <span className="panda-admin-ticket__meta">{ticket.status.replaceAll('_', ' ')}</span>
+      </div>
+    </article>
+  );
+
+  return (
+    <section className="panda-admin-support">
+      <header className="panda-admin-support__header">
+        <div><span className="panda-admin-kicker">CUSTOMER EXPERIENCE</span><h2>Support inbox</h2><p>Sorted by estimated complexity and recency. Identical issue titles are grouped into important problems for triage.</p></div>
+        <button type="button" className="panda-admin-secondary-button" onClick={onRefresh} disabled={loading}><RefreshCw size={14} className={loading ? 'animate-spin' : ''} /> Refresh</button>
+      </header>
+      {error && <div className="panda-support-status is-error" role="alert"><AlertTriangle size={16} /><span>{error} Check Firestore rules and administrator access, then refresh.</span></div>}
+      {loading && <div className="panda-admin-ticket__empty" role="status">Loading reports…</div>}
+      {!loading && !error && tickets.length === 0 && <div className="panda-admin-ticket__empty">No support reports yet. New submissions will appear here with their time, category, user impact, and triage status.</div>}
+
+      {!loading && importantGroups.length > 0 && (
+        <section className="panda-admin-support__section" aria-labelledby="important-problems-heading">
+          <div className="panda-admin-support__section-title" id="important-problems-heading"><AlertTriangle size={17} /> IMPORTANT PROBLEMS <span>{importantGroups.length} repeated issue groups</span></div>
+          {importantGroups.map((group) => (
+            <div key={group.key} style={{ border: '1px solid rgba(239,103,92,.2)', borderRadius: 14, padding: '0 14px', background: 'rgba(197,75,67,.035)' }}>
+              <div className="panda-admin-ticket__meta" style={{ paddingTop: 13 }}>
+                <span>{group.items.length} similar reports</span>
+                <span>{group.items.filter((ticket) => !['resolved', 'closed'].includes(ticket.status)).length} still active</span>
+                <span className="panda-admin-ticket__badge is-high">Complexity {group.complexity}/10</span>
+              </div>
+              {group.items.map((ticket) => renderTicket(ticket, supportComplexity(ticket, group.items.length), true))}
+            </div>
+          ))}
+        </section>
+      )}
+
+      {!loading && ordinaryTickets.length > 0 && (
+        <section className="panda-admin-support__section" aria-labelledby="support-queue-heading">
+          <div className="panda-admin-support__section-title" id="support-queue-heading"><MessageSquare size={16} /> REPORT QUEUE <span>{ordinaryTickets.length} reports</span></div>
+          {ordinaryTickets.map(({ ticket, complexity }) => renderTicket(ticket, complexity))}
+        </section>
+      )}
+    </section>
+  );
+}
+
 export function Admin() {
   const [, setLocation] = useLocation();
   const { user, loading: authLoading, signOut } = useAuth();
@@ -500,6 +645,9 @@ export function Admin() {
   const [activeTab, setActiveTab] = useState<AdminTab>('overview');
   const [range, setRange] = useState<Range>(30);
   const [events, setEvents] = useState<AdminEvent[]>([]);
+  const [supportTickets, setSupportTickets] = useState<SupportTicketRow[]>([]);
+  const [supportLoading, setSupportLoading] = useState(false);
+  const [supportError, setSupportError] = useState('');
   const [users, setUsers] = useState<UserRow[]>([]);
   const [usersLoaded, setUsersLoaded] = useState(false);
   const [loadingData, setLoadingData] = useState(true);
@@ -585,6 +733,52 @@ export function Admin() {
     }
   };
 
+  const loadSupportTickets = async () => {
+    if (!user || authorized !== true) return;
+    setSupportLoading(true);
+    setSupportError('');
+    try {
+      const snapshot = await getDocs(query(collection(db, 'supportTickets'), orderBy('clientTimestamp', 'desc'), limit(300)));
+      const loaded = snapshot.docs.map((docSnap) => {
+        const data = docSnap.data() as Record<string, unknown>;
+        const subject = typeof data.subject === 'string' ? data.subject : 'Untitled support report';
+        const impact = ['low', 'normal', 'high', 'critical'].includes(String(data.impact)) ? data.impact as SupportTicketRow['impact'] : 'normal';
+        return {
+          id: docSnap.id,
+          subject,
+          message: typeof data.message === 'string' ? data.message : '',
+          category: typeof data.category === 'string' ? data.category : 'other',
+          impact,
+          status: typeof data.status === 'string' ? data.status : 'open',
+          email: typeof data.email === 'string' ? data.email : '',
+          userId: typeof data.userId === 'string' ? data.userId : '',
+          page: typeof data.page === 'string' ? data.page : '',
+          clientTimestamp: typeof data.clientTimestamp === 'number' ? data.clientTimestamp : safeTimestamp(data.createdAt),
+          createdAt: data.createdAt,
+        } as SupportTicketRow;
+      });
+      setSupportTickets(loaded);
+    } catch (loadError) {
+      console.error('[Panda.fun] Support inbox load failed:', loadError);
+      setSupportError(loadError instanceof Error ? loadError.message : 'Unable to load the support inbox.');
+    } finally {
+      setSupportLoading(false);
+    }
+  };
+
+  const updateSupportStatus = async (ticketId: string, status: string) => {
+    const ticket = supportTickets.find((item) => item.id === ticketId);
+    if (!ticket) return;
+    setSupportError('');
+    try {
+      await updateDoc(doc(db, 'supportTickets', ticketId), { status, updatedAt: serverTimestamp() });
+      setSupportTickets((current) => current.map((item) => item.id === ticketId ? { ...item, status } : item));
+    } catch (statusError) {
+      console.error('[Panda.fun] Support ticket status update failed:', statusError);
+      setSupportError(statusError instanceof Error ? statusError.message : 'Unable to update this support report.');
+    }
+  };
+
   const runHealthCheck = async () => {
     setHealth({ status: 'loading', checkedAt: Date.now() });
     try { const data = await api.health(); setHealth({ status: 'ok', checkedAt: Date.now(), data }); }
@@ -601,6 +795,11 @@ export function Admin() {
     if (!user || authLoading || authorized !== true) return;
     if ((activeTab === 'audience' || activeTab === 'reports') && !usersLoaded) void loadUsers();
   }, [activeTab, authorized, authLoading, user, usersLoaded]);
+  useEffect(() => {
+    if (activeTab !== 'support' || authorized !== true || !user) return;
+    void loadSupportTickets();
+  }, [activeTab, authorized, user?.uid]);
+
   useEffect(() => {
     if (!autoRefresh || !user || authorized !== true) return;
     const timer = window.setInterval(() => {
@@ -623,6 +822,7 @@ export function Admin() {
     case 'health': activeView = <Health health={health} onCheck={runHealthCheck} />; break;
     case 'reports': activeView = <Reports events={events} usersCount={users.length} range={range} />; break;
     case 'settings': activeView = <SettingsView autoRefresh={autoRefresh} setAutoRefresh={setAutoRefresh} />; break;
+    case 'support': activeView = <SupportView tickets={supportTickets} loading={supportLoading} error={supportError} onRefresh={() => void loadSupportTickets()} onStatusChange={(ticketId, status) => void updateSupportStatus(ticketId, status)} />; break;
     default: activeView = null;
   }
 

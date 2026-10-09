@@ -81,11 +81,32 @@ export function AppearanceProvider({ children }: { children: React.ReactNode }) 
     let cancelled = false;
     getDoc(doc(db, 'users', user.uid)).then(snap => {
       if (cancelled) return;
-      const remote = snap.data()?.playbackPreferences;
-      if (!remote || typeof remote !== 'object') return;
-      const merged = { ...DEFAULT_PLAYBACK_PREFERENCES, ...remote } as PlaybackPreferences;
-      setPlaybackPreferences(merged);
-      try { window.localStorage.setItem(PLAYBACK_PREFERENCES_KEY, JSON.stringify(merged)); } catch {}
+      const data = snap.data() || {};
+      const remote = data.playbackPreferences as Partial<PlaybackPreferences> | undefined;
+      if (remote && typeof remote === 'object') {
+        const merged = { ...DEFAULT_PLAYBACK_PREFERENCES, ...remote } as PlaybackPreferences;
+        const validProvider = ['nxsha', 'cinesrc', 'videasy'].includes(merged.videoProvider);
+        const validLanguage = (value: string) => ['en', 'ja', 'ko', 'es', 'hi', 'auto', 'off'].includes(value);
+        if (validProvider && validLanguage(merged.audioLanguage) && validLanguage(merged.subtitleLanguage) && ['nitro', 'auto'].includes(merged.subtitleProvider)) {
+          setPlaybackPreferences(merged);
+          try { window.localStorage.setItem(PLAYBACK_PREFERENCES_KEY, JSON.stringify(merged)); } catch {}
+        }
+      }
+
+      const remotePlayer = data.playerSettings as Partial<PlayerSettings> | undefined;
+      if (remotePlayer && typeof remotePlayer === 'object') {
+        const merged = { ...DEFAULT_PLAYER_SETTINGS, ...remotePlayer } as PlayerSettings;
+        if (
+          typeof merged.autoPlay === 'boolean' &&
+          typeof merged.autoNext === 'boolean' &&
+          typeof merged.skipIntro === 'boolean' &&
+          typeof merged.skipOutro === 'boolean' &&
+          ['sub', 'dub'].includes(merged.preferredAudio)
+        ) {
+          setPlayerSettings(merged);
+          try { window.localStorage.setItem(PLAYER_SETTINGS_KEY, JSON.stringify(merged)); } catch {}
+        }
+      }
     }).catch(error => console.error('Failed to load playback preferences:', error));
     return () => { cancelled = true; };
   }, [user]);
@@ -135,9 +156,13 @@ export function AppearanceProvider({ children }: { children: React.ReactNode }) 
         window.localStorage.setItem(PLAYER_SETTINGS_KEY, JSON.stringify(updated));
         window.dispatchEvent(new CustomEvent('panda_player_settings_change', { detail: updated }));
       } catch {}
+      if (user) {
+        setDoc(doc(db, 'users', user.uid), { playerSettings: updated }, { merge: true })
+          .catch(error => console.error('Failed to sync player settings:', error));
+      }
       return updated;
     });
-  }, []);
+  }, [user]);
 
   const openSettingsModal = useCallback((tab: SettingsTab = 'player') => {
     setActiveSettingsTab(tab);

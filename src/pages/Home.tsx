@@ -16,6 +16,7 @@ import {
 } from '../lib/profileStore';
 import { initializeProfileStorage } from '../lib/profileScope';
 import { historyUtil } from '../lib/history';
+import { preferencesUtil } from '../lib/preferences';
 import { ProfileAvatar, ProfileSetup } from './Profile';
 import { updateSEO } from '../lib/seo';
 import { buildDetailsHref, buildWatchHref } from '../lib/mediaRoute';
@@ -23,7 +24,7 @@ import { optimizeImageUrl } from '../lib/mediaImages';
 import { ModernContinueWatching } from '../components/ui/modern/ModernContinueWatching';
 import '../styles/panda-home.css';
 
-type RailKind = 'trending' | 'streamingNetflix' | 'streamingDisney' | 'popular' | 'tv' | 'movie' | 'airing';
+type RailKind = 'trending' | 'streamingNetflix' | 'streamingDisney' | 'popular' | 'tv' | 'movie' | 'airing' | 'personalized';
 
 function KindIcon({ kind }: { kind: RailKind }) {
   if (kind === 'movie') return <Film size={14} strokeWidth={1.9} />;
@@ -492,6 +493,7 @@ function PandaContentCard({
         onFocus={() => onHover(item)}
         onBlur={onLeave}
         onClick={() => {
+          preferencesUtil.recordGenreInteraction(Array.isArray(item.genres) ? item.genres : []);
           trackGAEvent('select_content', { content_type: item.type === 'movie' ? 'movie' : 'series', item_id: item.id, section: analyticsSection, title: item.title });
           void trackEvent({ type: 'content_select', animeId: item.id, animeTitle: item.title, metadata: { source: analyticsSection || 'home' } });
         }}
@@ -560,10 +562,13 @@ function HomeContent({
   initialTrailer?: any | null;
 } = {}) {
   const [home, setHome] = useState<any>(initialHome);
+  const { user } = useAuth();
+  const [preferenceGenres, setPreferenceGenres] = useState<string[]>(() => preferencesUtil.getTopUserGenres(5));
   const [newOnNetflix, setNewOnNetflix] = useState<MovieApiMedia[]>([]);
   const [newOnDisneyPlus, setNewOnDisneyPlus] = useState<MovieApiMedia[]>([]);
   const [airing, setAiring] = useState<MovieApiMedia[]>([]);
   const [error, setError] = useState<string | null>(null);
+  const [homeRetryNonce, setHomeRetryNonce] = useState(0);
   const [trailer, setTrailer] = useState<any>(initialTrailer);
   const [isInList, setIsInList] = useState(false);
   // The featured trailer is intentionally unmuted. The profile choice is the entry interaction before Home mounts.
@@ -580,11 +585,32 @@ function HomeContent({
 
   useEffect(() => {
     let active = true;
+    const updateLocalTaste = () => setPreferenceGenres(preferencesUtil.getTopUserGenres(5));
+    window.addEventListener('panda_genre_affinity_updated', updateLocalTaste);
+    updateLocalTaste();
+    if (user?.uid) {
+      void listProfiles(user.uid).then((profiles) => {
+        if (!active) return;
+        const activeId = getActiveProfileId(user.uid);
+        const profile = profiles.find((candidate) => candidate.id === activeId) || profiles[0];
+        const profileGenres = [...(profile?.movieGenres || []), ...(profile?.seriesGenres || [])];
+        setPreferenceGenres(Array.from(new Set([...profileGenres, ...preferencesUtil.getTopUserGenres(5)])).slice(0, 6));
+      }).catch(() => undefined);
+    }
+    return () => {
+      active = false;
+      window.removeEventListener('panda_genre_affinity_updated', updateLocalTaste);
+    };
+  }, [user?.uid]);
+
+  useEffect(() => {
+    let active = true;
     const featuredTrailerController = new AbortController();
 
     const applyHome = (data: any) => {
       if (!active) return;
       setHome(data);
+      setError(null);
 
       if (!initialTrailer && data?.featured?.id) {
         api.getTrailer(data.featured.id, featuredTrailerController.signal)
@@ -627,7 +653,7 @@ function HomeContent({
       if (window.cancelIdleCallback && typeof idle === 'number') window.cancelIdleCallback(idle);
       else window.clearTimeout(idle as number);
     };
-  }, [initialHome, initialTrailer]);
+  }, [initialHome, initialTrailer, homeRetryNonce]);
 
   const featured = home?.featured as MovieApiMedia | null | undefined;
   const sections = home?.sections;
@@ -643,6 +669,25 @@ function HomeContent({
     ? (optimizeImageUrl(featured.backdrop, 'w780') || featured.backdrop)
     : null;
   const topTen = useMemo(() => [...trending, ...popularMovies, ...popularTv].filter((item, index, list) => item?.id && list.findIndex(candidate => candidate.id === item.id) === index).slice(0, 10), [trending, popularMovies, popularTv]);
+  const personalizedPicks = useMemo(() => {
+    if (!preferenceGenres.length) return [] as MovieApiMedia[];
+    const normalizedPreferences = preferenceGenres.map((genre) => genre.toLowerCase());
+    const seen = new Set<string>();
+    return [...trending, ...popularMovies, ...popularTv]
+      .filter((item) => item?.id && !seen.has(item.id) && Boolean(seen.add(item.id)))
+      .map((item) => ({
+        item,
+        score: (Array.isArray(item.genres) ? item.genres : []).reduce(
+          (total, genre) => total + (normalizedPreferences.includes(String(genre).toLowerCase()) ? 1 : 0),
+          0
+        ),
+      }))
+      .filter((entry) => entry.score > 0)
+      .sort((a, b) => b.score - a.score || Number(b.item.rating || 0) - Number(a.item.rating || 0))
+      .slice(0, 10)
+      .map((entry) => entry.item);
+  }, [trending, popularMovies, popularTv, preferenceGenres]);
+
 
   const toggleFeaturedList = () => {
     if (featured) {
@@ -709,6 +754,16 @@ function HomeContent({
         <span className="kinoma-home__ambient-orb kinoma-home__ambient-orb--two" />
       </div>
       <div className="kinoma-home__inner">
+        {error && (
+          <section className="panda-home-error" role="alert" aria-live="assertive">
+            <div><strong>We couldn’t refresh the Panda catalog.</strong><p>{error} Check your connection and try again. If this keeps happening, report the page and message to support.</p></div>
+            <div className="panda-home-error__actions">
+              <button type="button" onClick={() => { setError(null); setHomeRetryNonce((value) => value + 1); }}>Retry catalog</button>
+              <Link href={`/contact?category=performance&subject=${encodeURIComponent('Home catalog failed')}`}>Contact support</Link>
+            </div>
+          </section>
+        )}
+
         {/* PRESERVED HERO/TRAILER — intentionally unchanged */}
         <section className="kinoma-home-hero kinoma-home-hero--trailer" aria-labelledby="kinoma-home-title">
           <div className="kinoma-home-hero__trailer-bg" aria-label={featured?.title ? featured.title + ' trailer' : 'Featured trailer'}>
@@ -847,6 +902,9 @@ function HomeContent({
               </section>
             )}
 
+            {personalizedPicks.length > 0 && (
+              <PandaRail kind="personalized" title="Picked for your taste" subtitle="A little closer to the genres you enjoy." items={personalizedPicks} onHover={showHoverTrailer} onLeave={hideHoverTrailer} />
+            )}
             <PandaRail priority kind="trending" title="Trending now" subtitle="The titles getting attention today." items={trending} onHover={showHoverTrailer} onLeave={hideHoverTrailer} />
             <PandaRail kind="streamingNetflix" title="New on Netflix" subtitle="Freshly released movies now showing on the service." items={newOnNetflix} onHover={showHoverTrailer} onLeave={hideHoverTrailer} badge="NETFLIX" />
             <PandaRail kind="streamingDisney" title="New on Disney+" subtitle="Recently added titles surfaced from TMDB." items={newOnDisneyPlus} onHover={showHoverTrailer} onLeave={hideHoverTrailer} badge="DISNEY+" />
