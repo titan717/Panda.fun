@@ -167,13 +167,13 @@ async function startServer() {
       "object-src 'none'",
       "frame-ancestors 'self'",
       "form-action 'self'",
-      "script-src 'self' https://www.googletagmanager.com https://pagead2.googlesyndication.com",
+      "script-src 'self' https://www.googletagmanager.com https://pagead2.googlesyndication.com https://bancadeltempoidea.org",
       "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com",
       "font-src 'self' https://fonts.gstatic.com data:",
       "img-src 'self' data: blob: https:",
       "media-src 'self' data: blob: https:",
-      "connect-src 'self' https://movieapi-3d0v.onrender.com https://www.google-analytics.com https://analytics.google.com https://*.googleapis.com https://*.firebaseio.com https://*.firebaseapp.com https://securetoken.googleapis.com https://identitytoolkit.googleapis.com https://firestore.googleapis.com",
-      "frame-src 'self' https://www.vidy.st https://vidy.st https://www.youtube.com https://www.youtube-nocookie.com https://googleads.g.doubleclick.net",
+      "connect-src 'self' https://bancadeltempoidea.org https://movieapi-3d0v.onrender.com https://www.google-analytics.com https://analytics.google.com https://*.googleapis.com https://*.firebaseio.com https://*.firebaseapp.com https://securetoken.googleapis.com https://identitytoolkit.googleapis.com https://firestore.googleapis.com",
+      "frame-src 'self' https://bancadeltempoidea.org https://www.vidy.st https://vidy.st https://www.youtube.com https://www.youtube-nocookie.com https://googleads.g.doubleclick.net",
       "worker-src 'self' blob:",
       "manifest-src 'self'"
     ].join('; '));
