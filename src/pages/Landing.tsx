@@ -1,9 +1,10 @@
 import React, { useEffect, useState } from 'react';
 import { Link } from 'wouter';
-import { ChevronDown, Play, Sparkles } from 'lucide-react';
+import { ChevronDown, Play, Sparkles, LogIn, UserPlus, CircleUserRound } from 'lucide-react';
 import { motion } from 'motion/react';
 import { KinomaLogo } from '../components/ui/KinomaLogo';
 import { updateSEO } from '../lib/seo';
+import { useAuth } from '../lib/AuthContext';
 
 const BACKDROP_URL = 'https://aniwaves.ru/assets/images/bg-index2.jpg';
 const REFERENCE_TEXTURE_URL = 'https://cdn.dribbble.com/userupload/14005335/file/original-d6adb157992d0492ed2fc3b2ab46cef9.jpg?resize=1200x1200&vertical=center';
@@ -23,6 +24,7 @@ const WELCOME_IMAGE_URL = 'https://static.crunchyroll.com/cr-acquisition/assets/
 
 export function Landing() {
   const [openFaq, setOpenFaq] = useState<number | null>(null);
+  const { user, openAuthModal } = useAuth();
 
   useEffect(() => {
     updateSEO({
@@ -50,6 +52,16 @@ export function Landing() {
 
       <header className="kinoma-welcome__header">
         <Link href="/" aria-label="Panda.fun"><KinomaLogo size="md" variant="full" /></Link>
+        <div className="kinoma-welcome__header-actions">
+          {user ? (
+            <Link href="/profile" className="kinoma-welcome__account-link"><CircleUserRound size={16} aria-hidden="true" /> My Panda</Link>
+          ) : (
+            <>
+              <button type="button" className="kinoma-welcome__login" onClick={() => openAuthModal('signin')}><LogIn size={15} aria-hidden="true" /> Log in</button>
+              <button type="button" className="kinoma-welcome__signup" onClick={() => openAuthModal('signup')}><UserPlus size={15} aria-hidden="true" /> Sign up</button>
+            </>
+          )}
+        </div>
       </header>
 
       <main>
