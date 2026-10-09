@@ -568,6 +568,7 @@ function HomeContent({
   const [newOnDisneyPlus, setNewOnDisneyPlus] = useState<MovieApiMedia[]>([]);
   const [airing, setAiring] = useState<MovieApiMedia[]>([]);
   const [error, setError] = useState<string | null>(null);
+  const [homeRetryNonce, setHomeRetryNonce] = useState(0);
   const [trailer, setTrailer] = useState<any>(initialTrailer);
   const [isInList, setIsInList] = useState(false);
   // The featured trailer is intentionally unmuted. The profile choice is the entry interaction before Home mounts.
@@ -609,6 +610,7 @@ function HomeContent({
     const applyHome = (data: any) => {
       if (!active) return;
       setHome(data);
+      setError(null);
 
       if (!initialTrailer && data?.featured?.id) {
         api.getTrailer(data.featured.id, featuredTrailerController.signal)
@@ -651,7 +653,7 @@ function HomeContent({
       if (window.cancelIdleCallback && typeof idle === 'number') window.cancelIdleCallback(idle);
       else window.clearTimeout(idle as number);
     };
-  }, [initialHome, initialTrailer]);
+  }, [initialHome, initialTrailer, homeRetryNonce]);
 
   const featured = home?.featured as MovieApiMedia | null | undefined;
   const sections = home?.sections;
@@ -752,6 +754,16 @@ function HomeContent({
         <span className="kinoma-home__ambient-orb kinoma-home__ambient-orb--two" />
       </div>
       <div className="kinoma-home__inner">
+        {error && (
+          <section className="panda-home-error" role="alert" aria-live="assertive">
+            <div><strong>We couldn’t refresh the Panda catalog.</strong><p>{error} Check your connection and try again. If this keeps happening, report the page and message to support.</p></div>
+            <div className="panda-home-error__actions">
+              <button type="button" onClick={() => { setError(null); setHomeRetryNonce((value) => value + 1); }}>Retry catalog</button>
+              <Link href={`/contact?category=performance&subject=${encodeURIComponent('Home catalog failed')}`}>Contact support</Link>
+            </div>
+          </section>
+        )}
+
         {/* PRESERVED HERO/TRAILER — intentionally unchanged */}
         <section className="kinoma-home-hero kinoma-home-hero--trailer" aria-labelledby="kinoma-home-title">
           <div className="kinoma-home-hero__trailer-bg" aria-label={featured?.title ? featured.title + ' trailer' : 'Featured trailer'}>
