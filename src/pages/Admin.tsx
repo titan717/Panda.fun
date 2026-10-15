@@ -1,4 +1,5 @@
 import React, { useEffect, useMemo, useState } from 'react';
+import { PandaLoading } from '../components/ui/PandaLoading';
 import {
   Activity, ArrowUpRight, BarChart3, BookOpen, CheckCircle2, ChevronRight, Clock3, Copy,
   Download, ExternalLink, Film, HeartPulse, LayoutDashboard, LogOut, MonitorPlay,
@@ -279,7 +280,7 @@ function Overview({ events, usersCount, range, onRangeChange, autoRefresh, onRef
               {RANGE_OPTIONS.map((value) => <button key={value} type="button" className={range === value ? 'is-active' : ''} onClick={() => onRangeChange(value)}>{value}d</button>)}
             </div>
             <button type="button" className="panda-admin-icon-action" onClick={onRefresh} disabled={refreshing} aria-label="Refresh analytics">
-              <RefreshCw size={16} className={refreshing ? 'animate-spin' : ''} />
+              {refreshing ? <PandaLoading state="working" label="" size={18} variant="compact" /> : <RefreshCw size={16} />}
             </button>
           </div>
         }
@@ -399,7 +400,7 @@ function Content() {
       <TitleBar kicker="CONTENT" title="Inspect the catalogue." description="Search live MovieAPI records and test the active Vidy playback path." />
       <form className="panda-admin-content-search" onSubmit={(event) => void searchContent(event)}>
         <label className="panda-admin-search panda-admin-search--large"><Search size={17} /><input value={queryText} onChange={(event) => setQueryText(event.target.value)} placeholder="Search movies, series or anime" /></label>
-        <button type="submit" className="panda-admin-primary-button" disabled={loading || !queryText.trim()}>{loading ? <RefreshCw size={14} className="animate-spin" /> : <Search size={14} />}Search</button>
+        <button type="submit" className="panda-admin-primary-button" disabled={loading || !queryText.trim()}>{loading ? <PandaLoading state="searching" label="" size={18} variant="compact" /> : <Search size={14} />}Search</button>
       </form>
       {message && <div className="panda-admin-alert"><CheckCircle2 size={15} />{message}</div>}
       <section className="panda-admin-content-grid">{results.length ? results.map((item) => (

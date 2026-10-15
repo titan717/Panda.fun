@@ -1,4 +1,5 @@
 import React, { useEffect, useMemo, useRef, useState } from 'react';
+import { PandaLoading } from '../components/ui/PandaLoading';
 import { Footer } from '../components/ui/Footer';
 import { useLocation, useRoute, useSearch } from 'wouter';
 import { Play, Plus, Check, Film, Tv, Clock3, Share2, List, Grid2X2, Search, ArrowUpDown, Star, ChevronRight } from 'lucide-react';
@@ -238,7 +239,7 @@ export function Details() {
 
   return (
     <main className="kinoma-details-page">
-      {loading && <div className="panda-state-card" role="status"><span className="panda-state-card__spinner" aria-hidden="true" /><div><strong>Loading title</strong><small>Fetching the latest details…</small></div></div>}
+      {loading && <PandaLoading state="working" label="Fetching the latest details" variant="page" />}
       {error && !loading && <div className="panda-state-card is-error" role="alert"><div><strong>We couldn't load this title.</strong><small>{error}</small></div><button type="button" onClick={() => setRetryKey(value => value + 1)}>Retry</button></div>}
       <section className="kinoma-details-hero kinoma-details-hero--trailer">
         <div className="kinoma-details-hero__trailer-bg" aria-label={title + ' trailer preview'}>

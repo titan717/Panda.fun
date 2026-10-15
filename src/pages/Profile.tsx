@@ -1,3 +1,4 @@
+import { PandaLoading } from '../components/ui/PandaLoading';
 import React, { useEffect, useMemo, useState } from 'react';
 import { AnimatePresence, motion } from 'motion/react';
 import {
@@ -378,7 +379,7 @@ export function ProfileSetup({
                   (step === 4 && seriesGenres.length === 0)
                 }
               >
-                {saving && <span className="panda-profile-spinner" />}
+                {saving && <PandaLoading state="working" label="" size={18} variant="compact" />}
                 {!saving && step === 4 && 'Start watching'}
                 {!saving && step !== 4 && 'Continue'}
                 {!saving && <ArrowRight size={15} />}

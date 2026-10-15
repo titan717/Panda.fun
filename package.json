@@ -14,6 +14,7 @@
     "auth:set-admin": "node scripts/set-firebase-admin.mjs"
   },
   "dependencies": {
+    "@yogesharc/thinking-orbs": "^0.1.0",
     "@consumet/extensions": "^1.8.8",
     "@google/genai": "^2.4.0",
     "@tailwindcss/vite": "^4.1.14",

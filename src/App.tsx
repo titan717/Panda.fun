@@ -12,6 +12,7 @@ import { Privacy } from './pages/Privacy';
 import { Contact } from './pages/Contact';
 import { Docs } from './pages/Docs';
 import { Home } from './pages/Home';
+import { PandaLoading } from './components/ui/PandaLoading';
 function retryLazyImport<T>(importer: () => Promise<T>, chunkName: string) {
   return importer().catch(error => {
     if (!isRecoverableChunkLoadError(error)) throw error;
@@ -71,10 +72,7 @@ function AnimatedRoutes() {
         >
           <Suspense
             fallback={
-              <div className="min-h-[55vh] w-full flex items-center justify-center bg-[var(--kinoma-bg)]" role="status" aria-live="polite">
-                <div className="h-8 w-8 rounded-full border-2 border-white/15 border-t-white/80 animate-spin" aria-hidden="true" />
-                <span className="sr-only">Loading Panda.fun</span>
-              </div>
+              <PandaLoading state="working" label="Loading Panda.fun" variant="page" className="min-h-[55vh] w-full bg-[var(--kinoma-bg)]" />
             }
           >
             <Switch location={location}>

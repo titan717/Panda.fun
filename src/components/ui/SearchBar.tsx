@@ -1,7 +1,8 @@
+import { PandaLoading } from './PandaLoading';
 import React, { useState, useEffect, useRef } from 'react';
 import { useLocation } from 'wouter';
 import useSWR from 'swr';
-import { Search, Loader2 } from 'lucide-react';
+import { Search } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 import { api } from '../../lib/api';
 import { DEFAULT_POSTER } from '../../types';
@@ -98,7 +99,7 @@ export function SearchBar() {
           >
             {isLoading ? (
               <div className="p-4 flex items-center justify-center text-gray-400 gap-2">
-                <Loader2 className="w-4 h-4 animate-spin text-[#9c27b0]" />
+                <PandaLoading state="searching" label="" size={20} variant="compact" />
                 <span className="text-sm font-medium">Searching...</span>
               </div>
             ) : data?.results?.length > 0 ? (
