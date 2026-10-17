@@ -1,6 +1,6 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { Link, useLocation } from 'wouter';
-import { House, Search, Library, Settings, Info, UserRound, FileText, Shield, Tv, Clapperboard, Trophy, Grid2X2 } from 'lucide-react';
+import { House, Search, Library, Settings, Info, UserRound, FileText, Shield, Tv, Clapperboard, Trophy, Grid2X2, Smartphone, Sparkles, Popcorn, PersonStanding } from 'lucide-react';
 import { KinomaLogo } from './ui/KinomaLogo';
 import './mobile/mobile-shell.css';
 import '../styles/android-tv.css';
@@ -20,14 +20,14 @@ export const ITEMS = [
   { href: '/settings', label: 'Settings', Icon: Settings },
 ];
 
-const TV_ITEMS = [
+const TV_ITEMS: Array<{ href: string; label: string; Icon: typeof House; disabled?: boolean }> = [
+  { href: '/connect-phone', label: 'Connect Phone', Icon: Smartphone, disabled: true },
   { href: '/search', label: 'Search', Icon: Search },
   { href: '/home', label: 'Home', Icon: House },
   { href: '/search?type=series', label: 'TV', Icon: Tv },
-  { href: '/search?type=movie', label: 'Movies', Icon: Clapperboard },
-  { href: '/search?keyword=sports', label: 'Sports', Icon: Trophy },
-  { href: '/search', label: 'Categories', Icon: Grid2X2 },
-  { href: '/profile', label: 'My Space', Icon: UserRound },
+  { href: '/search?type=movie', label: 'Movies', Icon: Popcorn },
+  { href: '/search?keyword=sports', label: 'Sports', Icon: PersonStanding },
+  { href: '/search?view=categories', label: 'Categories', Icon: Grid2X2 },
 ];
 
 export function Layout({ children }: { children: React.ReactNode }) {
@@ -38,6 +38,7 @@ export function Layout({ children }: { children: React.ReactNode }) {
   const mainRef = useRef<HTMLElement | null>(null);
   const isPlayerRoute = location.startsWith('/watch/');
   const navItems = tvMode ? TV_ITEMS : ITEMS;
+  const isMySpaceActive = location === '/profile' || location.startsWith('/profile/');
 
   useEffect(() => {
     // TV screens manage their own initial focus so the remote lands on the
@@ -75,21 +76,28 @@ export function Layout({ children }: { children: React.ReactNode }) {
       )}
       {!isPlayerRoute && (
         <aside className={`kinoma-sidebar kinoma-sidebar--icons ${expanded ? 'is-expanded' : 'is-collapsed'}`} aria-label="Panda.fun navigation" onPointerEnter={expand} onPointerLeave={collapse} onFocusCapture={expand} onBlurCapture={(event) => { if (!event.currentTarget.contains(event.relatedTarget as Node | null)) collapse(); }}>
-          <div className="kinoma-sidebar__top"><Link href="/home" className="kinoma-sidebar__brand" aria-label="Panda.fun home"><KinomaLogo size={expanded ? 'md' : 'sm'} variant={expanded ? 'full' : 'mark'} className="kinoma-sidebar__logo" /></Link></div>
+          <div className="kinoma-sidebar__top">
+            <Link href="/home" className="kinoma-sidebar__brand" aria-label="Panda.fun home">
+              {tvMode ? <span className="kinoma-tv-sidebar__sparkle" aria-hidden="true"><Sparkles size={27} strokeWidth={1.65} /></span> : <KinomaLogo size={expanded ? 'md' : 'sm'} variant={expanded ? 'full' : 'mark'} className="kinoma-sidebar__logo" />}
+            </Link>
+          </div>
           <nav className="kinoma-sidebar__nav" aria-label="Main navigation">
-            {navItems.map(({ href, label, Icon }) => {
+            {navItems.map(({ href, label, Icon, disabled }) => {
               const pathname = location.split('?')[0];
               const query = new URLSearchParams(location.split('?')[1] || '');
               const active = (href === '/home' && (pathname === '/home' || pathname === '/browse')) ||
                 (href === '/profile' && pathname === '/profile') ||
                 (href === '/library' && (pathname === '/library' || pathname === '/history')) ||
                 (href === '/settings' && pathname === '/settings') ||
-                (href === '/search' && pathname === '/search' && !query.get('keyword')) ||
+                (href === '/search' && pathname === '/search' && query.get('view') !== 'categories') ||
+                (href === '/search?view=categories' && pathname === '/search' && query.get('view') === 'categories') ||
                 (href === '/search?type=series' && pathname === '/search' && query.get('type') === 'series') ||
                 (href === '/search?type=movie' && pathname === '/search' && query.get('type') === 'movie') ||
                 (href === '/search?keyword=sports' && pathname === '/search' && query.get('keyword') === 'sports');
+              if (tvMode && disabled) return <button key={label} type="button" className="kinoma-sidebar__item kinoma-tv-sidebar__connect is-disabled" aria-label="Connect Phone — coming soon" aria-disabled="true" data-tooltip={label}><Icon size={tvMode ? 23 : 20} strokeWidth={1.8} /><span>{label}<small>Coming soon</small></span></button>;
               return <Link key={label} href={href} className={`kinoma-sidebar__item ${active ? 'is-active' : ''}`} aria-label={label} aria-current={active ? 'page' : undefined} data-tooltip={label}><Icon size={tvMode ? 23 : 20} strokeWidth={1.8} /><span>{label}</span></Link>;
             })}
+            {tvMode && <Link href="/profile" className={`kinoma-sidebar__item kinoma-tv-sidebar__my-space ${isMySpaceActive ? 'is-active' : ''}`} aria-label="My Space" aria-current={isMySpaceActive ? 'page' : undefined} data-tooltip="My Space"><span className="kinoma-tv-sidebar__orb" aria-hidden="true" /><span>My Space</span></Link>}
             {!tvMode && (
               <>
                 <Link href="/profile" className={`kinoma-sidebar__item ${location === '/profile' ? 'is-active' : ''}`} aria-label="Profile" data-tooltip="My Panda"><UserRound size={20} strokeWidth={1.8} /><span>My Panda</span></Link>

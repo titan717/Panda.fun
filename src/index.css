@@ -3041,6 +3041,7 @@ p {
 }
 
 .kinoma-search-recent__items { display: flex; gap: 8px; }
+.kinoma-search-recent__history-icon { display: none; }
 
 .kinoma-search-recent__items button {
   flex: 0 0 auto;
