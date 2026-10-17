@@ -106,17 +106,18 @@ function AnimatedRoutes() {
   );
 }
 
-class AppErrorBoundary extends React.Component<{ children: React.ReactNode; resetKey?: string }, { hasError: boolean }> {
+class AppErrorBoundary extends React.Component<{ children: React.ReactNode; resetKey?: string }, { hasError: boolean; previousResetKey?: string }> {
   declare readonly props: { children: React.ReactNode; resetKey?: string };
-  declare state: { hasError: boolean };
+  declare state: { hasError: boolean; previousResetKey?: string };
   private readonly appChildren: React.ReactNode;
   constructor(props: { children: React.ReactNode; resetKey?: string }) {
     super(props);
     this.appChildren = props.children;
-    this.state = { hasError: false };
+    this.state = { hasError: false, previousResetKey: props.resetKey };
   }
-  componentDidUpdate(previousProps: { resetKey?: string }) {
-    if (previousProps.resetKey !== this.props.resetKey && this.state.hasError) this.setState({ hasError: false });
+  static getDerivedStateFromProps(props: { resetKey?: string }, state: { hasError: boolean; previousResetKey?: string }) {
+    if (props.resetKey !== state.previousResetKey) return { hasError: false, previousResetKey: props.resetKey };
+    return null;
   }
   static getDerivedStateFromError() { return { hasError: true }; }
   componentDidCatch(error: unknown) { console.error('[Panda.fun] App render error:', error); }
