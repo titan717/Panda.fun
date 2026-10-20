@@ -30,7 +30,7 @@
 - [ ] Run focused Vitest tests; expected failure must be due to missing selector/manifest behavior. If dependencies are unavailable, record an environment blocker.
 - [ ] Implement the selector, native bridge detection using `UiModeManager.currentModeType == UI_MODE_TYPE_TELEVISION` or `PackageManager.FEATURE_LEANBACK`, and conditional TV class/flag injection. Remove unconditional localStorage TV mode. Make Leanback optional; remove landscape lock from MainActivity only. Gate document-level D-pad handler; keep existing input/media exclusions.
 - [ ] Rerun focused tests; expect all selection boundaries and manifest assertions to pass.
-- [ ] Run `npm run lint`, `npm test`, `npm run build`; if Android SDK exists, run `cd android && ./gradlew :app:assembleDebug`. Existing TV-navigation, mobile-shell, Vidy and media-route tests must stay green.
+- [ ] Run `npm run lint`, `npm test`, `npm run build`; if Android SDK and Gradle 8.5 are available, run `cd android && gradle clean :app:assembleDebug`; this repository does not include a Gradle wrapper. Existing TV-navigation, mobile-shell, Vidy and media-route tests must stay green.
 - [ ] Commit as `feat(android): support universal TV and touch launch`.
 
 ### Task 2: Responsive shell and visual consistency
