@@ -60,6 +60,12 @@ describe('universal Android manifest contract', () => {
     expect(mobileHomeStyles).not.toContain('.panda-mobile-featured__loading span {');
   });
 
+  it('keeps the mobile hero cards rectangular and cinematic', () => {
+    expect(mobileHomeStyles).toContain('aspect-ratio: 16 / 9;');
+    expect(mobileHomeStyles).toContain('flex: 0 0 78vw;');
+    expect(mobileHomeStyles).not.toContain('aspect-ratio: 4 / 5;');
+  });
+
   it('passes real loading/error state into the mobile homepage and has an empty state', () => {
     expect(homePage).toContain('loading={!home && !error} error={error}');
     expect(mobileHome).toContain(') : loading ? (');
