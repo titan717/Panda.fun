@@ -184,6 +184,47 @@
   line-height: 1.4;
 }
 
+
+.panda-mobile-featured__empty {
+  display: grid;
+  justify-items: center;
+  gap: 10px;
+  min-height: min(42vh, 300px);
+  padding: 36px 24px;
+  text-align: center;
+}
+.panda-mobile-featured__empty strong {
+  color: #f5f2f2;
+  font-size: 16px;
+  font-weight: 750;
+}
+.panda-mobile-featured__empty > span {
+  max-width: 30ch;
+  color: rgba(245,242,242,.58);
+  font-size: 12px;
+  line-height: 1.55;
+}
+.panda-mobile-featured__empty a {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  min-height: 40px;
+  margin-top: 4px;
+  padding: 0 15px;
+  color: #fff;
+  background: #65172a;
+  border: 1px solid rgba(215,160,173,.24);
+  border-radius: 999px;
+  font-size: 12px;
+  font-weight: 700;
+  text-decoration: none;
+}
+.panda-mobile-featured__empty a:focus-visible {
+  outline: 2px solid #d7a0ad;
+  outline-offset: 3px;
+}
+
 .panda-mobile-home__collection {
   width: 100%;
   min-width: 0;
