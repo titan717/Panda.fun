@@ -44,8 +44,10 @@ import { trackPageView } from './lib/analytics';
 import { usePWAUpdate } from './lib/usePWAUpdate';
 import { PandaIntro, shouldShowPandaIntro } from './components/intro/PandaIntro';
 import { isRecoverableChunkLoadError } from './lib/appReliability';
+import { ThinkingOrb } from 'thinking-orbs';
 import './components/intro/panda-intro.css';
 import { handleTVRemoteKey } from './lib/tvRemoteNavigation';
+import { getCurrentDeviceMode } from './lib/deviceCapabilities';
 import { getCurrentDeviceMode } from './lib/deviceCapabilities';
 
 function AnimatedRoutes() {
@@ -71,9 +73,9 @@ function AnimatedRoutes() {
         >
           <Suspense
             fallback={
-              <div className="min-h-[55vh] w-full flex items-center justify-center bg-[var(--kinoma-bg)]" role="status" aria-live="polite">
-                <div className="h-8 w-8 rounded-full border-2 border-white/15 border-t-white/80 animate-spin" aria-hidden="true" />
-                <span className="sr-only">Loading Panda.fun</span>
+              <div className="kinoma-search-loading min-h-[55vh] w-full" role="status" aria-live="polite">
+                <ThinkingOrb state="searching" size={64} theme="dark" aria-label="Loading Panda.fun" />
+                <div className="kinoma-search-loading__copy"><span>Loading Panda.fun</span><p>Preparing your next discovery</p></div>
               </div>
             }
           >
