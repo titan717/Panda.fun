@@ -1,6 +1,6 @@
-# Panda.fun Native Android TV Application
+# Panda.fun Universal Android Application
 
-This directory contains the complete source code and build configuration for **Panda.fun TV**, a native Android TV application built with **Jetpack Compose for TV**, **ExoPlayer / Media3**, **Leanback launcher support**, and an **automatic private self-update system**.
+This directory contains the native Android wrapper for Panda.fun. The intended package is a single APK for Android TV and touchscreen Android devices, with both ordinary and Leanback launcher entries. The primary activity loads the bundled React web app in a WebView; existing TV remote navigation, fullscreen handling and update installation behavior must be preserved. Android TV / Media3 components remain in the project, but this wrapper change does not replace the current Vidy web playback flow.
 
 ## How to Build `Panda.fun.apk`
 
@@ -12,8 +12,9 @@ This directory contains the complete source code and build configuration for **P
    - **Release APK**: Run `./gradlew assembleRelease` to produce `app-release.apk`.
 
 ## Features
-- **Leanback Launcher**: Appears natively on Android TV home screens with custom banner and icon.
-- **D-Pad Spatial Navigation**: Fully remote-navigable focus model optimized for television screens.
-- **Media3 / ExoPlayer**: High performance video streaming with buffering, resume, and full-screen controls.
+- **Universal launcher intent**: ordinary Android launcher plus Leanback launcher; verify both on target devices.
+- **Adaptive presentation**: TV mode is selected from native TV capability; touch devices retain system bars and can use portrait layouts.
+- **D-pad navigation**: directional focus behavior remains active only on TV devices.
+- **Fullscreen WebView handling**: the current web player/provider flow remains unchanged.
 - **Self-Update System**: Automatically queries `https://raw.githubusercontent.com/titan717/Panda.fun/main/update/latest.json` and prompts users to download and install updates via Android's package installer.
 - **Panda.fun Backend Integration**: Connects directly to the Panda.fun anime backend API for real-time catalogs and trending shows.
