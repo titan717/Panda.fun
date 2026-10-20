@@ -4,6 +4,7 @@ import { House, Search, Library, Settings, Info, UserRound, FileText, Shield, Tv
 import { KinomaLogo } from './ui/KinomaLogo';
 import './mobile/mobile-shell.css';
 import '../styles/android-tv.css';
+import { getCurrentDeviceMode } from '../lib/deviceCapabilities';
 
 export const ABOUT_ITEMS = [
   { href: '/about', label: 'About' },
@@ -33,11 +34,25 @@ const TV_ITEMS = [
 export function Layout({ children }: { children: React.ReactNode }) {
   const [location] = useLocation();
   const [expanded, setExpanded] = useState(false);
-  const [tvMode] = useState(() => typeof window !== 'undefined' && Boolean((window as Window & { isKinomaAndroidTV?: boolean }).isKinomaAndroidTV));
+  const [deviceMode, setDeviceMode] = useState(() => getCurrentDeviceMode());
+  const tvMode = deviceMode === 'tv';
   const collapseTimer = useRef<number | null>(null);
   const mainRef = useRef<HTMLElement | null>(null);
   const isPlayerRoute = location.startsWith('/watch/');
   const navItems = tvMode ? TV_ITEMS : ITEMS;
+
+  useEffect(() => {
+    const syncDeviceMode = () => {
+      const nextMode = getCurrentDeviceMode();
+      setDeviceMode(nextMode);
+      (window as Window & { isKinomaAndroidTV?: boolean }).isKinomaAndroidTV = nextMode === 'tv';
+      document.documentElement.classList.toggle('tv-mode', nextMode === 'tv');
+      document.documentElement.dataset.deviceMode = nextMode;
+    };
+    syncDeviceMode();
+    window.addEventListener('resize', syncDeviceMode);
+    return () => window.removeEventListener('resize', syncDeviceMode);
+  }, []);
 
   useEffect(() => {
     // TV screens manage their own initial focus so the remote lands on the
