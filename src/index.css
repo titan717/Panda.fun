@@ -10279,3 +10279,48 @@ html.tv-mode .panda-content-card:focus-within { scroll-margin-inline: 32px; }
     animation: none !important;
   }
 }
+
+
+/* Shared route-level loading state: cinematic, compact and motion-aware. */
+.panda-route-loading {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 18px;
+  width: 100%;
+  min-height: 55vh;
+  padding: 32px 20px;
+  color: rgba(245, 245, 247, .92);
+  background: #000;
+}
+.panda-route-loading > canvas {
+  display: block;
+  flex: 0 0 64px;
+  width: 64px;
+  height: 64px;
+}
+.panda-route-loading__copy {
+  display: grid;
+  gap: 7px;
+}
+.panda-route-loading__copy > span {
+  font-size: 14px;
+  line-height: 1.25;
+  font-weight: 650;
+  letter-spacing: -.015em;
+}
+.panda-route-loading__copy p {
+  margin: 0;
+  color: rgba(235, 235, 240, .48);
+  font-size: 12px;
+  line-height: 1.5;
+}
+@media (max-width: 640px) {
+  .panda-route-loading { gap: 12px; padding-inline: 16px; }
+  .panda-route-loading > canvas { flex-basis: 56px; width: 56px; height: 56px; }
+  .panda-route-loading__copy > span { font-size: 13px; }
+  .panda-route-loading__copy p { font-size: 11px; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .panda-route-loading * { animation-duration: .01ms !important; animation-iteration-count: 1 !important; transition-duration: .01ms !important; }
+}

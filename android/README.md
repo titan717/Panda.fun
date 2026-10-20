@@ -1,19 +1,45 @@
-# Panda.fun Native Android TV Application
+# Panda.fun Universal Android Application
 
-This directory contains the complete source code and build configuration for **Panda.fun TV**, a native Android TV application built with **Jetpack Compose for TV**, **ExoPlayer / Media3**, **Leanback launcher support**, and an **automatic private self-update system**.
+This directory contains the native Android wrapper for Panda.fun. The intended package is a single APK for Android TV and touchscreen Android devices, with both ordinary and Leanback launcher entries. The main activity loads the bundled React application in a WebView. Existing TV remote navigation, fullscreen handling and update installation behavior must be preserved.
 
-## How to Build `Panda.fun.apk`
+The web app's current playback route uses the configured Vidy embed. Android TV / Media3 components remain in this repository, but this wrapper change does not replace the current Vidy playback flow with native ExoPlayer.
 
-1. Open Android Studio (Hedgehog or newer recommended).
-2. Select **Open** and choose the `/android` directory of this project.
-3. Allow Gradle to sync dependencies.
-4. Run the build or generate signed APK:
-   - **Debug APK**: Run `./gradlew assembleDebug` in the terminal inside `/android`. The output APK will be generated at `/android/app/build/outputs/apk/debug/app-debug.apk` (you can rename this to `Panda.fun.apk`).
-   - **Release APK**: Run `./gradlew assembleRelease` to produce `app-release.apk`.
+## Build the universal debug APK
 
-## Features
-- **Leanback Launcher**: Appears natively on Android TV home screens with custom banner and icon.
-- **D-Pad Spatial Navigation**: Fully remote-navigable focus model optimized for television screens.
-- **Media3 / ExoPlayer**: High performance video streaming with buffering, resume, and full-screen controls.
-- **Self-Update System**: Automatically queries `https://raw.githubusercontent.com/titan717/Panda.fun/main/update/latest.json` and prompts users to download and install updates via Android's package installer.
-- **Panda.fun Backend Integration**: Connects directly to the Panda.fun anime backend API for real-time catalogs and trending shows.
+Requirements:
+
+- JDK 17
+- Android SDK platform 34 and build tools 34.0.0
+- Gradle 8.5 (the repository does not include a Gradle wrapper)
+- Node.js and npm
+
+From the repository root, run:
+
+```bash
+npm install
+npm run lint
+npm test
+npm run build
+
+rm -rf android/app/src/main/assets/web
+mkdir -p android/app/src/main/assets/web
+cp -R dist/. android/app/src/main/assets/web/
+
+cd android
+gradle --version
+gradle clean assembleDebug --no-daemon
+```
+
+The debug APK is generated at `android/app/build/outputs/apk/debug/app-debug.apk`.
+
+Android Studio can also open the `android/` directory after installing the required SDK and Gradle versions. Ensure the web assets have been built and copied before packaging so the APK contains the same frontend that passed web verification.
+
+## Runtime behavior
+
+- **Ordinary Android launcher and Leanback launcher:** both launcher categories are declared; installation and launcher behavior must still be checked on real devices/emulators.
+- **TV capability:** the native bridge reports Android TV UI mode or Leanback support. The web app uses this signal to enable TV-focused layout and D-pad navigation.
+- **Touchscreen devices:** Leanback is optional, touchscreen is optional, and the main activity is not forced to landscape. The web shell can use mobile/tablet layouts and Android system bars.
+- **TV remote navigation:** directional focus movement remains TV-only. Inputs and embedded media keep ownership of their keyboard events.
+- **Fullscreen and updates:** the existing WebView fullscreen lifecycle and verified APK update path remain in place.
+
+The source-level manifest contract does not prove device-level compatibility. Verify launcher visibility, orientation, touch navigation, TV D-pad behavior and playback on an Android TV and a touchscreen Android device before publishing a release. Do not add release signing credentials to source control.
