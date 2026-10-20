@@ -5,6 +5,7 @@ import { getDeviceMode } from './deviceCapabilities';
 const read = (relativePath: string) => readFileSync(new URL(relativePath, import.meta.url), 'utf8');
 const app = read('../App.tsx');
 const activity = read('../../android/app/src/main/java/com/kinoma/tv/ui/MainActivity.kt');
+const styles = read('../index.css');
 
 describe('universal device capability selection', () => {
   it('prioritizes native TV capability at any viewport size', () => {
@@ -47,6 +48,13 @@ describe('universal Android manifest contract', () => {
   it('does not force the main activity into landscape', () => {
     const mainActivity = manifest.match(/<activity[\s\S]*?android:name="\.ui\.MainActivity"[\s\S]*?<\/activity>/)?.[0] ?? '';
     expect(mainActivity).not.toContain('android:screenOrientation="landscape"');
+  });
+
+  it('uses Thinking Orbs for the accessible route loading state', () => {
+    expect(app).toContain('<ThinkingOrb state="searching"');
+    expect(app).toContain('className="panda-route-loading');
+    expect(styles).toContain('.panda-route-loading');
+    expect(styles).toContain('@media (prefers-reduced-motion: reduce)');
   });
 
   it('keeps native TV mode truthful and gates directional navigation', () => {
