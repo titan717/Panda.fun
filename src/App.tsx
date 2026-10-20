@@ -46,6 +46,7 @@ import { PandaIntro, shouldShowPandaIntro } from './components/intro/PandaIntro'
 import { isRecoverableChunkLoadError } from './lib/appReliability';
 import './components/intro/panda-intro.css';
 import { handleTVRemoteKey } from './lib/tvRemoteNavigation';
+import { getCurrentDeviceMode } from './lib/deviceCapabilities';
 
 function AnimatedRoutes() {
   const [location] = useLocation();
@@ -155,7 +156,11 @@ export default function App() {
   useEffect(() => {
     // One document-level owner for directional focus in the Android TV WebView.
     // Text inputs and embedded media retain ownership of their own key events.
-    const onRemoteKeyDown = (event: KeyboardEvent) => { handleTVRemoteKey(event); };
+    const onRemoteKeyDown = (event: KeyboardEvent) => {
+      if (getCurrentDeviceMode() !== 'tv') return;
+      (window as Window & { isKinomaAndroidTV?: boolean }).isKinomaAndroidTV = true;
+      handleTVRemoteKey(event);
+    };
     document.addEventListener('keydown', onRemoteKeyDown, true);
     return () => document.removeEventListener('keydown', onRemoteKeyDown, true);
   }, []);
