@@ -80,16 +80,14 @@ export class MovieApiError extends Error {
 }
 
 const DEFAULT_BASE_URL = 'https://movieapi-3d0v.onrender.com';
-const DEFAULT_FALLBACK_URL = '';
-const LEGACY_VERCEL_API_HOST = 'apikinoma.vercel.app';
+const DEFAULT_FALLBACK_URL = 'https://apikinomafallback.vercel.app';
 const viteEnv = (import.meta as unknown as { env?: Record<string, string | undefined> }).env || {};
 
 export function resolveMovieApiBaseUrl(configuredBase: unknown): string {
   const normalized = String(configuredBase || '').trim().replace(/\/+$/, '');
   if (!normalized) return DEFAULT_BASE_URL;
   try {
-    const hostname = new URL(normalized).hostname.toLowerCase();
-    if (hostname === LEGACY_VERCEL_API_HOST) return DEFAULT_BASE_URL;
+    new URL(normalized);
   } catch {
     return DEFAULT_BASE_URL;
   }
@@ -179,7 +177,7 @@ async function request<T>(
           const error = data?.error || {};
           const apiError = new MovieApiError(error.message || `MovieApi request failed (${response.status}).`, response.status, error.code, error.requestId || response.headers.get('X-Request-ID') || undefined);
           lastError = apiError;
-          if (index < bases.length - 1 && (response.status >= 500 || response.status === 429 || response.status === 404)) continue;
+          if (index < bases.length - 1 && (response.status >= 500 || response.status === 429 || response.status === 404 || response.status === 403 || response.status === 408 || response.status === 425)) continue;
           throw apiError;
         }
         const value = unwrap<T>(payload);
