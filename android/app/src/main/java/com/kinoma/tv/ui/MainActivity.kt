@@ -2,8 +2,11 @@ package com.kinoma.tv.ui
 
 import android.annotation.SuppressLint
 import android.app.AlertDialog
+import android.app.UiModeManager
 import android.content.Context
 import android.content.Intent
+import android.content.pm.PackageManager
+import android.content.res.Configuration
 import android.graphics.Color
 import android.os.Build
 import android.os.Bundle
@@ -58,8 +61,12 @@ class MainActivity : ComponentActivity() {
 
         Log.i(TAG, "Starting Kinoma TV MainActivity")
 
-        // Keep screen on for TV viewing and set full immersion
-        window.addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON)
+        // TV viewing stays immersive; phones and tablets retain their system bars.
+        if (isTelevisionDevice()) {
+            window.addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON)
+        } else {
+            window.clearFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON)
+        }
         hideSystemUI()
 
         // Root layout
@@ -156,14 +163,16 @@ class MainActivity : ComponentActivity() {
             override fun onPageStarted(view: WebView, url: String, favicon: android.graphics.Bitmap?) {
                 super.onPageStarted(view, url, favicon)
                 Log.i(TAG, "WebView page started: $url")
-                // Inject early TV mode flag
+                // Publish actual device capability; never force TV styling on touch devices.
                 view.evaluateJavascript(
                     """
-                    window.isKinomaAndroidTV = true;
-                    try {
-                        localStorage.setItem('kinoma_tv_mode', 'true');
-                        document.documentElement.classList.add('tv-mode');
-                    } catch(e) {}
+                    (function() {
+                        var isTv = !!(window.KinomaNative &&
+                            typeof window.KinomaNative.isTV === 'function' &&
+                            window.KinomaNative.isTV());
+                        window.isKinomaAndroidTV = isTv;
+                        try { document.documentElement.classList.toggle('tv-mode', isTv); } catch(e) {}
+                    })();
                     """.trimIndent(), null
                 )
             }
@@ -171,15 +180,15 @@ class MainActivity : ComponentActivity() {
             override fun onPageFinished(view: WebView, url: String) {
                 super.onPageFinished(view, url)
                 Log.i(TAG, "WebView page finished: $url")
-                // Guarantee TV mode is active in the web frontend
+                // Reconcile frontend mode after document navigation.
                 view.evaluateJavascript(
                     """
                     (function() {
-                        window.isKinomaAndroidTV = true;
-                        try {
-                            localStorage.setItem('kinoma_tv_mode', 'true');
-                            document.documentElement.classList.add('tv-mode');
-                        } catch(e) {}
+                        var isTv = !!(window.KinomaNative &&
+                            typeof window.KinomaNative.isTV === 'function' &&
+                            window.KinomaNative.isTV());
+                        window.isKinomaAndroidTV = isTv;
+                        try { document.documentElement.classList.toggle('tv-mode', isTv); } catch(e) {}
                     })();
                     """.trimIndent(), null
                 )
@@ -384,7 +393,22 @@ class MainActivity : ComponentActivity() {
         }
     }
 
+    private fun isTelevisionDevice(): Boolean {
+        val uiModeManager = getSystemService(Context.UI_MODE_SERVICE) as? UiModeManager
+        return uiModeManager?.currentModeType == Configuration.UI_MODE_TYPE_TELEVISION ||
+            packageManager.hasSystemFeature(PackageManager.FEATURE_LEANBACK)
+    }
+
     private fun hideSystemUI() {
+        if (!isTelevisionDevice()) {
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
+                window.setDecorFitsSystemWindows(true)
+            } else {
+                @Suppress("DEPRECATION")
+                window.decorView.systemUiVisibility = View.SYSTEM_UI_FLAG_VISIBLE
+            }
+            return
+        }
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
             window.setDecorFitsSystemWindows(false)
         } else {
@@ -603,7 +627,7 @@ class MainActivity : ComponentActivity() {
 
         @JavascriptInterface
         fun isTV(): Boolean {
-            return true
+            return isTelevisionDevice()
         }
 
         @JavascriptInterface
