@@ -1,6 +1,6 @@
 # 🐼 Panda.fun
 
-Panda.fun is a responsive movie and TV streaming web application, previously known as **Kinoma**. It combines a Panda-themed streaming interface with a dedicated MovieAPI backend, local-first playback/library state, optional Firebase account sync, PWA support, and a native Android TV application.
+Panda.fun is a responsive movie and TV streaming web application, previously known as **Kinoma**. It combines a Panda-themed streaming interface with a dedicated MovieAPI backend, local-first playback/library state, optional Firebase account sync, PWA support, and a native Android application wrapper designed for Android TV, phones and tablets.
 
 > **Status:** Active development. The UI and playback system are still being refined, so implementation details may change.
 
@@ -51,7 +51,7 @@ The application does not store the movie or TV video files itself. It retrieves 
 ├──────────────────────────────────────────────┤
 │ PWA / Service Worker                         │
 ├──────────────────────────────────────────────┤
-│ Native Android TV                            │
+│ Universal Android app (TV / phone / tablet) │
 │ Jetpack Compose + Media3 / ExoPlayer         │
 └──────────────────────────────────────────────┘
 ```
@@ -316,19 +316,14 @@ The responsive web interface is intentionally shared across desktop, mobile and 
 
 ---
 
-## 📺 Native Android TV
+## 📺 Universal Android app (TV, phone and tablet)
 
-The repository also contains a native Android TV application under `/android`.
+The `/android` project packages the web application in a native Android WebView wrapper. The intended distribution is **one APK** with both the ordinary Android launcher and Android TV / Leanback launcher entries.
 
-It uses:
-
-- Kotlin
-- Jetpack Compose
-- Media3 / ExoPlayer
-- Android TV / Leanback launcher support
-- D-pad navigation
-- Native TV playback
-- Update checking
+- TV mode is selected from native Android TV UI mode / Leanback capability and retains the existing D-pad navigation and TV-focused presentation.
+- Touch devices use the touch-first responsive shell and can keep portrait orientation; the main activity is not locked to landscape.
+- Playback routes and current Vidy embed URL behavior remain shared with the web app. The native wrapper continues to handle its existing fullscreen WebView lifecycle and update flow.
+- The project also contains Android TV / Media3-related components; this does not mean the web app's current Vidy playback is replaced by a native ExoPlayer pipeline.
 
 Build instructions are maintained separately in:
 
@@ -336,7 +331,7 @@ Build instructions are maintained separately in:
 android/README.md
 ```
 
-The native Android TV infrastructure is part of the project and should not be removed when changing the web interface.
+Manifest configuration and source-level tests do not prove installation or launcher behavior on every device. Verify on an Android TV and a touchscreen Android device before claiming device-level compatibility.
 
 ---
 
@@ -445,7 +440,7 @@ The frontend should treat MovieAPI as its catalog, metadata, discovery, trailer 
 
 ```
 Panda.fun/
-├── android/                 # Native Android TV application
+├── android/                 # Universal Android wrapper (TV / phone / tablet)
 ├── docs/                    # Project plans and documentation
 ├── public/                  # Static web assets
 ├── src/
