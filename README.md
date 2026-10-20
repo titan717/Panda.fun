@@ -348,7 +348,7 @@ VITE_MOVIE_API_URL=https://movieapi-3d0v.onrender.com
 A secondary endpoint can be supplied through:
 
 ```
-VITE_MOVIE_API_FALLBACK_URL=
+VITE_MOVIE_API_FALLBACK_URL=https://apikinomafallback.vercel.app
 ```
 
 Firebase configuration is supplied through the Firebase configuration used by `src/lib/firebase.ts`.
@@ -428,9 +428,12 @@ Backend repository:
 
 **MovieAPI:** https://github.com/titan717/movieapi
 
-Current deployment:
+Current deployments:
 
-**MovieAPI Render:** https://movieapi-3d0v.onrender.com
+- **Primary MovieAPI (Render):** https://movieapi-3d0v.onrender.com
+- **Fallback MovieAPI (Vercel):** https://apikinomafallback.vercel.app
+
+The shared client retries against the Vercel endpoint when Render is unavailable, suspended, rate-limited, or returns a retryable error. See `docs/movieapi-fallback.md` for provider configuration and verification notes.
 
 The frontend should treat MovieAPI as its catalog, metadata, discovery, trailer and playback-resolution layer rather than directly embedding provider credentials or backend secrets.
 
