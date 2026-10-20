@@ -35,7 +35,7 @@ Do not change Vidy URL construction, autoplay/next-episode parameters, media-ID 
 Preserve useful API, routes, accounts, analytics and playback documentation. Correct stale Android-TV-only statements; document the single universal APK, TV capability selection, shared core/device-specific shells, supported build/test commands, Vidy boundary and unverified device-level checks. Never claim builds or device compatibility that were not verified.
 
 ## Validation
-Run baseline and final `npm run lint`, `npm test`, and `npm run build`. Run `cd android && ./gradlew :app:assembleDebug` when Gradle/SDK dependencies are available. Inspect merged manifest and bundled assets. Test TV remote, phone touch and tablet/resize behavior when devices/emulators are available. Report unavailable checks explicitly.
+Run baseline and final `npm run lint`, `npm test`, and `npm run build`. Run `cd android && gradle clean :app:assembleDebug` when Gradle/SDK dependencies are available; this repository does not include a Gradle wrapper. Inspect merged manifest and bundled assets. Test TV remote, phone touch and tablet/resize behavior when devices/emulators are available. Report unavailable checks explicitly.
 
 ## Out of scope
 No backend/provider replacement, no rewrite of TV playback, no removal of routes/auth/analytics/library behavior, and no claim of exact third-party UI parity.
