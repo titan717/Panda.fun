@@ -16,7 +16,7 @@ Requirements:
 From the repository root, run:
 
 ```bash
-npm ci
+npm install
 npm run lint
 npm test
 npm run build
