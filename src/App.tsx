@@ -72,9 +72,9 @@ function AnimatedRoutes() {
         >
           <Suspense
             fallback={
-              <div className="kinoma-search-loading min-h-[55vh] w-full" role="status" aria-live="polite">
+              <div className="panda-route-loading min-h-[55vh] w-full" role="status" aria-live="polite">
                 <ThinkingOrb state="searching" size={64} theme="dark" aria-label="Loading Panda.fun" />
-                <div className="kinoma-search-loading__copy"><span>Loading Panda.fun</span><p>Preparing your next discovery</p></div>
+                <div className="panda-route-loading__copy"><span>Loading Panda.fun</span><p>Preparing your next discovery</p></div>
               </div>
             }
           >
