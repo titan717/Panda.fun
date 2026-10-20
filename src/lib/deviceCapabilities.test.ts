@@ -6,6 +6,9 @@ const read = (relativePath: string) => readFileSync(new URL(relativePath, import
 const app = read('../App.tsx');
 const activity = read('../../android/app/src/main/java/com/kinoma/tv/ui/MainActivity.kt');
 const styles = read('../index.css');
+const mobileHome = read('../pages/MobileHome.tsx');
+const mobileHomeStyles = read('../pages/mobile-home.css');
+const homePage = read('../pages/Home.tsx');
 
 describe('universal device capability selection', () => {
   it('prioritizes native TV capability at any viewport size', () => {
@@ -48,6 +51,26 @@ describe('universal Android manifest contract', () => {
   it('does not force the main activity into landscape', () => {
     const mainActivity = manifest.match(/<activity[\s\S]*?android:name="\.ui\.MainActivity"[\s\S]*?<\/activity>/)?.[0] ?? '';
     expect(mainActivity).not.toContain('android:screenOrientation="landscape"');
+  });
+
+  it('uses Thinking Orbs rather than poster skeletons while the mobile hero loads', () => {
+    expect(mobileHome).toContain('<ThinkingOrb state="searching"');
+    expect(mobileHome).toContain('role="status" aria-live="polite"');
+    expect(mobileHomeStyles).toContain('.panda-mobile-featured__loading > canvas');
+    expect(mobileHomeStyles).not.toContain('.panda-mobile-featured__loading span {');
+  });
+
+  it('keeps the mobile hero cards rectangular and cinematic', () => {
+    expect(mobileHomeStyles).toContain('aspect-ratio: 16 / 9;');
+    expect(mobileHomeStyles).toContain('flex: 0 0 78vw;');
+    expect(mobileHomeStyles).not.toContain('aspect-ratio: 4 / 5;');
+  });
+
+  it('passes real loading/error state into the mobile homepage and has an empty state', () => {
+    expect(homePage).toContain('loading={!home && !error} error={error}');
+    expect(mobileHome).toContain(') : loading ? (');
+    expect(mobileHome).toContain('Your next watch is waiting.');
+    expect(mobileHomeStyles).toContain('.panda-mobile-featured__empty');
   });
 
   it('uses Thinking Orbs for the accessible route loading state', () => {
