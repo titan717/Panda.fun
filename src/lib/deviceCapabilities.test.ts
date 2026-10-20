@@ -3,6 +3,8 @@ import { readFileSync } from 'node:fs';
 import { getDeviceMode } from './deviceCapabilities';
 
 const read = (relativePath: string) => readFileSync(new URL(relativePath, import.meta.url), 'utf8');
+const app = read('../App.tsx');
+const activity = read('../../android/app/src/main/java/com/kinoma/tv/ui/MainActivity.kt');
 
 describe('universal device capability selection', () => {
   it('prioritizes native TV capability at any viewport size', () => {
@@ -46,4 +48,12 @@ describe('universal Android manifest contract', () => {
     const mainActivity = manifest.match(/<activity[\s\S]*?android:name="\.ui\.MainActivity"[\s\S]*?<\/activity>/)?.[0] ?? '';
     expect(mainActivity).not.toContain('android:screenOrientation="landscape"');
   });
+
+  it('keeps native TV mode truthful and gates directional navigation', () => {
+    expect(activity).toContain('return isTelevisionDevice()');
+    expect(activity).not.toContain("localStorage.setItem('kinoma_tv_mode', 'true')");
+    expect(activity).not.toContain('window.isKinomaAndroidTV = true;');
+    expect(app).toContain("if (getCurrentDeviceMode() !== 'tv') return;");
+  });
+
 });
