@@ -16,6 +16,8 @@ type MobileHomeProps = {
   newOnNetflix?: MovieApiMedia[];
   newOnDisneyPlus?: MovieApiMedia[];
   airing?: MovieApiMedia[];
+  loading?: boolean;
+  error?: string | null;
 };
 
 function imageFor(item: MovieApiMedia) {
@@ -67,6 +69,8 @@ export function MobileHome({
   newOnNetflix = [],
   newOnDisneyPlus = [],
   airing = [],
+  loading = false,
+  error = null,
 }: MobileHomeProps) {
   const viewportRef = useRef<HTMLDivElement | null>(null);
   const [activeIndex, setActiveIndex] = useState(0);
@@ -136,10 +140,16 @@ export function MobileHome({
               })}
             </div>
           </div>
-        ) : (
+        ) : loading ? (
           <div className="panda-mobile-featured__loading" role="status" aria-live="polite">
             <ThinkingOrb state="searching" size={64} theme="dark" aria-label="Loading featured titles" />
             <span className="panda-mobile-featured__loading-copy">Finding your next watch</span>
+          </div>
+        ) : (
+          <div className="panda-mobile-featured__empty" role="status">
+            <strong>{error ? 'We couldn’t load your picks.' : 'Your next watch is waiting.'}</strong>
+            <span>{error ? 'The catalogue may be taking a break. Try Search while we recover.' : 'Explore the catalogue to find something worth watching.'}</span>
+            <Link href="/search">Explore titles <ArrowRight size={15} /></Link>
           </div>
         )}
         <div className="panda-mobile-featured__hint" aria-hidden="true">
