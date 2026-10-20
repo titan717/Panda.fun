@@ -1,6 +1,7 @@
 import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { Link } from 'wouter';
 import { ArrowRight } from 'lucide-react';
+import { ThinkingOrb } from 'thinking-orbs';
 import { ModernContinueWatching } from '../components/ui/modern/ModernContinueWatching';
 import { MovieApiMedia } from '../lib/api';
 import { buildDetailsHref } from '../lib/mediaRoute';
@@ -136,7 +137,10 @@ export function MobileHome({
             </div>
           </div>
         ) : (
-          <div className="panda-mobile-featured__loading" aria-label="Featured titles loading"><span /><span /><span /></div>
+          <div className="panda-mobile-featured__loading" role="status" aria-live="polite">
+            <ThinkingOrb state="searching" size={64} theme="dark" aria-label="Loading featured titles" />
+            <span className="panda-mobile-featured__loading-copy">Finding your next watch</span>
+          </div>
         )}
         <div className="panda-mobile-featured__hint" aria-hidden="true">
           {featuredItems.map((item, index) => <span key={item.id} className={index === activeIndex ? 'is-active' : ''} />)}
