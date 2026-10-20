@@ -48,7 +48,6 @@ import { ThinkingOrb } from 'thinking-orbs';
 import './components/intro/panda-intro.css';
 import { handleTVRemoteKey } from './lib/tvRemoteNavigation';
 import { getCurrentDeviceMode } from './lib/deviceCapabilities';
-import { getCurrentDeviceMode } from './lib/deviceCapabilities';
 
 function AnimatedRoutes() {
   const [location] = useLocation();
