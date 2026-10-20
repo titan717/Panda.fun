@@ -161,19 +161,68 @@
 }
 
 .panda-mobile-featured__loading {
-  display: grid;
-  grid-template-columns: 1fr;
-  place-items: center;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 14px;
   width: 100%;
-  padding: 6px 13vw 12px;
+  min-height: min(58vh, 390px);
+  padding: 24px 18px;
+  color: #f5f2f2;
+  background: #000;
 }
-.panda-mobile-featured__loading span {
+.panda-mobile-featured__loading > canvas {
   display: block;
-  width: 74vw;
-  aspect-ratio: 4 / 5;
-  border: 1px solid rgba(255,255,255,.07);
-  border-radius: 12px;
-  background: #090909;
+  flex: 0 0 64px;
+  width: 64px;
+  height: 64px;
+}
+.panda-mobile-featured__loading-copy {
+  color: rgba(245,242,242,.8);
+  font-size: 13px;
+  font-weight: 650;
+  line-height: 1.4;
+}
+
+
+.panda-mobile-featured__empty {
+  display: grid;
+  justify-items: center;
+  gap: 10px;
+  min-height: min(42vh, 300px);
+  padding: 36px 24px;
+  text-align: center;
+}
+.panda-mobile-featured__empty strong {
+  color: #f5f2f2;
+  font-size: 16px;
+  font-weight: 750;
+}
+.panda-mobile-featured__empty > span {
+  max-width: 30ch;
+  color: rgba(245,242,242,.58);
+  font-size: 12px;
+  line-height: 1.55;
+}
+.panda-mobile-featured__empty a {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  min-height: 40px;
+  margin-top: 4px;
+  padding: 0 15px;
+  color: #fff;
+  background: #65172a;
+  border: 1px solid rgba(215,160,173,.24);
+  border-radius: 999px;
+  font-size: 12px;
+  font-weight: 700;
+  text-decoration: none;
+}
+.panda-mobile-featured__empty a:focus-visible {
+  outline: 2px solid #d7a0ad;
+  outline-offset: 3px;
 }
 
 .panda-mobile-home__collection {
