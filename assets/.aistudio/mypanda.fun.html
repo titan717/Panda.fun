@@ -1,0 +1,187 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>mypanda.fun</title>
+<style>
+:root{--bg:#050507;--fg:#f4f2f8;--mute:#a7a3b5;--acc:#ff2e63;color-scheme:dark;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+html{scroll-padding-top:env(safe-area-inset-top,0px)}
+*{box-sizing:border-box;margin:0}
+html,body{height:100%;background:var(--bg);color:var(--fg);font-family:"Inter","Segoe UI",Helvetica,Arial,sans-serif;overflow:hidden}
+#c{position:fixed;inset:0;width:100%;height:100%;z-index:5;pointer-events:none}
+#start{position:fixed;inset:0;z-index:9;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:18px;background:var(--bg);transition:opacity .5s}
+#start.off{opacity:0;pointer-events:none}
+#start b{font-size:clamp(28px,7vw,44px);font-weight:800;letter-spacing:-.02em}
+#start b i{font-style:normal;color:var(--acc)}
+button{font:inherit;color:inherit;cursor:pointer;border:0}
+#go{background:#fff;color:#111;font-weight:700;padding:14px 28px;border-radius:999px;font-size:16px}
+#go:focus-visible,#again:focus-visible{outline:3px solid var(--acc);outline-offset:3px}
+#start small{color:var(--mute)}
+#pick{cursor:pointer;color:var(--acc);border:1px solid var(--acc);border-radius:999px;padding:10px 20px;font-size:15px}#pick:focus-within{outline:3px solid var(--acc);outline-offset:3px}#file{position:absolute;opacity:0;width:1px;height:1px}
+#again{position:fixed;left:50%;top:50%;transform:translate(-50%,-50%);z-index:6;background:#ffffff1f;padding:12px 22px;border-radius:999px;font-size:15px;opacity:0;pointer-events:none;transition:opacity .8s}
+#again.on{opacity:1;pointer-events:auto}
+</style>
+</head>
+<body>
+<button id="again" type="button">Replay intro</button>
+<canvas id="c"></canvas>
+<div id="start"><b>mypanda<i>.fun</i></b><button id="go" type="button">Play intro</button><label id="pick">Add transition sound<input id="file" type="file" accept="audio/*"></label><small id="snd">Optional: choose your own audio file</small></div>
+
+<script>
+const $=s=>document.querySelector(s),cv=$('#c'),ctx=cv.getContext('2d');
+const clamp=(x,a=0,b=1)=>Math.min(b,Math.max(a,x)),ss=x=>(x=clamp(x))*x*(3-2*x),eo=x=>1-Math.pow(1-clamp(x),3),seg=(t,a,b)=>clamp((t-a)/(b-a));
+// face box (logo units), intro length OFF (transition starts at t=OFF), impact time IMP
+const X0=10,Y0=24,BW=280,BH=274,OFF=1.6,IMP=3.4;
+let W,H,D,k,lg,R=[],P=[],S=[],t0=0,raf=0,done=false,ac;
+
+// ---------- the panda face: head + two ears (clear gaps), eye patches / nose / mouth cut out ----------
+function face(c){
+  const g=c.createLinearGradient(0,Y0,0,Y0+BH);g.addColorStop(0,'#fff');g.addColorStop(1,'#cfcae6');
+  c.fillStyle=g;c.beginPath();c.ellipse(150,190,118,104,0,0,7);c.fill();
+  [[52,66],[248,66]].forEach(([x,y])=>{c.beginPath();c.arc(x,y,36,0,7);c.fill()});
+  c.globalCompositeOperation='destination-out';c.fillStyle=c.strokeStyle='#000';
+  [[94,190,.42],[206,190,-.42]].forEach(([x,y,r])=>{c.beginPath();c.ellipse(x,y,27,38,r,0,7);c.fill()});
+  c.beginPath();c.ellipse(150,222,16,11,0,0,7);c.fill();
+  c.lineWidth=4;c.lineCap='round';c.beginPath();c.moveTo(150,234);c.lineTo(150,246);c.moveTo(150,246);c.quadraticCurveTo(142,258,130,252);c.moveTo(150,246);c.quadraticCurveTo(158,258,170,252);c.stroke();
+}
+function rs(){
+  D=Math.min(devicePixelRatio||1,2);W=innerWidth;H=innerHeight;cv.width=W*D;cv.height=H*D;
+  k=Math.min(.42*H/BH,.56*W/BW);
+  lg=document.createElement('canvas');lg.width=Math.ceil(BW*k*D);lg.height=Math.ceil(BH*k*D);
+  const c=lg.getContext('2d');c.scale(k*D,k*D);c.translate(-X0,-Y0);face(c);
+  const n=W<600?110:200,span=W*2.2;R=[];
+  for(let i=0;i<n;i++){const u=i/(n-1);R.push({x:(u-.5)*span,w:(.4+Math.random()*1.2)*W*.0075,h:Math.random(),hue:(u*360+280)%360,ph:Math.random()*6.28,sp:.6+Math.random()*1.4,d:.7+Math.random()*.9})}
+  P=Array.from({length:80},()=>({x:Math.random(),y:Math.random(),s:Math.random()*1.8+.5,v:Math.random()*.02+.005,a:Math.random()*.4+.1}));
+  // the face is sliced into thin vertical bars: they grow in with the light beam, then stretch into ribbons
+  const nb=W<600?56:96,pp=lg.width/nb;
+  S=Array.from({length:nb},(_,i)=>({sx:Math.round(i*pp),sw:Math.max(1,Math.round(pp*.62)),xn:i/nb,d:(i/nb)*.25+Math.random()*.4,r:Math.random(),dir:Math.random()<.5?-1:1}));
+}
+
+// ---------- camera ----------
+// intro: low crane-up + sideways arc + roll settling, recoil on impact; transition (u = t-OFF) unchanged
+function cam(t){
+  const u=t-OFF,b=seg(u,3.4,6.4),a=seg(t,0,OFF+3.4),ar=1-eo(seg(t,0,4.2)),sh=t>IMP?Math.exp(-(t-IMP)*8):0;
+  return{z:.78+.26*eo(a)+2.4*Math.pow(b,2.1)-.05*sh,
+    r:-.05*(1-eo(seg(t,0,3.8)))+.025*Math.sin(t*1.1)*(1-ss(seg(t,3.6,OFF+3.4)))+.11*ss(b),
+    x:Math.sin(u*.7)*W*.014*(1-b)-W*.05*ar+Math.sin(t*95)*W*.007*sh+b*Math.sin(u*1.3)*W*.05,
+    y:H*.05*(1-eo(seg(t,0,3)))+Math.cos(u*.5)*H*.01+Math.cos(t*83)*H*.007*sh};
+}
+
+// ---------- light ribbons (unchanged) ----------
+function ribbons(t,spread,amp,lift,px){
+  ctx.globalCompositeOperation='lighter';
+  for(const r of R){
+    const m=ss((spread-Math.abs(r.x)/(W*1.1))/.18);if(m<=0)continue;
+    const hh=H*(.25+.95*r.h*(.55+.45*Math.sin(t*r.sp*1.6+r.ph)))*m*amp*r.d*(1-lift*.6);
+    if(hh<2)continue;
+    const x=W/2+r.x+(r.d-1)*px*3,y0=H/2-hh/2-lift*H*(.6+r.h*.9),hue=(r.hue+t*30)%360;
+    const g=ctx.createLinearGradient(0,y0,0,y0+hh);
+    g.addColorStop(0,`hsla(${hue},100%,60%,0)`);g.addColorStop(.5,`hsla(${hue},100%,68%,.95)`);g.addColorStop(1,`hsla(${hue},100%,60%,0)`);
+    ctx.fillStyle=g;ctx.globalAlpha=.22*Math.min(1,amp);ctx.fillRect(x-r.w*2.2,y0,r.w*5.4,hh);
+    ctx.globalAlpha=Math.min(1,amp);ctx.fillRect(x-r.w/2,y0,r.w,hh);
+  }
+  ctx.globalAlpha=1;ctx.globalCompositeOperation='source-over';
+}
+
+function frame(t){
+  const u=t-OFF;
+  ctx.setTransform(D,0,0,D,0,0);ctx.globalAlpha=1;ctx.globalCompositeOperation='source-over';
+  ctx.fillStyle='#050507';ctx.fillRect(0,0,W,H);
+  const c=cam(t),lx=W/2,ly=H*.46,iw=lg.width/D,ih=lg.height/D,ox=lx-iw/2,oy=ly-ih/2,fl=t>IMP?Math.exp(-(t-IMP)*3.2):0;
+  ctx.save();
+  ctx.translate(W/2+c.x,H/2+c.y);ctx.rotate(c.r);ctx.scale(c.z,c.z);ctx.translate(-W/2,-H/2);
+
+  // glow behind the face
+  const gl=ss(seg(t,1.4,3.2))*(1-ss(seg(u,3.6,4.8)));
+  if(gl>0){const g=ctx.createRadialGradient(lx,ly,0,lx,ly,Math.max(W,H)*.45);
+    g.addColorStop(0,`rgba(255,46,99,${.34*gl+.3*fl*gl})`);g.addColorStop(.5,`rgba(120,40,200,${.12*gl})`);g.addColorStop(1,'rgba(0,0,0,0)');
+    ctx.fillStyle=g;ctx.fillRect(-W,-H,W*3,H*3)}
+
+  // dust
+  const df=ss(seg(t,0,.8))*(1-ss(seg(u,3.6,4.6)));
+  if(df>0){ctx.fillStyle='#ffd6e6';for(const p of P){ctx.globalAlpha=p.a*df;ctx.fillRect(p.x*W*1.4-W*.2,(((p.y-t*p.v)%1+1)%1)*H*1.4-H*.2,p.s,p.s)}ctx.globalAlpha=1}
+
+  // INTRO 1: two eyes in the dark, one slow blink
+  const ea=ss(seg(t,.45,.9))*(1-ss(seg(u,3.4,3.7)));
+  if(ea>0){const sq=1-.92*Math.exp(-Math.pow((t-1.12)/.07,2)),r=8*k,ey=ly+24*k;
+    for(const dx of[-53,53]){const ex=lx+dx*k;
+      ctx.globalCompositeOperation='lighter';
+      const g=ctx.createRadialGradient(ex,ey,0,ex,ey,r*5);g.addColorStop(0,`rgba(225,20,60,${.8*ea})`);g.addColorStop(1,'rgba(150,0,30,0)');
+      ctx.fillStyle=g;ctx.fillRect(ex-r*5,ey-r*5,r*10,r*10);
+      ctx.globalCompositeOperation='source-over';ctx.globalAlpha=ea;ctx.shadowColor='#ff1030';ctx.shadowBlur=r*2.5;ctx.fillStyle='#dc143c';
+      ctx.beginPath();ctx.ellipse(ex,ey,r,Math.max(.6,r*sq),0,0,7);ctx.fill();ctx.shadowBlur=0;ctx.globalAlpha=1}}
+
+  if(u<3.4){
+    // INTRO 2: a beam of light sweeps across; face bars grow from the centre line as it passes
+    for(const s of S){const rv=eo((t-1.5-1.2*s.xn)/.5);if(rv<=0)continue;
+      const hh=lg.height*rv,sy=(lg.height-hh)/2;
+      ctx.drawImage(lg,s.sx,sy,s.sw,hh,ox+s.sx/D,oy+sy/D,s.sw/D,hh/D)}
+    const bp=(t-1.5)/1.2;
+    if(bp>0&&bp<1.1){const bx=ox+iw*Math.min(bp,1),ba=1-ss(seg(bp,.95,1.1)),by=ly-ih*.7,bh=ih*1.4;
+      ctx.globalCompositeOperation='lighter';
+      const g=ctx.createLinearGradient(0,by,0,by+bh);g.addColorStop(0,'rgba(255,255,255,0)');g.addColorStop(.5,'rgba(255,255,255,1)');g.addColorStop(1,'rgba(255,255,255,0)');
+      ctx.fillStyle=g;ctx.globalAlpha=.22*ba;ctx.fillRect(bx-24,by,48,bh);ctx.globalAlpha=ba;ctx.fillRect(bx-1.5,by,3,bh);
+      ctx.globalAlpha=1;ctx.globalCompositeOperation='source-over'}
+    // INTRO 3: impact flare + shockwave ring
+    if(fl>.02){ctx.globalCompositeOperation='lighter';const w=W*(.35+fl*1.1),g=ctx.createLinearGradient(lx-w,0,lx+w,0);
+      g.addColorStop(0,'#fff0');g.addColorStop(.5,`rgba(255,200,230,${fl})`);g.addColorStop(1,'#fff0');
+      ctx.fillStyle=g;ctx.fillRect(lx-w,ly-2,w*2,4);ctx.fillRect(lx-w*.6,ly-14,w*1.2,28);
+      ctx.strokeStyle=`rgba(255,170,210,${fl*.6})`;ctx.lineWidth=2;ctx.beginPath();ctx.arc(lx,ly,(t-IMP)*W*.9,0,7);ctx.stroke();
+      ctx.globalCompositeOperation='source-over'}
+  }
+  // wordmark, set well clear of the face
+  const wa=ss(seg(t,3.5,4.2))*(1-ss(seg(u,3.4,3.9)));
+  if(wa>0){const fs=k*44;ctx.save();ctx.globalAlpha=wa;ctx.font=`800 ${fs}px Inter,"Segoe UI",Helvetica,Arial,sans-serif`;ctx.textBaseline='middle';
+    ctx.letterSpacing=(fs*(.02+.25*(1-wa)))+'px';
+    const a1=ctx.measureText('mypanda').width,a2=ctx.measureText('.fun').width,x=lx-(a1+a2)/2,y=ly+BH*k/2+k*46;
+    ctx.fillStyle='#fff';ctx.fillText('mypanda',x,y);ctx.fillStyle='#ff2e63';ctx.fillText('.fun',x+a1,y);ctx.restore()}
+
+  // ===== TRANSITION (unchanged, just shifted by OFF): face shatters into streaks, spectrum ribbons rise =====
+  const p=seg(u,3.4,5.4);
+  if(p>0&&p<1){
+    for(const s of S){const q=clamp((p-s.d)/.6);if(q>=1)continue;
+      const sy=1+q*q*5,dh=ih*sy,dy=ly-dh/2+s.dir*q*q*H*.35*(.4+s.r);
+      ctx.globalAlpha=1-Math.pow(q,1.2);
+      ctx.drawImage(lg,s.sx,0,s.sw,lg.height,ox+s.sx/D,dy,s.sw/D+.6,dh)}
+    ctx.globalAlpha=1;
+  }
+  const sp=seg(u,3.2,5.6)*1.5,amp=ss(seg(u,3.2,4.2))*(1-ss(seg(u,6.0,7.0))),lift=ss(seg(u,5.8,7.2));
+  if(amp>0)ribbons(t,sp,amp,lift,c.x);
+  ctx.restore();
+
+  const v=ctx.createRadialGradient(W/2,H/2,Math.min(W,H)*.25,W/2,H/2,Math.max(W,H)*.75);
+  v.addColorStop(0,'rgba(0,0,0,0)');v.addColorStop(1,'rgba(0,0,0,.72)');ctx.fillStyle=v;ctx.fillRect(0,0,W,H);
+}
+
+// ---------- sound: silent, except the transition clip you choose ----------
+let clip=null;
+function ctxA(){try{ac=ac||new(window.AudioContext||window.webkitAudioContext)()}catch(e){}return ac}
+function sfx(){
+  if(!clip||!ctxA())return;
+  if(ac.state==='suspended')ac.resume();
+  const s=ac.createBufferSource();s.buffer=clip;s.connect(ac.destination);s.start(ac.currentTime+.05+OFF+3.4);
+}
+$('#file').onchange=e=>{
+  const f=e.target.files[0];if(!f||!ctxA())return;
+  const r=new FileReader();
+  r.onload=()=>ac.decodeAudioData(r.result,x=>{clip=x;$('#snd').textContent='Sound ready: plays at the transition'},()=>{$('#snd').textContent='Could not read that file'});
+  r.readAsArrayBuffer(f);
+};
+
+// ---------- playback ----------
+function loop(){
+  const t=(performance.now()-t0)/1000;frame(t);
+  if(t-OFF>6.6&&!done){done=true;$('#again').classList.add('on');dispatchEvent(new CustomEvent('mypanda:intro-end'))}
+  if(t<OFF+7.6)raf=requestAnimationFrame(loop);
+}
+function play(){
+  $('#start').classList.add('off');$('#again').classList.remove('on');done=false;cancelAnimationFrame(raf);
+  if(matchMedia('(prefers-reduced-motion:reduce)').matches){done=true;ctx.clearRect(0,0,cv.width,cv.height);$('#again').classList.add('on');return}
+  sfx();t0=performance.now();loop();
+}
+$('#go').onclick=play;$('#again').onclick=play;
+addEventListener('resize',rs);rs();
+</script>
+</body>
+</html>
