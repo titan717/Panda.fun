@@ -34,6 +34,27 @@ The debug APK is generated at `android/app/build/outputs/apk/debug/app-debug.apk
 
 Android Studio can also open the `android/` directory after installing the required SDK and Gradle versions. Ensure the web assets have been built and copied before packaging so the APK contains the same frontend that passed web verification.
 
+## Beta release and in-app updates
+
+The public update manifest is maintained at:
+
+```text
+update/latest.json
+https://raw.githubusercontent.com/titan717/Panda.fun/main/update/latest.json
+```
+
+The manifest provides the latest version code/name, release tag, APK URL, release notes, and SHA-256 checksum. The Android updater compares numeric version codes, downloads the APK only when a newer version is available, verifies the checksum, and then hands installation to Android. Android still enforces package/signature compatibility; keep the existing `com.kinoma.tv` application ID and release signing key for upgrade installs.
+
+The GitHub Actions beta workflow packages the production web build into the Android app. Before building, it runs:
+
+```bash
+npm run lint
+npm test
+npm run build
+```
+
+A successful source build or workflow run does not replace device testing. Before calling a beta release verified, check the APK signature, manifest checksum, update discovery, install/upgrade behavior, and playback on supported devices.
+
 ## Runtime behavior
 
 - **Ordinary Android launcher and Leanback launcher:** both launcher categories are declared; installation and launcher behavior must still be checked on real devices/emulators.
