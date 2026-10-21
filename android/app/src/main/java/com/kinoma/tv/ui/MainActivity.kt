@@ -107,7 +107,7 @@ class MainActivity : ComponentActivity() {
         }
 
         val retryButton = Button(this).apply {
-            text = "Reload Kinoma TV"
+            text = "Reload MyPanda"
             setBackgroundColor(Color.parseColor("#7b1fa2"))
             setTextColor(Color.WHITE)
             setOnClickListener {
