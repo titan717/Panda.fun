@@ -135,6 +135,12 @@ jobs:
       - name: Install web dependencies
         run: npm install --no-audit --no-fund
 
+      - name: Type-check web application
+        run: npm run lint
+
+      - name: Run web tests
+        run: npm test
+
       - name: Build web application
         run: npm run build
 
