@@ -66,13 +66,13 @@ object UpdateChecker {
 
             val destination = File(
                 context.getExternalFilesDir(Environment.DIRECTORY_DOWNLOADS),
-                "Kinoma-TV-update.apk"
+                "MyPanda-update.apk"
             )
             if (destination.exists()) destination.delete()
 
             val request = DownloadManager.Request(Uri.parse(apkUrl))
-                .setTitle("Kinoma TV Update")
-                .setDescription("Downloading the latest Kinoma TV release...")
+                .setTitle("MyPanda Update")
+                .setDescription("Downloading the latest MyPanda release...")
                 .setMimeType("application/vnd.android.package-archive")
                 .setDestinationInExternalFilesDir(
                     context,
