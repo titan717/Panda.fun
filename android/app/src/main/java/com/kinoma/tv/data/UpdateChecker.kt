@@ -17,8 +17,8 @@ import com.google.gson.Gson
 import java.io.File
 
 object UpdateChecker {
-    // Configurable stable endpoint
-    private const val UPDATE_JSON_URL = "https://raw.githubusercontent.com/titan717/Kinoma/main/update/latest.json"
+    // Public beta/stable manifest maintained in the Panda.fun repository
+    private const val UPDATE_JSON_URL = "https://raw.githubusercontent.com/titan717/Panda.fun/main/update/latest.json"
 
     suspend fun checkForUpdate(context: Context? = null, force: Boolean = false): UpdateInfo? = withContext(Dispatchers.IO) {
         try {
