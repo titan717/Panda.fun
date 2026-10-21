@@ -21,8 +21,16 @@ class PlayerActivity : ComponentActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        val videoUrl = intent.getStringExtra("video_url") ?: "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4"
-        val animeTitle = intent.getStringExtra("anime_title") ?: "Kinoma Anime Stream"
+        val videoUrl = intent.getStringExtra("video_url")?.trim()
+        if (videoUrl.isNullOrEmpty()) {
+            android.widget.Toast.makeText(
+                this,
+                "Playback URL is unavailable.",
+                android.widget.Toast.LENGTH_LONG
+            ).show()
+            finish()
+            return
+        }
 
         exoPlayer = ExoPlayer.Builder(this).build().apply {
             setMediaItem(MediaItem.fromUri(videoUrl))
