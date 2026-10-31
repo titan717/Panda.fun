@@ -7,6 +7,7 @@ import { MovieApiMedia } from '../lib/api';
 import { buildDetailsHref } from '../lib/mediaRoute';
 import { optimizeImageUrl } from '../lib/mediaImages';
 import './mobile-home.css';
+import './mobile-featured-controls.css';
 
 type MobileHomeProps = {
   items: MovieApiMedia[];
@@ -115,6 +116,14 @@ export function MobileHome({
     setActiveIndex(current => current === closestIndex ? current : closestIndex);
   };
 
+  const scrollToFeatured = (index: number) => {
+    const viewport = viewportRef.current;
+    const card = viewport?.querySelectorAll<HTMLElement>('.panda-mobile-featured__card')[index];
+    if (!card) return;
+    const prefersReducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    card.scrollIntoView({ behavior: prefersReducedMotion ? 'auto' : 'smooth', block: 'nearest', inline: 'center' });
+  };
+
   return (
     <div className="panda-mobile-home">
       <section className="panda-mobile-featured" aria-label="Featured titles">
@@ -152,9 +161,20 @@ export function MobileHome({
             <Link href="/search">Explore titles <ArrowRight size={15} /></Link>
           </div>
         )}
-        <div className="panda-mobile-featured__hint" aria-hidden="true">
-          {featuredItems.map((item, index) => <span key={item.id} className={index === activeIndex ? 'is-active' : ''} />)}
-        </div>
+        {featuredItems.length > 1 && (
+          <div className="panda-mobile-featured__hint" role="group" aria-label="Choose featured title">
+            {featuredItems.map((item, index) => (
+              <button
+                key={item.id}
+                type="button"
+                className={index === activeIndex ? 'is-active' : ''}
+                aria-label={`Show featured title ${index + 1} of ${featuredItems.length}: ${item.title}`}
+                aria-current={index === activeIndex ? 'true' : undefined}
+                onClick={() => scrollToFeatured(index)}
+              />
+            ))}
+          </div>
+        )}
       </section>
 
       <MobileRail title="Top 10" items={topTen} topTen />
