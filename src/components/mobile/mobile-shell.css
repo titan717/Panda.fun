@@ -404,3 +404,35 @@
     transform: none !important;
   }
 }
+
+
+@media (max-width: 767px) {
+  .panda-mobile-header__action {
+    transition: transform 220ms cubic-bezier(.2,.75,.25,1), color 180ms ease, border-color 180ms ease, background 180ms ease;
+  }
+  .panda-mobile-header__action:hover {
+    transform: rotate(8deg) scale(1.05);
+    color: #fff;
+    border-color: rgba(255,255,255,.42);
+  }
+  .panda-mobile-header__action.is-active {
+    color: #fff;
+    border-color: rgba(255,255,255,.45);
+    background: rgba(255,255,255,.1);
+  }
+  .panda-mobile-header__action:focus-visible {
+    color: #fff;
+    border-color: rgba(255,255,255,.72);
+    outline-color: rgba(255,255,255,.5);
+  }
+  .panda-mobile-bottom-nav__item:active .panda-mobile-bottom-nav__icon {
+    transform: translateY(1px) scale(.94);
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .panda-mobile-header__action,
+  .panda-mobile-bottom-nav__item,
+  .panda-mobile-bottom-nav__icon { transition: none !important; }
+  .panda-mobile-header__action:hover,
+  .panda-mobile-bottom-nav__item:active .panda-mobile-bottom-nav__icon { transform: none !important; }
+}
