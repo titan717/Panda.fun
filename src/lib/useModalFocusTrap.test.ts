@@ -9,7 +9,7 @@ describe('modal keyboard accessibility', () => {
 
   it('traps Tab and Shift+Tab, closes on Escape and restores previous focus', () => {
     expect(trap).toContain("event.key === 'Escape'");
-    expect(trap).toContain("event.key === 'Tab'");
+    expect(trap).toContain("event.key !== 'Tab'");
     expect(trap).toContain('previouslyFocused?.focus');
     expect(trap).toContain('document.addEventListener');
   });
