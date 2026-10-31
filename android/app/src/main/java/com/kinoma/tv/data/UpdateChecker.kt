@@ -20,29 +20,29 @@ object UpdateChecker {
     // Public beta/stable manifest maintained in the Panda.fun repository
     private const val UPDATE_JSON_URL = "https://raw.githubusercontent.com/titan717/Panda.fun/main/update/latest.json"
 
-    suspend fun checkForUpdate(context: Context? = null, force: Boolean = false): UpdateInfo? = withContext(Dispatchers.IO) {
-        try {
-            val client = OkHttpClient()
-            val request = Request.Builder().url(UPDATE_JSON_URL).build()
-            val response = client.newCall(request).execute()
-            if (!response.isSuccessful) return@withContext null
-            val body = response.body?.string() ?: return@withContext null
-            
-            val trimmedBody = body.trim()
-            if (!trimmedBody.startsWith("{") && !trimmedBody.startsWith("[")) {
-                return@withContext null
-            }
-            
-            val updateInfo = Gson().fromJson(trimmedBody, UpdateInfo::class.java)
-            
-            // Compare version code
-            if (updateInfo.latestVersionCode > BuildConfig.VERSION_CODE) {
-                return@withContext updateInfo
-            }
+    /** Silent background check: returns null when up to date or when anything goes wrong. */
+    suspend fun checkForUpdate(context: Context? = null, force: Boolean = false): UpdateInfo? {
+        return try {
+            checkForUpdateOrThrow()
         } catch (e: Exception) {
             e.printStackTrace()
+            null
         }
-        return@withContext null
+    }
+
+    /** Same check, but failures are thrown so the Settings screen can tell "up to date" from "offline". */
+    suspend fun checkForUpdateOrThrow(): UpdateInfo? = withContext(Dispatchers.IO) {
+        val client = OkHttpClient()
+        val request = Request.Builder().url(UPDATE_JSON_URL).build()
+        client.newCall(request).execute().use { response ->
+            if (!response.isSuccessful) throw java.io.IOException("Update server returned ${response.code}.")
+            val body = response.body?.string()?.trim()
+            if (body.isNullOrEmpty()) throw java.io.IOException("Update manifest was empty.")
+            if (!body.startsWith("{")) throw java.io.IOException("Update manifest was not valid.")
+            val updateInfo = Gson().fromJson(body, UpdateInfo::class.java)
+                ?: throw java.io.IOException("Update manifest could not be read.")
+            if (updateInfo.latestVersionCode > BuildConfig.VERSION_CODE) updateInfo else null
+        }
     }
 
     fun downloadAndInstall(

@@ -4,6 +4,7 @@ import { ChevronRight, Play, Database, Sparkles, ShieldCheck, X, RotateCcw, Flas
 import { useAppearance } from '../lib/AppearanceContext';
 import { updateSEO } from '../lib/seo';
 import { KinomaLogo } from '../components/ui/KinomaLogo';
+import { AppUpdatesCard } from '../components/ui/AppUpdatesCard';
 
 export function Settings() {
   const { openSettingsModal } = useAppearance();
@@ -73,6 +74,8 @@ export function Settings() {
             </button>
           ))}
         </section>
+
+        <AppUpdatesCard />
 
         <section className="panda-settings-footer">
           <div className="panda-settings-footer__icon"><ShieldCheck size={17} /></div>

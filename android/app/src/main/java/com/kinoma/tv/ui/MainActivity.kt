@@ -494,6 +494,53 @@ class MainActivity : ComponentActivity() {
         return super.dispatchKeyEvent(event)
     }
 
+    private var availableUpdate: UpdateInfo? = null
+
+    /** Sends update progress to the web Settings page (listens for "panda_native_update_status"). */
+    private fun emitUpdateStatus(status: String, update: UpdateInfo? = null, message: String? = null) {
+        val payload = HashMap<String, Any>()
+        payload["status"] = status
+        if (update != null) {
+            payload["versionName"] = update.latestVersionName
+            payload["releaseNotes"] = update.releaseNotes
+            payload["mandatory"] = update.mandatory
+        }
+        if (message != null) payload["message"] = message
+        val json = com.google.gson.Gson().toJson(payload)
+        runOnUiThread {
+            if (!isFinishing) {
+                webView.evaluateJavascript(
+                    "window.dispatchEvent(new CustomEvent('panda_native_update_status',{detail:$json}));",
+                    null
+                )
+            }
+        }
+    }
+
+    private fun checkUpdatesFromSettings() {
+        emitUpdateStatus("checking")
+        lifecycleScope.launch {
+            try {
+                val update = UpdateChecker.checkForUpdateOrThrow()
+                availableUpdate = update
+                if (update != null) emitUpdateStatus("available", update) else emitUpdateStatus("up-to-date")
+            } catch (e: Exception) {
+                Log.w(TAG, "Manual update check error: ${e.message}")
+                emitUpdateStatus("error", message = "Couldn't reach the update server. Check your connection and try again.")
+            }
+        }
+    }
+
+    private fun downloadAvailableUpdate() {
+        val update = availableUpdate
+        if (update == null) {
+            checkUpdatesFromSettings()
+            return
+        }
+        emitUpdateStatus("downloading", update)
+        startDownloadAndInstall(update)
+    }
+
     private fun checkUpdatesInBackground() {
         lifecycleScope.launch {
             try {
@@ -548,6 +595,7 @@ class MainActivity : ComponentActivity() {
                 }
             },
             onComplete = { apkUri ->
+                emitUpdateStatus("available", availableUpdate)
                 runOnUiThread {
                     progressDialog.dismiss()
                     if (canInstallPackages()) {
@@ -566,6 +614,7 @@ class MainActivity : ComponentActivity() {
                 }
             },
             onError = { error ->
+                emitUpdateStatus("error", message = error)
                 runOnUiThread {
                     progressDialog.dismiss()
                     AlertDialog.Builder(this, android.R.style.Theme_DeviceDefault_Dialog_Alert)
@@ -634,6 +683,20 @@ class MainActivity : ComponentActivity() {
         fun checkForUpdates() {
             runOnUiThread {
                 checkUpdatesInBackground()
+            }
+        }
+
+        @JavascriptInterface
+        fun checkForUpdatesManual() {
+            runOnUiThread {
+                checkUpdatesFromSettings()
+            }
+        }
+
+        @JavascriptInterface
+        fun downloadUpdate() {
+            runOnUiThread {
+                downloadAvailableUpdate()
             }
         }
     }
