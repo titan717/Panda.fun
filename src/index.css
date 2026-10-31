@@ -10451,3 +10451,67 @@ html.tv-mode .panda-content-card:focus-within { scroll-margin-inline: 32px; }
   .kinoma-library-tabs button:hover,
   .kinoma-library-card:hover { transform: none !important; }
 }
+
+
+/* Details page finishing pass: artwork fades into readable copy and actions remain easy to reach. */
+.kinoma-details-hero--trailer .kinoma-details-hero__trailer-bg::after {
+  content: "";
+  position: absolute;
+  inset: 42% 0 0;
+  pointer-events: none;
+  background: linear-gradient(180deg, transparent 0%, rgba(0,0,0,.42) 46%, rgba(0,0,0,.82) 100%);
+}
+.kinoma-details-hero--trailer .kinoma-details-copy h1 {
+  max-width: 12ch;
+  text-wrap: balance;
+}
+.kinoma-details-actions {
+  align-items: center;
+  gap: 11px;
+}
+.kinoma-details-actions button {
+  min-height: 48px;
+}
+.kinoma-details-share-feedback:empty {
+  display: none;
+}
+.kinoma-details-section__heading h2 {
+  text-wrap: balance;
+}
+.kinoma-season-tabs button:focus-visible,
+.kinoma-episode-card:focus-visible,
+.kinoma-season-picker__trigger:focus-visible {
+  outline: 2px solid rgba(232,208,192,.78);
+  outline-offset: 3px;
+}
+@media (max-width: 800px) {
+  .kinoma-details-hero--trailer .kinoma-details-hero__trailer-bg::after {
+    inset: 48% 0 0;
+    background: linear-gradient(180deg, transparent 0%, rgba(0,0,0,.24) 42%, rgba(0,0,0,.72) 100%);
+  }
+  .kinoma-details-hero--trailer .kinoma-details-hero__content {
+    padding-top: 0;
+    padding-bottom: 42px;
+  }
+  .kinoma-details-hero--trailer .kinoma-details-copy h1 {
+    max-width: 100%;
+    font-size: clamp(2.5rem, 11vw, 4.7rem);
+    line-height: .94;
+  }
+  .kinoma-details-actions {
+    gap: 8px;
+    margin-top: 22px;
+  }
+  .kinoma-details-actions button span {
+    min-height: 46px;
+    justify-content: center;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .kinoma-details-hero__trailer-video,
+  .kinoma-details-3d-button,
+  .kinoma-details-share {
+    transform: none !important;
+    transition: none !important;
+  }
+}
