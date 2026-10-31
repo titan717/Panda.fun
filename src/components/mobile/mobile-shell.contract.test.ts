@@ -16,6 +16,8 @@ describe('MYpanda.fun mobile shell contract', () => {
     expect(layout).toContain('panda-mobile-bottom-nav');
     expect(layout).toContain("location.startsWith('/watch/')");
     expect(layout).toContain("href === '/library' ? 'Library' : label");
+    expect(layout).toContain("const pathname = location.split('?')[0]");
+    expect(layout).toContain("pathname === '/search'");
   });
 
   it('keeps the mobile page surfaces black and makes Watch a viewport-filling shell-free player', () => {
@@ -26,6 +28,9 @@ describe('MYpanda.fun mobile shell contract', () => {
     expect(mobileShell).toContain('display: block !important;');
     expect(mobileShell).toContain('flex: none !important;');
     expect(mobileShell).toContain('.panda-mobile-featured__loading');
+    expect(mobileShell).toContain('right: 12px !important');
+    expect(mobileShell).toContain('border-radius: 22px');
+    expect(mobileShell).toContain('bottom: calc(8px + env(safe-area-inset-bottom, 0px)) !important');
   });
 
   it('includes Top 10 and the planned catalogue rows without replacing the existing API', () => {
