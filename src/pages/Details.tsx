@@ -226,20 +226,23 @@ export function Details() {
   const share = async () => {
     const shareUrl = window.location.href;
     setShareFeedback('');
-    try {
-      if (navigator.share) {
+    if (navigator.share) {
+      try {
         await navigator.share({ title, text: 'Watch ' + title + ' on Panda.fun', url: shareUrl });
         setShareFeedback('Thanks for sharing!');
         return;
+      } catch (error) {
+        if (error instanceof Error && error.name === 'AbortError') return;
       }
+    }
+    try {
       if (navigator.clipboard?.writeText) {
         await navigator.clipboard.writeText(shareUrl);
         setShareFeedback('Link copied to clipboard');
-        return;
+      } else {
+        setShareFeedback('Sharing is not available in this browser.');
       }
-      setShareFeedback('Sharing is not available in this browser.');
-    } catch (error) {
-      if (error instanceof Error && error.name === 'AbortError') return;
+    } catch {
       setShareFeedback('Could not share this title. Please try again.');
     }
   };
