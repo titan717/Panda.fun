@@ -13,7 +13,9 @@ describe('MYpanda.fun mobile shell contract', () => {
     expect(layout).toContain('panda-mobile-header');
     expect(layout).toContain('aria-label="Settings"');
     expect(layout).toContain('href="/settings"');
-    expect(layout).not.toContain('aria-label="Profile"');
+    const mobileHeader = layout.slice(layout.indexOf('<header className="panda-mobile-header">'), layout.indexOf('</header>'));
+    expect(mobileHeader).toContain('aria-label="Settings"');
+    expect(mobileHeader).not.toContain('Profile');
     expect(layout).not.toContain('aria-label="Search movies and shows"');
     expect(layout).toContain('panda-mobile-bottom-nav');
     expect(layout).toContain("location.startsWith('/watch/')");
