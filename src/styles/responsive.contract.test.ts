@@ -21,8 +21,8 @@ describe('responsive layout breakpoints', () => {
   });
 
   it('has compact-phone and wider featured-card sizing rules', () => {
-    expect(featuredCss).toContain('@media (max-width:420px)');
-    expect(featuredCss).toContain('@media (min-width:768px)');
+    expect(featuredCss).toContain('@media (max-width: 380px)');
+    expect(featuredCss).toContain('@media (min-width: 520px) and (max-width: 767px)');
     expect(featuredCss).toContain('min-width: 0');
   });
 });
