@@ -1,4 +1,4 @@
-export type UpdateStatus = 'idle' | 'checking' | 'up-to-date' | 'available' | 'applying' | 'error';
+export type UpdateStatus = 'idle' | 'checking' | 'up-to-date' | 'available' | 'applying' | 'downloaded' | 'error';
 export type UpdateSource = 'android' | 'web';
 
 export interface AppUpdateState {
@@ -19,6 +19,7 @@ export type AppUpdateEvent =
   | { type: 'up-to-date'; at: number }
   | { type: 'available'; at: number; versionName?: string; releaseNotes?: string; mandatory?: boolean }
   | { type: 'applying' }
+  | { type: 'downloaded'; at: number; versionName?: string }
   | { type: 'error'; at: number; message?: string };
 
 export function initialUpdateState(source: UpdateSource): AppUpdateState {
@@ -47,6 +48,8 @@ export function updateReducer(state: AppUpdateState, event: AppUpdateEvent): App
       };
     case 'applying':
       return { ...state, status: 'applying', message: undefined };
+    case 'downloaded':
+      return { ...state, status: 'downloaded', availableVersion: event.versionName, message: undefined, lastChecked: event.at };
     case 'error':
       return { ...state, status: 'error', message: event.message || 'Something went wrong while checking for updates.', lastChecked: event.at };
     default:
@@ -67,6 +70,8 @@ export function statusMessage(state: AppUpdateState): string {
         : 'A new version is available.';
     case 'applying':
       return state.source === 'android' ? 'Downloading the update…' : 'Updating Panda.fun…';
+    case 'downloaded':
+      return 'Update downloaded. Follow the Android installer prompt to finish.';
     case 'error':
       return state.message || 'Something went wrong while checking for updates.';
     default:
@@ -94,9 +99,16 @@ export function parseNativeStatus(detail: unknown, now: number): AppUpdateEvent 
       };
     case 'downloading':
       return { type: 'applying' };
+    case 'downloaded':
+      return { type: 'downloaded', at: now, versionName: str(d.versionName) };
     case 'error':
       return { type: 'error', at: now, message: str(d.message) };
     default:
       return null;
   }
+}
+
+/** Only terminal responses end a native Settings update check. */
+export function isTerminalNativeUpdateEvent(event: AppUpdateEvent): boolean {
+  return event.type === 'available' || event.type === 'up-to-date' || event.type === 'downloaded' || event.type === 'error';
 }
