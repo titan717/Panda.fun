@@ -308,10 +308,6 @@
   from { opacity: .72; transform: translate3d(var(--panda-featured-enter-x, 22px), 0, 0) scale(.985); }
   to { opacity: 1; transform: translate3d(0, 0, 0) scale(1); }
 }
-.panda-mobile-featured__kicker {
-  border-color: rgba(255,255,255,.34);
-  color: #fff;
-}
 .panda-mobile-featured__meta { color: rgba(255,255,255,.9); }
 .panda-mobile-featured__meta span + span::before { color: rgba(255,255,255,.6); }
 .panda-mobile-featured__watch {
