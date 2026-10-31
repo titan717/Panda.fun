@@ -41,8 +41,12 @@ describe('MYpanda.fun mobile shell contract', () => {
     expect(homeStyles).toContain('transform: scale(.82);');
     expect(homeStyles).toContain('opacity: .48;');
     expect(homeStyles).toContain('overflow-x: clip');
-    expect(mobileHome).toContain('const viewportRect = viewport.getBoundingClientRect()');
-    expect(mobileHome).toContain('viewport.scrollLeft += cardCenter - viewportCenter');
+    expect(mobileHome).toContain('panda-mobile-featured__spotlight');
+    expect(mobileHome).toContain('buildWatchHref(featured.id');
+    expect(mobileHome).toContain('aria-label="Previous featured title"');
+    expect(mobileHome).toContain('aria-label="Next featured title"');
+    expect(homeStyles).toContain('panda-mobile-featured__art::after');
+    expect(homeStyles).toContain('prefers-reduced-motion: reduce');
   });
 
   it('uses the Thinking Orbs searching state instead of a generic loading card', () => {

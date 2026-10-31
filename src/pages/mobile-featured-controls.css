@@ -1,0 +1,28 @@
+/* Accessible controls for the mobile featured carousel. */
+.panda-mobile-featured__hint button {
+  display: block;
+  width: 8px;
+  height: 8px;
+  flex: 0 0 8px;
+  padding: 0;
+  border: 0;
+  border-radius: 999px;
+  background: rgba(255,255,255,.3);
+  cursor: pointer;
+  transition: width 180ms ease, background 180ms ease, outline-color 180ms ease;
+}
+
+.panda-mobile-featured__hint button.is-active {
+  width: 18px;
+  flex-basis: 18px;
+  background: #a44760;
+}
+
+.panda-mobile-featured__hint button:focus-visible {
+  outline: 2px solid #f5d8df;
+  outline-offset: 4px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .panda-mobile-featured__hint button { transition: none; }
+}

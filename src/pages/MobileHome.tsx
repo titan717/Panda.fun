@@ -1,12 +1,14 @@
-import React, { useEffect, useMemo, useRef, useState } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import { Link } from 'wouter';
-import { ArrowRight } from 'lucide-react';
+import { ArrowRight, Check, ChevronLeft, ChevronRight, Play, Plus } from 'lucide-react';
 import { ThinkingOrb } from 'thinking-orbs';
 import { ModernContinueWatching } from '../components/ui/modern/ModernContinueWatching';
 import { MovieApiMedia } from '../lib/api';
-import { buildDetailsHref } from '../lib/mediaRoute';
+import { buildDetailsHref, buildWatchHref } from '../lib/mediaRoute';
+import { libraryManager } from '../lib/library';
 import { optimizeImageUrl } from '../lib/mediaImages';
 import './mobile-home.css';
+import './mobile-featured-controls.css';
 
 type MobileHomeProps = {
   items: MovieApiMedia[];
@@ -72,8 +74,8 @@ export function MobileHome({
   loading = false,
   error = null,
 }: MobileHomeProps) {
-  const viewportRef = useRef<HTMLDivElement | null>(null);
   const [activeIndex, setActiveIndex] = useState(0);
+  const [isInList, setIsInList] = useState(false);
   const featuredItems = useMemo(() => uniqueItems(items).filter(item => item.poster || item.backdrop).slice(0, 5), [items]);
   const catalogue = useMemo(() => uniqueItems([
     ...(trendingItems || []),
@@ -85,34 +87,27 @@ export function MobileHome({
   const trending = uniqueItems(trendingItems?.length ? trendingItems : items);
 
   useEffect(() => {
-    const viewport = viewportRef.current;
-    if (viewport && featuredItems.length > 2) {
-      const cards = Array.from(viewport.querySelectorAll('.panda-mobile-featured__card')) as HTMLElement[];
-      const middle = cards[Math.min(2, cards.length - 1)];
-      if (middle) {
-        const viewportRect = viewport.getBoundingClientRect();
-        const cardRect = middle.getBoundingClientRect();
-        const cardCenter = cardRect.left + cardRect.width / 2;
-        const viewportCenter = viewportRect.left + viewport.clientWidth / 2;
-        viewport.scrollLeft += cardCenter - viewportCenter;
-      }
-    }
-    setActiveIndex(Math.min(2, Math.max(0, featuredItems.length - 1)));
+    setActiveIndex(current => Math.min(current, Math.max(0, featuredItems.length - 1)));
   }, [featuredItems.length]);
 
-  const updateActiveCard = () => {
-    const viewport = viewportRef.current;
-    if (!viewport) return;
-    const viewportCenter = viewport.getBoundingClientRect().left + viewport.clientWidth / 2;
-    const cards = Array.from(viewport.querySelectorAll('.panda-mobile-featured__card')) as HTMLElement[];
-    let closestIndex = 0;
-    let closestDistance = Number.POSITIVE_INFINITY;
-    cards.forEach((card, index) => {
-      const cardCenter = card.getBoundingClientRect().left + card.offsetWidth / 2;
-      const distance = Math.abs(cardCenter - viewportCenter);
-      if (distance < closestDistance) { closestDistance = distance; closestIndex = index; }
-    });
-    setActiveIndex(current => current === closestIndex ? current : closestIndex);
+  const featured = featuredItems[activeIndex] || featuredItems[0];
+
+  useEffect(() => {
+    setIsInList(featured ? libraryManager.isInWatchlist(featured.id) : false);
+  }, [featured?.id]);
+
+  const toggleFeaturedList = () => {
+    if (!featured) return;
+    setIsInList(libraryManager.toggleWatchlist({
+      id: featured.id,
+      title: featured.title,
+      image: featured.poster || featured.backdrop || '',
+    }));
+  };
+
+  const selectFeatured = (index: number) => {
+    if (!featuredItems.length) return;
+    setActiveIndex((index + featuredItems.length) % featuredItems.length);
   };
 
   return (
@@ -121,25 +116,40 @@ export function MobileHome({
         <div className="panda-mobile-featured__head">
           <span className="panda-mobile-eyebrow">YOUR NEXT WATCH</span>
         </div>
-        {featuredItems.length > 0 ? (
-          <div className="panda-mobile-featured__viewport" ref={viewportRef} onScroll={updateActiveCard}>
-            <div className="panda-mobile-featured__track">
-              {featuredItems.map((item, index) => {
-                const image = imageFor(item);
-                return (
-                  <Link
-                    key={item.id}
-                    href={buildDetailsHref(item, item.type === 'movie' ? 'movie' : 'series')}
-                    className={'panda-mobile-featured__card' + (index === activeIndex ? ' is-initial-center' : '')}
-                    aria-label={'Open ' + item.title}
-                  >
-                    {image ? <img src={image} alt="" loading={index < 3 ? 'eager' : 'lazy'} decoding="async" referrerPolicy="no-referrer" /> : <span className="panda-mobile-featured__no-art" />}
-                    <span className="panda-mobile-featured__caption">{item.title}</span>
-                  </Link>
-                );
-              })}
+        {featuredItems.length > 0 && featured ? (
+          <article className="panda-mobile-featured__spotlight" aria-label={"Featured: " + featured.title}>
+            <div className="panda-mobile-featured__art" aria-hidden="true">
+              {(() => {
+                const source = featured.backdrop || featured.poster || '';
+                const image = source ? optimizeImageUrl(source, 'w1280') || source : '';
+                return image ? <img src={image} alt="" fetchPriority="high" decoding="async" referrerPolicy="no-referrer" /> : <span className="panda-mobile-featured__no-art" />;
+              })()}
             </div>
-          </div>
+            <div className="panda-mobile-featured__copy" aria-live="polite">
+              <span className="panda-mobile-featured__kicker">PANDA SPOTLIGHT</span>
+              <div className="panda-mobile-featured__meta">
+                <span>{featured.type === 'movie' ? 'MOVIE' : 'SERIES'}</span>
+                {featured.year && <span>{featured.year}</span>}
+                {featured.rating != null && <span>★ {Number(featured.rating).toFixed(1)}</span>}
+              </div>
+              <h1>{featured.title}</h1>
+              {featured.overview && <p>{featured.overview}</p>}
+              {!!featured.genres?.length && (
+                <div className="panda-mobile-featured__genres">
+                  {featured.genres.slice(0, 3).map(genre => <span key={genre}>{genre}</span>)}
+                </div>
+              )}
+              <div className="panda-mobile-featured__actions">
+                <Link href={buildWatchHref(featured.id, featured.type === 'movie' ? 'movie' : 'series')} className="panda-mobile-featured__watch" aria-label={"Watch " + featured.title + " now"}>
+                  <Play size={16} fill="currentColor" aria-hidden="true" /> Watch now
+                </Link>
+                <Link href={buildDetailsHref(featured, featured.type === 'movie' ? 'movie' : 'series')} className="panda-mobile-featured__details">View details</Link>
+                <button type="button" className="panda-mobile-featured__list" onClick={toggleFeaturedList} aria-pressed={isInList} aria-label={isInList ? "Remove " + featured.title + " from My List" : "Add " + featured.title + " to My List"}>
+                  {isInList ? <Check size={17} aria-hidden="true" /> : <Plus size={17} aria-hidden="true" />}
+                </button>
+              </div>
+            </div>
+          </article>
         ) : loading ? (
           <div className="panda-mobile-featured__loading" role="status" aria-live="polite">
             <ThinkingOrb state="searching" size={64} theme="dark" aria-label="Loading featured titles" />
@@ -152,9 +162,17 @@ export function MobileHome({
             <Link href="/search">Explore titles <ArrowRight size={15} /></Link>
           </div>
         )}
-        <div className="panda-mobile-featured__hint" aria-hidden="true">
-          {featuredItems.map((item, index) => <span key={item.id} className={index === activeIndex ? 'is-active' : ''} />)}
-        </div>
+        {featuredItems.length > 1 && (
+          <div className="panda-mobile-featured__controls" role="group" aria-label="Choose featured title">
+            <button type="button" className="panda-mobile-featured__step" onClick={() => selectFeatured(activeIndex - 1)} aria-label="Previous featured title"><ChevronLeft size={17} aria-hidden="true" /></button>
+            <div className="panda-mobile-featured__hint">
+              {featuredItems.map((item, index) => (
+                <button key={item.id} type="button" className={index === activeIndex ? 'is-active' : ''} aria-label={"Show featured title " + (index + 1) + " of " + featuredItems.length + ": " + item.title} aria-current={index === activeIndex ? 'true' : undefined} onClick={() => selectFeatured(index)} />
+              ))}
+            </div>
+            <button type="button" className="panda-mobile-featured__step" onClick={() => selectFeatured(activeIndex + 1)} aria-label="Next featured title"><ChevronRight size={17} aria-hidden="true" /></button>
+          </div>
+        )}
       </section>
 
       <MobileRail title="Top 10" items={topTen} topTen />
