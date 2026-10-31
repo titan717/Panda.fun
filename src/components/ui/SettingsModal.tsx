@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useRef, useState } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import { 
   X, 
@@ -21,6 +21,7 @@ import { useAppearance } from '../../lib/AppearanceContext';
 import { usePWAInstall } from '../../lib/usePWAInstall';
 import { historyUtil } from '../../lib/history';
 import { libraryManager } from '../../lib/library';
+import { useModalFocusTrap } from '../../lib/useModalFocusTrap';
 
 export function SettingsModal() {
   const { 
@@ -33,6 +34,8 @@ export function SettingsModal() {
   } = useAppearance();
 
   const { isInstallable, isInstalled, install } = usePWAInstall();
+  const dialogRef = useRef<HTMLDivElement>(null);
+  useModalFocusTrap(dialogRef, closeSettingsModal, isSettingsModalOpen);
 
   if (!isSettingsModalOpen) return null;
 
@@ -51,6 +54,11 @@ export function SettingsModal() {
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/75 backdrop-blur-md">
       <motion.div
+        ref={dialogRef}
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="kinoma-settings-modal-title"
+        tabIndex={-1}
         initial={{ opacity: 0, scale: 0.95, y: 10 }}
         animate={{ opacity: 1, scale: 1, y: 0 }}
         exit={{ opacity: 0, scale: 0.95, y: 10 }}
@@ -64,7 +72,7 @@ export function SettingsModal() {
               <Sliders className="w-4 h-4" />
             </div>
             <div>
-              <h2 className="text-base font-bold text-white tracking-tight">Kinoma Settings</h2>
+              <h2 id="kinoma-settings-modal-title" className="text-base font-bold text-white tracking-tight">Kinoma Settings</h2>
               <p className="text-[11px] text-gray-400">Appearance style and playback preferences</p>
             </div>
           </div>
@@ -73,6 +81,7 @@ export function SettingsModal() {
             onClick={closeSettingsModal}
             className="w-8 h-8 rounded-xl bg-[#1a1b24] hover:bg-[#252633] text-gray-400 hover:text-white flex items-center justify-center transition-colors"
             title="Close"
+            aria-label="Close settings"
           >
             <X className="w-4 h-4" />
           </button>
