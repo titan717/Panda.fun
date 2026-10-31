@@ -136,7 +136,7 @@ export function SearchBar() {
               </div>
             ) : data?.results?.length > 0 ? (
               <div id="panda-global-search-suggestions" className="overflow-y-auto no-scrollbar py-2" role="listbox" aria-label="Search suggestions">
-                {data.results.slice(0, 6).map((item: any) => {
+                {data.results.slice(0, 6).map((item: any, index: number) => {
                   const itemTitle = typeof item.title === 'string'
                     ? item.title
                     : item.title?.english || item.title?.romaji || item.title?.native || 'Untitled';
@@ -145,6 +145,7 @@ export function SearchBar() {
                     key={item.id}
                     type="button"
                     role="option"
+                    aria-label={`Open ${itemTitle} details`}
                     aria-selected={activeIndex === index}
                     onMouseEnter={() => setActiveIndex(index)}
                     onClick={() => selectSuggestion(item)}
