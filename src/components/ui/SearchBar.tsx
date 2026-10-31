@@ -101,6 +101,7 @@ export function SearchBar() {
           value={query}
           onChange={(e) => {
             setQuery(e.target.value);
+            setActiveIndex(-1);
             setIsOpen(true);
           }}
           onFocus={() => setIsOpen(true)}
@@ -152,7 +153,7 @@ export function SearchBar() {
                     aria-selected={activeIndex === index}
                     onMouseEnter={() => setActiveIndex(index)}
                     onClick={() => selectSuggestion(item)}
-                    className={`flex w-[calc(100%-16px)] items-center gap-3 p-2.5 mx-2 rounded-lg text-left transition-colors group/item ${activeIndex === index ? 'bg-[#252533]' : 'hover:bg-[#252533]'}`}
+                    className={`flex w-[calc(100%-16px)] items-center gap-3 p-2.5 mx-2 rounded-lg text-left transition-colors group/item focus-visible:outline focus-visible:outline-2 focus-visible:outline-[#c084fc] ${activeIndex === index ? 'bg-[#252533]' : 'hover:bg-[#252533]'}`}
                   >
                     <img src={item.image || DEFAULT_POSTER} alt="" className="w-10 h-14 object-cover rounded-md shadow-sm group-hover/item:scale-105 transition-transform" />
                     <div className="flex flex-col min-w-0">
