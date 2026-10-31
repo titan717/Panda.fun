@@ -20,3 +20,15 @@ describe('Global search suggestions accessibility', () => {
     expect(source).toContain('View all results for');
   });
 });
+
+  it('announces suggestion request failures and offers a retry action', () => {
+    expect(source).toContain('error,');
+    expect(source).toContain('mutate');
+    expect(source).toContain('Search suggestions unavailable');
+    expect(source).toContain('role="alert"');
+  });
+
+  it('does not present suggestions for an older query while the new query is debouncing', () => {
+    expect(source).toContain('isDebouncing');
+    expect(source).toContain('aria-label="Search movies, shows and anime"');
+  });
