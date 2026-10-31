@@ -54,6 +54,7 @@ export function SearchBar() {
   );
 
   const suggestions = data?.results?.slice(0, 6) || [];
+  useEffect(() => setActiveIndex(-1), [debouncedQuery]);
   const selectSuggestion = (item: any) => {
     const itemTitle = typeof item.title === 'string'
       ? item.title
@@ -112,6 +113,7 @@ export function SearchBar() {
           aria-autocomplete="list"
           aria-expanded={isOpen && debouncedQuery.length >= 2}
           aria-controls="panda-global-search-suggestions"
+          aria-activedescendant={activeIndex >= 0 ? `panda-search-option-${activeIndex}` : undefined}
           onKeyDown={handleInputKeyDown}
         />
         <div className="absolute right-3 top-1/2 -translate-y-1/2 flex items-center justify-center w-auto px-1.5 h-5 rounded bg-[#252530] text-[10px] font-bold text-gray-400 border border-[#333342] pointer-events-none">
@@ -130,12 +132,12 @@ export function SearchBar() {
             className="absolute top-full left-0 right-0 mt-2 bg-[#171720]/95 backdrop-blur-xl border border-[#2b2b3b] rounded-xl shadow-[0_12px_40px_rgba(0,0,0,0.7)] overflow-hidden z-50 flex flex-col max-h-[400px]"
           >
             {isLoading ? (
-              <div className="p-4 flex items-center justify-center text-gray-400 gap-2">
+              <div className="p-4 flex items-center justify-center text-gray-400 gap-2" role="status" aria-live="polite">
                 <Loader2 className="w-4 h-4 animate-spin text-[#9c27b0]" />
                 <span className="text-sm font-medium">Searching...</span>
               </div>
             ) : data?.results?.length > 0 ? (
-              <div id="panda-global-search-suggestions" className="overflow-y-auto no-scrollbar py-2" role="listbox" aria-label="Search suggestions">
+              <div id="panda-global-search-suggestions" className="overflow-y-auto no-scrollbar py-2" role="listbox" aria-label="Search suggestions" aria-busy={isLoading}>
                 {data.results.slice(0, 6).map((item: any, index: number) => {
                   const itemTitle = typeof item.title === 'string'
                     ? item.title
@@ -145,13 +147,14 @@ export function SearchBar() {
                     key={item.id}
                     type="button"
                     role="option"
+                    id={`panda-search-option-${index}`}
                     aria-label={`Open ${itemTitle} details`}
                     aria-selected={activeIndex === index}
                     onMouseEnter={() => setActiveIndex(index)}
                     onClick={() => selectSuggestion(item)}
                     className={`flex w-[calc(100%-16px)] items-center gap-3 p-2.5 mx-2 rounded-lg text-left transition-colors group/item ${activeIndex === index ? 'bg-[#252533]' : 'hover:bg-[#252533]'}`}
                   >
-                    <img src={item.image || DEFAULT_POSTER} alt="cover" className="w-10 h-14 object-cover rounded-md shadow-sm group-hover/item:scale-105 transition-transform" />
+                    <img src={item.image || DEFAULT_POSTER} alt="" className="w-10 h-14 object-cover rounded-md shadow-sm group-hover/item:scale-105 transition-transform" />
                     <div className="flex flex-col min-w-0">
                       <span className="text-sm font-semibold text-gray-200 group-hover/item:text-[#c084fc] transition-colors truncate">
                         {typeof item.title === 'string' ? item.title : (item.title?.english || item.title?.romaji)}
@@ -176,7 +179,7 @@ export function SearchBar() {
                 </button>
               </div>
             ) : (
-              <div className="p-5 text-center text-sm text-gray-400">
+              <div className="p-5 text-center text-sm text-gray-400" role="status">
                 No results found for "{debouncedQuery}"
               </div>
             )}
