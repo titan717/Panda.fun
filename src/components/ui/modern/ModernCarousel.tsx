@@ -47,7 +47,8 @@ export function ModernCarousel({
     if (scrollRef.current) {
       const { clientWidth } = scrollRef.current;
       const scrollAmount = direction === 'left' ? -clientWidth * 0.75 : clientWidth * 0.75;
-      scrollRef.current.scrollBy({ left: scrollAmount, behavior: 'smooth' });
+      const prefersReducedMotion = typeof window.matchMedia === 'function' && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+      scrollRef.current.scrollBy({ left: scrollAmount, behavior: prefersReducedMotion ? 'auto' : 'smooth' });
     }
   };
 
@@ -69,7 +70,7 @@ export function ModernCarousel({
           {actionText && (
             <button
               onClick={onAction}
-              className="min-h-10 px-2 text-xs font-semibold text-gray-400 hover:text-white transition-colors cursor-pointer mr-2 inline-flex items-center"
+              className="min-h-11 px-2 text-xs font-semibold text-gray-400 hover:text-white transition-colors cursor-pointer mr-2 inline-flex items-center"
             >
               {actionText}
             </button>
@@ -80,7 +81,7 @@ export function ModernCarousel({
             <button
               onClick={() => scroll('left')}
               disabled={!canScrollLeft}
-              className={`w-10 h-10 rounded-full bg-white/5 hover:bg-white/10 border border-white/10 flex items-center justify-center text-white transition-all backdrop-blur-md kinoma-focus ${
+              className={`w-11 h-11 rounded-full bg-white/5 hover:bg-white/10 border border-white/10 flex items-center justify-center text-white transition-all backdrop-blur-md kinoma-focus ${
                 !canScrollLeft ? 'opacity-25 cursor-not-allowed' : 'opacity-80 hover:opacity-100 cursor-pointer'
               }`}
               aria-label="Scroll left"
@@ -91,7 +92,7 @@ export function ModernCarousel({
             <button
               onClick={() => scroll('right')}
               disabled={!canScrollRight}
-              className={`w-7 h-7 sm:w-8 sm:h-8 rounded-full bg-white/5 hover:bg-white/10 border border-white/10 flex items-center justify-center text-white transition-all backdrop-blur-md kinoma-focus ${
+              className={`w-11 h-11 rounded-full bg-white/5 hover:bg-white/10 border border-white/10 flex items-center justify-center text-white transition-all backdrop-blur-md kinoma-focus ${
                 !canScrollRight ? 'opacity-25 cursor-not-allowed' : 'opacity-80 hover:opacity-100 cursor-pointer'
               }`}
               aria-label="Scroll right"
