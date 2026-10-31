@@ -108,11 +108,11 @@ export function MobileHome({
     }));
   };
 
-  const selectFeatured = (index: number) => {
+  const selectFeatured = (index: number, direction?: 'next' | 'previous') => {
     if (!featuredItems.length) return;
     const nextIndex = (index + featuredItems.length) % featuredItems.length;
     if (nextIndex === activeIndex) return;
-    setSwipeDirection(nextIndex > activeIndex || (activeIndex === featuredItems.length - 1 && nextIndex === 0) ? 'next' : 'previous');
+    setSwipeDirection(direction || (nextIndex > activeIndex || (activeIndex === featuredItems.length - 1 && nextIndex === 0) ? 'next' : 'previous'));
     setActiveIndex(nextIndex);
   };
 
@@ -130,7 +130,7 @@ export function MobileHome({
     event.preventDefault();
     suppressSwipeClick.current = true;
     window.setTimeout(() => { suppressSwipeClick.current = false; }, 450);
-    selectFeatured(activeIndex + (distance < 0 ? 1 : -1));
+    selectFeatured(activeIndex + (distance < 0 ? 1 : -1), distance < 0 ? 'next' : 'previous');
   };
 
   return (
