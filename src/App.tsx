@@ -16,6 +16,14 @@ import { NotFound } from './pages/NotFound';
 function retryLazyImport<T>(importer: () => Promise<T>, chunkName: string) {
   return importer().catch(error => {
     if (!isRecoverableChunkLoadError(error)) throw error;
+    // Offline: reloading now would replace the app with the browser's offline page.
+    // Keep the route's loading state (the offline banner explains why) and reload once
+    // back online — browsers cache failed module imports, so re-importing is not enough.
+    if (typeof navigator !== 'undefined' && navigator.onLine === false) {
+      return new Promise<T>(() => {
+        window.addEventListener('online', () => window.location.reload(), { once: true });
+      });
+    }
     try {
       const retryKey = 'panda-lazy-retry:' + chunkName + ':' + window.location.pathname;
       if (!sessionStorage.getItem(retryKey)) {

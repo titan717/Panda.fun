@@ -43,6 +43,7 @@ export function Watch() {
   const [playbackRetry, setPlaybackRetry] = useState(0);
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(true);
+  const [detailsRetry, setDetailsRetry] = useState(0);
   const [inList, setInList] = useState(false);
   const [shareMessage, setShareMessage] = useState('');
 
@@ -77,7 +78,7 @@ export function Watch() {
       setLoading(false);
     });
     return () => { active = false; controller.abort(); };
-  }, [id]);
+  }, [id, detailsRetry]);
 
   useEffect(() => {
     if (!data || type !== 'series') return;
@@ -219,13 +220,21 @@ export function Watch() {
     }
   };
 
+  const detailsHref = buildDetailsHref(data ? { ...data, title } : title, type, id);
+  const goBack = () => {
+    if (window.history.length > 1) window.history.back();
+    else setLocation(detailsHref);
+  };
+  const backButton = <button type="button" className="panda-watch-back" onClick={goBack} aria-label={'Back from ' + title}><ArrowLeft size={18} aria-hidden="true" /><span>Back</span></button>;
+
   if (loading) {
-    return <div className="panda-watch-page"><div className="panda-watch-loading"><span /></div></div>;
+    return <div className="panda-watch-page">{backButton}<div className="panda-watch-loading" role="status" aria-live="polite"><span aria-hidden="true" /><span className="panda-visually-hidden">Loading player</span></div></div>;
   }
 
   return (
     <div className="panda-watch-page">
-      <section className="panda-watch-stage">
+      {backButton}
+      <section className="panda-watch-stage" aria-label={'Now playing: ' + title}>
         <div className="panda-watch-player">
           {source ? (
             <iframe
@@ -241,11 +250,16 @@ export function Watch() {
           ) : sourceLoading ? (
             <div className="panda-watch-player-loading" role="status" aria-live="polite">
               <span aria-hidden="true" />
+              <span className="panda-visually-hidden">Preparing playback</span>
             </div>
           ) : (
-            <div className="panda-watch-player-empty">
+            <div className="panda-watch-player-empty" role="alert">
               <strong>Playback unavailable</strong>
               <span>{error || 'The player could not be resolved for this title.'}</span>
+              <div className="panda-watch-player-empty__actions">
+                <button type="button" className="panda-ux-button panda-ux-button--primary" onClick={() => (data ? setPlaybackRetry(value => value + 1) : setDetailsRetry(value => value + 1))}>Try again</button>
+                <button type="button" className="panda-ux-button" onClick={() => setLocation(detailsHref)}>Title details</button>
+              </div>
             </div>
           )}
         </div>

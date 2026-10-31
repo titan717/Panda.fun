@@ -40,7 +40,7 @@ function trailerSrc(url: unknown) {
     return url;
   }
 }
-function formatDuration(value: unknown) { const n = Number(value); if (!Number.isFinite(n) || n <= 0) return 'Series'; const h = Math.floor(n / 60); const m = Math.round(n % 60); return h ? h + 'h ' + String(m).padStart(2, '0') + 'm' : m + 'm'; }
+function formatDuration(value: unknown) { const n = Number(value); if (!Number.isFinite(n) || n <= 0) return 'Movie'; const h = Math.floor(n / 60); const m = Math.round(n % 60); return h ? h + 'h ' + String(m).padStart(2, '0') + 'm' : m + 'm'; }
 
 export function Details() {
   const [, params] = useRoute<{ id: string }>('/details/:id');
@@ -265,7 +265,7 @@ export function Details() {
       {loading && <div className="panda-state-card" role="status"><span className="panda-state-card__spinner" aria-hidden="true" /><div><strong>Loading title</strong><small>Fetching the latest details…</small></div></div>}
       {error && !loading && <div className="panda-state-card is-error" role="alert"><div><strong>We couldn't load this title.</strong><small>{error}</small></div><button type="button" onClick={() => setRetryKey(value => value + 1)}>Retry</button></div>}
       <section id="trailers-more" className="kinoma-details-hero kinoma-details-hero--trailer">
-        <div className="kinoma-details-hero__trailer-bg" aria-label={title + ' trailer preview'}>
+        <div className="kinoma-details-hero__trailer-bg">
           {hasTrailer && (!reducedMotion || trailerRequested) ? <iframe
             src={trailerSrc(trailer.trailer.embedUrl)}
             title={title + ' trailer'}
@@ -295,7 +295,7 @@ export function Details() {
             <div className="kinoma-details-actions">
               <button ref={watchButtonRef} className="kinoma-details-3d-button kinoma-details-3d-button--watch" onClick={watch}><span><Play size={18} fill="currentColor" /> {watchLabel}</span></button>
               <button className={'kinoma-details-3d-button kinoma-details-3d-button--list ' + (isInList ? 'is-added' : '')} onClick={toggleList}><span>{isInList ? <Check size={18} /> : <Plus size={18} />} {isInList ? 'In My List' : 'Add to My List'}</span></button>
-              {hasTrailer && reducedMotion && !trailerRequested && <button type="button" className="kinoma-details-share kinoma-details-trailer-toggle" onClick={() => setTrailerRequested(true)}><span><Film size={16} aria-hidden="true" /> Play trailer</span></button>}
+              {hasTrailer && reducedMotion && !trailerRequested && <button type="button" className="kinoma-details-share kinoma-details-trailer-toggle" aria-label="Play trailer" title="Play trailer" onClick={() => setTrailerRequested(true)}><span><Film size={16} aria-hidden="true" /> Play trailer</span></button>}
               <button className="kinoma-details-share" type="button" onClick={share} aria-label="Share this title"><span><Share2 className="kinoma-details-share__icon" size={16} /> Share</span></button>
             </div>
             <p className="kinoma-details-share-feedback" role="status" aria-live="polite">{shareFeedback}</p>

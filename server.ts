@@ -205,6 +205,13 @@ async function startServer() {
       return handler(req, res);
     };
 
+  // Vercel Analytics / Speed Insights scripts only exist on Vercel's edge. When the
+  // Express server hosts the app (Render, Android dev, local prod), the SPA fallback
+  // would answer them with index.html and throw "Unexpected token '<'" on every page.
+  app.get('/_vercel/*', (req, res) => {
+    res.type('application/javascript').set('Cache-Control', 'public, max-age=3600').send('');
+  });
+
   app.get(['/api/health', '/health'], (req, res) => proxyHandler('/api/v1/health', req, res));
   app.get(['/api/search', '/api/anime/search', '/search'], apiOnly((req, res) => proxyHandler('/api/v1/search', req, res)));
   app.get(['/api/search/:query', '/api/anime/search/:query'], (req, res) => {

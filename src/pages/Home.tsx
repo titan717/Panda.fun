@@ -346,7 +346,7 @@ export function Home() {
       <div className="kinoma-home__inner">
         {/* PRESERVED HERO/TRAILER — intentionally unchanged */}
         <section className="kinoma-home-hero kinoma-home-hero--trailer" aria-labelledby="kinoma-home-title">
-          <div className="kinoma-home-hero__trailer-bg" aria-label={featured?.title ? featured.title + ' trailer' : 'Featured trailer'}>
+          <div className="kinoma-home-hero__trailer-bg">
             {featured?.backdrop && <img src={featured.backdrop} alt="" className="kinoma-home-hero__banner-image kinoma-home-hero__banner-image--underlay" loading="eager" fetchPriority="high" decoding="async" />}
             {trailer?.trailer?.embedUrl && !reducedMotion ? (
               <iframe ref={trailerFrameRef} src={trailerSrc(trailer.trailer.embedUrl, soundEnabled)} title={featured?.title ? featured.title + ' trailer' : 'Featured trailer'} className={`kinoma-home-hero__trailer-video${trailerReady ? ' is-ready' : ''}`} onLoad={() => setTrailerReady(true)} allow="autoplay; encrypted-media; picture-in-picture" allowFullScreen />
@@ -357,7 +357,7 @@ export function Home() {
             )}
           </div>
           <div className="kinoma-home-hero__copy">
-            <span className="kinoma-home-hero__eyebrow"><Sparkles size={14} /> YOUR NEXT WATCH</span>
+            <span className="kinoma-home-hero__eyebrow"><Sparkles size={14} aria-hidden="true" /> YOUR NEXT WATCH</span>
             <h1 id="kinoma-home-title">{featured?.title || 'Something good is waiting.'}</h1>
             <p>{featured?.overview || error || 'Movies, series and stories worth pressing play for. Discover something, save it, and come back whenever you like.'}</p>
             <div className="kinoma-home-hero__actions">

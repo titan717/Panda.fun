@@ -113,15 +113,30 @@ function reportApiFailure(error: unknown, path: string) {
  * Short-lived circuit breaker: when a base URL fails at the network/5xx level we
  * try the other base first for a minute instead of paying the failure on every request.
  */
-export const BASE_COOLDOWN_MS = 60_000;
-const baseCooldownUntil = new Map<string, number>();
+export const BASE_COOLDOWN_MS = 5 * 60_000;
+const BASE_COOLDOWN_STORAGE_KEY = 'panda-api-base-cooldown';
+function loadCooldowns(): Map<string, number> {
+  try {
+    const raw = typeof localStorage === 'undefined' ? null : localStorage.getItem(BASE_COOLDOWN_STORAGE_KEY);
+    const parsed = raw ? JSON.parse(raw) as Record<string, number> : {};
+    const now = Date.now();
+    return new Map(Object.entries(parsed).filter(([, until]) => typeof until === 'number' && until > now));
+  } catch {
+    return new Map();
+  }
+}
+// Persisted so a reload skips a known-down base instead of re-paying (and logging) the failure.
+const baseCooldownUntil = loadCooldowns();
+function saveCooldowns() {
+  try { localStorage.setItem(BASE_COOLDOWN_STORAGE_KEY, JSON.stringify(Object.fromEntries(baseCooldownUntil))); } catch { /* storage unavailable */ }
+}
 export function orderBasesByHealth(bases: string[], cooldowns: ReadonlyMap<string, number>, now: number): string[] {
   const healthy = bases.filter(base => (cooldowns.get(base) || 0) <= now);
   const cooling = bases.filter(base => (cooldowns.get(base) || 0) > now);
   return [...healthy, ...cooling];
 }
-function markBaseUnhealthy(base: string) { baseCooldownUntil.set(base, Date.now() + BASE_COOLDOWN_MS); }
-function markBaseHealthy(base: string) { baseCooldownUntil.delete(base); }
+function markBaseUnhealthy(base: string) { baseCooldownUntil.set(base, Date.now() + BASE_COOLDOWN_MS); saveCooldowns(); }
+function markBaseHealthy(base: string) { if (baseCooldownUntil.delete(base)) saveCooldowns(); }
 
 const cache = new Map<string, { expires: number; value: unknown }>();
 const inflight = new Map<string, Promise<unknown>>();

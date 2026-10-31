@@ -106,22 +106,25 @@
 .panda-not-found__actions { display: flex; flex-wrap: wrap; justify-content: center; gap: 10px; margin-top: 10px; }
 
 /* ---------------------------------------------------------------------------
- * Home hero: a soft legibility scrim under the copy so the title and synopsis
- * stay readable (WCAG AA) over bright trailer frames. Video stays full-bleed.
+ * Home hero legibility. The playing trailer intentionally stays clean (see the
+ * October 2026 refinement in index.css). When a static backdrop is showing
+ * instead (no trailer, trailer still loading, or reduced motion) bright key
+ * art made the eyebrow and synopsis fail contrast, so add a soft scrim there.
  * ------------------------------------------------------------------------ */
-.kinoma-home-hero--trailer .kinoma-home-hero__copy::before {
-  content: "";
-  position: absolute;
-  inset: -30% -20% 0 0;
-  z-index: -1;
-  pointer-events: none;
-  background:
-    radial-gradient(120% 90% at 0% 100%, rgba(0, 0, 0, 0.72) 0%, rgba(0, 0, 0, 0.42) 45%, transparent 75%);
+.kinoma-home-hero--trailer:not(:has(iframe.is-ready)) .kinoma-home-hero__copy::before {
+  background: radial-gradient(130% 100% at 0% 100%, rgba(0, 0, 0, 0.8) 0%, rgba(0, 0, 0, 0.5) 48%, transparent 80%) !important;
 }
-.kinoma-home-hero--trailer .kinoma-home-hero__copy { isolation: isolate; }
-.kinoma-home-hero--trailer .kinoma-home-hero__copy p { color: rgba(246, 242, 238, 0.86); }
+.kinoma-home-hero--trailer .kinoma-home-hero__copy p {
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.7), 0 4px 18px rgba(0, 0, 0, 0.55) !important;
+}
+.kinoma-home-hero--trailer .kinoma-home-hero__eyebrow {
+  color: rgba(246, 236, 228, 0.92) !important;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.8), 0 2px 12px rgba(0, 0, 0, 0.6);
+}
 @media (max-width: 800px) {
-  .kinoma-home-hero--trailer .kinoma-home-hero__copy::before { inset: -40% 0 0 0; background: linear-gradient(0deg, rgba(0, 0, 0, 0.82) 0%, rgba(0, 0, 0, 0.4) 60%, transparent 100%); }
+  .kinoma-home-hero--trailer:not(:has(iframe.is-ready)) .kinoma-home-hero__copy::before {
+    background: linear-gradient(0deg, rgba(0, 0, 0, 0.85) 0%, rgba(0, 0, 0, 0.45) 60%, transparent 100%) !important;
+  }
 }
 
 /* ---------------------------------------------------------------------------
@@ -260,3 +263,79 @@ html:not(.tv-mode) .kinoma-tv-details-tabs a:hover { background: rgba(255, 255, 
 @media (min-width: 621px) and (max-width: 760px) {
   html:not(.tv-mode) .panda-home-v2__rail > .panda-content-card { flex-basis: calc((100% - 2 * 13px) / 2.7); }
 }
+
+/* ---------------------------------------------------------------------------
+ * Player: the sidebar is not rendered on /watch, but the content kept its 64px
+ * sidebar offset, so the 100vw player was pushed right and its right-hand
+ * controls (Audio & Subtitles, fullscreen) were clipped on tablet/desktop.
+ * ------------------------------------------------------------------------ */
+html:not(.tv-mode) .panda-app-shell--player .panda-app-content {
+  margin-left: 0 !important;
+  width: 100%;
+}
+
+.panda-visually-hidden {
+  position: absolute !important;
+  width: 1px; height: 1px;
+  margin: -1px; padding: 0;
+  overflow: hidden; clip: rect(0 0 0 0);
+  white-space: nowrap; border: 0;
+}
+
+/* Watch: a clear way out on touch/desktop (TV uses the remote's Back key). */
+.panda-watch-back {
+  /* Top-centre: the embedded player owns the top-left (title) and top-right (quality/CC). */
+  position: fixed;
+  top: max(12px, env(safe-area-inset-top));
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 40;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  height: 40px;
+  padding: 0 14px 0 10px;
+  font-size: 13px;
+  font-weight: 700;
+  border: 1px solid rgba(246, 242, 238, 0.18);
+  border-radius: 999px;
+  background: rgba(0, 0, 0, 0.55);
+  color: #fff;
+  cursor: pointer;
+  backdrop-filter: blur(10px);
+  opacity: 0.78;
+  transition: opacity 160ms ease, background-color 160ms ease;
+}
+.panda-watch-back:hover, .panda-watch-back:focus-visible { opacity: 1; background: rgba(0, 0, 0, 0.82); }
+.panda-watch-back:focus-visible { outline: 3px solid var(--panda-focus-ring); outline-offset: 3px; }
+html.tv-mode .panda-watch-back { display: none; }
+.panda-watch-player-empty__actions { display: flex; flex-wrap: wrap; justify-content: center; gap: 10px; margin-top: 14px; }
+
+/* ---------------------------------------------------------------------------
+ * WCAG AA contrast for secondary text (axe audit). Values chosen to keep the
+ * muted, cinematic hierarchy while reaching >= 4.5:1 on the near-black surfaces.
+ * Decorative, aria-hidden watermarks are intentionally left faint.
+ * ------------------------------------------------------------------------ */
+.panda-content-card__copy > span,
+.kinoma-more-card__copy > span,
+.kinoma-details-section__heading span,
+.kinoma-details-section__heading small,
+.kinoma-library-head p,
+.kinoma-library-collection-heading p,
+.kinoma-library-empty > p,
+.kinoma-search-toolbar__count,
+.kinoma-search-filters > button:not(.is-active) {
+  color: #a39d98 !important;
+}
+.kinoma-search-filters > button:not(.is-active) > span { color: #b5aea8 !important; }
+.kinoma-search-filters > button.is-active > span { color: #3d342e !important; }
+.kinoma-details-bottom { color: #9a948f !important; }
+
+.panda-shared-footer a,
+.panda-shared-footer__brand span,
+.panda-shared-footer__bottom span,
+.panda-shared-footer__top,
+.panda-shared-footer [aria-label$="coming soon"] > span {
+  color: #a39d98 !important;
+}
+.panda-shared-footer a:hover { color: #f6f2ee !important; }
