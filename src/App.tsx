@@ -142,10 +142,6 @@ function MainAppShell() {
   const [location] = useLocation();
   const [showIntro, setShowIntro] = useState(() => shouldShowPandaIntro());
 
-  useEffect(() => {
-    if (location !== '/') setShowIntro(false);
-  }, [location]);
-
   if (showIntro) {
     return <PandaIntro onComplete={() => setShowIntro(false)} />;
   }
