@@ -484,3 +484,119 @@
   .panda-mobile-featured__list:active,
   .panda-mobile-featured__step:active { transform: none; }
 }
+
+
+/* Featured card: responsive touch-first carousel with a clean white accent. */
+.panda-mobile-featured__spotlight {
+  touch-action: pan-y;
+  -webkit-user-select: none;
+  user-select: none;
+  border-color: rgba(255,255,255,.16);
+  animation: panda-featured-swipe-in 360ms cubic-bezier(.2,.8,.2,1) both;
+}
+.panda-mobile-featured__spotlight[data-swipe-direction="next"] {
+  animation-name: panda-featured-enter-next;
+}
+.panda-mobile-featured__spotlight[data-swipe-direction="previous"] {
+  animation-name: panda-featured-enter-previous;
+}
+@keyframes panda-featured-enter-next {
+  from { opacity: .55; transform: translateX(22px) scale(.99); }
+  to { opacity: 1; transform: translateX(0) scale(1); }
+}
+@keyframes panda-featured-enter-previous {
+  from { opacity: .55; transform: translateX(-22px) scale(.99); }
+  to { opacity: 1; transform: translateX(0) scale(1); }
+}
+.panda-mobile-featured__meta,
+.panda-mobile-featured__meta span + span::before,
+.panda-mobile-featured__genres span {
+  color: rgba(255,255,255,.92);
+}
+.panda-mobile-featured__genres span {
+  border-color: rgba(255,255,255,.34);
+  background: rgba(255,255,255,.055);
+}
+.panda-mobile-featured__watch {
+  border-color: #fff;
+  background: #fff;
+  color: #080808;
+  box-shadow: 0 5px 18px rgba(255,255,255,.12);
+}
+.panda-mobile-featured__details,
+.panda-mobile-featured__list {
+  border-color: rgba(255,255,255,.48);
+  background: rgba(0,0,0,.48);
+  color: #fff;
+  backdrop-filter: blur(12px);
+}
+.panda-mobile-featured__list[aria-pressed="true"] {
+  border-color: #fff;
+  color: #fff;
+  background: rgba(255,255,255,.14);
+}
+.panda-mobile-featured__step {
+  border-color: rgba(255,255,255,.42);
+  background: rgba(255,255,255,.07);
+  color: #fff;
+  transition: transform 180ms ease, background 180ms ease, border-color 180ms ease;
+}
+.panda-mobile-featured__step:hover,
+.panda-mobile-featured__step:active {
+  transform: scale(1.06);
+  border-color: #fff;
+  background: rgba(255,255,255,.16);
+}
+.panda-mobile-featured__hint button.is-active {
+  background: #fff;
+  box-shadow: 0 0 12px rgba(255,255,255,.24);
+}
+.panda-mobile-featured__watch,
+.panda-mobile-featured__details,
+.panda-mobile-featured__list {
+  transition: transform 180ms ease, background 180ms ease, border-color 180ms ease, box-shadow 180ms ease;
+}
+.panda-mobile-featured__watch:hover,
+.panda-mobile-featured__details:hover,
+.panda-mobile-featured__list:hover {
+  transform: translateY(-2px);
+}
+.panda-mobile-featured__watch:active,
+.panda-mobile-featured__details:active,
+.panda-mobile-featured__list:active {
+  transform: scale(.97);
+}
+.panda-mobile-featured__spotlight:focus-within {
+  outline: 1px solid rgba(255,255,255,.38);
+  outline-offset: 3px;
+}
+@media (max-width: 420px) {
+  .panda-mobile-featured { padding-inline: 12px; }
+  .panda-mobile-featured__spotlight { min-height: clamp(390px, 66svh, 530px); border-radius: 17px; }
+  .panda-mobile-featured__copy { padding: 23px 15px 16px; }
+  .panda-mobile-featured__copy h1 { font-size: clamp(25px, 8vw, 34px); }
+  .panda-mobile-featured__copy p { font-size: 11px; }
+  .panda-mobile-featured__actions { gap: 7px; }
+  .panda-mobile-featured__watch,
+  .panda-mobile-featured__details,
+  .panda-mobile-featured__list { min-height: 41px; }
+}
+@media (min-width: 768px) {
+  .panda-mobile-featured__spotlight { min-height: min(72svh, 660px); }
+  .panda-mobile-featured__copy { padding: 40px 34px 30px; }
+  .panda-mobile-featured__copy h1 { font-size: clamp(34px, 5vw, 54px); }
+}
+@media (prefers-reduced-motion: reduce) {
+  .panda-mobile-featured__spotlight,
+  .panda-mobile-featured__step,
+  .panda-mobile-featured__watch,
+  .panda-mobile-featured__details,
+  .panda-mobile-featured__list {
+    animation: none !important;
+    transition: none !important;
+  }
+  .panda-mobile-featured__step:hover,
+  .panda-mobile-featured__watch:hover,
+  .panda-mobile-featured__details:hover,
+  .panda-mobile-featured__list:hover { transform: none !important; }
+}
