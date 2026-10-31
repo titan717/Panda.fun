@@ -79,7 +79,7 @@ export function SettingsModal() {
 
           <button
             onClick={closeSettingsModal}
-            className="w-8 h-8 rounded-xl bg-[#1a1b24] hover:bg-[#252633] text-gray-400 hover:text-white flex items-center justify-center transition-colors"
+            className="w-11 h-11 rounded-xl bg-[#1a1b24] hover:bg-[#252633] text-gray-400 hover:text-white flex items-center justify-center transition-colors"
             title="Close"
             aria-label="Close settings"
           >
@@ -91,7 +91,7 @@ export function SettingsModal() {
         <div className="flex items-center gap-2 px-6 pt-3 border-b border-[#1c1c28] bg-[#101118]">
           <button
             onClick={() => setActiveSettingsTab('appearance')}
-            className={`flex items-center gap-2 pb-3 px-1 text-xs font-bold transition-colors relative ${
+            className={`flex min-h-11 items-center gap-2 pb-3 px-1 text-xs font-bold transition-colors relative ${
               activeSettingsTab === 'appearance' ? 'text-white' : 'text-gray-400 hover:text-gray-200'
             }`}
           >
