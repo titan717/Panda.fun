@@ -78,6 +78,7 @@ export function MobileHome({
   const [isInList, setIsInList] = useState(false);
   const [swipeDirection, setSwipeDirection] = useState<'next' | 'previous'>('next');
   const touchStartX = useRef<number | null>(null);
+  const touchStartY = useRef<number | null>(null);
   const suppressSwipeClick = useRef(false);
   const featuredItems = useMemo(() => uniqueItems(items).filter(item => item.poster || item.backdrop).slice(0, 5), [items]);
   const catalogue = useMemo(() => uniqueItems([
@@ -118,16 +119,20 @@ export function MobileHome({
 
   const handleFeaturedTouchStart = (event: React.TouchEvent<HTMLElement>) => {
     touchStartX.current = event.changedTouches[0]?.clientX ?? null;
+    touchStartY.current = event.changedTouches[0]?.clientY ?? null;
   };
 
   const handleFeaturedTouchEnd = (event: React.TouchEvent<HTMLElement>) => {
     const startX = touchStartX.current;
+    const startY = touchStartY.current;
     touchStartX.current = null;
+    touchStartY.current = null;
     const endX = event.changedTouches[0]?.clientX;
-    if (startX == null || endX == null) return;
+    const endY = event.changedTouches[0]?.clientY;
+    if (startX == null || startY == null || endX == null || endY == null) return;
     const distance = endX - startX;
-    if (Math.abs(distance) < 48) return;
-    event.preventDefault();
+    const verticalDistance = endY - startY;
+    if (Math.abs(distance) < 48 || Math.abs(distance) < Math.abs(verticalDistance) * 1.2) return;
     suppressSwipeClick.current = true;
     window.setTimeout(() => { suppressSwipeClick.current = false; }, 450);
     selectFeatured(activeIndex + (distance < 0 ? 1 : -1), distance < 0 ? 'next' : 'previous');
@@ -140,7 +145,7 @@ export function MobileHome({
           <span className="panda-mobile-eyebrow">YOUR NEXT WATCH</span>
         </div>
         {featuredItems.length > 0 && featured ? (
-          <article key={featured.id} className={`panda-mobile-featured__spotlight panda-mobile-featured__spotlight-track is-${swipeDirection}`} aria-label={"Featured: " + featured.title} onTouchStart={handleFeaturedTouchStart} onTouchEnd={handleFeaturedTouchEnd} onTouchCancel={() => { touchStartX.current = null; }} onClickCapture={event => { if (suppressSwipeClick.current) { event.preventDefault(); event.stopPropagation(); suppressSwipeClick.current = false; } }}>
+          <article key={featured.id} className={`panda-mobile-featured__spotlight panda-mobile-featured__spotlight-track is-${swipeDirection}`} aria-label={"Featured: " + featured.title} onTouchStart={handleFeaturedTouchStart} onTouchEnd={handleFeaturedTouchEnd} onTouchCancel={() => { touchStartX.current = null; touchStartY.current = null; }} onClickCapture={event => { if (suppressSwipeClick.current) { event.preventDefault(); event.stopPropagation(); suppressSwipeClick.current = false; } }}>
             <div className="panda-mobile-featured__art" aria-hidden="true">
               {(() => {
                 const source = featured.backdrop || featured.poster || '';
