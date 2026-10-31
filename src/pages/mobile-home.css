@@ -399,3 +399,88 @@
 @media (min-width: 520px) and (max-width: 767px) { .panda-mobile-featured { max-width: 680px; margin-inline: auto; } .panda-mobile-featured__spotlight { min-height: min(68svh, 620px); } .panda-mobile-featured__copy { padding: 34px 26px 25px; } }
 @media (max-width: 380px) { .panda-mobile-featured__spotlight { min-height: 440px; } .panda-mobile-featured__copy { padding: 24px 15px 16px; } .panda-mobile-featured__copy p { -webkit-line-clamp: 2; } .panda-mobile-featured__details { padding-inline: 11px; } }
 @media (prefers-reduced-motion: reduce) { .panda-mobile-featured__hint button { transition: none; } }
+
+
+/* Mobile featured card: swipe gestures, restrained white accent, and compact layouts. */
+.panda-mobile-featured__spotlight {
+  min-height: clamp(390px, 66svh, 590px);
+  touch-action: pan-y;
+  border-color: rgba(255,255,255,.18);
+  box-shadow: 0 22px 58px rgba(0,0,0,.54);
+}
+.panda-mobile-featured__spotlight-track {
+  animation: panda-featured-swipe-in 360ms cubic-bezier(.2,.75,.25,1) both;
+  will-change: transform, opacity;
+}
+.panda-mobile-featured__spotlight-track.is-previous {
+  --panda-featured-enter-x: -22px;
+}
+.panda-mobile-featured__spotlight-track.is-next {
+  --panda-featured-enter-x: 22px;
+}
+@keyframes panda-featured-swipe-in {
+  from { opacity: .72; transform: translate3d(var(--panda-featured-enter-x, 22px), 0, 0) scale(.985); }
+  to { opacity: 1; transform: translate3d(0, 0, 0) scale(1); }
+}
+.panda-mobile-featured__kicker {
+  border-color: rgba(255,255,255,.34);
+  color: #fff;
+}
+.panda-mobile-featured__meta { color: rgba(255,255,255,.9); }
+.panda-mobile-featured__meta span + span::before { color: rgba(255,255,255,.6); }
+.panda-mobile-featured__watch {
+  color: #090909;
+  border-color: #fff;
+  background: #fff;
+  box-shadow: 0 8px 24px rgba(0,0,0,.25);
+}
+.panda-mobile-featured__details,
+.panda-mobile-featured__list {
+  border-color: rgba(255,255,255,.62);
+  color: #fff;
+  background: rgba(0,0,0,.58);
+}
+.panda-mobile-featured__list[aria-pressed="true"] {
+  border-color: #fff;
+  color: #fff;
+  background: rgba(255,255,255,.14);
+}
+.panda-mobile-featured__hint button.is-active { background: #fff; }
+.panda-mobile-featured__step {
+  border-color: rgba(255,255,255,.5);
+  background: #080808;
+}
+.panda-mobile-featured__watch:hover,
+.panda-mobile-featured__details:hover,
+.panda-mobile-featured__list:hover,
+.panda-mobile-featured__step:hover {
+  transform: translateY(-2px);
+}
+.panda-mobile-featured__watch:active,
+.panda-mobile-featured__details:active,
+.panda-mobile-featured__list:active,
+.panda-mobile-featured__step:active {
+  transform: scale(.97);
+}
+@media (max-width: 380px) {
+  .panda-mobile-featured { padding-inline: 11px; }
+  .panda-mobile-featured__spotlight { min-height: clamp(370px, 64svh, 500px); border-radius: 16px; }
+  .panda-mobile-featured__copy { padding: 24px 14px 16px; }
+  .panda-mobile-featured__copy h1 { font-size: clamp(25px, 8vw, 32px); }
+  .panda-mobile-featured__copy p { -webkit-line-clamp: 2; }
+  .panda-mobile-featured__actions { gap: 6px; }
+  .panda-mobile-featured__watch,
+  .panda-mobile-featured__details,
+  .panda-mobile-featured__list { min-height: 40px; font-size: 10px; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .panda-mobile-featured__spotlight-track { animation: none; will-change: auto; }
+  .panda-mobile-featured__watch:hover,
+  .panda-mobile-featured__details:hover,
+  .panda-mobile-featured__list:hover,
+  .panda-mobile-featured__step:hover,
+  .panda-mobile-featured__watch:active,
+  .panda-mobile-featured__details:active,
+  .panda-mobile-featured__list:active,
+  .panda-mobile-featured__step:active { transform: none; }
+}
