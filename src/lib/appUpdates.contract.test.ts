@@ -4,6 +4,7 @@ import { readFileSync } from 'node:fs';
 describe('Settings update action handling', () => {
   const source = readFileSync(new URL('./appUpdates.ts', import.meta.url), 'utf8');
   const card = readFileSync(new URL('../components/ui/AppUpdatesCard.tsx', import.meta.url), 'utf8');
+  const state = readFileSync(new URL('./appUpdateState.ts', import.meta.url), 'utf8');
 
   it('keeps the native response timeout active through the intermediate checking event', () => {
     expect(source).toContain('if (isTerminalNativeUpdateEvent(parsed)) clearTimer()');
@@ -22,6 +23,6 @@ describe('Settings update action handling', () => {
     expect(source).toContain("native.downloadUpdate()");
     expect(card).toContain("state.status === 'available' ? (");
     expect(card).toContain("state.status === 'downloaded'");
-    expect(card).toContain('Update downloaded. Follow the Android installer prompt to finish.');
+    expect(state).toContain('Update downloaded. Follow the Android installer prompt to finish.');
   });
 });
