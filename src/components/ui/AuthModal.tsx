@@ -108,7 +108,7 @@ export function AuthModal() {
           <button 
             onClick={closeAuthModal}
             aria-label="Close sign-in dialog"
-            className="absolute top-5 right-5 text-gray-400 hover:text-white p-1 rounded-lg hover:bg-white/5 transition-colors"
+            className="absolute top-5 right-5 min-h-11 min-w-11 flex items-center justify-center text-gray-400 hover:text-white p-1 rounded-lg hover:bg-white/5 transition-colors"
           >
             <X className="w-5 h-5" />
           </button>
