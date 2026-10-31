@@ -10617,3 +10617,21 @@ html.tv-mode .panda-content-card:focus-within { scroll-margin-inline: 32px; }
   outline: 3px solid #fff;
   outline-offset: 3px;
 }
+
+
+/* Tablet density: give poster grids room to breathe between phone and desktop widths. */
+@media (min-width: 768px) and (max-width: 1023px) {
+  .kinoma-search-grid,
+  .kinoma-library-grid {
+    grid-template-columns: repeat(3, minmax(0, 1fr)) !important;
+  }
+  .panda-settings-page__grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+@media (min-width: 1024px) and (max-width: 1279px) {
+  .kinoma-search-grid,
+  .kinoma-library-grid {
+    grid-template-columns: repeat(4, minmax(0, 1fr)) !important;
+  }
+}
