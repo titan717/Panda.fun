@@ -19,6 +19,16 @@ describe('Mobile featured spotlight', () => {
     expect(source).toContain('Show featured title ');
   });
 
+  it('removes the spotlight label and supports touch swiping with a white active accent', () => {
+    const source = readFileSync(new URL('./MobileHome.tsx', import.meta.url), 'utf8');
+    const styles = readFileSync(new URL('./mobile-home.css', import.meta.url), 'utf8');
+    expect(source).not.toContain('PANDA SPOTLIGHT');
+    expect(source).toContain('onTouchStart');
+    expect(source).toContain('onTouchEnd');
+    expect(styles).toContain('panda-mobile-featured__spotlight-track');
+    expect(styles).toContain('background: #fff');
+  });
+
   it('supports reduced-motion preferences in the featured presentation', () => {
     const styles = readFileSync(new URL('./mobile-home.css', import.meta.url), 'utf8');
     expect(styles).toContain('@media (prefers-reduced-motion: reduce)');
