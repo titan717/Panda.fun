@@ -22,6 +22,11 @@ describe('modal keyboard accessibility', () => {
     }
   });
 
+  it('keeps the authentication dialog scrollable on short phone screens', () => {
+    expect(auth).toContain('max-h-[calc(100dvh-2rem)]');
+    expect(auth).toContain('overflow-y-auto');
+  });
+
   it('keeps the hidden developer tools dialog keyboard-contained too', () => {
     expect(pageSettings).toContain('useModalFocusTrap');
     expect(pageSettings).toContain('aria-modal="true"');
