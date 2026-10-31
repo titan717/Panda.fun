@@ -352,3 +352,55 @@
     transform: none !important;
   }
 }
+
+
+/* Shared mobile micro-interactions and neutral Settings shortcut. */
+@media (max-width: 767px) {
+  .panda-mobile-header__action {
+    color: #fff;
+    border-color: rgba(255,255,255,.2);
+    transition: transform 180ms cubic-bezier(.2,.8,.2,1), color 180ms ease, border-color 180ms ease, background 180ms ease, box-shadow 180ms ease;
+  }
+  .panda-mobile-header__action:hover,
+  .panda-mobile-header__action:focus-visible {
+    color: #fff;
+    border-color: rgba(255,255,255,.62);
+    background: rgba(255,255,255,.1);
+    box-shadow: 0 0 0 3px rgba(255,255,255,.06);
+  }
+  .panda-mobile-header__action:active {
+    transform: scale(.92) rotate(-8deg);
+  }
+  .panda-mobile-header__action:focus-visible {
+    outline: 2px solid #fff;
+    outline-offset: 3px;
+  }
+  .panda-mobile-bottom-nav__item {
+    transition: transform 180ms cubic-bezier(.2,.8,.2,1), color 180ms ease, background 180ms ease;
+  }
+  .panda-mobile-bottom-nav__item .panda-mobile-bottom-nav__icon {
+    transition: transform 220ms cubic-bezier(.2,.8,.2,1);
+  }
+  .panda-mobile-bottom-nav__item.is-active .panda-mobile-bottom-nav__icon {
+    transform: translateY(-2px) scale(1.06);
+  }
+  .panda-mobile-bottom-nav__item:focus-visible {
+    outline: 2px solid #fff;
+    outline-offset: 2px;
+  }
+  .panda-mobile-bottom-nav__item:active .panda-mobile-bottom-nav__icon {
+    transform: scale(.9);
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .panda-mobile-header__action,
+  .panda-mobile-bottom-nav__item,
+  .panda-mobile-bottom-nav__item .panda-mobile-bottom-nav__icon {
+    transition: none !important;
+  }
+  .panda-mobile-header__action:active,
+  .panda-mobile-bottom-nav__item:active,
+  .panda-mobile-bottom-nav__item .panda-mobile-bottom-nav__icon {
+    transform: none !important;
+  }
+}
