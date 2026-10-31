@@ -140,7 +140,11 @@ class AppErrorBoundary extends React.Component<{ children: React.ReactNode; rese
 function PWAUpdateBridge() { usePWAUpdate(); return null; }
 function MainAppShell() {
   const [location] = useLocation();
-  const [showIntro, setShowIntro] = useState(() => shouldShowPandaIntro());
+  const [showIntro, setShowIntro] = useState(() => location === '/' && shouldShowPandaIntro());
+
+  useEffect(() => {
+    if (location !== '/') setShowIntro(false);
+  }, [location]);
 
   if (showIntro) {
     return <PandaIntro onComplete={() => setShowIntro(false)} />;

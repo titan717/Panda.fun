@@ -60,9 +60,9 @@ describe('universal Android manifest contract', () => {
     expect(mobileHomeStyles).not.toContain('.panda-mobile-featured__loading span {');
   });
 
-  it('keeps the mobile hero cards rectangular and cinematic', () => {
-    expect(mobileHomeStyles).toContain('aspect-ratio: 16 / 9;');
-    expect(mobileHomeStyles).toContain('flex: 0 0 78vw;');
+  it('keeps the mobile featured area a cinematic spotlight, not a portrait card', () => {
+    expect(mobileHomeStyles).toContain('.panda-mobile-featured__spotlight');
+    expect(mobileHomeStyles).toContain('.panda-mobile-featured__art');
     expect(mobileHomeStyles).not.toContain('aspect-ratio: 4 / 5;');
   });
 
