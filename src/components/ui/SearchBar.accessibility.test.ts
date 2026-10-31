@@ -29,6 +29,7 @@ describe('Global search suggestions accessibility', () => {
 
   it('does not present suggestions for an older query while the new query is debouncing', () => {
     expect(source).toContain('isDebouncing');
+    expect(source).toContain('!isDebouncing && !error');
     expect(source).toContain('aria-label="Search movies, shows and anime"');
   });
 });
