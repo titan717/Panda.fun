@@ -556,7 +556,7 @@ class MainActivity : ComponentActivity() {
 
     private fun showUpdatePrompt(update: UpdateInfo) {
         val builder = AlertDialog.Builder(this, android.R.style.Theme_DeviceDefault_Dialog_Alert)
-        builder.setTitle("Kinoma TV Update")
+        builder.setTitle("Panda.fun Update")
         builder.setMessage("A new version (${update.latestVersionName}) is available.\n\n${update.releaseNotes}")
 
         builder.setPositiveButton("Update Now") { dialog, _ ->
@@ -579,7 +579,7 @@ class MainActivity : ComponentActivity() {
         val progressDialog = AlertDialog.Builder(this, android.R.style.Theme_DeviceDefault_Dialog_Alert)
             .setTitle("Downloading Update")
             .setView(ProgressBar(this).apply { isIndeterminate = false; max = 100 })
-            .setMessage("Downloading Kinoma TV update...")
+            .setMessage("Downloading Panda.fun update...")
             .setCancelable(false)
             .create()
 
@@ -603,8 +603,8 @@ class MainActivity : ComponentActivity() {
                     } else {
                         pendingVerifiedUpdateUri = apkUri
                         AlertDialog.Builder(this, android.R.style.Theme_DeviceDefault_Dialog_Alert)
-                            .setTitle("Allow Kinoma Updates")
-                            .setMessage("Android TV needs permission to install updates from Kinoma. Enable \"Allow from this source\", then return to Kinoma.")
+                            .setTitle("Allow Panda.fun Updates")
+                            .setMessage("Android TV needs permission to install updates from Panda.fun. Enable \"Allow from this source\", then return to Panda.fun.")
                             .setPositiveButton("Open Settings") { _, _ ->
                                 openInstallPermissionSettings()
                             }
