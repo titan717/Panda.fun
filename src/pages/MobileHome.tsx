@@ -80,6 +80,7 @@ export function MobileHome({
   const touchStart = useRef<{ x: number; y: number } | null>(null);
   const [swipeDirection, setSwipeDirection] = useState<'next' | 'previous'>('next');
   const touchStartX = useRef<number | null>(null);
+  const suppressSwipeClick = useRef(false);
   const featuredItems = useMemo(() => uniqueItems(items).filter(item => item.poster || item.backdrop).slice(0, 5), [items]);
   const catalogue = useMemo(() => uniqueItems([
     ...(trendingItems || []),
@@ -128,6 +129,9 @@ export function MobileHome({
     if (startX == null || endX == null) return;
     const distance = endX - startX;
     if (Math.abs(distance) < 48) return;
+    event.preventDefault();
+    suppressSwipeClick.current = true;
+    window.setTimeout(() => { suppressSwipeClick.current = false; }, 450);
     selectFeatured(activeIndex + (distance < 0 ? 1 : -1));
   };
 
@@ -138,7 +142,7 @@ export function MobileHome({
           <span className="panda-mobile-eyebrow">YOUR NEXT WATCH</span>
         </div>
         {featuredItems.length > 0 && featured ? (
-          <article key={featured.id} className={`panda-mobile-featured__spotlight panda-mobile-featured__spotlight-track is-${swipeDirection}`} aria-label={"Featured: " + featured.title} onTouchStart={handleFeaturedTouchStart} onTouchEnd={handleFeaturedTouchEnd} onTouchCancel={() => { touchStartX.current = null; }}>
+          <article key={featured.id} className={`panda-mobile-featured__spotlight panda-mobile-featured__spotlight-track is-${swipeDirection}`} aria-label={"Featured: " + featured.title} onTouchStart={handleFeaturedTouchStart} onTouchEnd={handleFeaturedTouchEnd} onTouchCancel={() => { touchStartX.current = null; }} onClickCapture={event => { if (suppressSwipeClick.current) { event.preventDefault(); event.stopPropagation(); suppressSwipeClick.current = false; } }}>
             <div className="panda-mobile-featured__art" aria-hidden="true">
               {(() => {
                 const source = featured.backdrop || featured.poster || '';
