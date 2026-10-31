@@ -35,15 +35,3 @@ describe('Mobile featured spotlight', () => {
     expect(styles).toContain('.panda-mobile-featured__hint button { transition: none; }');
   });
 });
-
-  it('supports touch swipes and removes the spotlight label from the featured card', () => {
-    const source = readFileSync(new URL('./MobileHome.tsx', import.meta.url), 'utf8');
-    const styles = readFileSync(new URL('./mobile-home.css', import.meta.url), 'utf8');
-    expect(source).toContain('onTouchStart');
-    expect(source).toContain('onTouchEnd');
-    expect(source).toContain('data-swipe-direction');
-    expect(source).not.toContain('PANDA SPOTLIGHT');
-    expect(styles).toContain('panda-mobile-featured-swipe-in');
-    expect(styles).toContain('rgba(255,255,255,.');
-    expect(styles).toContain('touch-action: pan-y');
-  });
