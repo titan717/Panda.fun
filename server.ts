@@ -4,7 +4,7 @@ import fs from 'fs';
 import { createServer as createViteServer } from 'vite';
 
 const MOVIE_API = "https://movieapi-3d0v.onrender.com";
-const MOVIE_API_FALLBACK = "";
+const MOVIE_API_FALLBACK = "https://apikinomafallback.vercel.app";
 const SITE_NAME = "Panda.fun";
 const SITE_DESCRIPTION = "Watch anime, movies and TV series on Panda.fun. Discover trending titles, new releases, popular shows and stories worth watching.";
 
@@ -195,19 +195,29 @@ async function startServer() {
     }
   });
 
+  // Legacy un-prefixed API aliases (/search, /trending, /popular, /schedule) share
+  // paths with SPA routes. Browser navigations (Accept: text/html) must fall
+  // through to the app so a refresh or deep link on /search renders Search.
+  const SPA_SHADOWED_ALIASES = new Set(['/search', '/trending', '/popular', '/schedule']);
+  const apiOnly = (handler: (req: express.Request, res: express.Response) => unknown) =>
+    (req: express.Request, res: express.Response, next: express.NextFunction) => {
+      if (SPA_SHADOWED_ALIASES.has(req.path) && req.accepts(['html', 'json']) === 'html') return next();
+      return handler(req, res);
+    };
+
   app.get(['/api/health', '/health'], (req, res) => proxyHandler('/api/v1/health', req, res));
-  app.get(['/api/search', '/api/anime/search', '/search'], (req, res) => proxyHandler('/api/v1/search', req, res));
+  app.get(['/api/search', '/api/anime/search', '/search'], apiOnly((req, res) => proxyHandler('/api/v1/search', req, res)));
   app.get(['/api/search/:query', '/api/anime/search/:query'], (req, res) => {
     req.query.q = req.params.query;
     proxyHandler('/api/v1/search', req, res);
   });
-  app.get(['/api/trending', '/api/anime/trending', '/trending'], (req, res) => proxyHandler('/api/v1/trending', req, res));
-  app.get(['/api/popular', '/api/anime/popular', '/popular'], (req, res) => proxyHandler('/api/v1/popular/tv', req, res));
+  app.get(['/api/trending', '/api/anime/trending', '/trending'], apiOnly((req, res) => proxyHandler('/api/v1/trending', req, res)));
+  app.get(['/api/popular', '/api/anime/popular', '/popular'], apiOnly((req, res) => proxyHandler('/api/v1/popular/tv', req, res)));
   app.get(['/api/info/:id', '/info/:id'], (req, res) => proxyHandler(`/api/v1/tv/${req.params.id}`, req, res));
   app.get(['/api/episodes/:id', '/episodes/:id'], (req, res) => proxyHandler(`/api/v1/tv/${req.params.id}/episodes`, req, res));
   app.get(['/api/servers/:id/:ep', '/servers/:id/:ep'], (req, res) => proxyHandler(`/api/v1/tv/${req.params.id}/season/1/episode/${req.params.ep}/sources`, req, res));
   app.get(['/api/stream/:id/:ep', '/stream/:id/:ep'], (req, res) => proxyHandler(`/api/v1/tv/${req.params.id}/season/1/episode/${req.params.ep}/play`, req, res));
-  app.get(['/api/schedule', '/schedule'], (req, res) => proxyHandler('/api/v1/airing/today', req, res));
+  app.get(['/api/schedule', '/schedule'], apiOnly((req, res) => proxyHandler('/api/v1/airing/today', req, res)));
 
   app.get(['/tv/update.json', '/update/latest.json'], (req, res) => {
     const latestJsonPath = path.join(process.cwd(), 'update', 'latest.json');
