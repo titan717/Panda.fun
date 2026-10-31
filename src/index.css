@@ -10515,3 +10515,33 @@ html.tv-mode .panda-content-card:focus-within { scroll-margin-inline: 32px; }
     transition: none !important;
   }
 }
+
+
+/* Small interaction details shared by the redesigned Library and title actions. */
+.kinoma-library-tabs button {
+  transition: color 180ms ease, background 180ms ease, border-color 180ms ease, transform 180ms cubic-bezier(.2,.75,.25,1), box-shadow 180ms ease;
+}
+.kinoma-library-tabs button:hover { transform: translateY(-1px); }
+.kinoma-library-tabs button:active { transform: scale(.98); }
+.kinoma-library-card,
+.kinoma-library-continue {
+  transition: transform 220ms cubic-bezier(.2,.75,.25,1), border-color 180ms ease, box-shadow 220ms ease;
+}
+.kinoma-details-share-feedback:not(:empty) {
+  animation: panda-share-feedback-in 220ms ease both;
+}
+@keyframes panda-share-feedback-in {
+  from { opacity: 0; transform: translateY(4px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+@media (prefers-reduced-motion: reduce) {
+  .kinoma-library-tabs button,
+  .kinoma-library-card,
+  .kinoma-library-continue,
+  .kinoma-details-share-feedback:not(:empty) {
+    animation: none !important;
+    transition: none !important;
+  }
+  .kinoma-library-tabs button:hover,
+  .kinoma-library-tabs button:active { transform: none !important; }
+}
