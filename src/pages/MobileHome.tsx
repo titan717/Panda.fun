@@ -187,13 +187,13 @@ export function MobileHome({
         )}
         {featuredItems.length > 1 && (
           <div className="panda-mobile-featured__controls" role="group" aria-label="Choose featured title">
-            <button type="button" className="panda-mobile-featured__step" onClick={() => selectFeatured(activeIndex - 1, 'previous')} aria-label="Previous featured title"><ChevronLeft size={17} aria-hidden="true" /></button>
+            <button type="button" className="panda-mobile-featured__step" onClick={() => selectFeatured(activeIndex - 1)} aria-label="Previous featured title"><ChevronLeft size={17} aria-hidden="true" /></button>
             <div className="panda-mobile-featured__hint">
               {featuredItems.map((item, index) => (
                 <button key={item.id} type="button" className={index === activeIndex ? 'is-active' : ''} aria-label={"Show featured title " + (index + 1) + " of " + featuredItems.length + ": " + item.title} aria-current={index === activeIndex ? 'true' : undefined} onClick={() => selectFeatured(index)} />
               ))}
             </div>
-            <button type="button" className="panda-mobile-featured__step" onClick={() => selectFeatured(activeIndex + 1, 'next')} aria-label="Next featured title"><ChevronRight size={17} aria-hidden="true" /></button>
+            <button type="button" className="panda-mobile-featured__step" onClick={() => selectFeatured(activeIndex + 1)} aria-label="Next featured title"><ChevronRight size={17} aria-hidden="true" /></button>
           </div>
         )}
       </section>
