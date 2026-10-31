@@ -55,10 +55,10 @@ export function useModalFocusTrap<T extends HTMLElement>(
       const first = focusable[0];
       const last = focusable[focusable.length - 1];
       const current = document.activeElement;
-      if (event.shiftKey && (current === first || !dialog.contains(current))) {
+      if (event.shiftKey && (current === first || current === dialog || !dialog.contains(current))) {
         event.preventDefault();
         last.focus();
-      } else if (!event.shiftKey && (current === last || !dialog.contains(current))) {
+      } else if (!event.shiftKey && (current === last || current === dialog || !dialog.contains(current))) {
         event.preventDefault();
         first.focus();
       }
