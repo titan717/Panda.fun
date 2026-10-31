@@ -25,6 +25,8 @@ describe('Mobile featured spotlight', () => {
     expect(source).not.toContain('PANDA SPOTLIGHT');
     expect(source).toContain('onTouchStart');
     expect(source).toContain('onTouchEnd');
+    expect(source).toContain('touchStartY');
+    expect(source).toContain('Math.abs(distance) < Math.abs(verticalDistance) * 1.2');
     expect(styles).toContain('panda-mobile-featured__spotlight-track');
     expect(styles).toContain('background: #fff');
   });

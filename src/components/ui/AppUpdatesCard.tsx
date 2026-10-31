@@ -8,7 +8,7 @@ export function AppUpdatesCard() {
   const busy = state.status === 'checking' || state.status === 'applying';
   const isAndroid = state.source === 'android';
   const Icon =
-    state.status === 'up-to-date' ? CheckCircle2 : state.status === 'error' ? TriangleAlert : state.status === 'available' ? Download : RefreshCw;
+    state.status === 'up-to-date' || state.status === 'downloaded' ? CheckCircle2 : state.status === 'error' ? TriangleAlert : state.status === 'available' ? Download : RefreshCw;
 
   return (
     <section className="panda-updates" aria-labelledby="panda-updates-title">

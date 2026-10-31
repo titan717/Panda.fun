@@ -576,6 +576,7 @@ class MainActivity : ComponentActivity() {
     }
 
     private fun startDownloadAndInstall(update: UpdateInfo) {
+        availableUpdate = update
         val progressDialog = AlertDialog.Builder(this, android.R.style.Theme_DeviceDefault_Dialog_Alert)
             .setTitle("Downloading Update")
             .setView(ProgressBar(this).apply { isIndeterminate = false; max = 100 })
@@ -595,7 +596,7 @@ class MainActivity : ComponentActivity() {
                 }
             },
             onComplete = { apkUri ->
-                emitUpdateStatus("available", availableUpdate)
+                emitUpdateStatus("downloaded", update)
                 runOnUiThread {
                     progressDialog.dismiss()
                     if (canInstallPackages()) {

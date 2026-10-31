@@ -17,6 +17,8 @@ import com.google.gson.Gson
 import java.io.File
 
 object UpdateChecker {
+    private const val DOWNLOAD_STALL_TIMEOUT_MS = 3 * 60 * 1000L
+
     // Public beta/stable manifest maintained in the Panda.fun repository
     private const val UPDATE_JSON_URL = "https://raw.githubusercontent.com/titan717/Panda.fun/main/update/latest.json"
 
@@ -91,6 +93,8 @@ object UpdateChecker {
             Thread {
                 val mainHandler = android.os.Handler(android.os.Looper.getMainLooper())
                 var finished = false
+                var lastBytesDownloaded = -1L
+                var lastProgressAt = System.currentTimeMillis()
 
                 while (!finished) {
                     try {
@@ -139,6 +143,17 @@ object UpdateChecker {
                                     val soFar = cursor.getLong(
                                         cursor.getColumnIndexOrThrow(DownloadManager.COLUMN_BYTES_DOWNLOADED_SO_FAR)
                                     )
+                                    val now = System.currentTimeMillis()
+                                    if (soFar > lastBytesDownloaded) {
+                                        lastBytesDownloaded = soFar
+                                        lastProgressAt = now
+                                    } else if (now - lastProgressAt > DOWNLOAD_STALL_TIMEOUT_MS) {
+                                        finished = true
+                                        manager.remove(downloadId)
+                                        destination.delete()
+                                        mainHandler.post { onError("Download stalled. Check your connection and try again.") }
+                                        return@Thread
+                                    }
                                     if (total > 0L) {
                                         val progress = ((soFar * 100L) / total).toInt().coerceIn(0, 100)
                                         mainHandler.post { onProgress(progress) }

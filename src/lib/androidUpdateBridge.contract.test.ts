@@ -8,12 +8,13 @@ describe('Android update bridge contract', () => {
   it('exposes manual check and download to the web Settings page', () => {
     expect(main).toContain('fun checkForUpdatesManual()');
     expect(main).toContain('fun downloadUpdate()');
+    expect(main).toContain('emitUpdateStatus("downloaded", update)');
     expect(main).toContain('panda_native_update_status');
     expect(main).toContain('fun getAppVersion()');
   });
 
   it('reports every status the web state machine understands', () => {
-    for (const status of ['checking', 'available', 'up-to-date', 'downloading', 'error']) {
+    for (const status of ['checking', 'available', 'up-to-date', 'downloading', 'downloaded', 'error']) {
       expect(main).toContain('"' + status + '"');
     }
   });
@@ -22,6 +23,9 @@ describe('Android update bridge contract', () => {
     expect(checker).toContain('suspend fun checkForUpdateOrThrow()');
     expect(checker).toContain('suspend fun checkForUpdate(');
     expect(checker).toContain('e.printStackTrace()');
+    expect(checker).toContain('DOWNLOAD_STALL_TIMEOUT_MS');
+    expect(checker).toContain('Download stalled. Check your connection and try again.');
+    expect(checker).toContain('manager.remove(downloadId)');
   });
 
   it('still verifies the checksum before installing and requires user confirmation', () => {

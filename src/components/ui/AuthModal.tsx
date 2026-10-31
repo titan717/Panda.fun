@@ -1,7 +1,8 @@
-import React, { useState } from 'react';
+import React, { useRef, useState } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import { X, Mail, Lock, User as UserIcon, AlertCircle, Loader2 } from 'lucide-react';
 import { useAuth } from '../../lib/AuthContext';
+import { useModalFocusTrap } from '../../lib/useModalFocusTrap';
 
 export function AuthModal() {
   const { 
@@ -19,6 +20,8 @@ export function AuthModal() {
   const [displayName, setDisplayName] = useState('');
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
+  const dialogRef = useRef<HTMLDivElement>(null);
+  useModalFocusTrap(dialogRef, closeAuthModal, isAuthModalOpen);
 
   if (!isAuthModalOpen) return null;
 
@@ -75,7 +78,7 @@ export function AuthModal() {
 
   return (
     <AnimatePresence>
-      <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+      <div className="fixed inset-0 z-50 flex items-center justify-center overflow-y-auto p-4">
         {/* Backdrop */}
         <motion.div 
           initial={{ opacity: 0 }}
@@ -86,11 +89,16 @@ export function AuthModal() {
         />
 
         {/* Modal Window */}
-        <motion.div 
+        <motion.div
+          ref={dialogRef}
+          role="dialog"
+          aria-modal="true"
+          aria-labelledby="panda-auth-modal-title"
+          tabIndex={-1}
           initial={{ opacity: 0, scale: 0.95, y: 15 }}
           animate={{ opacity: 1, scale: 1, y: 0 }}
           exit={{ opacity: 0, scale: 0.95, y: 15 }}
-          className="relative w-full max-w-md bg-[#0e0f14] border border-[#242432] rounded-2xl p-6 sm:p-8 shadow-[0_20px_50px_rgba(0,0,0,0.8)] overflow-hidden"
+          className="relative w-full max-w-md max-h-[calc(100dvh-2rem)] overflow-y-auto overscroll-contain bg-[#0e0f14] border border-[#242432] rounded-2xl p-6 sm:p-8 shadow-[0_20px_50px_rgba(0,0,0,0.8)]"
         >
           {/* Ambient Glow */}
           <div className="absolute -top-24 -left-24 w-48 h-48 bg-[#7b1fa2]/20 rounded-full blur-3xl pointer-events-none" />
@@ -99,7 +107,8 @@ export function AuthModal() {
           {/* Close button */}
           <button 
             onClick={closeAuthModal}
-            className="absolute top-5 right-5 text-gray-400 hover:text-white p-1 rounded-lg hover:bg-white/5 transition-colors"
+            aria-label="Close sign-in dialog"
+            className="absolute top-5 right-5 min-h-11 min-w-11 flex items-center justify-center text-gray-400 hover:text-white p-1 rounded-lg hover:bg-white/5 transition-colors"
           >
             <X className="w-5 h-5" />
           </button>
@@ -110,7 +119,7 @@ export function AuthModal() {
               <span className="text-2xl font-black tracking-tight text-white">Kino</span>
               <span className="text-2xl font-black tracking-tight text-[#c084fc] drop-shadow-[0_0_12px_rgba(156,39,176,0.6)]">ma</span>
             </div>
-            <h3 className="text-2xl font-bold text-white tracking-tight">
+            <h3 id="panda-auth-modal-title" className="text-2xl font-bold text-white tracking-tight">
               {isSignUp ? 'Create your account' : 'Welcome back'}
             </h3>
             <p className="text-xs sm:text-sm text-gray-400 mt-1">

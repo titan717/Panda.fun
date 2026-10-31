@@ -3,6 +3,7 @@ import {
   initialUpdateState,
   parseNativeStatus,
   updateReducer,
+  isTerminalNativeUpdateEvent,
   type UpdateSource,
 } from './appUpdateState';
 import { applyPWAUpdate, checkForPWAUpdate } from './usePWAUpdate';
@@ -52,7 +53,7 @@ export function useAppUpdates() {
     const onNative = (event: Event) => {
       const parsed = parseNativeStatus((event as CustomEvent).detail, Date.now());
       if (!parsed) return;
-      clearTimer();
+      if (isTerminalNativeUpdateEvent(parsed)) clearTimer();
       dispatch(parsed);
     };
     const onPwaReady = () => dispatch({ type: 'available', at: Date.now() });
@@ -67,41 +68,65 @@ export function useAppUpdates() {
   }, []);
 
   const check = useCallback(async () => {
+    clearTimer();
     dispatch({ type: 'check-started' });
     const native = getNativeBridge();
 
-    if (native) {
-      if (typeof native.checkForUpdatesManual === 'function') {
-        clearTimer();
-        timerRef.current = window.setTimeout(() => {
-          dispatch({ type: 'error', at: Date.now(), message: 'The app did not respond. Please try again.' });
-        }, NATIVE_RESPONSE_TIMEOUT_MS);
-        native.checkForUpdatesManual();
-      } else {
-        // Older APKs only expose a silent check that shows its own dialog if an update exists.
-        native.checkForUpdates?.();
-        dispatch({ type: 'handed-off', message: 'Check started. If an update is available, a prompt will appear.' });
+    try {
+      if (native) {
+        if (typeof native.checkForUpdatesManual === 'function') {
+          timerRef.current = window.setTimeout(() => {
+            timerRef.current = null;
+            dispatch({ type: 'error', at: Date.now(), message: 'The app did not respond. Please try again.' });
+          }, NATIVE_RESPONSE_TIMEOUT_MS);
+          native.checkForUpdatesManual();
+        } else {
+          // Older APKs only expose a silent check that may show their own update dialog.
+          native.checkForUpdates?.();
+          dispatch({ type: 'handed-off', message: 'Check started. If an update is available, an Android update prompt will appear.' });
+        }
+        return;
       }
-      return;
-    }
 
-    const result = await checkForPWAUpdate();
-    if (result === 'available') dispatch({ type: 'available', at: Date.now() });
-    else if (result === 'up-to-date') dispatch({ type: 'up-to-date', at: Date.now() });
-    else if (result === 'unsupported') {
-      dispatch({ type: 'error', at: Date.now(), message: 'Updates are managed by your browser on this device. Reload the page to get the latest version.' });
-    } else dispatch({ type: 'error', at: Date.now(), message: "Couldn't check for updates. Check your connection and try again." });
+      const result = await checkForPWAUpdate();
+      if (result === 'available') dispatch({ type: 'available', at: Date.now() });
+      else if (result === 'up-to-date') dispatch({ type: 'up-to-date', at: Date.now() });
+      else if (result === 'unsupported') {
+        dispatch({ type: 'error', at: Date.now(), message: 'Updates are managed by your browser on this device. Reload the page to get the latest version.' });
+      } else dispatch({ type: 'error', at: Date.now(), message: "Couldn't check for updates. Check your connection and try again." });
+    } catch (error) {
+      clearTimer();
+      dispatch({
+        type: 'error',
+        at: Date.now(),
+        message: error instanceof Error && error.message ? error.message : "Couldn't check for updates. Check your connection and try again.",
+      });
+    }
   }, []);
 
   const apply = useCallback(async () => {
     const native = getNativeBridge();
-    dispatch({ type: 'applying' });
-    if (native) {
-      if (typeof native.downloadUpdate === 'function') native.downloadUpdate();
-      else native.checkForUpdates?.();
-      return;
+    try {
+      if (native) {
+        if (typeof native.downloadUpdate === 'function') {
+          dispatch({ type: 'applying' });
+          native.downloadUpdate();
+        } else {
+          native.checkForUpdates?.();
+          dispatch({ type: 'handed-off', message: 'Your Android app is checking for the update. Follow the system prompt if one appears.' });
+        }
+        return;
+      }
+      dispatch({ type: 'applying' });
+      await applyPWAUpdate();
+    } catch (error) {
+      clearTimer();
+      dispatch({
+        type: 'error',
+        at: Date.now(),
+        message: error instanceof Error && error.message ? error.message : 'The update could not be started. Please try again.',
+      });
     }
-    await applyPWAUpdate();
   }, []);
 
   return { state, check, apply };

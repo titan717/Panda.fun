@@ -5,10 +5,13 @@ import { useAppearance } from '../lib/AppearanceContext';
 import { updateSEO } from '../lib/seo';
 import { KinomaLogo } from '../components/ui/KinomaLogo';
 import { AppUpdatesCard } from '../components/ui/AppUpdatesCard';
+import { useModalFocusTrap } from '../lib/useModalFocusTrap';
 
 export function Settings() {
   const { openSettingsModal } = useAppearance();
   const [devToolsOpen, setDevToolsOpen] = useState(false);
+  const devToolsDialogRef = React.useRef<HTMLDivElement>(null);
+  useModalFocusTrap(devToolsDialogRef, () => setDevToolsOpen(false), devToolsOpen);
   const pandaBufferRef = React.useRef('');
   const pandaCountRef = React.useRef(0);
 
@@ -87,8 +90,8 @@ export function Settings() {
         </section>
 
         {devToolsOpen && (
-          <div className="panda-devtools" role="dialog" aria-modal="true" aria-labelledby="panda-devtools-title">
-            <button className="panda-devtools__backdrop" aria-label="Close developer tools" onClick={() => setDevToolsOpen(false)} />
+          <div ref={devToolsDialogRef} className="panda-devtools" role="dialog" aria-modal="true" aria-labelledby="panda-devtools-title" tabIndex={-1}>
+            <button className="panda-devtools__backdrop" aria-label="Close developer tools" tabIndex={-1} onClick={() => setDevToolsOpen(false)} />
             <section className="panda-devtools__panel">
               <header className="panda-devtools__head">
                 <div>
