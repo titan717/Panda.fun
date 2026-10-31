@@ -9,5 +9,9 @@ describe('Panda launch intro', () => {
     expect(app).toContain('PandaIntro, shouldShowPandaIntro');
     expect(app).toContain('useState(() => shouldShowPandaIntro())');
     expect(intro).toContain("sessionStorage.setItem(INTRO_KEY, '1')");
+    const asset = readFileSync(new URL('../public/intro/panda-intro.html', import.meta.url), 'utf8');
+    expect(asset).toContain('rs();play();');
+    expect(asset).toContain("type:'panda-intro-end'");
+    expect(app).not.toContain("if (location !== '/') setShowIntro(false)");
   });
 });
