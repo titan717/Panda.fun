@@ -23,6 +23,9 @@ describe('Android update bridge contract', () => {
     expect(checker).toContain('suspend fun checkForUpdateOrThrow()');
     expect(checker).toContain('suspend fun checkForUpdate(');
     expect(checker).toContain('e.printStackTrace()');
+    expect(checker).toContain('DOWNLOAD_STALL_TIMEOUT_MS');
+    expect(checker).toContain('Download stalled. Check your connection and try again.');
+    expect(checker).toContain('manager.remove(downloadId)');
   });
 
   it('still verifies the checksum before installing and requires user confirmation', () => {
