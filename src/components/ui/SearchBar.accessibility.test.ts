@@ -7,6 +7,7 @@ describe('Global search suggestions accessibility', () => {
   it('exposes a labelled combobox and keyboard selection', () => {
     expect(source).toContain('role="combobox"');
     expect(source).toContain('aria-autocomplete="list"');
+    expect(source).toContain('aria-activedescendant');
     expect(source).toContain('ArrowDown');
     expect(source).toContain('ArrowUp');
     expect(source).toContain('activeIndex >= 0');
