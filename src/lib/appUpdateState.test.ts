@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { initialUpdateState, parseNativeStatus, statusMessage, updateReducer } from './appUpdateState';
+import { initialUpdateState, isTerminalNativeUpdateEvent, parseNativeStatus, statusMessage, updateReducer } from './appUpdateState';
 
 describe('app update state machine', () => {
   it('walks idle -> checking -> up-to-date and records the check time', () => {
@@ -71,5 +71,26 @@ describe('native status parsing', () => {
     expect(parseNativeStatus('x', 1)).toBeNull();
     expect(parseNativeStatus({ status: 'weird' }, 1)).toBeNull();
     expect(parseNativeStatus({}, 1)).toBeNull();
+  });
+});
+
+describe('native update response lifecycle', () => {
+  it('does not treat checking or downloading as a completed response', () => {
+    expect(isTerminalNativeUpdateEvent(parseNativeStatus({ status: 'checking' }, 1)!)).toBe(false);
+    expect(isTerminalNativeUpdateEvent(parseNativeStatus({ status: 'downloading' }, 1)!)).toBe(false);
+  });
+
+  it('clears the response wait after available, up-to-date, downloaded or error', () => {
+    for (const status of ['available', 'up-to-date', 'downloaded', 'error']) {
+      expect(isTerminalNativeUpdateEvent(parseNativeStatus({ status }, 1)!)).toBe(true);
+    }
+  });
+
+  it('announces a downloaded update without presenting it as still waiting to download', () => {
+    const event = parseNativeStatus({ status: 'downloaded', versionName: '0.0.9' }, 9);
+    expect(event).toEqual({ type: 'downloaded', at: 9, versionName: '0.0.9' });
+    const state = updateReducer(initialUpdateState('android'), event!);
+    expect(state.status).toBe('downloaded');
+    expect(statusMessage(state)).toContain('installer prompt');
   });
 });
