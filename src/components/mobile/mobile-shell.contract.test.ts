@@ -11,7 +11,9 @@ const search = read('../../pages/Search.tsx');
 describe('MYpanda.fun mobile shell contract', () => {
   it('uses a shared mobile header and route-aware three-item navigation', () => {
     expect(layout).toContain('panda-mobile-header');
-    expect(layout).toContain('aria-label="Profile"');
+    expect(layout).toContain('aria-label="Settings"');
+    expect(layout).toContain('href="/settings"');
+    expect(layout).not.toContain('aria-label="Profile"');
     expect(layout).not.toContain('aria-label="Search movies and shows"');
     expect(layout).toContain('panda-mobile-bottom-nav');
     expect(layout).toContain("location.startsWith('/watch/')");
@@ -47,6 +49,11 @@ describe('MYpanda.fun mobile shell contract', () => {
     expect(homeStyles).toContain('opacity: .48;');
     expect(homeStyles).toContain('overflow-x: clip');
     expect(mobileHome).toContain('panda-mobile-featured__spotlight');
+    expect(mobileHome).not.toContain('PANDA SPOTLIGHT');
+    expect(mobileHome).toContain('onTouchStart={handleFeaturedTouchStart}');
+    expect(mobileHome).toContain('onTouchEnd={handleFeaturedTouchEnd}');
+    expect(homeStyles).toContain('panda-mobile-featured__spotlight-track');
+    expect(homeStyles).toContain('background: #fff');
     expect(mobileHome).toContain('buildWatchHref(featured.id');
     expect(mobileHome).toContain('aria-label="Previous featured title"');
     expect(mobileHome).toContain('aria-label="Next featured title"');
