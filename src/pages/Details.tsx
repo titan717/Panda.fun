@@ -65,6 +65,7 @@ export function Details() {
   const episodeRailRef = useRef<HTMLDivElement | null>(null);
   const watchButtonRef = useRef<HTMLButtonElement | null>(null);
   const [showEpisodeRailHint, setShowEpisodeRailHint] = useState(false);
+  const [shareFeedback, setShareFeedback] = useState('');
   const kind = kindOf(type, data);
 
   useEffect(() => {
@@ -224,14 +225,22 @@ export function Details() {
 
   const share = async () => {
     const shareUrl = window.location.href;
+    setShareFeedback('');
     try {
       if (navigator.share) {
         await navigator.share({ title, text: 'Watch ' + title + ' on Panda.fun', url: shareUrl });
-      } else if (navigator.clipboard) {
-        await navigator.clipboard.writeText(shareUrl);
+        setShareFeedback('Thanks for sharing!');
+        return;
       }
-    } catch {
-      // Native share can be cancelled; no UI error is needed.
+      if (navigator.clipboard?.writeText) {
+        await navigator.clipboard.writeText(shareUrl);
+        setShareFeedback('Link copied to clipboard');
+        return;
+      }
+      setShareFeedback('Sharing is not available in this browser.');
+    } catch (error) {
+      if (error instanceof Error && error.name === 'AbortError') return;
+      setShareFeedback('Could not share this title. Please try again.');
     }
   };
 
@@ -275,6 +284,7 @@ export function Details() {
               <button className={'kinoma-details-3d-button kinoma-details-3d-button--list ' + (isInList ? 'is-added' : '')} onClick={toggleList}><span>{isInList ? <Check size={18} /> : <Plus size={18} />} {isInList ? 'In My List' : 'Add to My List'}</span></button>
               <button className="kinoma-details-share" type="button" onClick={share} aria-label="Share this title"><span><Share2 className="kinoma-details-share__icon" size={16} /> Share</span></button>
             </div>
+            <p className="kinoma-details-share-feedback" role="status" aria-live="polite">{shareFeedback}</p>
           </div>
         </div>
       </section>
