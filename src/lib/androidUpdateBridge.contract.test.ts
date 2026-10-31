@@ -8,12 +8,13 @@ describe('Android update bridge contract', () => {
   it('exposes manual check and download to the web Settings page', () => {
     expect(main).toContain('fun checkForUpdatesManual()');
     expect(main).toContain('fun downloadUpdate()');
+    expect(main).toContain('emitUpdateStatus("downloaded", update)');
     expect(main).toContain('panda_native_update_status');
     expect(main).toContain('fun getAppVersion()');
   });
 
   it('reports every status the web state machine understands', () => {
-    for (const status of ['checking', 'available', 'up-to-date', 'downloading', 'error']) {
+    for (const status of ['checking', 'available', 'up-to-date', 'downloading', 'downloaded', 'error']) {
       expect(main).toContain('"' + status + '"');
     }
   });
