@@ -17,3 +17,10 @@ describe('Panda sidebar navigation contract', () => {
     ]);
   });
 });
+
+  it('uses the custom Settings page as the mobile header shortcut instead of Profile', async () => {
+    const source = await import('node:fs').then(({ readFileSync }) => readFileSync(new URL('./Layout.tsx', import.meta.url), 'utf8'));
+    expect(source).toContain('href="/settings"');
+    expect(source).toContain('aria-label="Settings"');
+    expect(source).not.toContain('aria-label="Profile"');
+  });
