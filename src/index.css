@@ -10586,3 +10586,34 @@ html.tv-mode .panda-content-card:focus-within { scroll-margin-inline: 32px; }
   outline: 3px solid #fff;
   outline-offset: 3px;
 }
+
+
+/* Search controls: readable inactive states and comfortable keyboard/touch targets. */
+.kinoma-search-filters button {
+  min-height: 44px;
+  padding: 0 14px;
+  color: rgba(246,242,238,.76);
+  font-size: 12px;
+}
+.kinoma-search-filters button span {
+  color: rgba(246,242,238,.76);
+  font-size: 10px;
+}
+.kinoma-search-toolbar__count {
+  color: rgba(246,242,238,.72);
+  font-size: 11px;
+}
+.kinoma-search-empty p {
+  color: rgba(246,242,238,.76);
+  font-size: 13px;
+}
+.kinoma-search-empty button {
+  min-height: 44px;
+  padding-inline: 18px;
+  font-size: 12px;
+}
+.kinoma-search-filters button:focus-visible,
+.kinoma-search-empty button:focus-visible {
+  outline: 3px solid #fff;
+  outline-offset: 3px;
+}
