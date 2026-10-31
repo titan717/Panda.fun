@@ -83,7 +83,10 @@ export function Layout({ children }: { children: React.ReactNode }) {
         <nav className="panda-mobile-bottom-nav" aria-label="MYpanda.fun mobile navigation">
           {ITEMS.filter(({ href }) => href !== '/settings').map(({ href, label, Icon }) => {
             const mobileLabel = href === '/library' ? 'Library' : label;
-            const active = location === href || (href === '/home' && location === '/browse') || (href === '/search' && (location === '/explore' || location === '/whats-new')) || (href === '/library' && location === '/history');
+            const pathname = location.split('?')[0];
+            const active = (href === '/home' && (pathname === '/home' || pathname === '/browse')) ||
+              (href === '/search' && (pathname === '/search' || pathname === '/explore' || pathname === '/whats-new')) ||
+              (href === '/library' && (pathname === '/library' || pathname === '/history'));
             return <Link key={href} href={href} className={`panda-mobile-bottom-nav__item ${active ? 'is-active' : ''}`} aria-label={mobileLabel} aria-current={active ? 'page' : undefined}><span className="panda-mobile-bottom-nav__icon"><Icon size={21} strokeWidth={1.9} /></span><span className="panda-mobile-bottom-nav__label">{mobileLabel}</span></Link>;
           })}
         </nav>
