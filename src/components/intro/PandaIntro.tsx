@@ -28,7 +28,7 @@ export function PandaIntro({ onComplete }: { onComplete: () => void }) {
     const handleMessage = (event: MessageEvent) => {
       if (event.origin !== window.location.origin) return;
       if (event.source !== frameRef.current?.contentWindow) return;
-      if (event.data?.type === 'panda-intro-end') finishRef.current();
+      if (event.data?.type === 'mypanda:intro-end') finishRef.current();
     };
     window.addEventListener('message', handleMessage);
     const fallbackTimer = window.setTimeout(() => finishRef.current(), 10000);
@@ -44,7 +44,7 @@ export function PandaIntro({ onComplete }: { onComplete: () => void }) {
       <iframe
         ref={frameRef}
         className="panda-intro__asset-frame"
-        src="/intro/panda-intro.html"
+        src="/mypanda-intro.html"
         title="Panda.fun launch animation"
         aria-hidden="true"
         tabIndex={-1}
