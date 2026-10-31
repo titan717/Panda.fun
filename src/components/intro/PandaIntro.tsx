@@ -64,31 +64,37 @@ async function playPandaIntroAudio() {
 }
 
 export function PandaIntro({ onComplete }: { onComplete: () => void }) {
-  const [leaving, setLeaving] = useState(false);
   const [soundBlocked, setSoundBlocked] = useState(false);
+  const onCompleteRef = useRef(onComplete);
   const completedRef = useRef(false);
 
   useEffect(() => {
-    const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-    const duration = reduceMotion ? 700 : 2300;
+    onCompleteRef.current = onComplete;
+  }, [onComplete]);
 
-    void playPandaIntroAudio().then(played => {
-      if (!played) setSoundBlocked(true);
-    });
-
-    const exitTimer = window.setTimeout(() => setLeaving(true), Math.max(0, duration - 420));
-    const completeTimer = window.setTimeout(() => {
+  useEffect(() => {
+    const complete = () => {
       if (completedRef.current) return;
       completedRef.current = true;
       try { sessionStorage.setItem(INTRO_KEY, '1'); } catch {}
-      onComplete();
-    }, duration);
+      onCompleteRef.current();
+    };
+    const onMessage = (event: MessageEvent) => {
+      if (event.origin !== window.location.origin) return;
+      if (event.data?.type === 'mypanda:intro-end') complete();
+    };
+    const fallbackTimer = window.setTimeout(complete, 9500);
+    window.addEventListener('message', onMessage);
+
+    void playPandaIntroAudio().then(played => {
+      if (!played && !completedRef.current) setSoundBlocked(true);
+    });
 
     return () => {
-      window.clearTimeout(exitTimer);
-      window.clearTimeout(completeTimer);
+      window.clearTimeout(fallbackTimer);
+      window.removeEventListener('message', onMessage);
     };
-  }, [onComplete]);
+  }, []);
 
   const enableSound = async () => {
     const played = await playPandaIntroAudio();
@@ -96,16 +102,15 @@ export function PandaIntro({ onComplete }: { onComplete: () => void }) {
   };
 
   return (
-    <div className={`panda-intro ${leaving ? 'is-leaving' : ''}`} role="presentation" aria-label="mypanda.fun">
-      <div className="panda-intro__content">
-        <div className="panda-intro__mascot">
-          <KinomaLogo size="xl" variant="mark" className="panda-intro__mark" />
-        </div>
-        <div className="panda-intro__wordmark" aria-label="mypanda.fun">
-          mypanda<span>.fun</span>
-        </div>
-      </div>
-
+    <div className="panda-intro" role="presentation" aria-label="mypanda.fun">
+      <iframe
+        className="panda-intro__animation"
+        src="/mypanda-intro.html"
+        title="Panda.fun intro animation"
+        tabIndex={-1}
+        aria-hidden="true"
+        sandbox="allow-scripts allow-same-origin"
+      />
       {soundBlocked && (
         <button
           type="button"
