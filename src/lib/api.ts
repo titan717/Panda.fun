@@ -109,6 +109,20 @@ function reportApiFailure(error: unknown, path: string) {
   } catch {}
 }
 
+/**
+ * Short-lived circuit breaker: when a base URL fails at the network/5xx level we
+ * try the other base first for a minute instead of paying the failure on every request.
+ */
+export const BASE_COOLDOWN_MS = 60_000;
+const baseCooldownUntil = new Map<string, number>();
+export function orderBasesByHealth(bases: string[], cooldowns: ReadonlyMap<string, number>, now: number): string[] {
+  const healthy = bases.filter(base => (cooldowns.get(base) || 0) <= now);
+  const cooling = bases.filter(base => (cooldowns.get(base) || 0) > now);
+  return [...healthy, ...cooling];
+}
+function markBaseUnhealthy(base: string) { baseCooldownUntil.set(base, Date.now() + BASE_COOLDOWN_MS); }
+function markBaseHealthy(base: string) { baseCooldownUntil.delete(base); }
+
 const cache = new Map<string, { expires: number; value: unknown }>();
 const inflight = new Map<string, Promise<unknown>>();
 const CACHE_TTL = 120_000;
@@ -152,8 +166,9 @@ async function request<T>(
     if (active) return active as Promise<T>;
   }
   const promise = (async () => {
-    const bases = [MOVIE_API_BASE_URL];
-    if (MOVIE_API_FALLBACK_URL && MOVIE_API_FALLBACK_URL !== MOVIE_API_BASE_URL) bases.push(MOVIE_API_FALLBACK_URL);
+    const configuredBases = [MOVIE_API_BASE_URL];
+    if (MOVIE_API_FALLBACK_URL && MOVIE_API_FALLBACK_URL !== MOVIE_API_BASE_URL) configuredBases.push(MOVIE_API_FALLBACK_URL);
+    const bases = orderBasesByHealth(configuredBases, baseCooldownUntil, Date.now());
     let lastError: unknown = null;
     for (let index = 0; index < bases.length; index += 1) {
       const base = bases[index];
@@ -177,15 +192,20 @@ async function request<T>(
           const error = data?.error || {};
           const apiError = new MovieApiError(error.message || `MovieApi request failed (${response.status}).`, response.status, error.code, error.requestId || response.headers.get('X-Request-ID') || undefined);
           lastError = apiError;
+          if (response.status >= 500 || response.status === 429) markBaseUnhealthy(base);
           if (index < bases.length - 1 && (response.status >= 500 || response.status === 429 || response.status === 404 || response.status === 403 || response.status === 408 || response.status === 425)) continue;
           throw apiError;
         }
+        markBaseHealthy(base);
         const value = unwrap<T>(payload);
         if (!options.method || options.method === 'GET') cache.set(cacheKey, { expires: Date.now() + ttl, value });
         return value;
       } catch (error) {
         lastError = error;
+        // Caller cancelled (navigation, new search): stop instead of retrying the fallback.
+        if (externalSignal?.aborted) throw error;
         const transient = (error instanceof DOMException && error.name === 'AbortError') || !(error instanceof MovieApiError);
+        if (transient) markBaseUnhealthy(base);
         if (index < bases.length - 1 && transient) continue;
         reportApiFailure(error, path);
         if (error instanceof MovieApiError) throw error;
@@ -200,7 +220,11 @@ async function request<T>(
   })();
   if (!options.method || options.method === 'GET') {
     inflight.set(cacheKey, promise);
-    promise.finally(() => inflight.delete(cacheKey)).catch(() => undefined);
+    const release = () => { if (inflight.get(cacheKey) === promise) inflight.delete(cacheKey); };
+    promise.finally(release).catch(() => undefined);
+    // A cancelled request must not be shared with the next caller for the same URL,
+    // otherwise a quick re-search reuses the aborted promise and shows "Nothing found".
+    options.signal?.addEventListener('abort', release, { once: true });
   }
   return promise;
 }

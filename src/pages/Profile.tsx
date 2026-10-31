@@ -35,20 +35,20 @@ export function Profile() {
 
   if (loading) {
     return (
-      <main className="panda-profile-v2">
+      <div className="panda-profile-v2">
         <div className="panda-profile-v2__inner">
           <div className="panda-profile-v2__hero" aria-busy="true">
             <div style={{ width: 180, height: 12, borderRadius: 99, background: 'rgba(255,255,255,.08)' }} />
             <div style={{ width: 310, height: 38, borderRadius: 12, background: 'rgba(255,255,255,.08)', marginTop: 15 }} />
           </div>
         </div>
-      </main>
+      </div>
     );
   }
 
   if (!user) {
     return (
-      <main className="panda-profile-v2">
+      <div className="panda-profile-v2">
         <div className="panda-profile-v2__inner">
           <section className="panda-profile-v2__hero panda-profile-v2__signed-out">
             <div className="panda-profile-v2__mark"><UserRound size={30} /></div>
@@ -65,7 +65,7 @@ export function Profile() {
             </div>
           </section>
         </div>
-      </main>
+      </div>
     );
   }
 
@@ -81,7 +81,7 @@ export function Profile() {
   };
 
   return (
-    <main className="panda-profile-v2">
+    <div className="panda-profile-v2">
       <div className="panda-profile-v2__inner">
         <section className="panda-profile-v2__hero">
           <div className="panda-profile-v2__identity">
@@ -185,6 +185,6 @@ export function Profile() {
           </p>
         </section>
       </div>
-    </main>
+    </div>
   );
 }

@@ -43,7 +43,7 @@ export function Settings() {
   ];
 
   return (
-    <main className="panda-settings-page">
+    <div className="panda-settings-page">
       <div className="panda-settings-page__glow" aria-hidden="true" />
       <div className="panda-settings-page__inner">
         <header className="panda-settings-page__header">
@@ -130,6 +130,6 @@ export function Settings() {
 
         <div className="panda-settings-page__brand" aria-hidden="true">panda<span>.fun</span></div>
       </div>
-    </main>
+    </div>
   );
 }

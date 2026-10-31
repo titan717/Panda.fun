@@ -77,7 +77,7 @@
   gap: 18px;
   margin-bottom: 17px;
 }
-.panda-home-v2__section-title h3 {
+.panda-home-v2__section-title :is(h2,h3) {
   margin: 5px 0 0;
   color: #fff;
   font-size: clamp(19px, 2vw, 25px);
@@ -1508,7 +1508,7 @@
     padding-top: 3px;
   }
 
-  .panda-home-v2__section-title h3 {
+  .panda-home-v2__section-title :is(h2,h3) {
     font-size: clamp(18px, 5vw, 22px);
   }
 
@@ -1926,7 +1926,7 @@
   --panda-accent: #e8d0c0;
 }
 .panda-home-v2__welcome h2,
-.panda-home-v2__section-title h3,
+.panda-home-v2__section-title :is(h2,h3),
 .panda-content-card__copy strong { color:#f6f2ee; }
 .panda-home-v2__eyebrow,
 .panda-profile-v2__eyebrow { color:rgba(232,208,192,.72); }

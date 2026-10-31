@@ -65,7 +65,7 @@ export function Terms() {
           Back to MyPanda
         </Link>
       </header>
-      <main className="kinoma-terms__main">
+      <div className="kinoma-terms__main">
         <div className="kinoma-terms__intro">
           <div className="kinoma-terms__icon" aria-hidden="true"><FileText className="h-5 w-5" /></div>
           <p>LEGAL</p>
@@ -80,7 +80,7 @@ export function Terms() {
             </section>
           ))}
         </article>
-      </main>
+      </div>
       <footer className="kinoma-terms__footer">
         <KinomaLogo size="sm" variant="full" />
         <span>MyPanda Terms of Service</span>

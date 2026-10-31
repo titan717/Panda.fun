@@ -10,6 +10,7 @@ import { DEFAULT_POSTER } from '../types';
 import { updateSEO } from '../lib/seo';
 import { trackGAEvent } from '../lib/analytics';
 import { buildDetailsHref, buildWatchHref } from '../lib/mediaRoute';
+import { friendlyNetworkError } from '../lib/networkMessage';
 
 function clean(value: unknown) {
   return typeof value === 'string' ? value.replace(/<[^>]*>/g, '').trim() : '';
@@ -72,7 +73,7 @@ export function Watch() {
         .catch(() => undefined);
     }).catch(err => {
       if (!active) return;
-      setError(err instanceof Error ? err.message : 'Unable to load this title.');
+      setError(friendlyNetworkError(err, 'Unable to load this title.'));
       setLoading(false);
     });
     return () => { active = false; controller.abort(); };
@@ -113,7 +114,7 @@ export function Watch() {
     setError('');
     api.getWatchLink(id, type === 'series' ? season : 1, type === 'series' ? episode : 1, controller.signal, playbackProgress)
       .then(result => { if (!active) return; setSource(result.url); setSourceLoading(true); trackGAEvent('watch_start', { content_type: type, title }); })
-      .catch(err => { if (!active) return; setSourceLoading(false); setError(err instanceof Error ? err.message : 'Playback source unavailable.'); });
+      .catch(err => { if (!active) return; setSourceLoading(false); setError(friendlyNetworkError(err, 'Playback source unavailable.')); });
     return () => { active = false; controller.abort(); };
   }, [data, id, type, season, episode, playbackRetry]);
 
@@ -219,11 +220,11 @@ export function Watch() {
   };
 
   if (loading) {
-    return <main className="panda-watch-page"><div className="panda-watch-loading"><span /></div></main>;
+    return <div className="panda-watch-page"><div className="panda-watch-loading"><span /></div></div>;
   }
 
   return (
-    <main className="panda-watch-page">
+    <div className="panda-watch-page">
       <section className="panda-watch-stage">
         <div className="panda-watch-player">
           {source ? (
@@ -249,6 +250,6 @@ export function Watch() {
           )}
         </div>
       </section>
-    </main>
+    </div>
   );
 }

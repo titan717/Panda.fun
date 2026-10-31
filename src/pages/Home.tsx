@@ -1,4 +1,5 @@
 import React, { useEffect, useMemo, useRef, useState } from 'react';
+import { usePrefersReducedMotion } from '../lib/usePrefersReducedMotion';
 import { Footer } from '../components/ui/Footer';
 import { Link } from 'wouter';
 import { KinomaLogo } from '../components/ui/KinomaLogo';
@@ -12,6 +13,7 @@ import { optimizeImageUrl } from '../lib/mediaImages';
 import { ModernContinueWatching } from '../components/ui/modern/ModernContinueWatching';
 import '../styles/panda-home.css';
 import { MobileHome } from './MobileHome';
+import { friendlyNetworkError } from '../lib/networkMessage';
 
 type RailKind = 'trending' | 'streamingNetflix' | 'streamingDisney' | 'popular' | 'tv' | 'movie' | 'airing';
 
@@ -176,10 +178,10 @@ function PandaRail({
       <div className="panda-home-v2__section-head">
         <div className="panda-home-v2__section-title">
           <span className="panda-home-v2__eyebrow"><KindIcon kind={kind} /> {kind === 'trending' ? 'Right now' : kind === 'streamingNetflix' || kind === 'streamingDisney' ? 'From TMDB' : kind === 'airing' ? 'On today' : 'Panda picks'}</span>
-          <h3 id={`panda-${kind}-heading`}>{title}</h3>
+          <h2 id={`panda-${kind}-heading`}>{title}</h2>
           {subtitle && <p>{subtitle}</p>}
         </div>
-        {action && <Link href="/search" className="panda-home-v2__see-all">Explore <ArrowRight size={13} /></Link>}
+        {action && <Link href="/search" className="panda-home-v2__see-all" aria-label={`Explore more like ${title}`}>Explore <ArrowRight size={13} aria-hidden="true" /></Link>}
       </div>
       <div className="panda-home-v2__rail">
         {items.slice(0, 5).map((item, index) => React.createElement(PandaContentCard, { key: `${kind}-${item.id}-${index}`, item, onHover, onLeave, badge, priority: priority && index < 5, analyticsSection: kind }))}
@@ -199,6 +201,7 @@ export function Home() {
   const [isInList, setIsInList] = useState(false);
   const soundEnabled = true;
   const [trailerReady, setTrailerReady] = useState(false);
+  const reducedMotion = usePrefersReducedMotion();
   const trailerFrameRef = useRef<HTMLIFrameElement | null>(null);
   const watchButtonRef = useRef<HTMLAnchorElement | null>(null);
   
@@ -242,7 +245,7 @@ export function Home() {
         }
       })
       .catch((err: unknown) => {
-        if (active) setError(err instanceof MovieApiError ? err.message : 'MovieApi is unavailable right now.');
+        if (active) setError(friendlyNetworkError(err instanceof MovieApiError ? err : null, 'New picks are unavailable right now. Please try again in a moment.'));
       });
 
     const loadSecondaryRails = () => {
@@ -335,7 +338,7 @@ export function Home() {
   }, []);
 
   return isMobileLayout ? <MobileHome items={[...(featured ? [featured] : []), ...trending, ...popularMovies, ...popularTv]} trendingItems={trending} popularMovies={popularMovies} popularTv={popularTv} newOnNetflix={newOnNetflix} newOnDisneyPlus={newOnDisneyPlus} airing={airing} loading={!home && !error} error={error} /> : (
-    <main className="kinoma-home">
+    <div className="kinoma-home">
       <div className="kinoma-home__ambient" aria-hidden="true">
         <span className="kinoma-home__ambient-orb kinoma-home__ambient-orb--one" />
         <span className="kinoma-home__ambient-orb kinoma-home__ambient-orb--two" />
@@ -345,7 +348,7 @@ export function Home() {
         <section className="kinoma-home-hero kinoma-home-hero--trailer" aria-labelledby="kinoma-home-title">
           <div className="kinoma-home-hero__trailer-bg" aria-label={featured?.title ? featured.title + ' trailer' : 'Featured trailer'}>
             {featured?.backdrop && <img src={featured.backdrop} alt="" className="kinoma-home-hero__banner-image kinoma-home-hero__banner-image--underlay" loading="eager" fetchPriority="high" decoding="async" />}
-            {trailer?.trailer?.embedUrl ? (
+            {trailer?.trailer?.embedUrl && !reducedMotion ? (
               <iframe ref={trailerFrameRef} src={trailerSrc(trailer.trailer.embedUrl, soundEnabled)} title={featured?.title ? featured.title + ' trailer' : 'Featured trailer'} className={`kinoma-home-hero__trailer-video${trailerReady ? ' is-ready' : ''}`} onLoad={() => setTrailerReady(true)} allow="autoplay; encrypted-media; picture-in-picture" allowFullScreen />
             ) : featured?.backdrop ? (
               <img src={featured.backdrop} alt="" className="kinoma-home-hero__banner-image" loading="eager" fetchPriority="high" decoding="async" />
@@ -443,7 +446,7 @@ export function Home() {
                     <span className="panda-home-v2__eyebrow"><Tv size={13} /> TV nights</span>
                     <h3>Settle into a series.</h3>
                     <p>Open Search, filter for series and find something with enough episodes to keep the night going.</p>
-                    <Link href="/search?keyword=series" className="panda-discovery-panel__button">Browse TV <ArrowRight size={13} /></Link>
+                    <Link href="/search?type=series" className="panda-discovery-panel__button">Browse TV <ArrowRight size={13} /></Link>
                   </div>
                 </article>
                 <article className="panda-discovery-panel">
@@ -452,7 +455,7 @@ export function Home() {
                     <span className="panda-home-v2__eyebrow"><Film size={13} /> Movie break</span>
                     <h3>One story. One sitting.</h3>
                     <p>Jump into movies when you want something complete.</p>
-                    <Link href="/search?keyword=movie" className="panda-discovery-panel__button">Browse movies <ArrowRight size={13} /></Link>
+                    <Link href="/search?type=movie" className="panda-discovery-panel__button">Browse movies <ArrowRight size={13} /></Link>
                   </div>
                 </article>
               </div>
@@ -467,7 +470,7 @@ export function Home() {
                 aria-label={hoverTrailer.title + ' trailer preview'}
               >
                 <div className="panda-home-hover-trailer__media">
-                  {hoverTrailerUrl ? <iframe src={hoverTrailerUrl} title={hoverTrailer.title + ' trailer preview'} loading="lazy" allow="autoplay; encrypted-media; picture-in-picture" /> : <img src={(hoverTrailer.backdrop || hoverTrailer.poster || '') as string} alt="" />}
+                  {hoverTrailerUrl && !reducedMotion ? <iframe src={hoverTrailerUrl} title={hoverTrailer.title + ' trailer preview'} loading="lazy" allow="autoplay; encrypted-media; picture-in-picture" /> : <img src={(hoverTrailer.backdrop || hoverTrailer.poster || '') as string} alt="" />}
                 </div>
                 <div className="panda-home-hover-trailer__copy">
                   <span>🐼 QUICK LOOK</span>
@@ -482,6 +485,6 @@ export function Home() {
           </div>
         </div>
       </div>
-    </main>
+    </div>
   );
 }

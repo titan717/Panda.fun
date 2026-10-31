@@ -136,7 +136,7 @@ export function Admin() {
         </div>
       </aside>
 
-      <main className="lg:ml-[250px] p-5 sm:p-8 max-w-[1800px]">
+      <div className="lg:ml-[250px] p-5 sm:p-8 max-w-[1800px]">
         <header className="flex flex-col md:flex-row md:items-end justify-between gap-4 mb-8">
           <div>
             <div className="text-xs uppercase tracking-[0.18em] text-[#0A24E9] font-bold">Kinoma intelligence</div>
@@ -170,7 +170,7 @@ export function Admin() {
           <div className="bg-white rounded-3xl border border-[#e0e4e8] p-6"><Clock3 className="text-[#5C9764]"/><div className="text-3xl font-black mt-4">{formatDuration(metrics.avgSessionWatch)}</div><div className="text-sm font-bold">Avg. watch time / session</div></div>
           <div className="bg-white rounded-3xl border border-[#e0e4e8] p-6"><Activity className="text-[#0A24E9]"/><div className="text-3xl font-black mt-4">{metrics.starts ? Math.round((metrics.completes / metrics.starts) * 100) : 0}%</div><div className="text-sm font-bold">Completion rate</div></div>
         </section>
-      </main>
+      </div>
     </div>
   );
 }

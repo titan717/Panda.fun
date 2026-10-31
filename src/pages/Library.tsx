@@ -89,7 +89,7 @@ export function Library() {
 
 
   return (
-    <main className="kinoma-library-page">
+    <div className="kinoma-library-page">
       <div className="kinoma-library-page__ambient" aria-hidden="true" />
       <div className="kinoma-library-page__inner">
         <header className="kinoma-library-head">
@@ -189,6 +189,6 @@ export function Library() {
 
         <Footer />
       </div>
-    </main>
+    </div>
   );
 }
