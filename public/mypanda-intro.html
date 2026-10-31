@@ -10,17 +10,6 @@ html{scroll-padding-top:env(safe-area-inset-top,0px)}
 *{box-sizing:border-box;margin:0}
 html,body{height:100%;background:var(--bg);color:var(--fg);font-family:"Inter","Segoe UI",Helvetica,Arial,sans-serif;overflow:hidden}
 #c{position:fixed;inset:0;width:100%;height:100%;z-index:5;pointer-events:none}
-#start{position:fixed;inset:0;z-index:9;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:18px;background:var(--bg);transition:opacity .5s}
-#start.off{opacity:0;pointer-events:none}
-#start b{font-size:clamp(28px,7vw,44px);font-weight:800;letter-spacing:-.02em}
-#start b i{font-style:normal;color:var(--acc)}
-button{font:inherit;color:inherit;cursor:pointer;border:0}
-#go{background:#fff;color:#111;font-weight:700;padding:14px 28px;border-radius:999px;font-size:16px}
-#go:focus-visible,#again:focus-visible{outline:3px solid var(--acc);outline-offset:3px}
-#start small{color:var(--mute)}
-#pick{cursor:pointer;color:var(--acc);border:1px solid var(--acc);border-radius:999px;padding:10px 20px;font-size:15px}#pick:focus-within{outline:3px solid var(--acc);outline-offset:3px}#file{position:absolute;opacity:0;width:1px;height:1px}
-#again{position:fixed;left:50%;top:50%;transform:translate(-50%,-50%);z-index:6;background:#ffffff1f;padding:12px 22px;border-radius:999px;font-size:15px;opacity:0;pointer-events:none;transition:opacity .8s}
-#again.on{opacity:1;pointer-events:auto}
 </style>
 </head>
 <body>
@@ -31,7 +20,7 @@ const $=s=>document.querySelector(s),cv=$('#c'),ctx=cv.getContext('2d');
 const clamp=(x,a=0,b=1)=>Math.min(b,Math.max(a,x)),ss=x=>(x=clamp(x))*x*(3-2*x),eo=x=>1-Math.pow(1-clamp(x),3),seg=(t,a,b)=>clamp((t-a)/(b-a));
 // face box (logo units), intro length OFF (transition starts at t=OFF), impact time IMP
 const X0=10,Y0=24,BW=280,BH=274,OFF=1.6,IMP=3.4;
-let W,H,D,k,lg,R=[],P=[],S=[],t0=0,raf=0,done=false,ac;
+let W,H,D,k,lg,R=[],P=[],S=[],t0=0,raf=0,done=false;
 
 // ---------- the panda face: head + two ears (clear gaps), eye patches / nose / mouth cut out ----------
 function face(c){
