@@ -11,6 +11,7 @@ export function SearchBar() {
   const [query, setQuery] = useState('');
   const [debouncedQuery, setDebouncedQuery] = useState('');
   const [isOpen, setIsOpen] = useState(false);
+  const [activeIndex, setActiveIndex] = useState(-1);
   const [, setLocation] = useLocation();
   const ref = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
@@ -52,6 +53,33 @@ export function SearchBar() {
     () => api.search(debouncedQuery)
   );
 
+  const suggestions = data?.results?.slice(0, 6) || [];
+  const selectSuggestion = (item: any) => {
+    const itemTitle = typeof item.title === 'string'
+      ? item.title
+      : item.title?.english || item.title?.romaji || item.title?.native || 'Untitled';
+    setLocation(buildDetailsHref(itemTitle, item.type === 'movie' ? 'movie' : 'series', item.id));
+    setIsOpen(false);
+    setQuery('');
+    setActiveIndex(-1);
+  };
+  const handleInputKeyDown = (event: React.KeyboardEvent<HTMLInputElement>) => {
+    if (event.key === 'ArrowDown' && suggestions.length) {
+      event.preventDefault();
+      setIsOpen(true);
+      setActiveIndex(index => Math.min(index + 1, suggestions.length - 1));
+    } else if (event.key === 'ArrowUp' && suggestions.length) {
+      event.preventDefault();
+      setActiveIndex(index => Math.max(index - 1, -1));
+    } else if (event.key === 'Enter' && activeIndex >= 0 && suggestions[activeIndex]) {
+      event.preventDefault();
+      selectSuggestion(suggestions[activeIndex]);
+    } else if (event.key === 'Escape') {
+      setIsOpen(false);
+      setActiveIndex(-1);
+    }
+  };
+
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (query.trim()) {
@@ -77,9 +105,14 @@ export function SearchBar() {
           onFocus={() => setIsOpen(true)}
           id="global-search"
           name="search"
-          placeholder="Search anime..."
+          placeholder="Search movies, shows and anime…"
           className="w-full rounded-xl bg-[#18181f] border border-[#272733] focus:border-[#9c27b0] focus:ring-2 focus:ring-[#9c27b0]/20 hover:border-[#383848] py-2.5 pl-10 pr-12 text-sm text-white placeholder-gray-500 outline-none transition-all duration-200"
           autoComplete="off"
+          role="combobox"
+          aria-autocomplete="list"
+          aria-expanded={isOpen && debouncedQuery.length >= 2}
+          aria-controls="panda-global-search-suggestions"
+          onKeyDown={handleInputKeyDown}
         />
         <div className="absolute right-3 top-1/2 -translate-y-1/2 flex items-center justify-center w-auto px-1.5 h-5 rounded bg-[#252530] text-[10px] font-bold text-gray-400 border border-[#333342] pointer-events-none">
           Ctrl K
@@ -102,20 +135,20 @@ export function SearchBar() {
                 <span className="text-sm font-medium">Searching...</span>
               </div>
             ) : data?.results?.length > 0 ? (
-              <div className="overflow-y-auto no-scrollbar py-2">
+              <div id="panda-global-search-suggestions" className="overflow-y-auto no-scrollbar py-2" role="listbox" aria-label="Search suggestions">
                 {data.results.slice(0, 6).map((item: any) => {
                   const itemTitle = typeof item.title === 'string'
                     ? item.title
                     : item.title?.english || item.title?.romaji || item.title?.native || 'Untitled';
                   return (
-                  <div 
+                  <button
                     key={item.id}
-                    onClick={() => {
-                      setLocation(buildDetailsHref(itemTitle, item.type === 'movie' ? 'movie' : 'series', item.id));
-                      setIsOpen(false);
-                      setQuery('');
-                    }}
-                    className="flex items-center gap-3 p-2.5 mx-2 rounded-lg hover:bg-[#252533] cursor-pointer transition-colors group/item"
+                    type="button"
+                    role="option"
+                    aria-selected={activeIndex === index}
+                    onMouseEnter={() => setActiveIndex(index)}
+                    onClick={() => selectSuggestion(item)}
+                    className={`flex w-[calc(100%-16px)] items-center gap-3 p-2.5 mx-2 rounded-lg text-left transition-colors group/item ${activeIndex === index ? 'bg-[#252533]' : 'hover:bg-[#252533]'}`}
                   >
                     <img src={item.image || DEFAULT_POSTER} alt="cover" className="w-10 h-14 object-cover rounded-md shadow-sm group-hover/item:scale-105 transition-transform" />
                     <div className="flex flex-col min-w-0">
@@ -127,15 +160,19 @@ export function SearchBar() {
                         {item.type && <span className="px-1.5 py-0.5 bg-[#252532] rounded text-[10px] font-bold text-gray-300">{item.type}</span>}
                       </div>
                     </div>
-                  </div>
+                  </button>
                   );
                 })}
-                <div 
-                  onClick={handleSubmit}
-                  className="mt-1 p-3 text-center text-xs font-bold text-[#c084fc] hover:text-white cursor-pointer border-t border-[#262635] hover:bg-[#252533] transition-colors tracking-wide"
+                <button
+                  type="button"
+                  onClick={() => {
+                    setLocation('/search?keyword=' + encodeURIComponent(query.trim() || debouncedQuery));
+                    setIsOpen(false);
+                  }}
+                  className="mt-1 w-full p-3 text-center text-xs font-bold text-[#c084fc] hover:text-white border-t border-[#262635] hover:bg-[#252533] transition-colors tracking-wide focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-[-2px] focus-visible:outline-[#c084fc]"
                 >
                   View all results for "{debouncedQuery}"
-                </div>
+                </button>
               </div>
             ) : (
               <div className="p-5 text-center text-sm text-gray-400">
