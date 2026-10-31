@@ -1,34 +1,12 @@
-import React, { useEffect, useMemo, useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { Footer } from '../components/ui/Footer';
-import { Bookmark, CheckCircle2, Clock3, Heart, Play, Search, Trash2, X, Sparkles } from 'lucide-react';
+import { Bookmark, CheckCircle2, Clock3, Heart, Play, Search, X, Sparkles } from 'lucide-react';
 import { buildDetailsHref, buildWatchHref } from '../lib/mediaRoute';
 import { ModernCard } from '../components/ui/modern/ModernCard';
-import { Link } from 'wouter';
 import { historyUtil, HistoryItem } from '../lib/history';
 import { libraryManager, LibraryItem } from '../lib/library';
-import { preferencesUtil } from '../lib/preferences';
 
 type Tab = 'continue' | 'watchlist' | 'favorites' | 'completed';
-
-const FALLBACK = [
-  { id: 'library-1', title: 'Your saved titles will appear here', meta: 'Ready for MovieApi', tone: 'rose' },
-  { id: 'library-2', title: 'Build your watchlist', meta: 'Movies · Series · Anime', tone: 'violet' },
-  { id: 'library-3', title: 'Keep your favourites close', meta: 'Personal collection', tone: 'blue' },
-];
-
-function LibraryPandaScene({ savedMoments }: { savedMoments: number }) {
-  return <div className="panda-library-scene" aria-label={`${savedMoments} saved moments in Panda Library`} role="img">
-    <div className="panda-library-tv"><div className="panda-library-tv__screen"><span className="panda-library-tv__screen-glow" /><span className="panda-library-tv__saved"><b>{savedMoments}</b><small>saved moments</small></span></div></div>
-    <div className="panda-library-panda">
-      <span className="panda-library-head"><i className="panda-library-eye panda-library-eye--left" /><i className="panda-library-eye panda-library-eye--right" /><span className="panda-library-muzzle" /></span>
-      <span className="panda-library-body" />
-      <span className="panda-library-paw panda-library-paw--left" />
-      <span className="panda-library-paw panda-library-paw--right" />
-      <span className="panda-library-remote" />
-    </div>
-    <span className="panda-library-caption">Panda is watching too 🍿</span>
-  </div>;
-}
 
 function EmptyState({ tab, onBrowse }: { tab: Tab; onBrowse: () => void }) {
   const copy = {
@@ -86,14 +64,13 @@ export function Library() {
     };
   }, []);
 
-  const counts = useMemo(() => ({
-    continue: history.length,
-    watchlist: watchlist.length,
-    favorites: favorites.length,
-    completed: completed.length,
-  }), [history, watchlist, favorites, completed]);
-
   const current = active === 'continue' ? history : active === 'watchlist' ? watchlist : active === 'favorites' ? favorites : completed;
+  const sectionCopy = {
+    continue: ['Continue watching', 'Pick up where you left off.'],
+    watchlist: ['Your watchlist', 'The titles you have saved for later.'],
+    favorites: ['Your favourites', 'The stories you want to keep close.'],
+    completed: ['Completed titles', 'A collection of everything you have finished.'],
+  }[active];
   const filtered = query.trim()
     ? current.filter((item: any) => String(item.title || '').toLowerCase().includes(query.trim().toLowerCase()))
     : current;
@@ -109,7 +86,6 @@ export function Library() {
   };
 
   const browse = () => { window.location.href = '/home'; };
-  const savedMoments = history.length + watchlist.length + favorites.length + completed.length;
 
 
   return (
@@ -120,39 +96,40 @@ export function Library() {
           <div>
             <span className="kinoma-eyebrow">Your space</span>
             <h1>Library</h1>
-            <p>Everything you want to keep close — without the clutter.</p>
+            <p>Your personal collection, organised around what you love to watch.</p>
           </div>
-          <LibraryPandaScene savedMoments={savedMoments} />
+          <div className="kinoma-library-head__art" aria-hidden="true">
+            <span className="kinoma-library-head__art-orbit" />
+            <span className="kinoma-library-head__art-screen"><Play size={25} fill="currentColor" /></span>
+          </div>
         </header>
 
         <nav className="kinoma-library-tabs" aria-label="Library sections">
           {([
-            ['continue', 'Continue', Clock3],
+            ['continue', 'Continue Watching', Clock3],
             ['watchlist', 'Watchlist', Bookmark],
             ['favorites', 'Favourites', Heart],
             ['completed', 'Completed', CheckCircle2],
           ] as const).map(([id, label, Icon]) => (
-            <button key={id} type="button" className={active === id ? 'is-active' : ''} onClick={() => { setActive(id); setQuery(''); }}>
-              <Icon size={15} />
+            <button key={id} type="button" className={active === id ? 'is-active' : ''} aria-pressed={active === id} onClick={() => { setActive(id); setQuery(''); }}>
+              <Icon size={16} aria-hidden="true" />
               <span>{label}</span>
-              <b>{counts[id]}</b>
             </button>
           ))}
         </nav>
 
-        <section className="panda-saved-moments" aria-label="Saved moments">
-          <div className="panda-saved-moments__copy">
-            <span className="kinoma-eyebrow">Inside Panda&apos;s TV</span>
-            <h2>Saved Moments</h2>
-            <p>Your watch history and saved titles, gathered into one little corner of Panda&apos;s world.</p>
+        <section className="kinoma-library-collection-heading" aria-live="polite">
+          <div>
+            <span className="kinoma-eyebrow">Your collection</span>
+            <h2>{sectionCopy[0]}</h2>
+            <p>{sectionCopy[1]}</p>
           </div>
-          <div className="panda-saved-moments__count"><strong>{savedMoments}</strong><span>moments</span></div>
         </section>
 
         <div className="kinoma-library-toolbar">
           <label className="kinoma-library-search">
             <Search size={15} />
-            <input value={query} onChange={e => setQuery(e.target.value)} placeholder={`Search your ${active}…`} />
+            <input value={query} onChange={e => setQuery(e.target.value)} placeholder="Search this collection…" aria-label="Search this collection" />
             {query && <button type="button" onClick={() => setQuery('')} aria-label="Clear filter"><X size={14} /></button>}
           </label>
           {active === 'continue' && history.length > 0 && (
@@ -174,7 +151,7 @@ export function Library() {
                     key={item.episodeId || item.slug}
                     item={{ id: mediaId, title: item.title || 'Untitled', image: item.image, type }}
                     href={watchUrl}
-                    subText={type === 'movie' ? 'Resume' : `S${season} E${episode} · Resume`}
+                    subText="Continue watching"
                     onRemove={() => removeHistory(item.slug)}
                   />
                 );
