@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useState } from 'react';
+import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { Link } from 'wouter';
 import { ArrowRight, Check, ChevronLeft, ChevronRight, Play, Plus } from 'lucide-react';
 import { ThinkingOrb } from 'thinking-orbs';
@@ -76,6 +76,8 @@ export function MobileHome({
 }: MobileHomeProps) {
   const [activeIndex, setActiveIndex] = useState(0);
   const [isInList, setIsInList] = useState(false);
+  const [swipeDirection, setSwipeDirection] = useState<'next' | 'previous'>('next');
+  const touchStartX = useRef<number | null>(null);
   const featuredItems = useMemo(() => uniqueItems(items).filter(item => item.poster || item.backdrop).slice(0, 5), [items]);
   const catalogue = useMemo(() => uniqueItems([
     ...(trendingItems || []),
@@ -107,7 +109,24 @@ export function MobileHome({
 
   const selectFeatured = (index: number) => {
     if (!featuredItems.length) return;
-    setActiveIndex((index + featuredItems.length) % featuredItems.length);
+    const nextIndex = (index + featuredItems.length) % featuredItems.length;
+    if (nextIndex === activeIndex) return;
+    setSwipeDirection(nextIndex > activeIndex || (activeIndex === featuredItems.length - 1 && nextIndex === 0) ? 'next' : 'previous');
+    setActiveIndex(nextIndex);
+  };
+
+  const handleFeaturedTouchStart = (event: React.TouchEvent<HTMLElement>) => {
+    touchStartX.current = event.changedTouches[0]?.clientX ?? null;
+  };
+
+  const handleFeaturedTouchEnd = (event: React.TouchEvent<HTMLElement>) => {
+    const startX = touchStartX.current;
+    touchStartX.current = null;
+    const endX = event.changedTouches[0]?.clientX;
+    if (startX == null || endX == null) return;
+    const distance = endX - startX;
+    if (Math.abs(distance) < 48) return;
+    selectFeatured(activeIndex + (distance < 0 ? 1 : -1));
   };
 
   return (
@@ -117,7 +136,7 @@ export function MobileHome({
           <span className="panda-mobile-eyebrow">YOUR NEXT WATCH</span>
         </div>
         {featuredItems.length > 0 && featured ? (
-          <article className="panda-mobile-featured__spotlight" aria-label={"Featured: " + featured.title}>
+          <article key={featured.id} className={`panda-mobile-featured__spotlight panda-mobile-featured__spotlight-track is-${swipeDirection}`} aria-label={"Featured: " + featured.title} onTouchStart={handleFeaturedTouchStart} onTouchEnd={handleFeaturedTouchEnd} onTouchCancel={() => { touchStartX.current = null; }}>
             <div className="panda-mobile-featured__art" aria-hidden="true">
               {(() => {
                 const source = featured.backdrop || featured.poster || '';
@@ -126,7 +145,7 @@ export function MobileHome({
               })()}
             </div>
             <div className="panda-mobile-featured__copy" aria-live="polite">
-              <span className="panda-mobile-featured__kicker">PANDA SPOTLIGHT</span>
+              
               <div className="panda-mobile-featured__meta">
                 <span>{featured.type === 'movie' ? 'MOVIE' : 'SERIES'}</span>
                 {featured.year && <span>{featured.year}</span>}
