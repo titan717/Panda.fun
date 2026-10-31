@@ -77,7 +77,6 @@ export function MobileHome({
   const [activeIndex, setActiveIndex] = useState(0);
   const [isInList, setIsInList] = useState(false);
   const [swipeDirection, setSwipeDirection] = useState<'next' | 'previous'>('next');
-  const [swipeDirection, setSwipeDirection] = useState<'next' | 'previous'>('next');
   const touchStartX = useRef<number | null>(null);
   const suppressSwipeClick = useRef(false);
   const featuredItems = useMemo(() => uniqueItems(items).filter(item => item.poster || item.backdrop).slice(0, 5), [items]);
