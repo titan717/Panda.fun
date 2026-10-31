@@ -1,0 +1,23 @@
+import { describe, expect, it } from 'vitest';
+import { readFileSync } from 'node:fs';
+
+describe('readability and viewport contract', () => {
+  const html = readFileSync(new URL('../../index.html', import.meta.url), 'utf8');
+  const css = readFileSync(new URL('./readability.css', import.meta.url), 'utf8');
+  const main = readFileSync(new URL('../main.tsx', import.meta.url), 'utf8');
+
+  it('lets users zoom and enables safe-area insets', () => {
+    const viewport = html.match(/<meta name="viewport" content="([^"]*)"/)?.[1] ?? '';
+    expect(viewport).toContain('viewport-fit=cover');
+    expect(viewport).not.toContain('user-scalable=no');
+    expect(viewport).not.toContain('maximum-scale');
+  });
+
+  it('keeps mobile inputs at 16px so iOS does not zoom on focus', () => {
+    expect(css).toContain('font-size: 16px !important');
+  });
+
+  it('loads the readability layer after the other stylesheets', () => {
+    expect(main.indexOf("./styles/readability.css")).toBeGreaterThan(main.indexOf("./index.css"));
+  });
+});
