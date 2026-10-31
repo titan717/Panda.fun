@@ -10567,3 +10567,22 @@ html.tv-mode .panda-content-card:focus-within { scroll-margin-inline: 32px; }
 @keyframes panda-updates-spin { to { transform:rotate(360deg); } }
 @media (max-width:640px) { .panda-updates { flex-direction:column; } .panda-updates__actions { width:100%; } .panda-updates__button { width:100%; } }
 @media (prefers-reduced-motion:reduce) { .panda-updates__spin { animation:none; } .panda-updates__button { transition:none; } }
+
+
+/* Settings readability: secondary copy remains legible against the dark surfaces. */
+.panda-settings-page__identity p { color: rgba(255,255,255,.78); }
+.panda-settings-page__back { color: rgba(255,255,255,.78); }
+.panda-settings-card__copy small { color: rgba(255,255,255,.76); font-size: 12px; }
+.panda-settings-card__hint { color: rgba(255,255,255,.72); font-size: 10px; }
+.panda-settings-card:focus-visible { outline: 3px solid #fff; outline-offset: 4px; }
+.panda-settings-footer p { color: rgba(255,255,255,.74); font-size: 12px; }
+.panda-updates__version,
+.panda-updates__notes { color: rgba(255,255,255,.76); }
+
+/* Modal controls: full-size targets and a consistent high-contrast focus ring. */
+.panda-updates__button:focus-visible,
+.panda-settings-card:focus-visible,
+.panda-devtools button:focus-visible {
+  outline: 3px solid #fff;
+  outline-offset: 3px;
+}
