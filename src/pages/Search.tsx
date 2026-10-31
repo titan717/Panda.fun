@@ -7,6 +7,7 @@ import { updateSEO } from '../lib/seo';
 import { trackGAEvent } from '../lib/analytics';
 import { buildDetailsHref } from '../lib/mediaRoute';
 import { preferencesUtil } from '../lib/preferences';
+import { readSearchRouteState, type SearchMediaFilter } from '../lib/searchRouteState';
 import { libraryManager } from '../lib/library';
 import { optimizeImageUrl } from '../lib/mediaImages';
 import '../styles/panda-home.css';
@@ -100,9 +101,9 @@ function ContentCard({ item, priority = false }: { key?: React.Key; item: Search
 
 export function Search() {
   const [location, setLocation] = useLocation();
-  const initialQuery = useMemo(() => new URLSearchParams(window.location.search).get('keyword')?.trim() || '', []);
-  const [query, setQuery] = useState(initialQuery);
-  const [submittedQuery, setSubmittedQuery] = useState(initialQuery);
+  const initialRouteState = useMemo(() => readSearchRouteState(window.location.pathname + window.location.search), []);
+  const [query, setQuery] = useState(initialRouteState.keyword);
+  const [submittedQuery, setSubmittedQuery] = useState(initialRouteState.keyword);
   const [recentSearches, setRecentSearches] = useState<string[]>([]);
   const [results, setResults] = useState<SearchItem[]>([]);
   const [loading, setLoading] = useState(false);
@@ -110,13 +111,12 @@ export function Search() {
   const [retryNonce, setRetryNonce] = useState(0);
   const [voiceListening, setVoiceListening] = useState(false);
   const recognitionRef = useRef<SpeechRecognitionLike | null>(null);
-  const [filter, setFilter] = useState<'all' | 'movie' | 'series'>(() => {
-    const requestedType = new URLSearchParams(window.location.search).get('type');
-    return requestedType === 'movie' || requestedType === 'series' ? requestedType : 'all';
-  });
+  const [filter, setFilter] = useState<SearchMediaFilter>(initialRouteState.type);
   useEffect(() => {
-    const requestedType = new URLSearchParams(location.split('?')[1] || '').get('type');
-    setFilter(requestedType === 'movie' || requestedType === 'series' ? requestedType : 'all');
+    const routeState = readSearchRouteState(location);
+    setQuery(routeState.keyword);
+    setSubmittedQuery(routeState.keyword);
+    setFilter(routeState.type);
   }, [location]);
   const inputRef = useRef<HTMLInputElement>(null);
   const speechWindow = window as Window & { SpeechRecognition?: SpeechRecognitionConstructor; webkitSpeechRecognition?: SpeechRecognitionConstructor };
@@ -268,9 +268,9 @@ export function Search() {
       {!isSearching && recentSearches.length > 0 && <section className="kinoma-search-recent" aria-label="Recent searches"><div className="kinoma-search-recent__label"><Clock3 size={14} /> Recent</div><div className="kinoma-search-recent__items">{recentSearches.slice(0, 5).map(item => <button key={item} type="button" onClick={() => chooseRecent(item)}>{item}</button>)}<button type="button" className="kinoma-search-recent__clear" onClick={clearRecent}>Clear</button></div></section>}
       <section ref={resultsRef} className="kinoma-search-results" id="search-results">
         <div className="kinoma-search-results__heading"><div><span className="kinoma-eyebrow">{isSearching ? 'Your search' : 'Live discovery'}</span><h2>{isSearching ? 'Matches' : filter === 'movie' ? 'Movies' : filter === 'series' ? 'TV shows' : 'Trending now'}</h2></div>{!isSearching && <Sparkles size={18} />}</div>
-        {!loading && !error && results.length > 0 && <div className="kinoma-search-toolbar"><div className="kinoma-search-filters" role="tablist" aria-label="Filter search results"><button type="button" role="tab" aria-selected={filter === 'all'} className={filter === 'all' ? 'is-active' : ''} onClick={() => setFilter('all')}><Filter size={13} /> All <span>{results.length}</span></button><button type="button" role="tab" aria-selected={filter === 'movie'} className={filter === 'movie' ? 'is-active' : ''} onClick={() => setFilter('movie')}>Movies <span>{results.filter(item => item.type === 'movie').length}</span></button><button type="button" role="tab" aria-selected={filter === 'series'} className={filter === 'series' ? 'is-active' : ''} onClick={() => setFilter('series')}>Series <span>{results.filter(item => item.type === 'series').length}</span></button></div><span className="kinoma-search-toolbar__count">{visibleResults.length} {visibleResults.length === 1 ? 'title' : 'titles'}</span></div>}
+        {!loading && !error && results.length > 0 && <div className="kinoma-search-toolbar"><div className="kinoma-search-filters" role="group" aria-label="Filter search results"><button type="button" aria-pressed={filter === 'all'} className={filter === 'all' ? 'is-active' : ''} onClick={() => setFilter('all')}><Filter size={13} /> All <span>{results.length}</span></button><button type="button" role="tab" aria-selected={filter === 'movie'} className={filter === 'movie' ? 'is-active' : ''} onClick={() => setFilter('movie')}>Movies <span>{results.filter(item => item.type === 'movie').length}</span></button><button type="button" role="tab" aria-selected={filter === 'series'} className={filter === 'series' ? 'is-active' : ''} onClick={() => setFilter('series')}>Series <span>{results.filter(item => item.type === 'series').length}</span></button></div><span className="kinoma-search-toolbar__count">{visibleResults.length} {visibleResults.length === 1 ? 'title' : 'titles'}</span></div>}
         {loading ? <div className="kinoma-search-loading" role="status" aria-live="polite"><ThinkingOrb state="searching" size={64} theme="dark" aria-label="Searching the catalogue" /><div className="kinoma-search-loading__copy"><span>Searching the catalogue</span><p>Finding movies, series and anime</p></div></div>
-        : error ? <div className="kinoma-search-empty"><SearchIcon size={28} /><h3>Search unavailable</h3><p>{error}</p><button type="button" onClick={() => setRetryNonce(value => value + 1)}>Try again</button></div>
+        : error ? <div className="kinoma-search-empty" role="alert"><SearchIcon size={28} /><h3>Search unavailable</h3><p>{error}</p><button type="button" onClick={() => setRetryNonce(value => value + 1)}>Try again</button></div>
         : visibleResults.length ? <div className="kinoma-search-grid">{visibleResults.map((item, index) => <ContentCard key={item.id} item={item} priority={index < 5} />)}</div>
         : <div className="kinoma-search-empty"><SearchIcon size={28} /><h3>{results.length ? 'No titles in this filter' : 'Nothing found yet'}</h3><p>{results.length ? 'Try another filter to see more matches.' : 'Try a different title, spelling, or a broader search.'}</p><button type="button" onClick={results.length ? () => setFilter('all') : clearSearch}>{results.length ? 'Show all results' : 'Back to trending'}</button></div>}
       </section>
