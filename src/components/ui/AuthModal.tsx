@@ -1,7 +1,8 @@
-import React, { useState } from 'react';
+import React, { useRef, useState } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import { X, Mail, Lock, User as UserIcon, AlertCircle, Loader2 } from 'lucide-react';
 import { useAuth } from '../../lib/AuthContext';
+import { useModalFocusTrap } from '../../lib/useModalFocusTrap';
 
 export function AuthModal() {
   const { 
@@ -19,6 +20,8 @@ export function AuthModal() {
   const [displayName, setDisplayName] = useState('');
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
+  const dialogRef = useRef<HTMLDivElement>(null);
+  useModalFocusTrap(dialogRef, closeAuthModal, isAuthModalOpen);
 
   if (!isAuthModalOpen) return null;
 
@@ -86,7 +89,12 @@ export function AuthModal() {
         />
 
         {/* Modal Window */}
-        <motion.div 
+        <motion.div
+          ref={dialogRef}
+          role="dialog"
+          aria-modal="true"
+          aria-labelledby="panda-auth-modal-title"
+          tabIndex={-1}
           initial={{ opacity: 0, scale: 0.95, y: 15 }}
           animate={{ opacity: 1, scale: 1, y: 0 }}
           exit={{ opacity: 0, scale: 0.95, y: 15 }}
@@ -99,6 +107,7 @@ export function AuthModal() {
           {/* Close button */}
           <button 
             onClick={closeAuthModal}
+            aria-label="Close sign-in dialog"
             className="absolute top-5 right-5 text-gray-400 hover:text-white p-1 rounded-lg hover:bg-white/5 transition-colors"
           >
             <X className="w-5 h-5" />
@@ -110,7 +119,7 @@ export function AuthModal() {
               <span className="text-2xl font-black tracking-tight text-white">Kino</span>
               <span className="text-2xl font-black tracking-tight text-[#c084fc] drop-shadow-[0_0_12px_rgba(156,39,176,0.6)]">ma</span>
             </div>
-            <h3 className="text-2xl font-bold text-white tracking-tight">
+            <h3 id="panda-auth-modal-title" className="text-2xl font-bold text-white tracking-tight">
               {isSignUp ? 'Create your account' : 'Welcome back'}
             </h3>
             <p className="text-xs sm:text-sm text-gray-400 mt-1">
