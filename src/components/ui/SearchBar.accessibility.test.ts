@@ -19,7 +19,6 @@ describe('Global search suggestions accessibility', () => {
     expect(source).toContain('aria-label={`Open ${itemTitle} details`}');
     expect(source).toContain('View all results for');
   });
-});
 
   it('announces suggestion request failures and offers a retry action', () => {
     expect(source).toContain('error,');
@@ -32,3 +31,4 @@ describe('Global search suggestions accessibility', () => {
     expect(source).toContain('isDebouncing');
     expect(source).toContain('aria-label="Search movies, shows and anime"');
   });
+});
