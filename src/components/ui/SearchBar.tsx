@@ -54,7 +54,7 @@ export function SearchBar() {
   );
 
   const isDebouncing = query.trim().length >= 2 && query.trim() !== debouncedQuery.trim();
-  const suggestions = !isDebouncing ? data?.results?.slice(0, 6) || [] : [];
+  const suggestions = !isDebouncing && !error ? data?.results?.slice(0, 6) || [] : [];
   useEffect(() => setActiveIndex(-1), [debouncedQuery]);
   const selectSuggestion = (item: any) => {
     const itemTitle = typeof item.title === 'string'
