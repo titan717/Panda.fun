@@ -77,7 +77,6 @@ export function MobileHome({
   const [activeIndex, setActiveIndex] = useState(0);
   const [isInList, setIsInList] = useState(false);
   const [swipeDirection, setSwipeDirection] = useState<'next' | 'previous'>('next');
-  const touchStart = useRef<{ x: number; y: number } | null>(null);
   const [swipeDirection, setSwipeDirection] = useState<'next' | 'previous'>('next');
   const touchStartX = useRef<number | null>(null);
   const suppressSwipeClick = useRef(false);
