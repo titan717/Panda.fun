@@ -78,7 +78,7 @@ export function AuthModal() {
 
   return (
     <AnimatePresence>
-      <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+      <div className="fixed inset-0 z-50 flex items-center justify-center overflow-y-auto p-4">
         {/* Backdrop */}
         <motion.div 
           initial={{ opacity: 0 }}
@@ -98,7 +98,7 @@ export function AuthModal() {
           initial={{ opacity: 0, scale: 0.95, y: 15 }}
           animate={{ opacity: 1, scale: 1, y: 0 }}
           exit={{ opacity: 0, scale: 0.95, y: 15 }}
-          className="relative w-full max-w-md bg-[#0e0f14] border border-[#242432] rounded-2xl p-6 sm:p-8 shadow-[0_20px_50px_rgba(0,0,0,0.8)] overflow-hidden"
+          className="relative w-full max-w-md max-h-[calc(100dvh-2rem)] overflow-y-auto overscroll-contain bg-[#0e0f14] border border-[#242432] rounded-2xl p-6 sm:p-8 shadow-[0_20px_50px_rgba(0,0,0,0.8)]"
         >
           {/* Ambient Glow */}
           <div className="absolute -top-24 -left-24 w-48 h-48 bg-[#7b1fa2]/20 rounded-full blur-3xl pointer-events-none" />
