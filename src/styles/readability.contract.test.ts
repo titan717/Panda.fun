@@ -24,6 +24,13 @@ describe('readability and viewport contract', () => {
     expect(appCss).toContain('.panda-settings-card:focus-visible { outline: 3px solid #fff');
   });
 
+  it('keeps Search filters and retry controls readable and large enough to operate', () => {
+    expect(appCss).toContain('.kinoma-search-filters button {');
+    expect(appCss).toContain('min-height: 44px;');
+    expect(appCss).toContain('.kinoma-search-empty p {');
+    expect(appCss).toContain('color: rgba(246,242,238,.76)');
+  });
+
   it('loads the readability layer after the other stylesheets', () => {
     expect(main.indexOf("./styles/readability.css")).toBeGreaterThan(main.indexOf("./index.css"));
   });
