@@ -76,7 +76,7 @@ export function Layout({ children }: { children: React.ReactNode }) {
       {!isPlayerRoute && (
         <header className="panda-mobile-header">
           <Link href="/home" className="panda-mobile-header__brand" aria-label="MYpanda.fun home"><KinomaLogo size="md" variant="full" /></Link>
-          <nav className="panda-mobile-header__actions" aria-label="Quick actions"><Link href="/settings" className="panda-mobile-header__action" aria-label="Settings" title="Settings"><Settings size={20} strokeWidth={1.8} /></Link></nav>
+          <nav className="panda-mobile-header__actions" aria-label="Quick actions"><Link href="/settings" className={`panda-mobile-header__action${location.split("?")[0] === "/settings" ? " is-active" : ""}`} aria-label="Settings" aria-current={location.split("?")[0] === "/settings" ? "page" : undefined} title="Settings"><Settings size={20} strokeWidth={1.8} /></Link></nav>
         </header>
       )}
       {!isPlayerRoute && (
