@@ -41,18 +41,15 @@ describe('MYpanda.fun mobile shell contract', () => {
     }
     expect(mobileHome).toContain('<ModernContinueWatching />');
     expect(mobileHome).toContain('buildDetailsHref');
-    expect(homeStyles).toContain('aspect-ratio: 16 / 9;');
-    expect(homeStyles).toContain('flex: 0 0 78vw;');
-    expect(homeStyles).toContain('padding-inline: 11vw;');
-    expect(homeStyles).toContain('scroll-snap-stop: always;');
-    expect(homeStyles).toContain('transform: scale(.82);');
-    expect(homeStyles).toContain('opacity: .48;');
     expect(homeStyles).toContain('overflow-x: clip');
     expect(mobileHome).toContain('panda-mobile-featured__spotlight');
     expect(mobileHome).not.toContain('PANDA SPOTLIGHT');
     expect(mobileHome).toContain('onTouchStart={handleFeaturedTouchStart}');
     expect(mobileHome).toContain('onTouchEnd={handleFeaturedTouchEnd}');
     expect(homeStyles).toContain('panda-mobile-featured__spotlight-track');
+    expect(homeStyles).toContain('touch-action: pan-y');
+    expect(homeStyles).toContain('panda-featured-swipe-in');
+    expect(homeStyles).not.toContain('panda-mobile-featured__viewport');
     expect(homeStyles).toContain('background: #fff');
     expect(mobileHome).toContain('buildWatchHref(featured.id');
     expect(mobileHome).toContain('aria-label="Previous featured title"');
