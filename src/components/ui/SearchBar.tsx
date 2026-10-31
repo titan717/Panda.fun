@@ -48,12 +48,13 @@ export function SearchBar() {
     return () => document.removeEventListener('keydown', handleKeyDown);
   }, []);
 
-  const { data, isLoading } = useSWR(
+  const { data, isLoading, error, mutate } = useSWR(
     debouncedQuery.length >= 2 ? `search-${debouncedQuery}` : null,
     () => api.search(debouncedQuery)
   );
 
-  const suggestions = data?.results?.slice(0, 6) || [];
+  const isDebouncing = query.trim().length >= 2 && query.trim() !== debouncedQuery.trim();
+  const suggestions = !isDebouncing ? data?.results?.slice(0, 6) || [] : [];
   useEffect(() => setActiveIndex(-1), [debouncedQuery]);
   const selectSuggestion = (item: any) => {
     const itemTitle = typeof item.title === 'string'
@@ -108,13 +109,14 @@ export function SearchBar() {
           id="global-search"
           name="search"
           placeholder="Search movies, shows and anime…"
+          aria-label="Search movies, shows and anime"
           className="w-full rounded-xl bg-[#18181f] border border-[#272733] focus:border-[#9c27b0] focus:ring-2 focus:ring-[#9c27b0]/20 hover:border-[#383848] py-2.5 pl-10 pr-12 text-sm text-white placeholder-gray-500 outline-none transition-all duration-200"
           autoComplete="off"
           role="combobox"
           aria-autocomplete="list"
-          aria-expanded={isOpen && debouncedQuery.length >= 2}
-          aria-controls="panda-global-search-suggestions"
-          aria-activedescendant={activeIndex >= 0 ? `panda-search-option-${activeIndex}` : undefined}
+          aria-expanded={isOpen && query.trim().length >= 2}
+          aria-controls={suggestions.length ? "panda-global-search-suggestions" : undefined}
+          aria-activedescendant={activeIndex >= 0 && suggestions[activeIndex] ? `panda-search-option-${activeIndex}` : undefined}
           onKeyDown={handleInputKeyDown}
         />
         <div className="absolute right-3 top-1/2 -translate-y-1/2 flex items-center justify-center w-auto px-1.5 h-5 rounded bg-[#252530] text-[10px] font-bold text-gray-400 border border-[#333342] pointer-events-none">
@@ -124,7 +126,7 @@ export function SearchBar() {
 
       {/* Suggestion Dropdown */}
       <AnimatePresence>
-        {isOpen && debouncedQuery.length >= 2 && (
+        {isOpen && query.trim().length >= 2 && (
           <motion.div 
             initial={{ opacity: 0, y: -6, scale: 0.98 }}
             animate={{ opacity: 1, y: 0, scale: 1 }}
@@ -132,10 +134,16 @@ export function SearchBar() {
             transition={{ duration: 0.18, ease: "easeOut" }}
             className="absolute top-full left-0 right-0 mt-2 bg-[#171720]/95 backdrop-blur-xl border border-[#2b2b3b] rounded-xl shadow-[0_12px_40px_rgba(0,0,0,0.7)] overflow-hidden z-50 flex flex-col max-h-[400px]"
           >
-            {isLoading ? (
+            {isDebouncing || isLoading ? (
               <div className="p-4 flex items-center justify-center text-gray-400 gap-2" role="status" aria-live="polite">
                 <Loader2 className="w-4 h-4 animate-spin text-[#9c27b0]" />
                 <span className="text-sm font-medium">Searching...</span>
+              </div>
+            ) : error ? (
+              <div className="p-5 text-center" role="alert">
+                <p className="text-sm font-semibold text-white">Search suggestions unavailable</p>
+                <p className="mt-1 text-xs text-gray-400">Check your connection and try again.</p>
+                <button type="button" onClick={() => void mutate()} className="mt-3 min-h-11 rounded-full border border-white/20 px-4 text-xs font-bold text-white hover:bg-white/10 focus-visible:outline focus-visible:outline-2 focus-visible:outline-white">Try again</button>
               </div>
             ) : data?.results?.length > 0 ? (
               <div id="panda-global-search-suggestions" className="overflow-y-auto no-scrollbar py-2" role="listbox" aria-label="Search suggestions" aria-busy={isLoading}>
