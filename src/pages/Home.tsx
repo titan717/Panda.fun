@@ -306,7 +306,7 @@ export function Home() {
       const lastWatched = history[0];
       if (lastWatched?.animeId) {
         setLastWatchedTitle(lastWatched.title || 'your last watch');
-        api.getRecommendations(lastWatched.animeId).then(result => {
+        api.getRecommendationsMedia(lastWatched.animeId).then(result => {
           if (active) setBecauseWatched((result.results || []) as unknown as MovieApiMedia[]);
         }).catch(() => undefined);
       }
