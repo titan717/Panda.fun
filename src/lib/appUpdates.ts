@@ -5,7 +5,8 @@ import {
   updateReducer,
   type UpdateSource,
 } from './appUpdateState';
-import { applyPWAUpdate, checkForPWAUpdate } from './usePWAUpdate';
+import { applyPWAUpdate, checkForPWAUpdate, type PWACheckResult } from './usePWAUpdate';
+import type { AppUpdateEvent } from './appUpdateState';
 
 declare const __APP_VERSION__: string | undefined;
 
@@ -34,6 +35,101 @@ function readVersion(bridge: NativeBridge | null): string | null {
     /* fall through to the web version */
   }
   return typeof __APP_VERSION__ === 'string' && __APP_VERSION__ ? __APP_VERSION__ : null;
+}
+
+export const UPDATE_MESSAGES = {
+  offline: "You're offline. Connect to the internet, then check for updates again.",
+  nativeTimeout: 'The app did not respond. Please try again.',
+  downloadTimeout: "The download didn't start. Please try again.",
+  nativeFailed: "Couldn't reach the app's updater. Please try again.",
+  legacyCheck: 'Check started. If an update is available, a prompt will appear.',
+  legacyDownload: 'Update handed to the app. Follow the prompt to install it.',
+  browserManaged: 'Updates are managed by your browser here. Reload the page any time to get the latest version.',
+  webFailed: "Couldn't check for updates. Check your connection and try again.",
+  applyFailed: "Couldn't apply the update. Reload the page to try again.",
+} as const;
+
+type Dispatch = (event: AppUpdateEvent) => void;
+interface UpdateFlowEnv {
+  bridge: NativeBridge | null;
+  online: boolean;
+  dispatch: Dispatch;
+  startNativeTimer: (message: string) => void;
+  clearTimer: () => void;
+}
+
+function isOnline() {
+  return typeof navigator === 'undefined' || navigator.onLine !== false;
+}
+
+/** Manual "Check for updates" flow. Pure enough to unit test with a fake bridge. */
+export async function runUpdateCheck(env: UpdateFlowEnv & { checkWeb: () => Promise<PWACheckResult> }) {
+  const { bridge, online, dispatch } = env;
+  if (!online) {
+    dispatch({ type: 'error', at: Date.now(), message: UPDATE_MESSAGES.offline });
+    return;
+  }
+  dispatch({ type: 'check-started' });
+
+  if (bridge) {
+    try {
+      if (typeof bridge.checkForUpdatesManual === 'function') {
+        env.startNativeTimer(UPDATE_MESSAGES.nativeTimeout);
+        bridge.checkForUpdatesManual();
+      } else {
+        // Older APKs only expose a silent check that shows its own dialog if an update exists.
+        bridge.checkForUpdates?.();
+        dispatch({ type: 'handed-off', message: UPDATE_MESSAGES.legacyCheck });
+      }
+    } catch {
+      env.clearTimer();
+      dispatch({ type: 'error', at: Date.now(), message: UPDATE_MESSAGES.nativeFailed });
+    }
+    return;
+  }
+
+  let result: PWACheckResult = 'error';
+  try {
+    result = await env.checkWeb();
+  } catch {
+    result = 'error';
+  }
+  if (result === 'available') dispatch({ type: 'available', at: Date.now() });
+  else if (result === 'up-to-date') dispatch({ type: 'up-to-date', at: Date.now() });
+  // Not an error: dev builds, private windows and some browsers have no service worker.
+  else if (result === 'unsupported') dispatch({ type: 'handed-off', message: UPDATE_MESSAGES.browserManaged });
+  else dispatch({ type: 'error', at: Date.now(), message: UPDATE_MESSAGES.webFailed });
+}
+
+/** "Download update" / "Reload to update" flow. */
+export async function runUpdateApply(env: UpdateFlowEnv & { applyWeb: () => Promise<void> }) {
+  const { bridge, online, dispatch } = env;
+  if (!online) {
+    dispatch({ type: 'error', at: Date.now(), message: UPDATE_MESSAGES.offline });
+    return;
+  }
+  dispatch({ type: 'applying' });
+  if (bridge) {
+    try {
+      if (typeof bridge.downloadUpdate === 'function') {
+        // MainActivity emits "downloading" (clears the timer) or "error".
+        env.startNativeTimer(UPDATE_MESSAGES.downloadTimeout);
+        bridge.downloadUpdate();
+      } else {
+        bridge.checkForUpdates?.();
+        dispatch({ type: 'handed-off', message: UPDATE_MESSAGES.legacyDownload });
+      }
+    } catch {
+      env.clearTimer();
+      dispatch({ type: 'error', at: Date.now(), message: UPDATE_MESSAGES.nativeFailed });
+    }
+    return;
+  }
+  try {
+    await env.applyWeb();
+  } catch {
+    dispatch({ type: 'error', at: Date.now(), message: UPDATE_MESSAGES.applyFailed });
+  }
 }
 
 export function useAppUpdates() {
@@ -81,43 +177,20 @@ export function useAppUpdates() {
     };
   }, []);
 
+  const startNativeTimer = (message: string) => {
+    clearTimer();
+    timerRef.current = window.setTimeout(() => {
+      timerRef.current = null;
+      dispatch({ type: 'error', at: Date.now(), message });
+    }, NATIVE_RESPONSE_TIMEOUT_MS);
+  };
+
   const check = useCallback(async () => {
-    dispatch({ type: 'check-started' });
-    const native = getNativeBridge();
-
-    if (native) {
-      if (typeof native.checkForUpdatesManual === 'function') {
-        clearTimer();
-        timerRef.current = window.setTimeout(() => {
-          dispatch({ type: 'error', at: Date.now(), message: 'The app did not respond. Please try again.' });
-        }, NATIVE_RESPONSE_TIMEOUT_MS);
-        native.checkForUpdatesManual();
-      } else {
-        // Older APKs only expose a silent check that shows its own dialog if an update exists.
-        native.checkForUpdates?.();
-        dispatch({ type: 'handed-off', message: 'Check started. If an update is available, a prompt will appear.' });
-      }
-      return;
-    }
-
-    const result = await checkForPWAUpdate();
-    if (result === 'available') dispatch({ type: 'available', at: Date.now() });
-    else if (result === 'up-to-date') dispatch({ type: 'up-to-date', at: Date.now() });
-    else if (result === 'unsupported') {
-      dispatch({ type: 'error', at: Date.now(), message: 'Updates are managed by your browser on this device. Reload the page to get the latest version.' });
-    } else dispatch({ type: 'error', at: Date.now(), message: "Couldn't check for updates. Check your connection and try again." });
+    await runUpdateCheck({ bridge: getNativeBridge(), online: isOnline(), checkWeb: checkForPWAUpdate, dispatch, startNativeTimer, clearTimer });
   }, []);
 
   const apply = useCallback(async () => {
-    const native = getNativeBridge();
-    if (native) {
-      dispatch({ type: 'applying' });
-      if (typeof native.downloadUpdate === 'function') native.downloadUpdate();
-      else native.checkForUpdates?.();
-      return;
-    }
-    dispatch({ type: 'applying' });
-    await applyPWAUpdate();
+    await runUpdateApply({ bridge: getNativeBridge(), online: isOnline(), applyWeb: applyPWAUpdate, dispatch, startNativeTimer, clearTimer });
   }, []);
 
   const cancel = useCallback(() => {
