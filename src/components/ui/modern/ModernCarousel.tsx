@@ -132,8 +132,8 @@ export function ModernCarousel({
  */
 export function ModernCarouselSlot({ children }: { children: React.ReactNode; key?: React.Key }) {
   return (
-    <Reveal className="shrink-0 w-[42vw] xs:w-[39vw] sm:w-[28vw] md:w-[22vw] lg:w-[18%] xl:w-[15.2%] min-w-[130px] sm:min-w-[155px] max-w-[220px]" >
-      <div style={{ scrollSnapAlign: 'start' }}>{children}</div>
+    <Reveal style={{ scrollSnapAlign: 'start' }} className="shrink-0 w-[42vw] xs:w-[39vw] sm:w-[28vw] md:w-[22vw] lg:w-[18%] xl:w-[15.2%] min-w-[130px] sm:min-w-[155px] max-w-[220px]">
+      {children}
     </Reveal>
   );
 }
