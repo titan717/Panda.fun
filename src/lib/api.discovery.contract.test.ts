@@ -10,6 +10,11 @@ describe('homepage discovery API contracts', () => {
     expect(api).toContain("'/api/v1/upcoming/tv'");
   });
 
+  it('exposes a typed genre wrapper for both movies and TV', () => {
+    expect(api).toContain("async getGenreMedia(genre: string, type: 'movie' | 'tv', limit = 12)");
+    expect(api).toContain("'/api/v1/genres/' + encodeURIComponent(genre)");
+  });
+
   it('builds an Anime rail from both verified animation genre media types and Japanese original language', () => {
     expect(api).toContain("'/api/v1/genres/' + encodeURIComponent(genre)");
     expect(api).toContain("{ type: 'movie', page: 1 }");
