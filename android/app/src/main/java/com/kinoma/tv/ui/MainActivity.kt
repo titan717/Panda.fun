@@ -13,6 +13,7 @@ import android.os.Build
 import android.os.Bundle
 import android.provider.Settings
 import android.util.Log
+import android.view.HapticFeedbackConstants
 import android.view.KeyEvent
 import android.view.View
 import android.view.ViewGroup
@@ -732,6 +733,14 @@ class MainActivity : ComponentActivity() {
                 }
             } catch (e: Exception) {
                 0
+            }
+        }
+
+        @JavascriptInterface
+        fun performHapticFeedback() {
+            if (isTelevisionDevice()) return
+            runOnUiThread {
+                webView.performHapticFeedback(HapticFeedbackConstants.VIRTUAL_KEY)
             }
         }
 
