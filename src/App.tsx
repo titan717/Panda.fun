@@ -50,21 +50,53 @@ import './components/intro/panda-intro.css';
 import { handleTVRemoteKey } from './lib/tvRemoteNavigation';
 import { getCurrentDeviceMode } from './lib/deviceCapabilities';
 
-function DelayedRouteFallback() {
+function DelayedRouteFallback({ previousLocation }: { previousLocation: string }) {
   const [show, setShow] = useState(false);
   useEffect(() => {
     const timer = window.setTimeout(() => setShow(true), 400);
     return () => window.clearTimeout(timer);
   }, []);
-  if (!show) return null;
   return (
-    <div className="panda-route-loading min-h-[55vh] w-full" role="status" aria-live="polite">
-      <ThinkingOrb state="searching" size={64} theme="dark" aria-label="Loading Panda.fun" />
-      <div className="panda-route-loading__copy"><span>Loading Panda.fun</span><p>Preparing your next discovery</p></div>
+    <div className="panda-route-loading-keepalive">
+      <RouteContent location={previousLocation} />
+      {show && (
+        <div className="panda-route-loading-overlay" role="status" aria-live="polite">
+          <ThinkingOrb state="searching" size={64} theme="dark" aria-label="Loading Panda.fun" />
+          <div className="panda-route-loading__copy"><span>Loading Panda.fun</span><p>Preparing your next discovery</p></div>
+        </div>
+      )}
     </div>
   );
 }
 
+function RouteContent({ location }: { location: string }) {
+  return (
+              <Switch location={location}>
+                <Route path="/" component={Landing} />
+                <Route path="/browse" component={Home} />
+                <Route path="/home" component={Home} />
+                <Route path="/terms" component={Terms} />
+                <Route path="/privacy-policy" component={Privacy} />
+                <Route path="/privacy" component={Privacy} />
+                <Route path="/contact" component={Contact} />
+                <Route path="/docs" component={Docs} />
+                <Route path="/profile" component={Profile} />
+                <Route path="/about" component={About} />
+                <Route path="/admin" component={Admin} />
+                <Route path="/settings" component={SettingsPage} />
+                <Route path="/search" component={Search} />
+                <Route path="/explore" component={Search} />
+                <Route path="/whats-new" component={WhatsNew} />
+                <Route path="/details/:id" component={Details} />
+                <Route path="/watch/:id" component={Watch} />
+                <Route path="/library" component={Library} />
+                <Route path="/history" component={Library} />
+                <Route>
+                  <main className="flex min-h-[60vh] items-center justify-center px-6 text-center text-gray-500 font-medium" role="main"><div><h1 className="text-xl font-semibold text-white">Page not found</h1><p className="mt-2">The Panda wandered somewhere else.</p></div></main>
+                </Route>
+           
+  );
+}
 function AnimatedRoutes() {
   const [location] = useLocation();
   const preference = useMotionPreference();
@@ -92,39 +124,25 @@ function AnimatedRoutes() {
           animate={{ opacity: 1, x: 0 }}
           exit={{ opacity: 0, x: getMotionOffset(preference, direction * -14) }}
           transition={{ duration: preference === 'full' ? (isDetailTransition ? 0.28 : 0.16) : 0.12, ease: [0.16, 1, 0.3, 1] }}
-          onAnimationComplete={() => {
-            if (lastScrolledLocation.current !== location) {
-              lastScrolledLocation.current = location;
-              window.scrollTo({ top: 0, behavior: 'instant' });
-            }
-          }}
           className="panda-route-transition-page w-full flex-1 flex flex-col"
         >
           <Suspense fallback={<DelayedRouteFallback />}>
-            <Switch location={location}>
-              <Route path="/" component={Landing} />
-              <Route path="/browse" component={Home} />
-              <Route path="/home" component={Home} />
-              <Route path="/terms" component={Terms} />
-              <Route path="/privacy-policy" component={Privacy} />
-              <Route path="/privacy" component={Privacy} />
-              <Route path="/contact" component={Contact} />
-              <Route path="/docs" component={Docs} />
-              <Route path="/profile" component={Profile} />
-              <Route path="/about" component={About} />
-              <Route path="/admin" component={Admin} />
-              <Route path="/settings" component={SettingsPage} />
-              <Route path="/search" component={Search} />
-              <Route path="/explore" component={Search} />
-              <Route path="/whats-new" component={WhatsNew} />
-              <Route path="/details/:id" component={Details} />
-              <Route path="/watch/:id" component={Watch} />
-              <Route path="/library" component={Library} />
-              <Route path="/history" component={Library} />
-              <Route>
-                <main className="flex min-h-[60vh] items-center justify-center px-6 text-center text-gray-500 font-medium" role="main"><div><h1 className="text-xl font-semibold text-white">Page not found</h1><p className="mt-2">The Panda wandered somewhere else.</p></div></main>
-              </Route>
-            </Switch>
+            <Suspense fallback={<DelayedRouteFallback previousLocation={previousLocation.current} />}>
+              <m.div
+                key={`route-content-${location}`}
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                transition={{ duration: preference === 'full' ? 0.16 : 0.12 }}
+                onAnimationComplete={() => {
+                  if (lastScrolledLocation.current !== location) {
+                    lastScrolledLocation.current = location;
+                    window.scrollTo({ top: 0, behavior: 'instant' });
+                  }
+                }}
+              >
+                <RouteContent location={location} />
+              </m.div>
+            </Suspense>   </Switch>
           </Suspense>
         </m.div>
       </AnimatePresence>
