@@ -136,7 +136,7 @@ function LazyGenreRail({ title, genre, movieGenre, tvGenre, animeOnly = false }:
         ];
     Promise.allSettled(requests).then(results => {
       if (!active) return;
-      const merged = results.flatMap(result => result.status === 'fulfilled' ? result.value.results : []) as unknown as MovieApiMedia[];
+      const merged = results.flatMap(result => result.status === 'fulfilled' ? result.value.results : []);
       setItems(uniqueItems(merged));
       setLoading(false);
     });
