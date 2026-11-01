@@ -25,9 +25,9 @@
     justify-content: space-between;
     width: 100%;
     box-sizing: border-box;
-    height: calc(56px + var(--safe-top, var(--safe-top, 0px)));
-    min-height: calc(56px + var(--safe-top, var(--safe-top, 0px)));
-    padding: var(--safe-top, var(--safe-top, 0px)) 16px 0;
+    height: calc(56px + var(--safe-top, env(safe-area-inset-top, 0px)));
+    min-height: calc(56px + var(--safe-top, env(safe-area-inset-top, 0px)));
+    padding: var(--safe-top, env(safe-area-inset-top, 0px)) 16px 0;
     margin: 0;
     background: transparent;
     border-bottom: 1px solid transparent;
@@ -44,7 +44,7 @@
   .panda-mobile-category-row {
     position: fixed;
     z-index: 40;
-    top: calc(56px + var(--safe-top, var(--safe-top, 0px)));
+    top: calc(56px + var(--safe-top, env(safe-area-inset-top, 0px)));
     right: 0;
     left: 0;
     display: flex;
@@ -176,7 +176,7 @@
   .panda-app-shell.keyboard-open .panda-mobile-bottom-nav { display: none !important; }
   .panda-app-content { width: 100% !important; min-width: 0 !important; margin: 0 !important; padding: 0 !important; }
   .kinoma-app-main { width: 100% !important; min-width: 0 !important; min-height: 0 !important; margin: 0 !important; padding-top: 0 !important; padding-right: 0 !important; padding-left: 0 !important; }
-  .panda-mobile-home { min-height: 0 !important; margin: 0 !important; padding: 0 0 calc(86px + var(--safe-bottom, 0px)) !important; background: #000 !important; }
+  .panda-mobile-home { min-height: 0 !important; margin: 0 !important; padding: 0 0 calc(86px + var(--safe-bottom, env(safe-area-inset-bottom, 0px))) !important; background: #000 !important; }
   .panda-mobile-home__header { display: none !important; }
 
   .kinoma-search-page,
@@ -195,7 +195,7 @@
     width: 100% !important;
     max-width: none !important;
     margin: 0 !important;
-    padding: 18px 16px calc(92px + var(--safe-bottom, 0px)) !important;
+    padding: 18px 16px calc(92px + var(--safe-bottom, env(safe-area-inset-bottom, 0px))) !important;
   }
 
   .kinoma-search-head { gap: 16px !important; }
@@ -217,7 +217,7 @@
   .kinoma-library-head { gap: 12px !important; }
   .kinoma-library-tabs { max-width: 100%; overflow-x: auto; }
   .kinoma-library-grid { grid-template-columns: repeat(3, minmax(0, 1fr)) !important; gap: 14px 9px !important; }
-  .kinoma-details-page { padding-bottom: calc(84px + var(--safe-bottom, 0px)) !important; }
+  .kinoma-details-page { padding-bottom: calc(84px + var(--safe-bottom, env(safe-area-inset-bottom, 0px))) !important; }
   .kinoma-details-hero { margin-top: 0 !important; }
   .kinoma-details-bottom { padding-bottom: 20px !important; }
 
@@ -336,7 +336,7 @@
   .panda-mobile-bottom-nav {
     right: 12px !important;
     left: 12px !important;
-    bottom: calc(8px + var(--safe-bottom, 0px)) !important;
+    bottom: calc(8px + var(--safe-bottom, env(safe-area-inset-bottom, 0px))) !important;
     width: auto !important;
     min-height: 68px;
     padding: 7px 9px;
@@ -368,16 +368,16 @@
   }
 
   .panda-mobile-home {
-    padding-bottom: calc(112px + var(--safe-bottom, 0px)) !important;
+    padding-bottom: calc(112px + var(--safe-bottom, env(safe-area-inset-bottom, 0px))) !important;
   }
 
   .kinoma-search-page__inner,
   .kinoma-library-page__inner {
-    padding-bottom: calc(112px + var(--safe-bottom, 0px)) !important;
+    padding-bottom: calc(112px + var(--safe-bottom, env(safe-area-inset-bottom, 0px))) !important;
   }
 
   .kinoma-details-page {
-    padding-bottom: calc(112px + var(--safe-bottom, 0px)) !important;
+    padding-bottom: calc(112px + var(--safe-bottom, env(safe-area-inset-bottom, 0px))) !important;
   }
 }
 
@@ -484,7 +484,7 @@
     width: 100%;
     max-width: 100%;
     min-width: 0;
-    padding-bottom: calc(118px + var(--safe-bottom, 0px));
+    padding-bottom: calc(118px + var(--safe-bottom, env(safe-area-inset-bottom, 0px)));
   }
   .panda-library .panda-library__filters {
     position: sticky;
