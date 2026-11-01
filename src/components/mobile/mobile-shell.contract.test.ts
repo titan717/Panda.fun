@@ -21,6 +21,7 @@ describe('MYpanda.fun mobile shell contract', () => {
     expect(layout).not.toContain('aria-label="Search movies and shows"');
     expect(layout).toContain('panda-mobile-bottom-nav');
     expect(layout).toContain("location.startsWith('/watch/')");
+    expect(layout).toContain('native?.setPlayerPage?.(isPlayerRoute)');
     expect(layout).toContain("href === '/library' ? 'Library' : label");
     expect(layout).toContain("const pathname = location.split('?')[0]");
     expect(layout).toContain("pathname === '/search'");
