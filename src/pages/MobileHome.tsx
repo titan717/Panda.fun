@@ -21,8 +21,6 @@ type MobileHomeProps = {
   comingSoon?: MovieApiMedia[];
   becauseWatched?: MovieApiMedia[];
   lastWatchedTitle?: string;
-  anime?: MovieApiMedia[];
-  genreShelves?: Record<string, MovieApiMedia[]>;
   loading?: boolean;
   error?: string | null;
 };
@@ -150,8 +148,6 @@ export function MobileHome({
   comingSoon = [],
   becauseWatched = [],
   lastWatchedTitle = '',
-  anime = [],
-  genreShelves = {},
   loading = false,
   error = null,
 }: MobileHomeProps) {
@@ -188,7 +184,6 @@ export function MobileHome({
   const topTen = catalogue.slice(0, 10);
   const trending = uniqueItems(filterCategory(trendingItems?.length ? trendingItems : items));
   const myList = libraryManager.getWatchlist().map(item => ({ id: item.id, title: item.title, poster: item.image, type: item.id.toLowerCase().includes('movie') ? 'movie' : 'tv' } as MovieApiMedia));
-  const genreItems = (genre: string) => uniqueItems(filterCategory(genreShelves[genre] || []));
 
   useEffect(() => {
     const onCategory = (event: Event) => {
