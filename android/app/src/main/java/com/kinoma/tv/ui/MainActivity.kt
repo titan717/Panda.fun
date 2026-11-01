@@ -724,11 +724,6 @@ class MainActivity : ComponentActivity() {
 
         @JavascriptInterface
         fun getAppVersionCode(): Int {
-            return BuildConfig.VERSION_CODE
-        }
-
-        @JavascriptInterface
-        fun getAppVersionCode(): Int {
             return try {
                 val info = context.packageManager.getPackageInfo(context.packageName, 0)
                 if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.P) info.longVersionCode.toInt() else {
