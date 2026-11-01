@@ -232,7 +232,17 @@ async function startServer() {
         if (err && !res.headersSent) res.status(404).send('APK file not found');
       });
     }
-    res.redirect(302, 'https://github.com/titan717/Panda.fun/releases/latest/download/Panda.fun-Android-TV.apk');
+    try {
+      const manifestPath = path.join(process.cwd(), 'update', 'latest.json');
+      const manifest = JSON.parse(fs.readFileSync(manifestPath, 'utf8'));
+      const apkUrl = typeof manifest.apkUrl === 'string' ? manifest.apkUrl : '';
+      const validReleaseAsset = /^https:\/\/github\.com\/titan717\/Panda\.fun\/releases\/download\/[^/]+\/Panda\.fun-Android-TV(?:-beta)?\.apk$/.test(apkUrl);
+      const validChecksum = typeof manifest.sha256 === 'string' && /^[a-f0-9]{64}$/i.test(manifest.sha256);
+      if (validReleaseAsset && validChecksum) return res.redirect(302, apkUrl);
+    } catch (error) {
+      console.error('[Panda.fun] Could not resolve APK manifest:', error);
+    }
+    return res.status(503).json({ error: 'No verified Panda.fun APK release is currently published.' });
   });
 
   if (process.env.NODE_ENV !== 'production') {
