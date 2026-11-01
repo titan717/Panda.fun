@@ -247,6 +247,8 @@ class MainActivity : ComponentActivity() {
             ): Boolean {
                 Log.e(TAG, "WebView render process gone! didCrash=${detail.didCrash()}")
                 webViewCrashed = true
+                (view.parent as? ViewGroup)?.removeView(view)
+                view.destroy()
                 showDiagnosticScreen("Render Process Crash", WEB_ENTRY_URL, null, "WebView render process crashed. didCrash=${detail.didCrash()}")
                 return true
             }
@@ -725,19 +727,6 @@ class MainActivity : ComponentActivity() {
         @JavascriptInterface
         fun getAppVersionCode(): Int {
             return BuildConfig.VERSION_CODE
-        }
-
-        @JavascriptInterface
-        fun getAppVersionCode(): Int {
-            return try {
-                val info = context.packageManager.getPackageInfo(context.packageName, 0)
-                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.P) info.longVersionCode.toInt() else {
-                    @Suppress("DEPRECATION")
-                    info.versionCode
-                }
-            } catch (e: Exception) {
-                0
-            }
         }
 
         @JavascriptInterface
