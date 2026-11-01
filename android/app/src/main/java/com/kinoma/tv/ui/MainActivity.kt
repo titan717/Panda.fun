@@ -420,9 +420,8 @@ class MainActivity : ComponentActivity() {
             builtInZoomControls = false
             setSupportZoom(false)
 
-            // Identify as Android TV Leanback environment for automatic TV layout
-            val defaultUa = userAgentString
-            userAgentString = if (isTelevisionDevice()) "$defaultUa Panda.fun/1.0.0 (Android TV; Leanback; SmartTV)" else "$defaultUa Panda.fun/1.0.0 (Android)"
+            // Device mode is reported by the native bridge, not inferred from a spoofed user agent.
+            userAgentString = "$userAgentString Panda.fun/1.0.0"
             mixedContentMode = WebSettings.MIXED_CONTENT_NEVER_ALLOW
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
                 safeBrowsingEnabled = true
