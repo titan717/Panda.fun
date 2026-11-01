@@ -170,6 +170,8 @@ export function MobileHome({
       if (category === 'tv shows') return item.type === 'tv';
       if (category === 'anime') return genres.some(genre => /anime|animation/.test(genre));
       if (category === 'kids') return genres.some(genre => /family|kids|animation/.test(genre));
+      if (category === 'sci-fi & fantasy') return genres.some(genre => /science fiction|sci-fi|fantasy/.test(genre));
+      if (category === 'action') return genres.some(genre => /action|adventure/.test(genre));
       return genres.some(genre => genre.includes(category));
     });
   };
@@ -345,7 +347,7 @@ export function MobileHome({
 
       <MobileRail title="Top 10" items={topTen} topTen />
       <ModernContinueWatching />
-      <MobileRail title="My List" items={myList} />
+      <MobileRail title="My List" items={uniqueItems(filterCategory(myList))} />
       <MobileRail title="Trending Now" items={trending} />
       <MobileRail title="New on Netflix" items={uniqueItems(filterCategory(newOnNetflix))} />
       <MobileRail title="New on Disney+" items={uniqueItems(filterCategory(newOnDisneyPlus))} />
