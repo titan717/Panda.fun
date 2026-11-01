@@ -10,7 +10,7 @@ import { preferencesUtil } from '../lib/preferences';
 import { libraryManager } from '../lib/library';
 import { optimizeImageUrl } from '../lib/mediaImages';
 import '../styles/panda-home.css';
-import { api, MovieApiError, MovieApiMedia } from '../lib/api';
+import { api, MovieApiError, type MovieApiMedia } from '../lib/api';
 import type { AnimeItem } from '../types';
 import { ThinkingOrb } from 'thinking-orbs';
 import { friendlyNetworkError } from '../lib/networkMessage';
