@@ -56,38 +56,34 @@ describe('MYpanda.fun mobile shell contract', () => {
     expect(mobileHome).toContain('buildWatchHref(featured.id');
     expect(mobileHome).toContain('panda-mobile-featured__segment');
     expect(mobileHome).toContain('aria-label="Featured title progress"');
-    expect(mobileHome).toContain('aria-current={index === activeIndex ? \'true\' : undefined}');
+    expect(mobileHome).toContain("aria-current={index === activeIndex ? 'true' : undefined}");
     expect(mobileHome).not.toContain('Previous featured title');
     expect(mobileHome).not.toContain('Next featured title');
     expect(homeStyles).toContain('panda-mobile-featured__art::after');
     expect(homeStyles).toContain('prefers-reduced-motion: reduce');
   });
 
-  it('uses the Thinking Orbs searching state instead of a generic loading card', () => {
+  it('uses the Thinking Orbs searching state in the redesigned search layout', () => {
     expect(search).toContain("import { ThinkingOrb } from 'thinking-orbs'");
     expect(search).toContain('<ThinkingOrb state="searching"');
-    expect(search).toContain('kinoma-search-loading');
+    expect(search).toContain('panda-search__loading');
     expect(search).not.toContain('<h3>Searching…</h3>');
-    expect(read('../../index.css')).toContain('.kinoma-search-loading');
   });
 
-  it('keeps search mascot-free with a cinematic hero and visible metal border beam', () => {
+  it('keeps search mascot-free with a sticky accessible search field', () => {
     expect(search).not.toContain('panda-search-companion');
-    expect(search).toContain('Discover films, series and anime worth staying up for.');
     expect(search).toContain('role="search" aria-label="Search the catalogue"');
-    expect(search).toContain('kinoma-search-control__sheen');
-    expect(search).toContain('<ArrowRight size={15}');
-    expect(read('../../index.css')).toContain('panda-search-beam-spin 1.96s linear infinite');
-    expect(read('../../index.css')).toContain('panda-search-metal-sweep');
-    expect(read('../../index.css')).toContain('z-index: 0;');
-    expect(read('../../index.css')).toContain('prefers-reduced-motion: reduce');
+    expect(search).toContain('aria-label="Search movies, series or anime"');
+    expect(search).toContain('panda-search__field');
   });
 
   it('preserves the existing search API, recent searches, and supported filters', () => {
     expect(search).toContain('api.search(submittedQuery, controller.signal)');
+    expect(search).toContain('api.getTrending()');
     expect(search).toContain('preferencesUtil.addRecentSearch(clean)');
     expect(search).toContain("filter === 'movie'");
     expect(search).toContain("filter === 'series'");
+    expect(search).toContain("{ id: 'anime', label: 'Anime' }");
     expect(search).toContain('Try again');
   });
 });
