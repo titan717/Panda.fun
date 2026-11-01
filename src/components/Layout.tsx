@@ -90,7 +90,7 @@ export function Layout({ children }: { children: React.ReactNode }) {
               <Link href="/profile" className="panda-mobile-header__action" aria-label="Profile"><UserRound size={20} strokeWidth={1.9} /></Link>
             </nav>
           </header>
-          {location.split('?')[0] === '/home' || location.split('?')[0] === '/browse' ? (
+          {!tvMode && (location.split('?')[0] === '/home' || location.split('?')[0] === '/browse') ? (
             <nav className="panda-mobile-category-row" aria-label="Home categories">
               {['All', 'Movies', 'TV Shows', 'Anime', 'Kids', 'Action', 'Comedy', 'Drama'].map(category => (
                 <button key={category} type="button" onClick={() => window.dispatchEvent(new CustomEvent('panda_home_category_select', { detail: category }))}>{category}</button>
