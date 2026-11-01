@@ -53,7 +53,7 @@ export function updateReducer(state: AppUpdateState, event: AppUpdateEvent): App
     case 'handed-off':
       return { ...state, status: 'idle', message: event.message };
     case 'up-to-date':
-      return { ...state, status: 'up-to-date', message: undefined, availableVersion: undefined, releaseNotes: undefined, lastChecked: event.at };
+      return { ...state, status: 'up-to-date', message: undefined, availableVersion: undefined, availableVersionCode: undefined, sizeBytes: undefined, releaseNotes: undefined, verifiedSha256: undefined, progressPercent: undefined, downloadedBytes: undefined, totalBytes: undefined, lastChecked: event.at };
     case 'available':
       return {
         ...state,
