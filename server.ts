@@ -237,8 +237,6 @@ async function startServer() {
     return res.status(503).json({ error: 'No verified stable Panda.fun production release has been published yet.' });
   });
 
-  app.use('/downloads', express.static(path.join(process.cwd(), 'public', 'downloads')));
-
   app.get('/downloads/Panda.fun.apk', (req, res) => {
     const filePath = path.join(process.cwd(), 'public', 'downloads', 'Panda.fun.apk');
     try {
@@ -271,6 +269,8 @@ async function startServer() {
       return res.status(503).json({ error: 'No verified stable Panda.fun APK release is currently published.' });
     }
   });
+  app.use('/downloads', express.static(path.join(process.cwd(), 'public', 'downloads')));
+
 
   if (process.env.NODE_ENV !== 'production') {
     const vite = await createViteServer({ server: { middlewareMode: true }, appType: 'spa' });
