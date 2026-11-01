@@ -211,19 +211,21 @@ function isInstalledAppShell() {
 function MainAppShell() {
   const [location, setLocation] = useLocation();
   const appShell = isInstalledAppShell();
-  const [showIntro, setShowIntro] = useState(() => location === '/' && !appShell && shouldShowPandaIntro());
+  const [showIntro, setShowIntro] = useState(() => location === '/' && shouldShowPandaIntro());
 
   useEffect(() => {
-    if (appShell && location === '/') {
-      setShowIntro(false);
+    if (appShell && location === '/' && !showIntro) {
       setLocation('/home', { replace: true });
       return;
     }
     if (location !== '/') setShowIntro(false);
-  }, [appShell, location, setLocation]);
+  }, [appShell, location, setLocation, showIntro]);
 
-  if (showIntro && !appShell) {
-    return <PandaIntro onComplete={() => setShowIntro(false)} />;
+  if (showIntro) {
+    return <PandaIntro onComplete={() => {
+      setShowIntro(false);
+      if (appShell) setLocation('/home', { replace: true });
+    }} />;
   }
 
   return <AppErrorBoundary resetKey={location}><AnimatedRoutes /></AppErrorBoundary>;
