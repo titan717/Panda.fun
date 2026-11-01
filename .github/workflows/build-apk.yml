@@ -124,6 +124,12 @@ jobs:
             echo "KINOMA_VERSION_NAME=$KINOMA_VERSION_NAME"
           } >> "$GITHUB_ENV"
 
+      - name: Prepare Panda icon generation
+        run: python3 -m pip install --user CairoSVG Pillow
+
+      - name: Generate web and Android icon assets
+        run: npm run icons
+
       - name: Install web dependencies
         run: npm install --no-audit --no-fund
 
