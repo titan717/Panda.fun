@@ -9,30 +9,30 @@
 export const tokens = {
   colors: {
     // Canvas & Surfaces
-    background: 'var(--kinoma-bg)',
-    backgroundElevated: 'var(--kinoma-bg-elevated)',
-    surface: 'var(--kinoma-surface)',
-    surfaceHover: 'var(--kinoma-surface-hover)',
-    surfaceActive: 'var(--kinoma-card-hover)',
-    card: 'var(--kinoma-card)',
-    cardHover: 'var(--kinoma-card-hover)',
+    background: 'var(--color-background)',
+    backgroundElevated: 'var(--color-background-elevated)',
+    surface: 'var(--color-surface)',
+    surfaceHover: 'var(--color-surface-hover)',
+    surfaceActive: 'var(--color-card-hover)',
+    card: 'var(--color-card)',
+    cardHover: 'var(--color-card-hover)',
 
     // Borders & Dividers
-    borderSubtle: 'rgba(255, 255, 255, 0.05)',
-    borderDefault: 'rgba(255, 255, 255, 0.08)',
-    borderStrong: 'rgba(255, 255, 255, 0.16)',
-    borderFocus: 'var(--kinoma-accent)',
+    borderSubtle: 'var(--color-border-subtle)',
+    borderDefault: 'var(--color-border-default)',
+    borderStrong: 'var(--color-border-strong)',
+    borderFocus: 'var(--color-accent)',
 
     // Text & Content
-    textPrimary: 'var(--kinoma-text)',
-    textSecondary: 'var(--kinoma-muted)',
-    textMuted: 'var(--kinoma-muted-strong)',
-    textInverse: 'var(--kinoma-bg)',
+    textPrimary: 'var(--color-foreground)',
+    textSecondary: 'var(--color-muted)',
+    textMuted: 'var(--color-muted-foreground)',
+    textInverse: 'var(--color-background)',
 
     // Panda accent palette (CSS custom properties are the source of truth)
-    accent: 'var(--kinoma-accent)',
-    accentHover: 'var(--kinoma-accent-hover)',
-    accentLight: 'var(--kinoma-accent-soft)',
+    accent: 'var(--color-accent)',
+    accentHover: 'var(--color-accent-hover)',
+    accentLight: 'var(--color-accent-light)',
     accentSubtle: 'rgba(184, 77, 65, 0.15)',
     accentGlow: 'rgba(184, 77, 65, 0.35)',
 
@@ -40,12 +40,12 @@ export const tokens = {
     success: '#10b981',
     warning: '#f59e0b',
     error: '#ef4444',
-    info: '#3b82f6',
+    info: 'var(--color-blue)',
 
     // Glass & Overlay
     overlayDark: 'rgba(0, 0, 0, 0.88)',
     glassBackground: 'rgba(5, 5, 5, 0.82)',
-    glassBorder: 'var(--kinoma-border)',
+    glassBorder: 'var(--color-border-default)',
   },
 
   radius: {
