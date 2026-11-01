@@ -29,3 +29,7 @@ export function resolveMotionPreference(input: {
   if (input.prefersReducedMotion || input.saveData) return 'reduced';
   return 'full';
 }
+
+export function getMotionOffset(preference: MotionPreference, distance: number): number {
+  return preference === 'full' ? distance : 0;
+}
