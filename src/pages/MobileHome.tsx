@@ -75,6 +75,7 @@ export function MobileHome({
   error = null,
 }: MobileHomeProps) {
   const [activeIndex, setActiveIndex] = useState(0);
+  const [activeCategory, setActiveCategory] = useState('All');
   const [isInList, setIsInList] = useState(false);
   const [swipeDirection, setSwipeDirection] = useState<'next' | 'previous'>('next');
   const [touchPaused, setTouchPaused] = useState(false);
@@ -83,15 +84,40 @@ export function MobileHome({
   const touchStartX = useRef<number | null>(null);
   const suppressSwipeClick = useRef(false);
   const touchResumeTimer = useRef<number | null>(null);
-  const featuredItems = useMemo(() => uniqueItems(items).filter(item => item.poster || item.backdrop).slice(0, 5), [items]);
-  const catalogue = useMemo(() => uniqueItems([
+  const filterCategory = (list: MovieApiMedia[]) => {
+    if (activeCategory === 'All') return list;
+    const category = activeCategory.toLowerCase();
+    return list.filter(item => {
+      const genres = (item.genres || []).map(genre => genre.toLowerCase());
+      if (category === 'movies') return item.type === 'movie';
+      if (category === 'tv shows') return item.type === 'tv';
+      if (category === 'anime') return genres.some(genre => /anime|animation/.test(genre));
+      if (category === 'kids') return genres.some(genre => /family|kids|animation/.test(genre));
+      return genres.some(genre => genre.includes(category));
+    });
+  };
+  const categorizedItems = useMemo(() => filterCategory(items), [items, activeCategory]);
+  const featuredItems = useMemo(() => uniqueItems(categorizedItems).filter(item => item.poster || item.backdrop).slice(0, 5), [categorizedItems]);
+  const catalogue = useMemo(() => uniqueItems(filterCategory([
     ...(trendingItems || []),
     ...popularMovies,
     ...popularTv,
     ...items,
-  ]), [trendingItems, popularMovies, popularTv, items]);
+  ])), [trendingItems, popularMovies, popularTv, items, activeCategory]);
   const topTen = catalogue.slice(0, 10);
-  const trending = uniqueItems(trendingItems?.length ? trendingItems : items);
+  const trending = uniqueItems(filterCategory(trendingItems?.length ? trendingItems : items));
+
+  useEffect(() => {
+    const onCategory = (event: Event) => {
+      const category = (event as CustomEvent).detail;
+      if (typeof category === 'string') {
+        setActiveCategory(category);
+        setActiveIndex(0);
+      }
+    };
+    window.addEventListener('panda_home_category_select', onCategory);
+    return () => window.removeEventListener('panda_home_category_select', onCategory);
+  }, []);
 
   useEffect(() => {
     setActiveIndex(current => Math.min(current, Math.max(0, featuredItems.length - 1)));
@@ -242,11 +268,11 @@ export function MobileHome({
       <MobileRail title="Top 10" items={topTen} topTen />
       <ModernContinueWatching />
       <MobileRail title="Trending Now" items={trending} />
-      <MobileRail title="New on Netflix" items={uniqueItems(newOnNetflix)} />
-      <MobileRail title="New on Disney+" items={uniqueItems(newOnDisneyPlus)} />
-      <MobileRail title="Popular Movies" items={uniqueItems(popularMovies)} />
-      <MobileRail title="Popular TV Shows" items={uniqueItems(popularTv)} />
-      <MobileRail title="Airing Today" items={uniqueItems(airing)} />
+      <MobileRail title="New on Netflix" items={uniqueItems(filterCategory(newOnNetflix))} />
+      <MobileRail title="New on Disney+" items={uniqueItems(filterCategory(newOnDisneyPlus))} />
+      <MobileRail title="Popular Movies" items={uniqueItems(filterCategory(popularMovies))} />
+      <MobileRail title="Popular TV Shows" items={uniqueItems(filterCategory(popularTv))} />
+      <MobileRail title="Airing Today" items={uniqueItems(filterCategory(airing))} />
     </div>
   );
 }
