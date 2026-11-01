@@ -1,4 +1,5 @@
 import express from 'express';
+import { createHash } from 'crypto';
 import path from 'path';
 import fs from 'fs';
 import { createServer as createViteServer } from 'vite';
@@ -226,38 +227,66 @@ async function startServer() {
   app.get(['/api/stream/:id/:ep', '/stream/:id/:ep'], (req, res) => proxyHandler(`/api/v1/tv/${req.params.id}/season/1/episode/${req.params.ep}/play`, req, res));
   app.get(['/api/schedule', '/schedule'], apiOnly((req, res) => proxyHandler('/api/v1/airing/today', req, res)));
 
-  app.get(['/tv/update.json', '/update/latest.json'], (req, res) => {
+  app.get('/tv/update.json', (req, res) => {
     const latestJsonPath = path.join(process.cwd(), 'update', 'latest.json');
     if (fs.existsSync(latestJsonPath)) {
       res.setHeader('Content-Type', 'application/json');
       return res.sendFile(latestJsonPath);
     }
-    res.json({
-      versionCode: 1,
-      versionName: '1.0.0',
-      apkUrl: 'https://github.com/titan717/Panda.fun/releases/latest/download/Panda.fun.apk',
-      releaseNotes: 'Initial release of Panda.fun Native Android TV App.',
-      mandatory: false,
-      sha256: 'PENDING'
-    });
+    return res.status(503).json({ error: 'No verified Panda.fun release manifest has been published yet.' });
+  });
+
+  app.get('/update/latest.json', (req, res) => {
+    const latestJsonPath = path.join(process.cwd(), 'update', 'latest.json');
+    try {
+      const manifest = JSON.parse(fs.readFileSync(latestJsonPath, 'utf8'));
+      const stable = manifest.channel === 'stable' && manifest.prerelease === false;
+      const validVersion = Number.isInteger(manifest.latestVersionCode) && manifest.latestVersionCode > 0;
+      const validChecksum = typeof manifest.sha256 === 'string' && /^[a-f0-9]{64}$/i.test(manifest.sha256);
+      const validApk = typeof manifest.apkUrl === 'string' && /^https:\/\/github\.com\/titan717\/Panda\.fun\/releases\/download\/[^/]+\/Panda\.fun-Android-TV\.apk$/.test(manifest.apkUrl);
+      if (stable && validVersion && validChecksum && validApk) {
+        res.setHeader('Content-Type', 'application/json');
+        return res.sendFile(latestJsonPath);
+      }
+    } catch (error) {
+      console.error('[Panda.fun] Stable update manifest is not ready:', error);
+    }
+    return res.status(503).json({ error: 'No verified stable Panda.fun production release has been published yet.' });
+  });
+
+  app.get('/downloads/Panda.fun.apk', (req, res) => {
+    const filePath = path.join(process.cwd(), 'public', 'downloads', 'Panda.fun.apk');
+    try {
+      const manifestPath = path.join(process.cwd(), 'update', 'latest.json');
+      const manifest = JSON.parse(fs.readFileSync(manifestPath, 'utf8'));
+      const apkUrl = typeof manifest.apkUrl === 'string' ? manifest.apkUrl : '';
+      const stableRelease = manifest.channel === 'stable' && manifest.prerelease === false;
+      const validReleaseAsset = /^https:\/\/github\.com\/titan717\/Panda\.fun\/releases\/download\/[^/]+\/Panda\.fun-Android-TV\.apk$/.test(apkUrl);
+      const validChecksum = typeof manifest.sha256 === 'string' && /^[a-f0-9]{64}$/i.test(manifest.sha256);
+      const validVersion = Number.isInteger(manifest.latestVersionCode) && manifest.latestVersionCode > 0;
+      if (!stableRelease || !validReleaseAsset || !validChecksum || !validVersion) {
+        return res.status(503).json({ error: 'No verified stable Panda.fun APK release is currently published.' });
+      }
+      if (fs.existsSync(filePath)) {
+        const localSha256 = createHash('sha256').update(fs.readFileSync(filePath)).digest('hex');
+        if (localSha256 === manifest.sha256.toLowerCase()) {
+          return res.download(filePath, 'Panda.fun.apk', {
+            headers: {
+              'Content-Type': 'application/vnd.android.package-archive',
+              'Cache-Control': 'no-store, no-cache, must-revalidate, proxy-revalidate'
+            }
+          });
+        }
+        console.warn('[Panda.fun] Local APK checksum does not match stable update manifest; redirecting to verified release asset.');
+      }
+      return res.redirect(302, apkUrl);
+    } catch (error) {
+      console.error('[Panda.fun] Could not resolve verified stable APK:', error);
+      return res.status(503).json({ error: 'No verified stable Panda.fun APK release is currently published.' });
+    }
   });
 
   app.use('/downloads', express.static(path.join(process.cwd(), 'public', 'downloads')));
-
-  app.get('/downloads/Panda.fun.apk', async (req, res) => {
-    const filePath = path.join(process.cwd(), 'public', 'downloads', 'Panda.fun.apk');
-    if (fs.existsSync(filePath)) {
-      return res.download(filePath, 'Panda.fun.apk', {
-        headers: {
-          'Content-Type': 'application/vnd.android.package-archive',
-          'Cache-Control': 'no-store, no-cache, must-revalidate, proxy-revalidate'
-        }
-      }, (err) => {
-        if (err && !res.headersSent) res.status(404).send('APK file not found');
-      });
-    }
-    res.redirect('https://github.com/titan717/Panda.fun/releases/latest/download/Panda.fun.apk');
-  });
 
   if (process.env.NODE_ENV !== 'production') {
     const vite = await createViteServer({ server: { middlewareMode: true }, appType: 'spa' });
