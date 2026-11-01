@@ -45,11 +45,15 @@
   .panda-motion-shimmer::after { animation: none; }
 }
 
+[data-motion-preference='reduced'] .panda-billboard-kenburns,
+[data-motion-preference='reduced'] .panda-featured-swipe-in,
 [data-motion-preference='minimal'] .panda-billboard-kenburns,
 [data-motion-preference='minimal'] .panda-featured-swipe-in {
   animation: none !important;
   transform: none !important;
 }
+[data-motion-preference='reduced'] .modern-card__poster:hover,
+[data-motion-preference='reduced'] .modern-card__poster:active,
 [data-motion-preference='minimal'] .modern-card__poster:hover,
 [data-motion-preference='minimal'] .modern-card__poster:active {
   transform: none !important;
@@ -100,6 +104,7 @@
 @media (prefers-reduced-motion: reduce) {
   .panda-mobile-bottom-nav__active-pill { transition: none; }
 }
+[data-motion-preference='reduced'] .panda-motion-shimmer::after,
 [data-motion-preference='minimal'] .panda-motion-shimmer::after { animation: none; }
 
 .panda-motion-play-cta {
