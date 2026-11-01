@@ -32,7 +32,7 @@ export function Card({
 }: CardProps) {
   const badgeColors = {
     default: 'bg-black/70 text-gray-200 border-white/15',
-    accent: 'bg-purple-950/80 text-purple-300 border-purple-500/30',
+    accent: 'bg-purple-950/80 text-[var(--kinoma-accent-soft)] border-[var(--kinoma-accent)]/30',
     success: 'bg-emerald-950/80 text-emerald-300 border-emerald-500/30',
   };
 
@@ -87,7 +87,7 @@ export function Card({
         {typeof progress === 'number' && progress > 0 && (
           <div className="absolute bottom-0 left-0 right-0 h-1.5 bg-black/60 z-10">
             <div
-              className="h-full bg-gradient-to-r from-purple-600 to-fuchsia-500"
+              className="h-full bg-gradient-to-r from-[var(--kinoma-accent)] to-fuchsia-500"
               style={{ width: `${Math.min(100, Math.max(5, progress))}%` }}
             />
           </div>
@@ -103,7 +103,7 @@ export function Card({
 
       {/* Typography & Metadata Below Card */}
       <div className="mt-2.5 px-0.5 flex flex-col">
-        <h3 className="text-xs sm:text-sm font-semibold text-white group-hover:text-purple-300 transition-colors duration-150 line-clamp-1 leading-snug">
+        <h3 className="text-xs sm:text-sm font-semibold text-white group-hover:text-[var(--kinoma-accent-soft)] transition-colors duration-150 line-clamp-1 leading-snug">
           {title}
         </h3>
         {subtitle && (
