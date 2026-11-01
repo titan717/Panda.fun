@@ -25,7 +25,7 @@ function SettingSwitch({ label, description, checked, onChange }: { label: strin
 
 export function Settings() {
   const { user } = useAuth();
-  const { playerSettings, updatePlayerSetting } = useAppearance();
+  const { playerSettings, updatePlayerSetting, playbackPreferences, updatePlaybackPreference } = useAppearance();
   const [devToolsOpen, setDevToolsOpen] = useState(false);
   const [historyCount, setHistoryCount] = useState(() => historyUtil.getHistory().length);
   const [savedCount, setSavedCount] = useState(() => libraryManager.getWatchlist().length + libraryManager.getFavorites().length + libraryManager.getCompleted().length);
@@ -110,7 +110,25 @@ export function Settings() {
               <button type="button" className={playerSettings.preferredAudio === 'dub' ? 'is-active' : ''} aria-pressed={playerSettings.preferredAudio === 'dub'} onClick={() => updatePlayerSetting('preferredAudio', 'dub')}>Dub</button>
             </div>
           </div>
-          <div className="panda-settings-row"><span className="panda-settings-row__copy"><strong>Playback provider</strong><small>Vidy · automatic quality</small></span><span className="panda-settings-v3__active"><Check size={14} /> Default</span></div>
+          <div className="panda-settings-row panda-settings-row--stack">
+            <div className="panda-settings-row__copy"><strong>Audio language</strong><small>Preferred spoken language</small></div>
+            <select className="panda-settings-select" value={playbackPreferences.audioLanguage} onChange={event => updatePlaybackPreference('audioLanguage', event.target.value as typeof playbackPreferences.audioLanguage)} aria-label="Audio language">
+              <option value="auto">Auto</option><option value="en">English</option><option value="ja">Japanese</option><option value="ko">Korean</option><option value="es">Spanish</option><option value="hi">Hindi</option>
+            </select>
+          </div>
+          <div className="panda-settings-row panda-settings-row--stack">
+            <div className="panda-settings-row__copy"><strong>Subtitle language</strong><small>Preferred subtitle language</small></div>
+            <select className="panda-settings-select" value={playbackPreferences.subtitleLanguage} onChange={event => updatePlaybackPreference('subtitleLanguage', event.target.value as typeof playbackPreferences.subtitleLanguage)} aria-label="Subtitle language">
+              <option value="off">Off</option><option value="auto">Auto</option><option value="en">English</option><option value="ja">Japanese</option><option value="ko">Korean</option><option value="es">Spanish</option><option value="hi">Hindi</option>
+            </select>
+          </div>
+          <div className="panda-settings-row panda-settings-row--stack">
+            <div className="panda-settings-row__copy"><strong>Subtitle source</strong><small>Choose automatic selection or Nitro</small></div>
+            <div className="panda-settings-segment" role="group" aria-label="Subtitle source">
+              <button type="button" className={playbackPreferences.subtitleProvider === 'auto' ? 'is-active' : ''} aria-pressed={playbackPreferences.subtitleProvider === 'auto'} onClick={() => updatePlaybackPreference('subtitleProvider', 'auto')}>Auto</button>
+              <button type="button" className={playbackPreferences.subtitleProvider === 'nitro' ? 'is-active' : ''} aria-pressed={playbackPreferences.subtitleProvider === 'nitro'} onClick={() => updatePlaybackPreference('subtitleProvider', 'nitro')}>Nitro</button>
+            </div>
+          </div>
         </div>
       </section>
 
