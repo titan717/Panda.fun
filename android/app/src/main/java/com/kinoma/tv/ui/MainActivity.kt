@@ -55,6 +55,7 @@ class MainActivity : ComponentActivity() {
     private var pendingVerifiedUpdateUri: Uri? = null
     private var isPlayerPage: Boolean = false
     private var webViewCrashed: Boolean = false
+    private var gestureNavigationFromInsets: Boolean = false
 
     companion object {
         private const val TAG = "KinomaTV"
@@ -292,7 +293,10 @@ class MainActivity : ComponentActivity() {
                 val status = insets.getInsets(WindowInsetsCompat.Type.statusBars())
                 val navigation = insets.getInsets(WindowInsetsCompat.Type.navigationBars())
                 val gesture = insets.getInsets(WindowInsetsCompat.Type.mandatorySystemGestures())
-                val systemNavFallback = insets.isVisible(WindowInsetsCompat.Type.navigationBars()) && !isGestureNavigation() && !isPlayerPage
+                if (gesture.bottom > 0) gestureNavigationFromInsets = true
+                val gestureMode = isGestureNavigation() || gesture.bottom > 0
+                if (gestureMode) WindowInsetsControllerCompat(window, window.decorView).show(WindowInsetsCompat.Type.navigationBars())
+                val systemNavFallback = insets.isVisible(WindowInsetsCompat.Type.navigationBars()) && !gestureMode && !isPlayerPage
                 val safeBottom = maxOf(navigation.bottom, gesture.bottom)
                 val ime = insets.getInsets(WindowInsetsCompat.Type.ime())
                 val script = """
@@ -485,6 +489,7 @@ class MainActivity : ComponentActivity() {
     }
 
     private fun isGestureNavigation(): Boolean {
+        if (gestureNavigationFromInsets) return true
         return try {
             val resourceId = resources.getIdentifier("config_navBarInteractionMode", "integer", "android")
             resourceId != 0 && resources.getInteger(resourceId) == 2
