@@ -453,6 +453,15 @@ export const api = {
     return { results: data.results.map(toAnimeItem) };
   },
 
+  async getGenreMedia(genre: string, type: 'movie' | 'tv', limit = 24, signal?: AbortSignal) {
+    const data = await request<{ results: MovieApiMedia[] }>(
+      '/api/v1/genres/' + encodeURIComponent(genre),
+      { type, page: 1 },
+      signal ? { signal } : undefined
+    );
+    return { results: data.results.slice(0, limit).map(toAnimeItem) };
+  },
+
   async getGenreAnime(genre = '', limit?: number) {
     const data = await request<{ type: 'tv' | 'movie'; genreId: number; page: number; totalPages: number; totalResults: number; results: MovieApiMedia[] }>('/api/v1/genres/' + encodeURIComponent(genre), { type: 'tv', page: 1 });
     return { results: data.results.slice(0, limit ?? data.results.length).map(toAnimeItem) };
