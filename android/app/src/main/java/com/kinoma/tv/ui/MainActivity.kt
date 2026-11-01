@@ -55,6 +55,7 @@ class MainActivity : ComponentActivity() {
     private lateinit var diagnosticText: TextView
     private var pendingVerifiedUpdateUri: Uri? = null
     private var isPlayerPage: Boolean = false
+    private var webViewCrashed: Boolean = false
 
     companion object {
         private const val TAG = "KinomaTV"
@@ -119,7 +120,7 @@ class MainActivity : ComponentActivity() {
             setBackgroundColor(Color.parseColor("#B84D41"))
             setTextColor(Color.WHITE)
             setOnClickListener {
-                loadHomeOrShowOffline()
+                retryFromOfflineScreen()
             }
         }
 
@@ -246,6 +247,7 @@ class MainActivity : ComponentActivity() {
                 detail: android.webkit.RenderProcessGoneDetail
             ): Boolean {
                 Log.e(TAG, "WebView render process gone! didCrash=${detail.didCrash()}")
+                webViewCrashed = true
                 showDiagnosticScreen("Render Process Crash", WEB_ENTRY_URL, null, "WebView render process crashed. didCrash=${detail.didCrash()}")
                 return true
             }
@@ -447,6 +449,18 @@ class MainActivity : ComponentActivity() {
         } catch (_: Exception) {
             false
         }
+    }
+
+    private fun retryFromOfflineScreen() {
+        if (webViewCrashed) {
+            val restartIntent = Intent(this, MainActivity::class.java).apply {
+                addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP)
+            }
+            finish()
+            startActivity(restartIntent)
+            return
+        }
+        loadHomeOrShowOffline()
     }
 
     private fun loadHomeOrShowOffline() {
