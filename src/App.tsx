@@ -157,7 +157,7 @@ function MainAppShell() {
   useEffect(() => {
     if (appShell && location === '/') {
       setShowIntro(false);
-      setLocation('/home');
+      setLocation('/home', { replace: true });
       return;
     }
     if (location !== '/') setShowIntro(false);
