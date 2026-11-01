@@ -44,3 +44,13 @@
 @media (prefers-reduced-motion: reduce) {
   .panda-motion-shimmer::after { animation: none; }
 }
+
+[data-motion-preference='minimal'] .panda-billboard-kenburns,
+[data-motion-preference='minimal'] .panda-featured-swipe-in {
+  animation: none !important;
+  transform: none !important;
+}
+[data-motion-preference='minimal'] .modern-card__poster:hover,
+[data-motion-preference='minimal'] .kinoma-focus:active .modern-card__poster {
+  transform: none !important;
+}
