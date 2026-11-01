@@ -62,7 +62,7 @@ export function ModernHero({ items }: ModernHeroProps) {
 
   if (!items || items.length === 0) {
     return (
-      <div className="w-full h-[54vh] sm:h-[68vh] md:h-[76vh] lg:h-[82vh] min-h-[460px] max-h-[860px] bg-[#0c0d12] animate-pulse" />
+      <div className="w-full h-[54vh] sm:h-[68vh] md:h-[76vh] lg:h-[82vh] min-h-[460px] max-h-[860px] bg-[#050505] animate-pulse" />
     );
   }
 
@@ -102,7 +102,7 @@ export function ModernHero({ items }: ModernHeroProps) {
 
   return (
     <div 
-      className="relative w-full h-[52vh] sm:h-[66vh] md:h-[76vh] lg:h-[84vh] min-h-[460px] max-h-[880px] overflow-hidden bg-[#08090d] flex items-end select-none"
+      className="relative w-full h-[52vh] sm:h-[66vh] md:h-[76vh] lg:h-[84vh] min-h-[460px] max-h-[880px] overflow-hidden bg-[#000000] flex items-end select-none"
       onMouseEnter={() => setIsPaused(true)}
       onMouseLeave={() => setIsPaused(false)}
     >
@@ -129,13 +129,13 @@ export function ModernHero({ items }: ModernHeroProps) {
 
       {/* Responsive Cinematic Gradient Masks */}
       {/* 1. Mobile vertical scrim: Dark gradient on bottom half protecting text */}
-      <div className="absolute inset-0 z-0 bg-gradient-to-t from-[#0e1017] via-[#0e1017]/85 md:via-[#0e1017]/40 to-transparent" />
+      <div className="absolute inset-0 z-0 bg-gradient-to-t from-[#050505] via-[#050505]/85 md:via-[#050505]/40 to-transparent" />
       
       {/* 2. Desktop horizontal scrim: Left-to-right fade for wide desktop text clarity */}
-      <div className="hidden md:block absolute inset-0 z-0 bg-gradient-to-r from-[#0e1017] via-[#0e1017]/75 to-transparent w-[68%]" />
+      <div className="hidden md:block absolute inset-0 z-0 bg-gradient-to-r from-[#050505] via-[#050505]/75 to-transparent w-[68%]" />
       
       {/* 3. Top subtle scrim: Protects navigation */}
-      <div className="absolute inset-x-0 top-0 z-0 h-36 bg-gradient-to-b from-[#08090d]/90 to-transparent" />
+      <div className="absolute inset-x-0 top-0 z-0 h-36 bg-gradient-to-b from-[#000000]/90 to-transparent" />
 
       {/* Soft cinematic veil keeps artwork rich without the old neon-heavy look. */}
       <div className="absolute inset-0 z-[1] bg-[radial-gradient(ellipse_at_72%_38%,transparent_0%,rgba(8,9,13,.12)_42%,rgba(8,9,13,.72)_100%)]" />
