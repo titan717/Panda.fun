@@ -3,7 +3,6 @@ import { readFileSync } from 'node:fs';
 
 const api = readFileSync(new URL('./api.ts', import.meta.url), 'utf8');
 const mobileHome = readFileSync(new URL('../pages/MobileHome.tsx', import.meta.url), 'utf8');
-const movieApiRoutes = `app.get(\"/upcoming/movies\"); app.get(\"/upcoming/tv\"); app.get(\"/genres/:genre\"); app.get(\"/recommendations/:id\");`;
 
 describe('homepage discovery API contracts', () => {
   it('uses the documented upcoming movie and TV endpoints', () => {
