@@ -15,6 +15,10 @@ type NativeBridge = {
   checkForUpdates?: () => void;
   checkForUpdatesManual?: () => void;
   downloadUpdate?: () => void;
+  cancelUpdateDownload?: () => void;
+  installUpdate?: () => void;
+  openInstallPermissionSettings?: () => void;
+  getAppVersionCode?: () => number;
 };
 
 const NATIVE_RESPONSE_TIMEOUT_MS = 15000;
@@ -151,13 +155,26 @@ export function useAppUpdates() {
       clearTimer();
       dispatch(parsed);
     };
+    const onProgress = (event: Event) => {
+      const detail = (event as CustomEvent).detail as Record<string, unknown> | undefined;
+      if (!detail || typeof detail !== 'object') return;
+      clearTimer();
+      dispatch({
+        type: 'download-progress',
+        percent: typeof detail.percent === 'number' ? detail.percent : 0,
+        downloadedBytes: typeof detail.downloadedBytes === 'number' ? detail.downloadedBytes : 0,
+        totalBytes: typeof detail.totalBytes === 'number' ? detail.totalBytes : 0,
+      });
+    };
     const onPwaReady = () => dispatch({ type: 'available', at: Date.now() });
 
     window.addEventListener('panda_native_update_status', onNative);
+    window.addEventListener('kinoma_update_progress', onProgress);
     window.addEventListener('panda_pwa_update_ready', onPwaReady);
     return () => {
       clearTimer();
       window.removeEventListener('panda_native_update_status', onNative);
+      window.removeEventListener('kinoma_update_progress', onProgress);
       window.removeEventListener('panda_pwa_update_ready', onPwaReady);
     };
   }, []);
@@ -178,5 +195,34 @@ export function useAppUpdates() {
     await runUpdateApply({ bridge: getNativeBridge(), online: isOnline(), applyWeb: applyPWAUpdate, dispatch, startNativeTimer, clearTimer });
   }, []);
 
-  return { state, check, apply };
+  const cancel = useCallback(() => {
+    clearTimer();
+    try {
+      getNativeBridge()?.cancelUpdateDownload?.();
+      dispatch({ type: 'later' });
+    } catch {
+      dispatch({ type: 'error', at: Date.now(), message: 'Could not cancel the update download.' });
+    }
+  }, []);
+
+  const install = useCallback(() => {
+    try {
+      dispatch({ type: 'applying' });
+      getNativeBridge()?.installUpdate?.();
+    } catch {
+      dispatch({ type: 'error', at: Date.now(), message: 'Could not start the Android installer.' });
+    }
+  }, []);
+
+  const openInstallPermissionSettings = useCallback(() => {
+    try {
+      getNativeBridge()?.openInstallPermissionSettings?.();
+    } catch {
+      dispatch({ type: 'error', at: Date.now(), message: 'Could not open Android install permissions.' });
+    }
+  }, []);
+
+  const later = useCallback(() => dispatch({ type: 'later' }), []);
+
+  return { state, check, apply, cancel, install, openInstallPermissionSettings, later };
 }
