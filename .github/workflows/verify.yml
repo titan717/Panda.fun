@@ -23,3 +23,27 @@ jobs:
       - run: npm run lint
       - run: npm test
       - run: npm run build
+
+      - name: Set up Java for Android debug verification
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: "17"
+      - name: Set up Android SDK
+        uses: android-actions/setup-android@v4
+        with:
+          packages: "platform-tools"
+      - name: Install Android SDK packages
+        run: sdkmanager "platform-tools" "platforms;android-34" "build-tools;34.0.0"
+      - name: Set up Gradle
+        uses: gradle/actions/setup-gradle@v4
+        with:
+          gradle-version: "8.5"
+      - name: Package verified web build into Android WebView assets
+        run: |
+          rm -rf android/app/src/main/assets/web
+          mkdir -p android/app/src/main/assets/web
+          cp -R dist/. android/app/src/main/assets/web/
+      - name: Build Android debug APK
+        working-directory: android
+        run: gradle :app:assembleDebug --no-daemon --stacktrace --warning-mode all
