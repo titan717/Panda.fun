@@ -521,15 +521,17 @@ class MainActivity : ComponentActivity() {
         super.onWindowFocusChanged(hasFocus)
         if (hasFocus) {
             hideSystemUI()
-            webView.requestFocus()
+            if (::webView.isInitialized && !webViewCrashed) webView.requestFocus()
         }
     }
 
     override fun onResume() {
         super.onResume()
         hideSystemUI()
-        webView.onResume()
-        webView.requestFocus()
+        if (::webView.isInitialized && !webViewCrashed) {
+            webView.onResume()
+            webView.requestFocus()
+        }
         if (pendingVerifiedUpdateUri != null && canInstallPackages()) {
             emitUpdateStatus("ready-to-install", availableUpdate)
         }
@@ -537,7 +539,7 @@ class MainActivity : ComponentActivity() {
 
     override fun onPause() {
         super.onPause()
-        webView.onPause()
+        if (::webView.isInitialized && !webViewCrashed) webView.onPause()
     }
 
     override fun onSaveInstanceState(outState: Bundle) {
