@@ -386,7 +386,7 @@ class MainActivity : ComponentActivity() {
         runOnUiThread {
             webView.visibility = View.GONE
             diagnosticContainer.visibility = View.VISIBLE
-            diagnosticText.text = "Panda.fun\\n\\nYou seem to be offline.\\nCheck your connection and try again."
+            diagnosticText.text = "Panda.fun\n\nYou seem to be offline.\nCheck your connection and try again."
             diagnosticText.textSize = 20f
             diagnosticText.gravity = android.view.Gravity.CENTER
             diagnosticText.setTextColor(Color.parseColor("#F6F2EE"))
