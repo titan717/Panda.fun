@@ -83,7 +83,7 @@ export function updateReducer(state: AppUpdateState, event: AppUpdateEvent): App
     case 'permission-required':
       return { ...state, status: 'permission-required', message: event.message || 'Allow installs from this source to continue.' };
     case 'later':
-      return { ...state, status: state.source === 'android' && state.verifiedSha256 ? 'ready-to-install' : 'idle', message: 'Update postponed.' };
+      return { ...state, status: 'idle', message: 'Update postponed.' };
     case 'error':
       return { ...state, status: 'error', message: event.message || 'Something went wrong while checking for updates.', lastChecked: event.at };
     default:
