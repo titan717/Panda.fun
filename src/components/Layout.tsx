@@ -71,15 +71,6 @@ export function Layout({ children }: { children: React.ReactNode }) {
   }, []);
 
   useEffect(() => {
-    const onCategory = (event: Event) => {
-      const category = (event as CustomEvent).detail;
-      if (typeof category === 'string') setActiveHomeCategory(category);
-    };
-    window.addEventListener('panda_home_category_select', onCategory);
-    return () => window.removeEventListener('panda_home_category_select', onCategory);
-  }, []);
-
-  useEffect(() => {
     const onScroll = () => setHeaderScrolled(window.scrollY > 80);
     onScroll();
     window.addEventListener('scroll', onScroll, { passive: true });
