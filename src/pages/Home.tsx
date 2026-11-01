@@ -275,7 +275,7 @@ export function Home() {
       });
       if (!isMobileLayout) {
         api.getGenreAnime('animation', 24).then(result => {
-          if (active) setAnime((result.results || []) as unknown as MovieApiMedia[]);
+          if (active) setAnime((result.results || []).map(item => ({ id: item.id, type: item.type === 'movie' ? 'movie' : 'tv', title: typeof item.title === 'string' ? item.title : item.title.english || item.title.romaji || 'Anime', poster: item.image, backdrop: item.cover || item.banner || item.image, rating: typeof item.rating === 'number' ? item.rating : Number(item.rating) || null, releaseDate: item.releaseDate || null, overview: item.description || null, genres: item.genres || [], language: 'ja' })));
         }).catch(() => undefined);
 
       const genreDefinitions: Array<[string, string, string?]> = [
