@@ -14,6 +14,7 @@ describe('Android update bridge contract', () => {
     expect(main).toContain('fun installUpdate()');
     expect(main).toContain('fun openInstallPermissionSettings()');
     expect(main).toContain('fun getAppVersion()');
+    expect(main).toContain('fun getAppVersionCode()');
   });
 
   it('reports every status the web state machine understands', () => {
