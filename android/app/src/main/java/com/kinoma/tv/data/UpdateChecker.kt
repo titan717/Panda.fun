@@ -44,11 +44,24 @@ object UpdateChecker {
             val updateInfo = Gson().fromJson(body, UpdateInfo::class.java)
                 ?: throw java.io.IOException("Update manifest could not be read.")
             if (updateInfo.latestVersionCode <= 0) throw java.io.IOException("Update manifest versionCode is invalid.")
+            if (updateInfo.latestVersionName.isBlank()) throw java.io.IOException("Update manifest versionName is missing.")
             if (!updateInfo.apkUrl.startsWith("https://")) throw java.io.IOException("Update package URL must use HTTPS.")
             if (!updateInfo.sha256.matches(Regex("(?i)^[a-f0-9]{64}$"))) throw java.io.IOException("Update manifest checksum is invalid.")
-            // Stable production installs must never be downgraded or silently moved to a beta channel.
-            val stableRelease = updateInfo.channel == "stable" && !updateInfo.prerelease
-            if (stableRelease && updateInfo.latestVersionCode > BuildConfig.VERSION_CODE) updateInfo else null
+            if (updateInfo.channel !in setOf("stable", "beta")) throw java.io.IOException("Update manifest release channel is missing or invalid.")
+            // Beta builds can receive beta updates; production builds must never receive prereleases.
+            val installedIsPrerelease = BuildConfig.VERSION_NAME.contains("beta", ignoreCase = true)
+            val channelMatches = if (installedIsPrerelease) {
+                updateInfo.channel == "beta" && updateInfo.prerelease
+            } else {
+                updateInfo.channel == "stable" && !updateInfo.prerelease
+            }
+            if (!channelMatches) {
+                throw java.io.IOException(if (installedIsPrerelease) "No matching beta release is currently published." else "No stable production release is currently published.")
+            }
+            if (updateInfo.latestVersionCode < BuildConfig.VERSION_CODE) {
+                throw java.io.IOException("The published update is older than this installation. Update manifest versionCode must increase.")
+            }
+            if (updateInfo.latestVersionCode == BuildConfig.VERSION_CODE) null else updateInfo
         }
     }
 
