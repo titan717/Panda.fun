@@ -34,6 +34,19 @@ const TV_ITEMS = [
   { href: '/profile', label: 'My Space', Icon: UserRound },
 ];
 
+function triggerMobileNavHaptic() {
+  try {
+    const native = (window as Window & { KinomaNative?: { performHapticFeedback?: () => void } }).KinomaNative;
+    if (native?.performHapticFeedback) {
+      native.performHapticFeedback();
+      return;
+    }
+    if (typeof navigator !== 'undefined') navigator.vibrate?.(8);
+  } catch {
+    // Haptics are optional; navigation must never depend on device support.
+  }
+}
+
 export function Layout({ children }: { children: React.ReactNode }) {
   const [location] = useLocation();
   const motionPreference = useMotionPreference();
@@ -113,7 +126,7 @@ export function Layout({ children }: { children: React.ReactNode }) {
             const active = (href === '/home' && (pathname === '/home' || pathname === '/browse')) ||
               (href === '/search' && (pathname === '/search' || pathname === '/explore' || pathname === '/whats-new')) ||
               (href === '/library' && (pathname === '/library' || pathname === '/history'));
-            return <Link key={href} href={href} className={`panda-mobile-bottom-nav__item ${active ? 'is-active' : ''}`} aria-label={mobileLabel} aria-current={active ? 'page' : undefined}>
+            return <Link key={href} href={href} className={`panda-mobile-bottom-nav__item ${active ? 'is-active' : ''}`} aria-label={mobileLabel} aria-current={active ? 'page' : undefined} onClick={triggerMobileNavHaptic}>
               {active && motionPreference === 'full' && <m.span layoutId="panda-bottom-nav-active" className="panda-mobile-bottom-nav__active-pill" transition={{ type: 'spring', stiffness: 420, damping: 34 }} aria-hidden="true" />}
               <m.span className="panda-mobile-bottom-nav__icon" animate={active && motionPreference === 'full' ? { scale: [1, 1.12, 1], y: [0, -2, 0] } : { scale: 1, y: 0 }} transition={{ duration: 0.28 }}><Icon size={21} strokeWidth={1.9} fill={active && (href === '/home' || href === '/library') ? 'currentColor' : 'none'} /></m.span>
               <span className="panda-mobile-bottom-nav__label">{mobileLabel}</span>
