@@ -1,0 +1,44 @@
+:root {
+  --motion-duration-instant: 90ms;
+  --motion-duration-fast: 160ms;
+  --motion-duration-base: 240ms;
+  --motion-duration-slow: 380ms;
+  --motion-duration-hero: 600ms;
+  --motion-ease-standard: cubic-bezier(.2, 0, 0, 1);
+  --motion-ease-emphasized: cubic-bezier(.16, 1, .3, 1);
+  --motion-ease-exit: cubic-bezier(.4, 0, 1, 1);
+}
+
+.panda-motion-shimmer {
+  position: relative;
+  overflow: hidden;
+  background: rgba(255,255,255,.055);
+  border-radius: inherit;
+  contain: paint;
+}
+.panda-motion-shimmer::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  transform: translateX(-100%);
+  background: linear-gradient(90deg, transparent, rgba(255,255,255,.09), transparent);
+  animation: panda-motion-shimmer 1.8s linear infinite;
+}
+@keyframes panda-motion-shimmer {
+  to { transform: translateX(100%); }
+}
+
+[data-motion-stagger='on'] > * {
+  animation: panda-motion-reveal 380ms var(--motion-ease-emphasized) both;
+  animation-delay: calc(var(--motion-stagger) * var(--motion-index, 0));
+}
+@keyframes panda-motion-reveal {
+  from { opacity: 0; transform: translate3d(0, 12px, 0); }
+  to { opacity: 1; transform: translate3d(0, 0, 0); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .panda-motion-shimmer::after { animation: none; }
+  [data-motion-stagger='on'] > * { animation: none; }
+}
+[data-motion-stagger='off'] > * { animation: none; }
