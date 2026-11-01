@@ -12,9 +12,9 @@
         <item name="android:windowContentOverlay">@null</item>
     </style>
     <style name="Theme.KinomaTV.Splash" parent="Theme.SplashScreen">
-        <item name="windowSplashScreenBackground">@color/launcher_background</item>
+        <item name="windowSplashScreenBackground">@color/tv_background</item>
         <item name="windowSplashScreenAnimatedIcon">@drawable/panda_launcher_foreground</item>
-        <item name="windowSplashScreenIconBackgroundColor">@color/launcher_background</item>
+        <item name="windowSplashScreenIconBackgroundColor">@color/tv_background</item>
         <item name="postSplashScreenTheme">@style/Theme.KinomaTV</item>
         <item name="android:windowBackground">@drawable/panda_splash_background</item>
         <item name="android:statusBarColor">@android:color/transparent</item>
