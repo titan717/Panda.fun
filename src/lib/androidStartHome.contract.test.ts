@@ -15,6 +15,8 @@ describe('installed app launch routing', () => {
   });
 
   it('keeps the marketing Landing route available to ordinary web visitors', () => {
-    expect(app).toContain('if (location === \'/\') return <Landing />');
+    expect(app).toContain('return isInstalledAppShell() ? <Layout><Home /></Layout> : <Landing />');
+    expect(app).toContain('if (showIntro && !appShell)');
+    expect(app).toContain('shouldShowPandaIntro');
   });
 });
