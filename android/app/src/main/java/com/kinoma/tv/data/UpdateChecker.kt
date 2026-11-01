@@ -17,6 +17,7 @@ import com.google.gson.Gson
 import java.io.File
 
 object UpdateChecker {
+    @Volatile private var activeDownloadId: Long? = null
     // Public beta/stable manifest maintained in the Panda.fun repository
     private const val UPDATE_JSON_URL = "https://raw.githubusercontent.com/titan717/Panda.fun/main/update/latest.json"
 
@@ -45,11 +46,20 @@ object UpdateChecker {
         }
     }
 
+    fun cancelDownload(context: Context) {
+        val id = activeDownloadId ?: return
+        try {
+            (context.getSystemService(Context.DOWNLOAD_SERVICE) as DownloadManager).remove(id)
+        } finally {
+            activeDownloadId = null
+        }
+    }
+
     fun downloadAndInstall(
         context: Context,
         apkUrl: String,
         expectedSha256: String,
-        onProgress: (Int) -> Unit,
+        onProgress: (Int, Long, Long) -> Unit,
         onComplete: (Uri) -> Unit,
         onError: (String) -> Unit
     ) {
@@ -66,13 +76,13 @@ object UpdateChecker {
 
             val destination = File(
                 context.getExternalFilesDir(Environment.DIRECTORY_DOWNLOADS),
-                "MyPanda-update.apk"
+                "Panda.fun-update.apk"
             )
             if (destination.exists()) destination.delete()
 
             val request = DownloadManager.Request(Uri.parse(apkUrl))
-                .setTitle("MyPanda Update")
-                .setDescription("Downloading the latest MyPanda release...")
+                .setTitle("Panda.fun")
+                .setDescription("Downloading the latest Panda.fun release...")
                 .setMimeType("application/vnd.android.package-archive")
                 .setDestinationInExternalFilesDir(
                     context,
@@ -87,6 +97,7 @@ object UpdateChecker {
 
             val manager = context.getSystemService(Context.DOWNLOAD_SERVICE) as DownloadManager
             val downloadId = manager.enqueue(request)
+            activeDownloadId = downloadId
 
             Thread {
                 val mainHandler = android.os.Handler(android.os.Looper.getMainLooper())
@@ -108,6 +119,7 @@ object UpdateChecker {
                             when (status) {
                                 DownloadManager.STATUS_SUCCESSFUL -> {
                                     finished = true
+                                    activeDownloadId = null
                                     if (destination.exists() && verifySha256(destination, expectedSha256)) {
                                         val uri = FileProvider.getUriForFile(
                                             context,
@@ -123,6 +135,7 @@ object UpdateChecker {
 
                                 DownloadManager.STATUS_FAILED -> {
                                     finished = true
+                                    activeDownloadId = null
                                     val reason = cursor.getInt(
                                         cursor.getColumnIndexOrThrow(DownloadManager.COLUMN_REASON)
                                     )
@@ -141,9 +154,9 @@ object UpdateChecker {
                                     )
                                     if (total > 0L) {
                                         val progress = ((soFar * 100L) / total).toInt().coerceIn(0, 100)
-                                        mainHandler.post { onProgress(progress) }
+                                        mainHandler.post { onProgress(progress, soFar, total) }
                                     } else {
-                                        mainHandler.post { onProgress(0) }
+                                        mainHandler.post { onProgress(0, soFar, total) }
                                     }
                                 }
                                 else -> {
