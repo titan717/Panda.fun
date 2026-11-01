@@ -1,20 +1,5 @@
 /* Mobile-only shell and route presentation. Desktop and Android TV layouts are intentionally untouched. */
 @media (max-width: 767px) {
-  :root {
-    --kinoma-bg: #000;
-    --kinoma-bg-elevated: #000;
-    --kinoma-surface: #000;
-    --kinoma-surface-hover: #080808;
-    --kinoma-card: #000;
-    --kinoma-card-hover: #080808;
-    --kinoma-accent: #b84d41;
-    --kinoma-accent-hover: #c45a4e;
-    --kinoma-accent-soft: #e8d0c0;
-    --kinoma-accent-deep: #542c25;
-    --kinoma-border: rgba(255,255,255,.1);
-    --kinoma-border-soft: rgba(255,255,255,.06);
-  }
-
   html, body, #root,
   .panda-app-shell,
   .panda-app-content,
