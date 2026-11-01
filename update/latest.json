@@ -1,11 +1,11 @@
 {
-  "latestVersionCode": 1236,
-  "latestVersionName": "0.0.8-beta.1236",
-  "releaseTag": "v0.0.8-beta.1236",
-  "releaseNotes": "Panda.fun Android TV Beta 0.0.8-beta.1236",
-  "apkUrl": "https://github.com/titan717/Panda.fun/releases/download/v0.0.8-beta.1236/Panda.fun-Android-TV-beta.apk",
-  "sha256": "dffc26642b673e093cbf7cca416954bec9a4bbf929908eb5dab4f4ebc5a12edd",
+  "latestVersionCode": 1237,
+  "latestVersionName": "0.0.8-beta.1237",
+  "releaseTag": "v0.0.8-beta.1237",
+  "releaseNotes": "MyPanda Android Beta 0.0.8-beta.1237",
+  "apkUrl": "https://github.com/titan717/Panda.fun/releases/download/v0.0.8-beta.1237/MyPanda-Android-0.0.8-beta.1237.apk",
+  "sha256": "7c6000f1d8aec55e33ee87b52d2ce2ff8436be49d53c9ca480c9612daff13595",
   "mandatory": false,
   "channel": "beta",
   "prerelease": true
-}
+}\n
