@@ -44,7 +44,6 @@ const SettingsPage = lazy(() => retryLazyImport(() => import('./pages/Settings')
 import { AuthProvider } from './lib/AuthContext';
 import { AuthModal } from './components/ui/AuthModal';
 import { AppearanceProvider } from './lib/AppearanceContext';
-import { SettingsModal } from './components/ui/SettingsModal';
 import { PWAInstallPrompt } from './components/ui/PWAInstallPrompt';
 import { PWAUpdatePrompt } from './components/ui/PWAUpdatePrompt';
 import { trackPageView } from './lib/analytics';
@@ -249,7 +248,6 @@ export default function App() {
           <PWAInstallPrompt />
           <PWAUpdatePrompt />
           <AuthModal />
-          <SettingsModal />
         </AppearanceProvider>
       </AuthProvider>
     </SWRConfig>
