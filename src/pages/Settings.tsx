@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { Link } from 'wouter';
-import { ChevronLeft, Play, Database, Sparkles, X, RotateCcw, FlaskConical, Trash2, UserRound, Monitor, Info, Check } from 'lucide-react';
+import { ChevronLeft, Play, Database, Download, Sparkles, X, RotateCcw, FlaskConical, Trash2, UserRound, Monitor, Info, Check } from 'lucide-react';
 import { useAppearance } from '../lib/AppearanceContext';
 import { useAuth } from '../lib/AuthContext';
 import { updateSEO } from '../lib/seo';
@@ -219,5 +219,5 @@ export function Settings() {
 }
 
 function DownloadIcon() {
-  return <Database size={17} />;
+  return <Download size={17} />;
 }
