@@ -16,6 +16,7 @@ export interface AppUpdateState {
   currentVersion: string | null;
   availableVersion?: string;
   availableVersionCode?: number;
+  sizeBytes?: number;
   releaseNotes?: string;
   mandatory?: boolean;
   message?: string;
@@ -31,7 +32,7 @@ export type AppUpdateEvent =
   | { type: 'check-started' }
   | { type: 'handed-off'; message: string }
   | { type: 'up-to-date'; at: number }
-  | { type: 'available'; at: number; versionName?: string; versionCode?: number; releaseNotes?: string; mandatory?: boolean; sha256?: string }
+  | { type: 'available'; at: number; versionName?: string; versionCode?: number; releaseNotes?: string; mandatory?: boolean; sha256?: string; sizeBytes?: number }
   | { type: 'applying' }
   | { type: 'download-progress'; percent: number; downloadedBytes: number; totalBytes: number }
   | { type: 'ready-to-install'; at: number; sha256?: string }
@@ -60,6 +61,7 @@ export function updateReducer(state: AppUpdateState, event: AppUpdateEvent): App
         message: undefined,
         availableVersion: event.versionName,
         availableVersionCode: event.versionCode,
+        sizeBytes: event.sizeBytes,
         releaseNotes: event.releaseNotes,
         mandatory: event.mandatory,
         verifiedSha256: event.sha256,
@@ -121,6 +123,7 @@ export function parseNativeStatus(detail: unknown, now: number): AppUpdateEvent 
         releaseNotes: str(d.releaseNotes),
         mandatory: d.mandatory === true,
         sha256: str(d.sha256),
+        sizeBytes: typeof d.sizeBytes === 'number' ? d.sizeBytes : undefined,
       };
     case 'downloading':
       return {
