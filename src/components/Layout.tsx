@@ -120,13 +120,14 @@ export function Layout({ children }: { children: React.ReactNode }) {
       )}
       {!isPlayerRoute && (
         <nav className="panda-mobile-bottom-nav" aria-label="Panda.fun mobile navigation">
-          {ITEMS.filter(({ href }) => href !== '/settings').map(({ href, label, Icon }) => {
+          {ITEMS.map(({ href, label, Icon }) => {
             const mobileLabel = href === '/library' ? 'Library' : label;
             const pathname = location.split('?')[0];
             const active = (href === '/home' && (pathname === '/home' || pathname === '/browse')) ||
               (href === '/search' && (pathname === '/search' || pathname === '/explore' || pathname === '/whats-new')) ||
-              (href === '/library' && (pathname === '/library' || pathname === '/history'));
-            return <Link key={href} href={href} className={`panda-mobile-bottom-nav__item ${active ? 'is-active' : ''}`} aria-label={mobileLabel} aria-current={active ? 'page' : undefined}>
+              (href === '/library' && (pathname === '/library' || pathname === '/history')) ||
+              (href === '/settings' && pathname === '/settings');
+            return <Link key={href} href={href} className={`panda-mobile-bottom-nav__item ${active ? 'is-active' : ''}`} onClick={() => { try { navigator.vibrate?.(8); } catch {} }} aria-label={mobileLabel} aria-current={active ? 'page' : undefined}>
               {active && motionPreference === 'full' && <m.span layoutId="panda-bottom-nav-active" className="panda-mobile-bottom-nav__active-pill" transition={{ type: 'spring', stiffness: 420, damping: 34 }} aria-hidden="true" />}
               <m.span className="panda-mobile-bottom-nav__icon" animate={active && motionPreference === 'full' ? { scale: [1, 1.12, 1], y: [0, -2, 0] } : { scale: 1, y: 0 }} transition={{ duration: 0.28 }}><Icon size={21} strokeWidth={1.9} fill={active && (href === '/home' || href === '/library') ? 'currentColor' : 'none'} /></m.span>
               <span className="panda-mobile-bottom-nav__label">{mobileLabel}</span>
