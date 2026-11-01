@@ -4,7 +4,7 @@ import { ArrowRight, Info, Play, Plus } from 'lucide-react';
 import { AnimatedCheck, Pressable, Reveal, Shimmer, useMotionPreference } from '../motion';
 import { ThinkingOrb } from 'thinking-orbs';
 import { ModernContinueWatching } from '../components/ui/modern/ModernContinueWatching';
-import { api, MovieApiMedia } from '../lib/api';
+import { api, type MovieApiMedia } from '../lib/api';
 import { buildDetailsHref, buildWatchHref } from '../lib/mediaRoute';
 import { libraryManager } from '../lib/library';
 import { optimizeImageUrl } from '../lib/mediaImages';
