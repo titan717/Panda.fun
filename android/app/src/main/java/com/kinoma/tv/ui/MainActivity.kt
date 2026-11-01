@@ -31,6 +31,7 @@ import android.widget.TextView
 import android.net.Uri
 import android.widget.Button
 import androidx.activity.ComponentActivity
+import androidx.core.splashscreen.SplashScreen.Companion.installSplashScreen
 import androidx.core.view.ViewCompat
 import androidx.core.view.WindowCompat
 import androidx.core.view.WindowInsetsCompat
@@ -62,6 +63,7 @@ class MainActivity : ComponentActivity() {
 
     @SuppressLint("SetJavaScriptEnabled")
     override fun onCreate(savedInstanceState: Bundle?) {
+        installSplashScreen()
         super.onCreate(savedInstanceState)
 
         Log.i(TAG, "Starting Kinoma TV MainActivity")
@@ -415,7 +417,7 @@ class MainActivity : ComponentActivity() {
 
             // Identify as Android TV Leanback environment for automatic TV layout
             val defaultUa = userAgentString
-            userAgentString = "$defaultUa KinomaTV/1.0.0 (Android TV; Leanback; SmartTV)"
+            userAgentString = if (isTelevisionDevice()) "$defaultUa Panda.fun/1.0.0 (Android TV; Leanback; SmartTV)" else "$defaultUa Panda.fun/1.0.0 (Android)"
             mixedContentMode = WebSettings.MIXED_CONTENT_NEVER_ALLOW
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
                 safeBrowsingEnabled = true
