@@ -32,12 +32,12 @@ export function ModernHero({ items }: ModernHeroProps) {
   // Auto-rotate hero every 4.2 seconds if not hovered/paused.
   // Keep the derived list above the effect so the dependency is always initialized.
   useEffect(() => {
-    if (visibleItems.length <= 1 || isPaused) return;
+    if (visibleItems.length <= 1 || isPaused || motionPreference !== 'full') return;
     const interval = window.setInterval(() => {
       setCurrentIndex((prev) => (prev + 1) % visibleItems.length);
     }, 4200);
     return () => window.clearInterval(interval);
-  }, [visibleItems.length, isPaused]);
+  }, [visibleItems.length, isPaused, motionPreference]);
   const currentItem = visibleItems[currentIndex] || visibleItems[0];
 
   // Watchlist status tracking for currentItem
@@ -142,7 +142,7 @@ export function ModernHero({ items }: ModernHeroProps) {
 
       {/* Hero Content Area */}
       <div className="relative z-10 w-full max-w-[1680px] mx-auto px-4 sm:px-6 md:px-8 lg:px-10 pb-8 sm:pb-12 lg:pb-16">
-        <AnimatePresence mode="wait">
+        <AnimatePresence mode="popLayout">
           <m.div
             key={`modern-hero-content-${currentItem.id || currentIndex}`}
             initial={{ opacity: 0, y: motionPreference === 'full' ? 20 : 0 }}
@@ -174,7 +174,7 @@ export function ModernHero({ items }: ModernHeroProps) {
             </p></Reveal>
 
             {/* Action Buttons: Primary Watch/Resume, My List, More Info */}
-            <div className="flex flex-wrap items-center gap-2.5 sm:gap-3 pt-2">
+            <Reveal delay={0.18}><div className="flex flex-wrap items-center gap-2.5 sm:gap-3 pt-2">
               
               {/* Primary CTA (Continue Watching or Watch Now) */}
               <Link href={watchUrl}>
@@ -215,7 +215,7 @@ export function ModernHero({ items }: ModernHeroProps) {
                 </Pressable>
               </Link>
 
-            </div>
+            </div></Reveal>
 
           </m.div>
         </AnimatePresence>
