@@ -528,17 +528,17 @@ export const api = {
     return { results: data.results.map(toAnimeItem), total: data.total };
   },
 
-  async getRecommendations(id: string, signal?: AbortSignal) {
+  async getRecommendations(id: string, signal?: AbortSignal): Promise<{ results: MovieApiMedia[] }> {
     const media = mediaFromId(id);
-    if (!media) return { results: [] as AnimeItem[] };
+    if (!media) return { results: [] };
     const tmdbId = await resolveTmdbId(media, signal);
-    if (!tmdbId) return { results: [] as AnimeItem[] };
-    const data = await request<MovieApiPage>(
+    if (!tmdbId) return { results: [] };
+    const data = await request<MovieApiPage<MovieApiMedia>>(
       `/api/v1/recommendations/${tmdbId}`,
       { type: media.type },
       { signal }
     );
-    return { results: data.results.map(toAnimeItem) };
+    return { results: data.results };
   },
 
   async getTrailer(id: string, signal?: AbortSignal) {
