@@ -1,9 +1,12 @@
 <resources>
-    <color name="tv_background">#07080d</color>
-    <color name="tv_card_background">#13141f</color>
-    <color name="tv_accent">#c084fc</color>
-    <color name="purple_700">#7b1fa2</color>
-    <color name="teal_200">#03dac5</color>
+    <color name="tv_background">#000000</color>
+    <color name="tv_card_background">#0A0A0A</color>
+    <color name="tv_foreground">#F6F2EE</color>
+    <color name="tv_accent">#B84D41</color>
+    <color name="tv_accent_light">#E8D0C0</color>
+    <color name="tv_amber">#C1935F</color>
+    <color name="purple_700">#B84D41</color>
+    <color name="teal_200">#C1935F</color>
     <color name="black">#FF000000</color>
-    <color name="white">#FFFFFFFF</color>
+    <color name="white">#FFF6F2EE</color>
 </resources>
