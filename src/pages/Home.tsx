@@ -7,6 +7,7 @@ import { ArrowRight, Check, Film, Github, Play, Plus, Search, Sparkles, Tv } fro
 import { api, MovieApiError, MovieApiMedia } from '../lib/api';
 import { trackGAEvent } from '../lib/analytics';
 import { libraryManager } from '../lib/library';
+import { historyUtil } from '../lib/history';
 import { updateSEO } from '../lib/seo';
 import { buildDetailsHref, buildWatchHref } from '../lib/mediaRoute';
 import { optimizeImageUrl } from '../lib/mediaImages';
@@ -15,12 +16,13 @@ import '../styles/panda-home.css';
 import { MobileHome } from './MobileHome';
 import { friendlyNetworkError } from '../lib/networkMessage';
 
-type RailKind = 'trending' | 'streamingNetflix' | 'streamingDisney' | 'popular' | 'tv' | 'movie' | 'airing';
+type RailKind = 'trending' | 'streamingNetflix' | 'streamingDisney' | 'popular' | 'tv' | 'movie' | 'airing' | 'upcoming' | 'recommendations' | 'anime' | 'genre';
 
 function KindIcon({ kind }: { kind: RailKind }) {
   if (kind === 'movie') return <Film size={14} strokeWidth={1.9} />;
   if (kind === 'trending' || kind === 'streamingNetflix' || kind === 'streamingDisney') return <Sparkles size={14} strokeWidth={1.9} />;
-  if (kind === 'airing' || kind === 'tv') return <Tv size={14} strokeWidth={1.9} />;
+  if (kind === 'airing' || kind === 'tv' || kind === 'anime') return <Tv size={14} strokeWidth={1.9} />;
+  if (kind === 'upcoming') return <Play size={14} strokeWidth={1.9} />;
   return <Sparkles size={14} strokeWidth={1.9} />;
 }
 
@@ -196,6 +198,11 @@ export function Home() {
   const [newOnNetflix, setNewOnNetflix] = useState<MovieApiMedia[]>([]);
   const [newOnDisneyPlus, setNewOnDisneyPlus] = useState<MovieApiMedia[]>([]);
   const [airing, setAiring] = useState<MovieApiMedia[]>([]);
+  const [comingSoon, setComingSoon] = useState<MovieApiMedia[]>([]);
+  const [becauseWatched, setBecauseWatched] = useState<MovieApiMedia[]>([]);
+  const [anime, setAnime] = useState<MovieApiMedia[]>([]);
+  const [genreShelves, setGenreShelves] = useState<Record<string, MovieApiMedia[]>>({});
+  const [lastWatchedTitle, setLastWatchedTitle] = useState('');
   const [error, setError] = useState<string | null>(null);
   const [trailer, setTrailer] = useState<any>(null);
   const [isInList, setIsInList] = useState(false);
@@ -252,13 +259,55 @@ export function Home() {
       Promise.allSettled([
         api.getNewOnNetflix(),
         api.getNewOnDisneyPlus(),
-        api.getAiringToday()
-      ]).then(([netflix, disney, today]) => {
+        api.getAiringToday(),
+        api.getUpcomingMovies(),
+        api.getUpcomingTv()
+      ]).then(([netflix, disney, today, upcomingMovies, upcomingTv]) => {
         if (!active) return;
         if (netflix.status === 'fulfilled') setNewOnNetflix((netflix.value.results || []) as unknown as MovieApiMedia[]);
         if (disney.status === 'fulfilled') setNewOnDisneyPlus((disney.value.results || []) as unknown as MovieApiMedia[]);
         if (today.status === 'fulfilled') setAiring((today.value.results || []) as unknown as MovieApiMedia[]);
+        if (upcomingMovies.status === 'fulfilled' && upcomingTv.status === 'fulfilled') {
+          const merged = [...(upcomingMovies.value.results || []), ...(upcomingTv.value.results || [])] as MovieApiMedia[];
+          setComingSoon(merged.filter((item, index, list) => item?.id && list.findIndex(other => other.id === item.id) === index));
+        }
       });
+      if (!isMobileLayout) {
+        api.getGenreAnime('animation', 24).then(result => {
+          if (active) setAnime((result.results || []) as unknown as MovieApiMedia[]);
+        }).catch(() => undefined);
+
+      const genreDefinitions: Array<[string, string, string?]> = [
+        ['Action', 'Action', 'Action & Adventure'],
+        ['Comedy', 'Comedy', 'Comedy'],
+        ['Drama', 'Drama', 'Drama'],
+        ['Sci-Fi & Fantasy', 'Science Fiction', 'Sci-Fi & Fantasy'],
+        ['Horror', 'Horror'],
+        ['Animation & Family', 'Animation', 'Animation'],
+        ['Documentary', 'Documentary', 'Documentary'],
+      ];
+      Promise.all(genreDefinitions.map(async ([label, movieGenre, tvGenre]) => {
+        const [movies, shows] = await Promise.allSettled([
+          api.getGenreMedia(movieGenre, 'movie', 12),
+          tvGenre ? api.getGenreMedia(tvGenre, 'tv', 12) : Promise.resolve({ results: [] as MovieApiMedia[] }),
+        ]);
+        const combined = [
+          ...(movies.status === 'fulfilled' ? movies.value.results : []),
+          ...(shows.status === 'fulfilled' ? shows.value.results : []),
+        ] as unknown as MovieApiMedia[];
+        return [label, combined.filter((item, index, list) => item?.id && list.findIndex(other => other.id === item.id) === index)] as const;
+      })).then(entries => {
+        if (active) setGenreShelves(Object.fromEntries(entries));
+      });
+      }
+      const history = historyUtil.getHistory().sort((a, b) => b.lastWatchedTime - a.lastWatchedTime);
+      const lastWatched = history[0];
+      if (lastWatched?.animeId) {
+        setLastWatchedTitle(lastWatched.title || 'your last watch');
+        api.getRecommendations(lastWatched.animeId).then(result => {
+          if (active) setBecauseWatched((result.results || []) as unknown as MovieApiMedia[]);
+        }).catch(() => undefined);
+      }
     };
     const idle = window.requestIdleCallback
       ? window.requestIdleCallback(loadSecondaryRails, { timeout: 1200 })
@@ -270,7 +319,7 @@ export function Home() {
       if (window.cancelIdleCallback && typeof idle === 'number') window.cancelIdleCallback(idle);
       else window.clearTimeout(idle as number);
     };
-  }, []);
+  }, [isMobileLayout]);
 
   const featured = home?.featured as MovieApiMedia | null | undefined;
   const sections = home?.sections;
@@ -337,7 +386,10 @@ export function Home() {
     hoverTrailerController.current = null;
   }, []);
 
-  return isMobileLayout ? <MobileHome items={[...(featured ? [featured] : []), ...trending, ...popularMovies, ...popularTv]} trendingItems={trending} popularMovies={popularMovies} popularTv={popularTv} newOnNetflix={newOnNetflix} newOnDisneyPlus={newOnDisneyPlus} airing={airing} loading={!home && !error} error={error} /> : (
+  const myList = libraryManager.getWatchlist().map(item => ({ id: item.id, title: item.title, poster: item.image, type: item.id.toLowerCase().includes('movie') ? 'movie' : 'tv' } as MovieApiMedia));
+  const genreShelf = (name: string) => genreShelves[name] || [];
+
+  return isMobileLayout ? <MobileHome items={[...(featured ? [featured] : []), ...trending, ...popularMovies, ...popularTv]} trendingItems={trending} popularMovies={popularMovies} popularTv={popularTv} newOnNetflix={newOnNetflix} newOnDisneyPlus={newOnDisneyPlus} airing={airing} comingSoon={comingSoon} becauseWatched={becauseWatched} lastWatchedTitle={lastWatchedTitle} loading={!home && !error} error={error} /> : (
     <div className="kinoma-home">
       <div className="kinoma-home__ambient" aria-hidden="true">
         <span className="kinoma-home__ambient-orb kinoma-home__ambient-orb--one" />
@@ -424,12 +476,17 @@ export function Home() {
               </section>
             )}
 
+            <PandaRail kind="popular" title="My List" items={myList} onHover={showHoverTrailer} onLeave={hideHoverTrailer} />
             <PandaRail priority kind="trending" title="Trending now" subtitle="The titles getting attention today." items={trending} onHover={showHoverTrailer} onLeave={hideHoverTrailer} />
             <PandaRail kind="streamingNetflix" title="New on Netflix" subtitle="Freshly released movies now showing on the service." items={newOnNetflix} onHover={showHoverTrailer} onLeave={hideHoverTrailer} badge="NETFLIX" />
             <PandaRail kind="streamingDisney" title="New on Disney+" subtitle="Recently added titles surfaced from TMDB." items={newOnDisneyPlus} onHover={showHoverTrailer} onLeave={hideHoverTrailer} badge="DISNEY+" />
             <PandaRail kind="movie" title="Popular movies" items={popularMovies} onHover={showHoverTrailer} onLeave={hideHoverTrailer} />
             <PandaRail kind="tv" title="Popular TV shows" items={popularTv} onHover={showHoverTrailer} onLeave={hideHoverTrailer} />
             <PandaRail kind="airing" title="Airing today" subtitle="What's moving through today's schedule." items={airing} onHover={showHoverTrailer} onLeave={hideHoverTrailer} />
+            <PandaRail kind="upcoming" title="Coming soon" subtitle="Upcoming movies and series to keep on your radar." items={comingSoon} onHover={showHoverTrailer} onLeave={hideHoverTrailer} />
+            {lastWatchedTitle && <PandaRail kind="recommendations" title={"Because you watched " + lastWatchedTitle} items={becauseWatched} onHover={showHoverTrailer} onLeave={hideHoverTrailer} />}
+            <PandaRail kind="anime" title="Anime" items={anime} onHover={showHoverTrailer} onLeave={hideHoverTrailer} />
+            {["Action", "Comedy", "Drama", "Sci-Fi & Fantasy", "Horror", "Animation & Family", "Documentary"].map(genre => <PandaRail key={genre} kind="genre" title={genre} items={genreShelf(genre)} onHover={showHoverTrailer} onLeave={hideHoverTrailer} />)}
 
             <section className="panda-home-v2__section panda-home-v2__section--compact" aria-label="Browse">
               <div className="panda-home-v2__section-head">
