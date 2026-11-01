@@ -1,26 +1,23 @@
-name: Build and Publish Panda.fun Android TV Beta
+name: Build and Publish Panda.fun Android TV Stable Release
 
 on:
   workflow_dispatch:
     inputs:
       version_name:
-        description: "Optional beta version, e.g. 0.0.8-beta.1 (beta suffix is added automatically if omitted)"
+        description: "Optional stable semantic version, e.g. 1.0.0 (beta suffixes are not accepted)"
         required: false
         type: string
-  push:
-    branches:
-      - main
 
 permissions:
   contents: write
 
 concurrency:
-  group: panda-android-tv-beta
+  group: panda-android-tv-stable
   cancel-in-progress: true
 
 jobs:
-  build-beta:
-    name: Build signed Android TV beta APK
+  build-release:
+    name: Build signed Android TV production APK
     runs-on: ubuntu-latest
 
     steps:
@@ -29,7 +26,7 @@ jobs:
         with:
           fetch-depth: 0
 
-      - name: Resolve beta version
+      - name: Resolve stable release version
         id: version
         shell: bash
         run: |
@@ -39,32 +36,27 @@ jobs:
           if [[ -n "$INPUT_VERSION" ]]; then
             VERSION_NAME="$INPUT_VERSION"
           else
-            # Base the next beta on the latest stable semantic-version tag.
             LATEST_TAG="$(git tag --list 'v[0-9]*.[0-9]*.[0-9]*' --sort=-v:refname | grep -v -- '-beta\.' | head -n 1 || true)"
             if [[ "$LATEST_TAG" =~ ^v([0-9]+)\.([0-9]+)\.([0-9]+)$ ]]; then
               MAJOR="${BASH_REMATCH[1]}"
               MINOR="${BASH_REMATCH[2]}"
               PATCH="${BASH_REMATCH[3]}"
-              VERSION_NAME="${MAJOR}.${MINOR}.$((PATCH + 1))-beta.${GITHUB_RUN_NUMBER}"
+              VERSION_NAME="${MAJOR}.${MINOR}.$((PATCH + 1))"
             else
-              VERSION_NAME="0.0.1-beta.${GITHUB_RUN_NUMBER}"
+              VERSION_NAME="1.0.0"
             fi
           fi
 
-          # Never publish this workflow as a stable release.
-          if [[ ! "$VERSION_NAME" =~ -beta\.[0-9]+$ ]]; then
-            VERSION_NAME="${VERSION_NAME}-beta.${GITHUB_RUN_NUMBER}"
-          fi
-
-          if [[ ! "$VERSION_NAME" =~ ^[0-9]+\.[0-9]+\.[0-9]+-beta\.[0-9]+$ ]]; then
-            echo "Invalid beta version name: $VERSION_NAME"
+          if [[ ! "$VERSION_NAME" =~ ^[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
+            echo "Invalid stable version name: $VERSION_NAME (use MAJOR.MINOR.PATCH without beta suffixes)"
             exit 1
           fi
 
-          VERSION_CODE="${GITHUB_RUN_NUMBER}"
+          # Existing beta installs use versionCode 1236; keep stable upgrades monotonic.
+          VERSION_CODE="$((1236 + GITHUB_RUN_NUMBER))"
           echo "version_name=$VERSION_NAME" >> "$GITHUB_OUTPUT"
           echo "version_code=$VERSION_CODE" >> "$GITHUB_OUTPUT"
-          echo "Resolved beta: $VERSION_NAME (versionCode $VERSION_CODE)"
+          echo "Resolved stable release: $VERSION_NAME (versionCode $VERSION_CODE)"
 
       - name: Set up JDK 17
         uses: actions/setup-java@v4
@@ -152,7 +144,7 @@ jobs:
           mkdir -p android/app/src/main/assets/web
           cp -R dist/. android/app/src/main/assets/web/
 
-      - name: Build signed beta APK
+      - name: Build signed production APK
         working-directory: android
         env:
           KINOMA_KEYSTORE_BASE64: ${{ secrets.KINOMA_KEYSTORE_BASE64 }}
@@ -172,40 +164,40 @@ jobs:
           set -euo pipefail
           APK="android/app/build/outputs/apk/release/app-release.apk"
           test -s "$APK"
-          mkdir -p beta
-          cp "$APK" beta/Panda.fun-Android-TV-beta.apk
+          mkdir -p release
+          cp "$APK" release/Panda.fun-Android-TV.apk
           if command -v apksigner >/dev/null 2>&1; then
-            apksigner verify --verbose beta/Panda.fun-Android-TV-beta.apk
+            apksigner verify --verbose release/Panda.fun-Android-TV.apk
           fi
-          sha256sum beta/Panda.fun-Android-TV-beta.apk | tee beta/Panda.fun-Android-TV-beta.apk.sha256
+          sha256sum release/Panda.fun-Android-TV.apk | tee release/Panda.fun-Android-TV.apk.sha256
 
-      - name: Publish GitHub Beta (pre-release)
-        id: beta
+      - name: Publish GitHub stable release
+        id: release
         uses: softprops/action-gh-release@v2
         with:
           tag_name: v${{ steps.version.outputs.version_name }}
-          name: Panda.fun Android TV Beta v${{ steps.version.outputs.version_name }}
-          prerelease: true
-          make_latest: false
+          name: Panda.fun Android TV v${{ steps.version.outputs.version_name }}
+          prerelease: false
+          make_latest: true
           body: |
-            # Panda.fun Android TV Beta v${{ steps.version.outputs.version_name }}
+            # Panda.fun Android TV v${{ steps.version.outputs.version_name }}
 
-            **Beta / pre-release build — not a stable release.**
+            **Stable production release.**
 
             - Version code: ${{ steps.version.outputs.version_code }}
-            - APK: Panda.fun-Android-TV-beta.apk
+            - APK: Panda.fun-Android-TV.apk
             - SHA-256 is attached alongside the APK.
           files: |
             beta/Panda.fun-Android-TV-beta.apk
             beta/Panda.fun-Android-TV-beta.apk.sha256
           generate_release_notes: true
 
-      - name: Publish beta update manifest to main
+      - name: Publish stable update manifest to main
         shell: bash
         env:
           VERSION_CODE: ${{ steps.version.outputs.version_code }}
           VERSION_NAME: ${{ steps.version.outputs.version_name }}
-          BETA_TAG: v${{ steps.version.outputs.version_name }}
+          RELEASE_TAG: v${{ steps.version.outputs.version_name }}
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           set -euo pipefail
@@ -219,12 +211,12 @@ jobs:
               "latestVersionCode": int(os.environ["VERSION_CODE"]),
               "latestVersionName": os.environ["VERSION_NAME"],
               "releaseTag": os.environ["BETA_TAG"],
-              "releaseNotes": f"Panda.fun Android TV Beta {os.environ['VERSION_NAME']}",
+              "releaseNotes": f"Panda.fun Android TV {os.environ['VERSION_NAME']}",
               "apkUrl": os.environ["APK_URL"],
               "sha256": os.environ["SHA256"],
               "mandatory": False,
-              "channel": "beta",
-              "prerelease": True
+              "channel": "stable",
+              "prerelease": False
           }
           with open("update/latest.json", "w", encoding="utf-8") as f:
               json.dump(data, f, indent=2)
@@ -236,5 +228,5 @@ jobs:
           git fetch origin main
           git checkout main
           git add update/latest.json
-          git commit -m "chore(update): publish Panda.fun beta ${VERSION_NAME} manifest [skip ci]" || echo "latest.json already up to date"
+          git commit -m "chore(update): publish Panda.fun stable ${VERSION_NAME} manifest [skip ci]" || echo "latest.json already up to date"
           git push origin HEAD:main
