@@ -36,7 +36,7 @@
   transform: scale(.96);
 }
 @media (hover: hover) and (pointer: fine) {
-  .modern-card__poster:hover {
+  .modern-card__poster:hover:not(:active) {
     transform: translateY(-3px);
   }
 }
@@ -66,7 +66,7 @@
   min-width: 0;
 }
 @media (hover: hover) and (pointer: fine) {
-  .modern-card__poster:hover {
+  .modern-card__poster:hover:not(:active) {
     transform: translateY(-3px);
   }
 }
@@ -101,3 +101,31 @@
   .panda-mobile-bottom-nav__active-pill { transition: none; }
 }
 [data-motion-preference='minimal'] .panda-motion-shimmer::after { animation: none; }
+
+.panda-motion-play-cta {
+  position: relative;
+  overflow: hidden;
+  isolation: isolate;
+}
+.panda-motion-play-cta::after {
+  content: '';
+  position: absolute;
+  inset: -20% auto -20% -55%;
+  width: 42%;
+  pointer-events: none;
+  background: linear-gradient(105deg, transparent, rgba(255,255,255,.28), transparent);
+  transform: skewX(-18deg);
+  animation: panda-motion-cta-sweep 900ms cubic-bezier(.2,0,0,1) 650ms both;
+}
+@keyframes panda-motion-cta-sweep {
+  from { transform: translateX(0) skewX(-18deg); opacity: 0; }
+  20% { opacity: 1; }
+  to { transform: translateX(390%) skewX(-18deg); opacity: 0; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .panda-motion-play-cta::after { animation: none !important; }
+}
+[data-motion-preference='reduced'] .panda-motion-play-cta::after,
+[data-motion-preference='minimal'] .panda-motion-play-cta::after {
+  animation: none !important;
+}
