@@ -12,7 +12,8 @@ describe('installed app launch and recovery contract', () => {
     expect(app).toContain("setLocation('/home', { replace: true })");
     expect(app).toContain('nativeBridge || standalone');
     expect(app).toContain('return isInstalledAppShell() ? <Layout><Home /></Layout> : <Landing />');
-    expect(app).toContain('if (showIntro && !appShell)');
+    expect(app).toContain('if (showIntro)');
+    expect(app).toContain("const [showIntro, setShowIntro] = useState(() => location === '/' && shouldShowPandaIntro())");
     expect(app).toContain('shouldShowPandaIntro');
   });
 
