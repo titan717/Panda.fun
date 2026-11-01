@@ -40,5 +40,7 @@ describe('mobile-first Settings page', () => {
     expect(settings).toContain('href="/terms"');
     expect(settings).toContain('href="/privacy-policy"');
     expect(settings).toContain('Panda.fun');
+    expect(settings).toContain('getAppVersionCode');
+    expect(settings).toContain('Version {buildInfo.version}');
   });
 });
