@@ -56,6 +56,7 @@ class MainActivity : ComponentActivity() {
     private var pendingVerifiedUpdateUri: Uri? = null
     private var isPlayerPage: Boolean = false
     private var webViewCrashed: Boolean = false
+    private var webViewCrashed: Boolean = false
 
     companion object {
         private const val TAG = "KinomaTV"
@@ -464,6 +465,14 @@ class MainActivity : ComponentActivity() {
     }
 
     private fun loadHomeOrShowOffline() {
+        if (webViewCrashed) {
+            // A WebView whose renderer exited cannot be reused. Relaunch the Activity
+            // so Android creates a fresh renderer and the WebView is rebuilt from Home.
+            val restart = Intent(this, MainActivity::class.java)
+            finish()
+            startActivity(restart)
+            return
+        }
         if (!hasValidatedNetwork()) {
             showDiagnosticScreen("offline", WEB_ENTRY_URL, null, "No validated internet connection")
             return
@@ -539,7 +548,7 @@ class MainActivity : ComponentActivity() {
     }
 
     override fun onDestroy() {
-        webView.destroy()
+        if (::webView.isInitialized && !webViewCrashed) webView.destroy()
         super.onDestroy()
     }
 
