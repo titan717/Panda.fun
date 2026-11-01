@@ -42,7 +42,12 @@ object UpdateChecker {
             if (!body.startsWith("{")) throw java.io.IOException("Update manifest was not valid.")
             val updateInfo = Gson().fromJson(body, UpdateInfo::class.java)
                 ?: throw java.io.IOException("Update manifest could not be read.")
-            if (updateInfo.latestVersionCode > BuildConfig.VERSION_CODE) updateInfo else null
+            if (updateInfo.latestVersionCode <= 0) throw java.io.IOException("Update manifest versionCode is invalid.")
+            if (!updateInfo.apkUrl.startsWith("https://")) throw java.io.IOException("Update package URL must use HTTPS.")
+            if (!updateInfo.sha256.matches(Regex("(?i)^[a-f0-9]{64}$"))) throw java.io.IOException("Update manifest checksum is invalid.")
+            // Stable production installs must never be downgraded or silently moved to a beta channel.
+            val stableRelease = updateInfo.channel == "stable" && !updateInfo.prerelease
+            if (stableRelease && updateInfo.latestVersionCode > BuildConfig.VERSION_CODE) updateInfo else null
         }
     }
 
