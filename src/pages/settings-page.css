@@ -26,7 +26,7 @@
 .panda-settings-row__icon { display: grid; place-items: center; width: 34px; height: 34px; flex: 0 0 auto; border-radius: 11px; color: #e8d0c0; background: rgba(184,77,65,.12); }
 .panda-settings-row--button { width: 100%; border: 0; border-bottom: 1px solid rgba(246,242,238,.07); background: transparent; color: inherit; text-align: left; text-decoration: none; cursor: pointer; }
 .panda-settings-row__chevron { transform: rotate(180deg); color: #817873; }
-.panda-settings-switch { position: relative; width: 52px; height: 44px; flex: 0 0 auto; padding: 3px; border: 1px solid rgba(246,242,238,.14); border-radius: 999px; background: #262220; transition: background 150ms ease; }
+ .panda-settings-switch { display: flex; align-items: center; justify-content: flex-start; position: relative; width: 52px; height: 44px; flex: 0 0 auto; padding: 3px; border: 1px solid rgba(246,242,238,.14); border-radius: 999px; background: #262220; transition: background 150ms ease; }
 .panda-settings-switch span { display: block; width: 20px; height: 20px; border-radius: 50%; background: #aaa19b; transition: transform 150ms ease, background 150ms ease; }
 .panda-settings-switch.is-on { border-color: #b84d41; background: #b84d41; }
 .panda-settings-switch.is-on span { transform: translateX(24px); background: #fffaf6; }
