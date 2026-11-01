@@ -24,6 +24,12 @@ describe('installed app launch and recovery contract', () => {
     expect(manifest).toContain('android:screenOrientation="landscape"'); // PlayerActivity only.
   });
 
+  it('exits from Home instead of navigating back to Landing or the intro', () => {
+    expect(activity).toContain("if (path === '/' || path === '/home' || path === '/browse') return 'home';");
+    expect(activity).toContain('if (result == "\\"home\\"") finish()');
+    expect(activity).toContain('window.history.back()');
+  });
+
   it('shows a branded offline/retry surface and recreates a crashed WebView before retrying', () => {
     expect(activity).toContain('showDiagnosticScreen("offline"');
     expect(activity).toContain('diagnosticText.text = "Panda.fun');
