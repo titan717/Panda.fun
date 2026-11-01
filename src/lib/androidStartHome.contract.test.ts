@@ -20,3 +20,11 @@ describe('installed app launch routing', () => {
     expect(app).toContain('shouldShowPandaIntro');
   });
 });
+
+  
+  it('shows a branded offline and retry surface on WebView main-frame failure', () => {
+    expect(activity).toContain('showDiagnosticScreen("offline"');
+    expect(activity).toContain('diagnosticText.text = "Panda.fun');
+    expect(activity).toContain('loadHomeOrShowOffline()');
+    expect(activity).toContain('webView.visibility = View.GONE');
+  });
