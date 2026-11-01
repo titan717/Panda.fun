@@ -192,6 +192,32 @@
   scroll-snap-align: start;
   text-decoration: none;
 }
+.panda-mobile-home__trending-card.is-wide {
+  flex-basis: 68vw;
+  width: 68vw;
+  max-width: 340px;
+  aspect-ratio: 16 / 9;
+  border-radius: 13px;
+}
+.panda-mobile-home__rail-skeleton {
+  display: flex;
+  gap: 10px;
+  overflow: hidden;
+  padding: 0 18px 8px;
+}
+.panda-mobile-home__rail-skeleton span {
+  display: block;
+  flex: 0 0 34vw;
+  max-width: 210px;
+  aspect-ratio: 2 / 3;
+  border-radius: 9px;
+  background: linear-gradient(110deg, #080808 25%, #171412 42%, #080808 62%);
+  background-size: 220% 100%;
+  animation: panda-mobile-rail-shimmer 1.5s ease-in-out infinite;
+}
+.panda-mobile-home__rail-skeleton.is-wide span { flex-basis: 68vw; aspect-ratio: 16 / 9; }
+@keyframes panda-mobile-rail-shimmer { to { background-position-x: -220%; } }
+
 .panda-mobile-home__trending-card img,
 .panda-mobile-home__top10-card img {
   display: block;
@@ -250,6 +276,7 @@
 }
 
 @media (prefers-reduced-motion: reduce) {
+  .panda-mobile-home__rail-skeleton span { animation: none; }
   .panda-mobile-featured__card,
   .panda-mobile-featured__hint span { transition: none; }
 }
