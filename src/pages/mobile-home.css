@@ -618,3 +618,12 @@
 [data-motion-preference='minimal'] .panda-mobile-featured__watch::after {
   animation: none !important;
 }
+
+[data-motion-preference='reduced'] .panda-billboard .panda-mobile-featured__art img,
+[data-motion-preference='minimal'] .panda-billboard .panda-mobile-featured__art img,
+[data-motion-preference='reduced'] .panda-mobile-featured__spotlight-track,
+[data-motion-preference='minimal'] .panda-mobile-featured__spotlight-track {
+  animation: none !important;
+  transition: opacity 160ms ease !important;
+  transform: none !important;
+}
