@@ -18,6 +18,7 @@ import java.io.File
 
 object UpdateChecker {
     @Volatile private var activeDownloadId: Long? = null
+    @Volatile private var cancelledDownloadId: Long? = null
     // Public beta/stable manifest maintained in the Panda.fun repository
     private const val UPDATE_JSON_URL = "https://raw.githubusercontent.com/titan717/Panda.fun/main/update/latest.json"
 
@@ -53,6 +54,7 @@ object UpdateChecker {
 
     fun cancelDownload(context: Context) {
         val id = activeDownloadId ?: return
+        cancelledDownloadId = id
         try {
             (context.getSystemService(Context.DOWNLOAD_SERVICE) as DownloadManager).remove(id)
         } finally {
@@ -101,6 +103,7 @@ object UpdateChecker {
                 )
 
             val manager = context.getSystemService(Context.DOWNLOAD_SERVICE) as DownloadManager
+            cancelledDownloadId = null
             val downloadId = manager.enqueue(request)
             activeDownloadId = downloadId
 
@@ -113,6 +116,7 @@ object UpdateChecker {
                         val query = DownloadManager.Query().setFilterById(downloadId)
                         manager.query(query).use { cursor ->
                             if (!cursor.moveToFirst()) {
+                                activeDownloadId = null
                                 mainHandler.post { onError("Update download disappeared.") }
                                 return@Thread
                             }
@@ -141,11 +145,13 @@ object UpdateChecker {
                                 DownloadManager.STATUS_FAILED -> {
                                     finished = true
                                     activeDownloadId = null
-                                    val reason = cursor.getInt(
-                                        cursor.getColumnIndexOrThrow(DownloadManager.COLUMN_REASON)
-                                    )
-                                    mainHandler.post {
-                                        onError("Download failed (code $reason).")
+                                    val wasCancelled = cancelledDownloadId == downloadId
+                                    cancelledDownloadId = null
+                                    if (!wasCancelled) {
+                                        val reason = cursor.getInt(
+                                            cursor.getColumnIndexOrThrow(DownloadManager.COLUMN_REASON)
+                                        )
+                                        mainHandler.post { onError("Download failed (code $reason).") }
                                     }
                                 }
 
@@ -166,12 +172,14 @@ object UpdateChecker {
                                 }
                                 else -> {
                                     finished = true
+                                    activeDownloadId = null
                                     mainHandler.post { onError("Unknown update download status: $status") }
                                 }
                             }
                         }
                     } catch (e: Exception) {
                         finished = true
+                        activeDownloadId = null
                         mainHandler.post { onError(e.message ?: "Update download failed.") }
                     }
 
@@ -179,6 +187,7 @@ object UpdateChecker {
                 }
             }.start()
         } catch (e: Exception) {
+            activeDownloadId = null
             onError(e.message ?: "Update download failed.")
         }
     }
