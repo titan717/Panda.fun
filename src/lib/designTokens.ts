@@ -1,40 +1,40 @@
 /**
- * Kinoma Design System Tokens
+ * Panda.fun Design System Tokens
  * Phase 1: Foundational Design System & App Shell
  * 
  * Provides centralized tokens for colors, typography, spacing, radius,
- * elevation, and TV focus states across the Kinoma platform.
+ * elevation, and TV focus states across the Panda.fun app.
  */
 
 export const tokens = {
   colors: {
     // Canvas & Surfaces
-    background: '#000000',
-    backgroundElevated: '#050505',
-    surface: '#070707',
-    surfaceHover: '#0b0b0b',
-    surfaceActive: '#101010',
-    card: '#050505',
-    cardHover: '#0a0a0a',
+    background: 'var(--kinoma-bg)',
+    backgroundElevated: 'var(--kinoma-bg-elevated)',
+    surface: 'var(--kinoma-surface)',
+    surfaceHover: 'var(--kinoma-surface-hover)',
+    surfaceActive: 'var(--kinoma-card-hover)',
+    card: 'var(--kinoma-card)',
+    cardHover: 'var(--kinoma-card-hover)',
 
     // Borders & Dividers
     borderSubtle: 'rgba(255, 255, 255, 0.05)',
     borderDefault: 'rgba(255, 255, 255, 0.08)',
     borderStrong: 'rgba(255, 255, 255, 0.16)',
-    borderFocus: 'rgba(168, 85, 247, 0.6)',
+    borderFocus: 'var(--kinoma-accent)',
 
     // Text & Content
-    textPrimary: '#f9fafb',
-    textSecondary: '#9ca3af',
-    textMuted: '#6b7280',
-    textInverse: '#08090d',
+    textPrimary: 'var(--kinoma-text)',
+    textSecondary: 'var(--kinoma-muted)',
+    textMuted: 'var(--kinoma-muted-strong)',
+    textInverse: 'var(--kinoma-bg)',
 
-    // Accent Palette (Artistic & Cinematic Purple/Violet)
-    accent: '#9333ea',
-    accentHover: '#a855f7',
-    accentLight: '#c084fc',
-    accentSubtle: 'rgba(147, 51, 234, 0.15)',
-    accentGlow: 'rgba(147, 51, 234, 0.35)',
+    // Panda accent palette (CSS custom properties are the source of truth)
+    accent: 'var(--kinoma-accent)',
+    accentHover: 'var(--kinoma-accent-hover)',
+    accentLight: 'var(--kinoma-accent-soft)',
+    accentSubtle: 'rgba(184, 77, 65, 0.15)',
+    accentGlow: 'rgba(184, 77, 65, 0.35)',
 
     // Semantic Status
     success: '#10b981',
@@ -45,7 +45,7 @@ export const tokens = {
     // Glass & Overlay
     overlayDark: 'rgba(0, 0, 0, 0.88)',
     glassBackground: 'rgba(5, 5, 5, 0.82)',
-    glassBorder: 'rgba(255, 255, 255, 0.08)',
+    glassBorder: 'var(--kinoma-border)',
   },
 
   radius: {
