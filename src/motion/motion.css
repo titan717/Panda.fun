@@ -28,17 +28,19 @@
   to { transform: translateX(100%); }
 }
 
-[data-motion-stagger='on'] > * {
-  animation: panda-motion-reveal 380ms var(--motion-ease-emphasized) both;
-  animation-delay: calc(var(--motion-stagger) * var(--motion-index, 0));
+.modern-card__poster {
+  transition: transform var(--motion-duration-fast) var(--motion-ease-emphasized);
+  transform-origin: center;
 }
-@keyframes panda-motion-reveal {
-  from { opacity: 0; transform: translate3d(0, 12px, 0); }
-  to { opacity: 1; transform: translate3d(0, 0, 0); }
+.kinoma-focus:active .modern-card__poster {
+  transform: scale(.96);
+}
+@media (hover: hover) and (pointer: fine) {
+  .modern-card__poster:hover {
+    transform: translateY(-3px);
+  }
 }
 
 @media (prefers-reduced-motion: reduce) {
   .panda-motion-shimmer::after { animation: none; }
-  [data-motion-stagger='on'] > * { animation: none; }
 }
-[data-motion-stagger='off'] > * { animation: none; }
