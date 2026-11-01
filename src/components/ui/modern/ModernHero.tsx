@@ -102,7 +102,7 @@ export function ModernHero({ items }: ModernHeroProps) {
 
   return (
     <div 
-      className="relative w-full h-[52vh] sm:h-[66vh] md:h-[76vh] lg:h-[84vh] min-h-[460px] max-h-[880px] overflow-hidden bg-[#08090d] flex items-end select-none"
+      className="relative w-full h-[52vh] sm:h-[66vh] md:h-[76vh] lg:h-[84vh] min-h-[460px] max-h-[880px] overflow-hidden bg-[var(--color-background)] flex items-end select-none"
       onMouseEnter={() => setIsPaused(true)}
       onMouseLeave={() => setIsPaused(false)}
     >
@@ -129,13 +129,13 @@ export function ModernHero({ items }: ModernHeroProps) {
 
       {/* Responsive Cinematic Gradient Masks */}
       {/* 1. Mobile vertical scrim: Dark gradient on bottom half protecting text */}
-      <div className="absolute inset-0 z-0 bg-gradient-to-t from-[#0e1017] via-[#0e1017]/85 md:via-[#0e1017]/40 to-transparent" />
+      <div className="absolute inset-0 z-0 bg-gradient-to-t from-black via-black/85 md:via-black/40 to-transparent" />
       
       {/* 2. Desktop horizontal scrim: Left-to-right fade for wide desktop text clarity */}
-      <div className="hidden md:block absolute inset-0 z-0 bg-gradient-to-r from-[#0e1017] via-[#0e1017]/75 to-transparent w-[68%]" />
+      <div className="hidden md:block absolute inset-0 z-0 bg-gradient-to-r from-black via-[#0e1017]/75 to-transparent w-[68%]" />
       
       {/* 3. Top subtle scrim: Protects navigation */}
-      <div className="absolute inset-x-0 top-0 z-0 h-36 bg-gradient-to-b from-[#08090d]/90 to-transparent" />
+      <div className="absolute inset-x-0 top-0 z-0 h-36 bg-gradient-to-b from-black/90 to-transparent" />
 
       {/* Soft cinematic veil keeps artwork rich without the old neon-heavy look. */}
       <div className="absolute inset-0 z-[1] bg-[radial-gradient(ellipse_at_72%_38%,transparent_0%,rgba(8,9,13,.12)_42%,rgba(8,9,13,.72)_100%)]" />
@@ -178,7 +178,7 @@ export function ModernHero({ items }: ModernHeroProps) {
               
               {/* Primary CTA (Continue Watching or Watch Now) */}
               <Link href={watchUrl}>
-                <Pressable className="panda-motion-play-cta flex items-center justify-center gap-2 bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-500 hover:to-indigo-500 text-white px-5 sm:px-7 py-2.5 sm:py-3 rounded-full text-xs sm:text-sm font-semibold shadow-sm transition-all cursor-pointer kinoma-focus">
+                <Pressable className="panda-motion-play-cta flex items-center justify-center gap-2 bg-[var(--color-accent)] hover:bg-[var(--color-accent-hover)] text-white px-5 sm:px-7 py-2.5 sm:py-3 rounded-full text-xs sm:text-sm font-semibold shadow-sm transition-all cursor-pointer kinoma-focus">
                   <Play className="w-4 h-4 fill-white text-white ml-0.5" />
                   <span>{primaryLabel}</span>
                 </Pressable>
@@ -189,14 +189,14 @@ export function ModernHero({ items }: ModernHeroProps) {
                 onClick={handleToggleWatchlist}
                 className={`flex items-center justify-center gap-1.5 px-4 sm:px-5 py-2.5 sm:py-3 rounded-full text-xs sm:text-sm font-semibold backdrop-blur-md border transition-all cursor-pointer kinoma-focus ${
                   inWatchlist
-                    ? 'bg-purple-600/30 border-purple-500/60 text-purple-200 hover:bg-purple-600/40'
+                    ? 'bg-[var(--color-accent)]/20 border-[var(--color-accent)]/60 text-[var(--color-accent-light)] hover:bg-[var(--color-accent)]/30'
                     : 'bg-white/10 hover:bg-white/15 border-white/20 text-white'
                 }`}
                 title={inWatchlist ? 'Remove from My List' : 'Add to My List'}
               >
                 {inWatchlist ? (
                   <>
-                    <AnimatedCheck checked size={16} className="text-purple-300" />
+                    <AnimatedCheck checked size={16} className="text-[var(--color-accent-light)]" />
                     <span>In My List</span>
                   </>
                 ) : (
