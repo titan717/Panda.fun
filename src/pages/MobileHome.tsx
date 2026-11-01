@@ -58,7 +58,7 @@ function MobileRail({ title, items, topTen = false, wide = false, genre }: { tit
         <Link href={genre ? '/search?genre=' + encodeURIComponent(genre) : '/search'} aria-label={'Explore ' + title}><ArrowRight size={17} /></Link>
       </div>
       {!nearViewport ? (
-        <div className="panda-mobile-home__rail-skeleton" aria-hidden="true"><span /><span /><span /><span /></div>
+        <div className={wide ? "panda-mobile-home__rail-skeleton is-wide" : "panda-mobile-home__rail-skeleton"} aria-hidden="true"><span /><span /><span /><span /></div>
       ) : (
         <div className={railClass}>
           {visible.map((item, index) => {
@@ -99,6 +99,7 @@ export function MobileHome({
   error = null,
 }: MobileHomeProps) {
   const [activeIndex, setActiveIndex] = useState(0);
+  const [libraryRevision, setLibraryRevision] = useState(0);
   const [activeCategory, setActiveCategory] = useState('All');
   const [isInList, setIsInList] = useState(false);
   const [swipeDirection, setSwipeDirection] = useState<'next' | 'previous'>('next');
@@ -131,6 +132,12 @@ export function MobileHome({
   const topTen = catalogue.slice(0, 10);
   const trending = uniqueItems(filterCategory(trendingItems?.length ? trendingItems : items));
   const myList = libraryManager.getWatchlist().map(item => ({ id: item.id, title: item.title, poster: item.image, type: item.id.includes('_movie_') ? 'movie' : 'tv' } as MovieApiMedia));
+  void libraryRevision;
+  useEffect(() => {
+    const onLibraryUpdate = () => setLibraryRevision(value => value + 1);
+    window.addEventListener('kinoma_library_update', onLibraryUpdate);
+    return () => window.removeEventListener('kinoma_library_update', onLibraryUpdate);
+  }, []);
   const genreItems = (genre: string) => uniqueItems(filterCategory(catalogue.filter(item => (item.genres || []).some(value => value.toLowerCase().includes(genre.toLowerCase())))));
 
   useEffect(() => {
