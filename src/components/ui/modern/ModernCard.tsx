@@ -12,6 +12,7 @@ export interface ModernCardProps {
   subText?: string;
   currentEpisode?: number;
   layout?: 'standard' | 'wide';
+  progress?: number;
   href?: string;
   onRemove?: () => void;
 }
@@ -20,6 +21,8 @@ export function ModernCard({
   item,
   badgeText,
   subText,
+  layout = 'standard',
+  progress,
   href,
   onRemove
 }: ModernCardProps) {
@@ -32,15 +35,19 @@ export function ModernCard({
   const detailHref = href || buildDetailsHref(title, item.type === 'movie' ? 'movie' : 'series', item.id);
   const cardImage = optimizeImageUrl(item.image, 'w342') || item.image || DEFAULT_POSTER;
   const defaultBadge = badgeText || (item.status === 'RELEASING' ? 'New Season' : undefined);
+  const isWide = layout === 'wide';
+  const safeProgress = typeof progress === 'number' && Number.isFinite(progress)
+    ? Math.min(1, Math.max(0, progress))
+    : null;
 
   return (
-    <div className="group relative flex w-full min-w-0 flex-col select-none rounded-2xl">
+    <div className={`group relative flex w-full min-w-0 flex-col select-none rounded-2xl ${isWide ? 'modern-card--wide' : ''}`}>
       <Link
         href={detailHref}
-        className="block rounded-2xl outline-none"
+        className="block rounded-2xl outline-none focus-visible:ring-2 focus-visible:ring-[#e8d0c0] focus-visible:ring-offset-2 focus-visible:ring-offset-black"
         aria-label={`Open ${title}`}
       >
-        <div className="relative aspect-[2/3] w-full overflow-hidden rounded-2xl border border-white/5 bg-[#0e1017] transition-[transform,border-color,box-shadow] duration-300 group-hover:-translate-y-1 group-hover:border-white/20 group-hover:shadow-[0_12px_32px_rgba(0,0,0,0.6)]">
+        <div className={`relative w-full overflow-hidden rounded-2xl border border-white/5 bg-[#0e1017] transition-[transform,border-color,box-shadow] duration-300 group-hover:-translate-y-1 group-hover:border-white/20 group-hover:shadow-[0_12px_32px_rgba(0,0,0,0.6)] ${isWide ? 'aspect-video' : 'aspect-[2/3]'}`}>
           <span className="kinoma-focus absolute inset-0 z-0 block rounded-2xl">
             {!imageLoaded && (
               <div className="absolute inset-0 animate-pulse bg-[#12141c]" aria-hidden="true" />
@@ -49,7 +56,7 @@ export function ModernCard({
               src={cardImage}
               alt=""
               srcSet={cardImage.includes("/w342/") ? (cardImage + " 342w, " + (optimizeImageUrl(cardImage, 'w500') || cardImage) + " 500w") : undefined}
-              sizes="(max-width: 540px) 44vw, (max-width: 900px) 30vw, (max-width: 1200px) 20vw, 18vw"
+              sizes={isWide ? "(max-width: 540px) 72vw, 360px" : "(max-width: 540px) 44vw, (max-width: 900px) 30vw, (max-width: 1200px) 20vw, 18vw"}
               loading="lazy"
               decoding="async"
               referrerPolicy="no-referrer"
@@ -64,9 +71,21 @@ export function ModernCard({
           </span>
           {defaultBadge && (
             <div className="pointer-events-none absolute left-2 top-2 z-10">
-              <span className="rounded-full border border-white/10 bg-black/65 px-2.5 py-0.5 text-[10px] font-bold text-white backdrop-blur-md">
+              <span className="rounded-full border border-white/10 bg-black/75 px-2.5 py-0.5 text-[10px] font-bold text-white backdrop-blur-md">
                 {defaultBadge}
               </span>
+            </div>
+          )}
+          {safeProgress !== null && (
+            <div
+              className="pointer-events-none absolute inset-x-0 bottom-0 z-20 h-[3px] bg-white/25"
+              role="progressbar"
+              aria-label={`${title} progress`}
+              aria-valuemin={0}
+              aria-valuemax={100}
+              aria-valuenow={Math.round(safeProgress * 100)}
+            >
+              <span className="block h-full bg-[#b84d41]" style={{ width: `${safeProgress * 100}%` }} />
             </div>
           )}
         </div>
@@ -87,7 +106,7 @@ export function ModernCard({
           onClick={onRemove}
           title={`Remove ${title} from Library`}
           aria-label={`Remove ${title} from Library`}
-          className="kinoma-focus absolute right-2 top-2 z-20 flex h-9 w-9 items-center justify-center rounded-full border border-white/20 bg-black/80 text-gray-100 opacity-0 shadow-md transition-all hover:scale-105 hover:bg-black focus-visible:opacity-100 group-hover:opacity-100 group-focus-within:opacity-100"
+          className="kinoma-focus absolute right-2 top-2 z-20 flex h-11 w-11 items-center justify-center rounded-full border border-white/30 bg-black/85 text-gray-100 opacity-100 shadow-md transition-colors hover:bg-black focus-visible:outline focus-visible:outline-2 focus-visible:outline-[#e8d0c0] focus-visible:outline-offset-2 sm:opacity-0 sm:group-hover:opacity-100 sm:group-focus-within:opacity-100"
         >
           <X className="h-4 w-4" />
         </button>
