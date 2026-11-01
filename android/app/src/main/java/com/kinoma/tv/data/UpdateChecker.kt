@@ -47,6 +47,7 @@ object UpdateChecker {
             if (updateInfo.latestVersionName.isBlank()) throw java.io.IOException("Update manifest versionName is missing.")
             if (!updateInfo.apkUrl.startsWith("https://")) throw java.io.IOException("Update package URL must use HTTPS.")
             if (!updateInfo.sha256.matches(Regex("(?i)^[a-f0-9]{64}$"))) throw java.io.IOException("Update manifest checksum is invalid.")
+            if (updateInfo.sizeBytes <= 0L) throw java.io.IOException("Update manifest package size is invalid.")
             if (updateInfo.channel !in setOf("stable", "beta")) throw java.io.IOException("Update manifest release channel is missing or invalid.")
             val expectedApkName = if (updateInfo.prerelease) "Panda.fun-Android-TV-beta.apk" else "Panda.fun-Android-TV.apk"
             if (!updateInfo.apkUrl.endsWith("/$expectedApkName")) {
