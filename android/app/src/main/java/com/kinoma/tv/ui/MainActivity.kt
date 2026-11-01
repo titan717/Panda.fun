@@ -477,7 +477,9 @@ class MainActivity : ComponentActivity() {
         hideSystemUI()
         webView.onResume()
         webView.requestFocus()
-
+        if (pendingVerifiedUpdateUri != null && canInstallPackages()) {
+            emitUpdateStatus("ready-to-install", availableUpdate)
+        }
     }
 
     override fun onPause() {
