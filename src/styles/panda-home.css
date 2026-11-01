@@ -1520,7 +1520,7 @@
 
   .panda-home-hover-trailer {
     z-index: 110;
-    bottom: calc(74px + env(safe-area-inset-bottom));
+    bottom: calc(74px + var(--safe-bottom, env(safe-area-inset-bottom, 0px)));
   }
 }
 
