@@ -199,6 +199,7 @@ export function Home() {
   const [comingSoon, setComingSoon] = useState<MovieApiMedia[]>([]);
   const [becauseWatched, setBecauseWatched] = useState<MovieApiMedia[]>([]);
   const [anime, setAnime] = useState<MovieApiMedia[]>([]);
+  const [genreShelves, setGenreShelves] = useState<Record<string, MovieApiMedia[]>>({});
   const [lastWatchedTitle, setLastWatchedTitle] = useState('');
   const [error, setError] = useState<string | null>(null);
   const [trailer, setTrailer] = useState<any>(null);
@@ -258,7 +259,7 @@ export function Home() {
         api.getAiringToday(),
         api.getUpcomingMovies(),
         api.getUpcomingTv(),
-        api.getGenreAnime('anime', 24)
+        api.getGenreAnime('animation', 24)
       ]).then(([netflix, disney, today, upcomingMovies, upcomingTv, animeTitles]) => {
         if (!active) return;
         if (netflix.status === 'fulfilled') setNewOnNetflix((netflix.value.results || []) as unknown as MovieApiMedia[]);
@@ -269,6 +270,28 @@ export function Home() {
           setComingSoon(merged.filter((item, index, list) => item?.id && list.findIndex(other => other.id === item.id) === index));
         }
         if (animeTitles.status === 'fulfilled') setAnime((animeTitles.value.results || []) as unknown as MovieApiMedia[]);
+      });
+      const genreDefinitions: Array<[string, string, string]> = [
+        ['Action', 'Action', 'Action & Adventure'],
+        ['Comedy', 'Comedy', 'Comedy'],
+        ['Drama', 'Drama', 'Drama'],
+        ['Sci-Fi & Fantasy', 'Science Fiction', 'Sci-Fi & Fantasy'],
+        ['Horror', 'Horror', 'Mystery'],
+        ['Animation & Family', 'Animation', 'Animation'],
+        ['Documentary', 'Documentary', 'Documentary'],
+      ];
+      Promise.all(genreDefinitions.map(async ([label, movieGenre, tvGenre]) => {
+        const [movies, shows] = await Promise.allSettled([
+          api.getGenreMedia(movieGenre, 'movie', 12),
+          api.getGenreMedia(tvGenre, 'tv', 12),
+        ]);
+        const combined = [
+          ...(movies.status === 'fulfilled' ? movies.value.results : []),
+          ...(shows.status === 'fulfilled' ? shows.value.results : []),
+        ] as unknown as MovieApiMedia[];
+        return [label, combined.filter((item, index, list) => item?.id && list.findIndex(other => other.id === item.id) === index)] as const;
+      })).then(entries => {
+        if (active) setGenreShelves(Object.fromEntries(entries));
       });
       const history = historyUtil.getHistory().sort((a, b) => b.lastWatchedTime - a.lastWatchedTime);
       const lastWatched = history[0];
@@ -357,9 +380,9 @@ export function Home() {
   }, []);
 
   const myList = libraryManager.getWatchlist().map(item => ({ id: item.id, title: item.title, poster: item.image, type: item.id.includes('_movie_') ? 'movie' : 'tv' } as MovieApiMedia));
-  const genreShelf = (name: string) => [...trending, ...popularMovies, ...popularTv].filter(item => (item.genres || []).some(genre => genre.toLowerCase().includes(name.toLowerCase()))).filter((item, index, list) => list.findIndex(other => other.id === item.id) === index).slice(0, 18);
+  const genreShelf = (name: string) => genreShelves[name] || [];
 
-  return isMobileLayout ? <MobileHome items={[...(featured ? [featured] : []), ...trending, ...popularMovies, ...popularTv]} trendingItems={trending} popularMovies={popularMovies} popularTv={popularTv} newOnNetflix={newOnNetflix} newOnDisneyPlus={newOnDisneyPlus} airing={airing} comingSoon={comingSoon} becauseWatched={becauseWatched} lastWatchedTitle={lastWatchedTitle} anime={anime} loading={!home && !error} error={error} /> : (
+  return isMobileLayout ? <MobileHome items={[...(featured ? [featured] : []), ...trending, ...popularMovies, ...popularTv]} trendingItems={trending} popularMovies={popularMovies} popularTv={popularTv} newOnNetflix={newOnNetflix} newOnDisneyPlus={newOnDisneyPlus} airing={airing} comingSoon={comingSoon} becauseWatched={becauseWatched} lastWatchedTitle={lastWatchedTitle} anime={anime} genreShelves={genreShelves} loading={!home && !error} error={error} /> : (
     <main className="kinoma-home">
       <div className="kinoma-home__ambient" aria-hidden="true">
         <span className="kinoma-home__ambient-orb kinoma-home__ambient-orb--one" />
