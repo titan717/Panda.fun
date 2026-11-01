@@ -50,6 +50,35 @@ import './components/intro/panda-intro.css';
 import { handleTVRemoteKey } from './lib/tvRemoteNavigation';
 import { getCurrentDeviceMode } from './lib/deviceCapabilities';
 
+function RouteContent({ location }: { location: string }) {
+  return (
+    <Switch location={location}>
+      <Route path="/" component={Landing} />
+      <Route path="/browse" component={Home} />
+      <Route path="/home" component={Home} />
+      <Route path="/terms" component={Terms} />
+      <Route path="/privacy-policy" component={Privacy} />
+      <Route path="/privacy" component={Privacy} />
+      <Route path="/contact" component={Contact} />
+      <Route path="/docs" component={Docs} />
+      <Route path="/profile" component={Profile} />
+      <Route path="/about" component={About} />
+      <Route path="/admin" component={Admin} />
+      <Route path="/settings" component={SettingsPage} />
+      <Route path="/search" component={Search} />
+      <Route path="/explore" component={Search} />
+      <Route path="/whats-new" component={WhatsNew} />
+      <Route path="/details/:id" component={Details} />
+      <Route path="/watch/:id" component={Watch} />
+      <Route path="/library" component={Library} />
+      <Route path="/history" component={Library} />
+      <Route>
+        <main className="flex min-h-[60vh] items-center justify-center px-6 text-center text-gray-500 font-medium" role="main"><div><h1 className="text-xl font-semibold text-white">Page not found</h1><p className="mt-2">The Panda wandered somewhere else.</p></div></main>
+      </Route>
+    </Switch>
+  );
+}
+
 function DelayedRouteFallback({ previousLocation }: { previousLocation: string }) {
   const [show, setShow] = useState(false);
   useEffect(() => {
@@ -69,34 +98,6 @@ function DelayedRouteFallback({ previousLocation }: { previousLocation: string }
   );
 }
 
-function RouteContent({ location }: { location: string }) {
-  return (
-              <Switch location={location}>
-                <Route path="/" component={Landing} />
-                <Route path="/browse" component={Home} />
-                <Route path="/home" component={Home} />
-                <Route path="/terms" component={Terms} />
-                <Route path="/privacy-policy" component={Privacy} />
-                <Route path="/privacy" component={Privacy} />
-                <Route path="/contact" component={Contact} />
-                <Route path="/docs" component={Docs} />
-                <Route path="/profile" component={Profile} />
-                <Route path="/about" component={About} />
-                <Route path="/admin" component={Admin} />
-                <Route path="/settings" component={SettingsPage} />
-                <Route path="/search" component={Search} />
-                <Route path="/explore" component={Search} />
-                <Route path="/whats-new" component={WhatsNew} />
-                <Route path="/details/:id" component={Details} />
-                <Route path="/watch/:id" component={Watch} />
-                <Route path="/library" component={Library} />
-                <Route path="/history" component={Library} />
-                <Route>
-                  <main className="flex min-h-[60vh] items-center justify-center px-6 text-center text-gray-500 font-medium" role="main"><div><h1 className="text-xl font-semibold text-white">Page not found</h1><p className="mt-2">The Panda wandered somewhere else.</p></div></main>
-                </Route>
-           
-  );
-}
 function AnimatedRoutes() {
   const [location] = useLocation();
   const preference = useMotionPreference();
@@ -106,27 +107,24 @@ function AnimatedRoutes() {
   const isDetailTransition = getRouteDepth(currentPath) > 0 || getRouteDepth(previousPath) > 0;
   const direction = getRouteTransitionDirection(previousPath, currentPath);
   const lastScrolledLocation = useRef(location);
-  useEffect(() => { previousLocation.current = location; }, [location]);
 
-  useEffect(() => {
-    trackPageView(location);
-  }, [location]);
+  useEffect(() => { previousLocation.current = location; }, [location]);
+  useEffect(() => { trackPageView(location); }, [location]);
 
   if (location === '/') return <Landing />;
 
   return (
     <Layout>
       <div className="panda-route-transition-shell">
-      <AnimatePresence mode="popLayout" initial={false}>
-        <m.div
-          key={location}
-          initial={{ opacity: 0, x: getMotionOffset(preference, direction * 22) }}
-          animate={{ opacity: 1, x: 0 }}
-          exit={{ opacity: 0, x: getMotionOffset(preference, direction * -14) }}
-          transition={{ duration: preference === 'full' ? (isDetailTransition ? 0.28 : 0.16) : 0.12, ease: [0.16, 1, 0.3, 1] }}
-          className="panda-route-transition-page w-full flex-1 flex flex-col"
-        >
-          <Suspense fallback={<DelayedRouteFallback />}>
+        <AnimatePresence mode="popLayout" initial={false}>
+          <m.div
+            key={location}
+            initial={{ opacity: 0, x: getMotionOffset(preference, direction * 22) }}
+            animate={{ opacity: 1, x: 0 }}
+            exit={{ opacity: 0, x: getMotionOffset(preference, direction * -14) }}
+            transition={{ duration: preference === 'full' ? (isDetailTransition ? 0.28 : 0.16) : 0.12, ease: [0.16, 1, 0.3, 1] }}
+            className="panda-route-transition-page w-full flex-1 flex flex-col"
+          >
             <Suspense fallback={<DelayedRouteFallback previousLocation={previousLocation.current} />}>
               <m.div
                 key={`route-content-${location}`}
@@ -142,10 +140,9 @@ function AnimatedRoutes() {
               >
                 <RouteContent location={location} />
               </m.div>
-            </Suspense>   </Switch>
-          </Suspense>
-        </m.div>
-      </AnimatePresence>
+            </Suspense>
+          </m.div>
+        </AnimatePresence>
       </div>
     </Layout>
   );
