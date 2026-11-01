@@ -269,8 +269,12 @@ export function Home() {
           const merged = [...(upcomingMovies.value.results || []), ...(upcomingTv.value.results || [])] as MovieApiMedia[];
           setComingSoon(merged.filter((item, index, list) => item?.id && list.findIndex(other => other.id === item.id) === index));
         }
-        if (animeTitles.status === 'fulfilled') setAnime((animeTitles.value.results || []) as unknown as MovieApiMedia[]);
       });
+      if (!isMobileLayout) {
+        api.getGenreAnime('animation', 24).then(result => {
+          if (active) setAnime((result.results || []) as unknown as MovieApiMedia[]);
+        }).catch(() => undefined);
+
       const genreDefinitions: Array<[string, string, string]> = [
         ['Action', 'Action', 'Action & Adventure'],
         ['Comedy', 'Comedy', 'Comedy'],
@@ -293,6 +297,7 @@ export function Home() {
       })).then(entries => {
         if (active) setGenreShelves(Object.fromEntries(entries));
       });
+      }
       const history = historyUtil.getHistory().sort((a, b) => b.lastWatchedTime - a.lastWatchedTime);
       const lastWatched = history[0];
       if (lastWatched?.animeId) {
