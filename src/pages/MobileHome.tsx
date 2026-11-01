@@ -6,6 +6,7 @@ import { ThinkingOrb } from 'thinking-orbs';
 import { ModernContinueWatching } from '../components/ui/modern/ModernContinueWatching';
 import { api, type MovieApiMedia } from '../lib/api';
 import { buildDetailsHref, buildWatchHref } from '../lib/mediaRoute';
+import type { AnimeItem } from '../types';
 import { libraryManager } from '../lib/library';
 import { optimizeImageUrl } from '../lib/mediaImages';
 import './mobile-home.css';
@@ -84,6 +85,22 @@ function MobileRail({ title, items, topTen = false, wide = false, genre }: { tit
 }
 
 
+function toGenreRailMedia(item: MovieApiMedia | AnimeItem): MovieApiMedia {
+  if ('poster' in item) return item;
+  return {
+    id: item.id,
+    type: item.type === 'movie' ? 'movie' : 'tv',
+    title: typeof item.title === 'string' ? item.title : item.title.english || item.title.romaji || 'Anime',
+    poster: item.image,
+    backdrop: item.cover || item.banner || item.image,
+    rating: typeof item.rating === 'number' ? item.rating : Number(item.rating) || null,
+    releaseDate: item.releaseDate || null,
+    overview: item.description || null,
+    genres: item.genres || [],
+    language: 'ja',
+  };
+}
+
 function LazyGenreRail({ title, genre, movieGenre, tvGenre, animeOnly = false }: {
   title: string;
   genre: string;
@@ -121,7 +138,7 @@ function LazyGenreRail({ title, genre, movieGenre, tvGenre, animeOnly = false }:
         ];
     Promise.allSettled(requests).then(results => {
       if (!active) return;
-      const merged = results.flatMap(result => result.status === 'fulfilled' ? result.value.results : []) as unknown as MovieApiMedia[];
+      const merged = results.flatMap(result => result.status === 'fulfilled' ? result.value.results.map(toGenreRailMedia) : []);
       setItems(uniqueItems(merged));
       setLoading(false);
     });
