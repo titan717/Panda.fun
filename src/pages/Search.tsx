@@ -14,7 +14,7 @@ import { api, MovieApiError } from '../lib/api';
 import type { AnimeItem } from '../types';
 import { ThinkingOrb } from 'thinking-orbs';
 
-type SearchItem = { key?: React.Key; id: string; title: string; type: 'movie' | 'series'; meta: string; image?: string; href: string; rating?: number; year?: number; };
+type SearchItem = { key?: React.Key; id: string; title: string; type: 'movie' | 'series'; meta: string; image?: string; href: string; rating?: number; year?: number; genres?: string[]; };
 type SpeechRecognitionLike = {
   lang: string;
   interimResults: boolean;
@@ -35,6 +35,7 @@ const mapItem = (item: AnimeItem): SearchItem => {
     type,
     meta: [item.releaseDate ? String(item.releaseDate).slice(0, 4) : null, item.rating ? '★ ' + item.rating : null, type === 'movie' ? 'Movie' : 'Series'].filter(Boolean).join(' • ') || 'MovieApi',
     image: item.image,
+    genres: Array.isArray((item as any).genres) ? (item as any).genres : [],
     rating: Number(item.rating || 0) || 0,
     year: item.releaseDate ? Number(String(item.releaseDate).slice(0, 4)) || undefined : undefined,
     href: buildDetailsHref(titleOf(item), type, item.id),
@@ -103,6 +104,7 @@ export function Search() {
   const initialQuery = useMemo(() => new URLSearchParams(window.location.search).get('keyword')?.trim() || '', []);
   const [query, setQuery] = useState(initialQuery);
   const [submittedQuery, setSubmittedQuery] = useState(initialQuery);
+  const [genre, setGenre] = useState(() => new URLSearchParams(window.location.search).get('genre')?.trim() || '');
   const [recentSearches, setRecentSearches] = useState<string[]>([]);
   const [results, setResults] = useState<SearchItem[]>([]);
   const [loading, setLoading] = useState(false);
@@ -115,8 +117,10 @@ export function Search() {
     return requestedType === 'movie' || requestedType === 'series' ? requestedType : 'all';
   });
   useEffect(() => {
-    const requestedType = new URLSearchParams(location.split('?')[1] || '').get('type');
+    const params = new URLSearchParams(location.split('?')[1] || '');
+    const requestedType = params.get('type');
     setFilter(requestedType === 'movie' || requestedType === 'series' ? requestedType : 'all');
+    setGenre(params.get('genre')?.trim() || '');
   }, [location]);
   const inputRef = useRef<HTMLInputElement>(null);
   const speechWindow = window as Window & { SpeechRecognition?: SpeechRecognitionConstructor; webkitSpeechRecognition?: SpeechRecognitionConstructor };
@@ -128,6 +132,7 @@ export function Search() {
     const normalized = submittedQuery.toLocaleLowerCase();
     return results
       .filter(item => filter === 'all' || item.type === filter)
+      .filter(item => !genre || (item.genres || []).some(value => value.toLowerCase().includes(genre.toLowerCase())))
       .sort((a, b) => {
         if (!normalized) return b.rating - a.rating;
         const score = (item: SearchItem) => {
@@ -136,7 +141,7 @@ export function Search() {
         };
         return score(b) - score(a);
       });
-  }, [results, filter, submittedQuery]);
+  }, [results, filter, submittedQuery, genre]);
 
   useEffect(() => {
     setRecentSearches(preferencesUtil.getRecentSearches());
@@ -229,7 +234,7 @@ export function Search() {
     setSubmittedQuery(clean);
     setLocation('/search?keyword=' + encodeURIComponent(clean));
   };
-  const clearSearch = () => { setQuery(''); setSubmittedQuery(''); setError(null); setFilter('all'); inputRef.current?.focus(); setLocation('/search'); };
+  const clearSearch = () => { setQuery(''); setSubmittedQuery(''); setError(null); setFilter('all'); setGenre(''); inputRef.current?.focus(); setLocation('/search'); };
   const clearQueryInput = () => { setQuery(''); inputRef.current?.focus(); };
   const clearRecent = () => { preferencesUtil.clearRecentSearches(); setRecentSearches([]); };
   const surprisePool = useMemo(() => results.filter(item => item.id && item.title), [results]);
@@ -263,6 +268,7 @@ export function Search() {
           </button>
           <button type="submit" className="kinoma-search-control__submit"><span className="kinoma-search-control__sheen" aria-hidden="true" /><span>Search</span><ArrowRight size={15} aria-hidden="true" /></button>
         </form>
+        {genre && <div className="panda-search-active-genre"><span>Genre · {genre}</span><button type="button" onClick={() => { setGenre(''); setLocation('/search' + (submittedQuery ? '?keyword=' + encodeURIComponent(submittedQuery) : '')); }}>Clear genre</button></div>}
         {!isSearching && <button type="button" className="panda-search-surprise" onClick={surpriseMe} disabled={!surprisePool.length} aria-label="Pick a surprise title and open its details page"><Sparkles size={15} /> Surprise Me <span>Pick something for me</span></button>}
       </header>
       {!isSearching && recentSearches.length > 0 && <section className="kinoma-search-recent" aria-label="Recent searches"><div className="kinoma-search-recent__label"><Clock3 size={14} /> Recent</div><div className="kinoma-search-recent__items">{recentSearches.slice(0, 5).map(item => <button key={item} type="button" onClick={() => chooseRecent(item)}>{item}</button>)}<button type="button" className="kinoma-search-recent__clear" onClick={clearRecent}>Clear</button></div></section>}
