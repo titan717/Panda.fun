@@ -52,6 +52,8 @@ describe('app update state machine', () => {
     s = updateReducer(s, { type: 'up-to-date', at: 2 });
     expect(s.availableVersion).toBeUndefined();
     expect(s.releaseNotes).toBeUndefined();
+    expect(s.sizeBytes).toBeUndefined();
+    expect(s.verifiedSha256).toBeUndefined();
   });
 });
 
@@ -60,8 +62,8 @@ describe('native status parsing', () => {
     expect(parseNativeStatus({ status: 'checking' }, 1)).toEqual({ type: 'check-started' });
     expect(parseNativeStatus({ status: 'up-to-date' }, 5)).toEqual({ type: 'up-to-date', at: 5 });
     expect(parseNativeStatus({ status: 'downloading', percent: 42, downloadedBytes: 420, totalBytes: 1000 }, 1)).toEqual({ type: 'download-progress', percent: 42, downloadedBytes: 420, totalBytes: 1000 });
-    expect(parseNativeStatus({ status: 'available', versionName: '1.2.3', releaseNotes: 'n', mandatory: true }, 7)).toEqual({
-      type: 'available', at: 7, versionName: '1.2.3', releaseNotes: 'n', mandatory: true,
+    expect(parseNativeStatus({ status: 'available', versionName: '1.2.3', releaseNotes: 'n', mandatory: true, sizeBytes: 2048 }, 7)).toEqual({
+      type: 'available', at: 7, versionName: '1.2.3', releaseNotes: 'n', mandatory: true, sizeBytes: 2048,
     });
     expect(parseNativeStatus({ status: 'ready-to-install', sha256: 'a'.repeat(64) }, 8)).toEqual({ type: 'ready-to-install', at: 8, sha256: 'a'.repeat(64) });
     expect(parseNativeStatus({ status: 'permission-required', message: 'Allow installs' }, 9)).toEqual({ type: 'permission-required', message: 'Allow installs' });
