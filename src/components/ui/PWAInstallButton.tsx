@@ -36,7 +36,7 @@ export function PWAInstallButton({
         title="Install Kinoma app"
         aria-label="Install App"
       >
-        <Download className="w-4 h-4 text-[#c084fc]" />
+        <Download className="w-4 h-4 text-[#e8d0c0]" />
       </button>
     );
   }
@@ -48,7 +48,7 @@ export function PWAInstallButton({
       className={`flex items-center gap-2 px-3.5 py-1.5 rounded-full text-xs font-bold bg-white/10 hover:bg-white/15 border border-white/20 text-white shadow-sm transition-all cursor-pointer disabled:opacity-50 ${className}`}
       title="Install Kinoma app"
     >
-      <Download className="w-3.5 h-3.5 text-[#c084fc]" />
+      <Download className="w-3.5 h-3.5 text-[#e8d0c0]" />
       <span>{installing ? 'Installing...' : 'Install Kinoma'}</span>
     </button>
   );
