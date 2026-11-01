@@ -27,7 +27,7 @@ describe('Mobile cinematic billboard accessibility', () => {
   it('auto-advances after six seconds and pauses for touch, hidden tabs and reduced motion', () => {
     expect(source).toContain('}, 6000)');
     expect(source).toContain('document.addEventListener(\'visibilitychange\'');
-    expect(source).toContain('prefers-reduced-motion: reduce');
+    expect(styles).toContain('@media (prefers-reduced-motion: reduce)');
     expect(source).toContain('setTouchPaused(true)');
     expect(source).toContain('documentHidden || touchPaused');
     expect(styles).toContain('is-paused');
