@@ -259,7 +259,7 @@ export function Home() {
         api.getAiringToday(),
         api.getUpcomingMovies(),
         api.getUpcomingTv(),
-        api.getGenreAnime('animation', 24)
+        isMobileLayout ? Promise.resolve({ results: [] as any[] }) : api.getGenreAnime('animation', 24)
       ]).then(([netflix, disney, today, upcomingMovies, upcomingTv, animeTitles]) => {
         if (!active) return;
         if (netflix.status === 'fulfilled') setNewOnNetflix((netflix.value.results || []) as unknown as MovieApiMedia[]);
@@ -280,7 +280,7 @@ export function Home() {
         ['Animation & Family', 'Animation', 'Animation'],
         ['Documentary', 'Documentary', 'Documentary'],
       ];
-      Promise.all(genreDefinitions.map(async ([label, movieGenre, tvGenre]) => {
+      if (!isMobileLayout) Promise.all(genreDefinitions.map(async ([label, movieGenre, tvGenre]) => {
         const [movies, shows] = await Promise.allSettled([
           api.getGenreMedia(movieGenre, 'movie', 12),
           api.getGenreMedia(tvGenre, 'tv', 12),
@@ -312,7 +312,7 @@ export function Home() {
       if (window.cancelIdleCallback && typeof idle === 'number') window.cancelIdleCallback(idle);
       else window.clearTimeout(idle as number);
     };
-  }, []);
+  }, [isMobileLayout]);
 
   const featured = home?.featured as MovieApiMedia | null | undefined;
   const sections = home?.sections;
