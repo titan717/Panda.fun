@@ -436,3 +436,45 @@
   .panda-mobile-header__action:hover,
   .panda-mobile-bottom-nav__item:active .panda-mobile-bottom-nav__icon { transform: none !important; }
 }
+
+
+/* Mobile Library viewport, safe-area and shelf sizing */
+@media (max-width: 767px) {
+  .panda-library.kinoma-library-page {
+    width: 100%;
+    min-width: 0;
+    overflow-x: clip;
+    background: #000;
+  }
+  .panda-library .kinoma-library-page__inner {
+    width: 100%;
+    max-width: 100%;
+    min-width: 0;
+    padding-bottom: calc(118px + env(safe-area-inset-bottom, 0px));
+  }
+  .panda-library .panda-library__filters {
+    position: sticky;
+    top: calc(58px + env(safe-area-inset-top, 0px));
+    z-index: 35;
+    margin-inline: 0;
+    overscroll-behavior-x: contain;
+  }
+  .panda-library .panda-library__shelf-track {
+    scroll-padding-inline: 18px;
+    -webkit-overflow-scrolling: touch;
+  }
+  .panda-library .panda-library__shelf-card,
+  .panda-library .panda-library__poster-card {
+    min-width: 0;
+  }
+  .panda-library .panda-library__search-toggle,
+  .panda-library .panda-library__filters button,
+  .panda-library .panda-library__resume-button,
+  .panda-library .panda-library__empty button {
+    min-height: 44px;
+  }
+  .panda-library .panda-library__search-toggle { min-width: 44px; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .panda-library .panda-library__shelf-track { scroll-behavior: auto; }
+}

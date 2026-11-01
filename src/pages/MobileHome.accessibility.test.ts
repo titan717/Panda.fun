@@ -1,37 +1,49 @@
 import { describe, expect, it } from 'vitest';
 import { readFileSync } from 'node:fs';
 
-describe('Mobile featured spotlight', () => {
-  it('shows one selected cinematic title with working watch, details and My List actions', () => {
-    const source = readFileSync(new URL('./MobileHome.tsx', import.meta.url), 'utf8');
-    expect(source).toContain('panda-mobile-featured__spotlight');
+describe('Mobile cinematic billboard accessibility', () => {
+  const source = readFileSync(new URL('./MobileHome.tsx', import.meta.url), 'utf8');
+  const styles = readFileSync(new URL('./mobile-home.css', import.meta.url), 'utf8');
+  const controls = readFileSync(new URL('./mobile-featured-controls.css', import.meta.url), 'utf8');
+
+  it('keeps existing playback, details and My List actions without the old eyebrow or text action', () => {
     expect(source).toContain('buildWatchHref(featured.id');
     expect(source).toContain('buildDetailsHref(featured');
     expect(source).toContain('libraryManager.toggleWatchlist');
     expect(source).toContain('aria-pressed={isInList}');
+    expect(source).not.toContain('YOUR NEXT WATCH');
+    expect(source).not.toContain('View details');
   });
 
-  it('provides labelled previous, next and direct featured-title controls', () => {
-    const source = readFileSync(new URL('./MobileHome.tsx', import.meta.url), 'utf8');
-    expect(source).toContain('aria-label="Previous featured title"');
-    expect(source).toContain('aria-label="Next featured title"');
+  it('uses accessible segmented controls instead of dot and chevron navigation', () => {
+    expect(source).toContain('panda-mobile-featured__segment');
     expect(source).toContain('aria-current={index === activeIndex ? \'true\' : undefined}');
     expect(source).toContain('Show featured title ');
+    expect(source).not.toContain('Previous featured title');
+    expect(source).not.toContain('Next featured title');
+    expect(controls).toContain('panda-billboard-segment-fill');
   });
 
-  it('removes the spotlight label and supports touch swiping with a white active accent', () => {
-    const source = readFileSync(new URL('./MobileHome.tsx', import.meta.url), 'utf8');
-    const styles = readFileSync(new URL('./mobile-home.css', import.meta.url), 'utf8');
-    expect(source).not.toContain('PANDA SPOTLIGHT');
+  it('auto-advances after six seconds and pauses for touch, hidden tabs and reduced motion', () => {
+    expect(source).toContain('}, 6000)');
+    expect(source).toContain('document.addEventListener(\'visibilitychange\'');
+    expect(styles).toContain('@media (prefers-reduced-motion: reduce)');
+    expect(source).toContain('setTouchPaused(true)');
+    expect(source).toContain('documentHidden || touchPaused');
+    expect(styles).toContain('is-paused');
+  });
+
+  it('retains swipe navigation and cinematic slide animation', () => {
+    expect(source).toContain('Math.abs(distance) >= 48');
     expect(source).toContain('onTouchStart');
     expect(source).toContain('onTouchEnd');
     expect(styles).toContain('panda-mobile-featured__spotlight-track');
-    expect(styles).toContain('background: #fff');
+    expect(styles).toContain('panda-featured-swipe-in');
   });
 
-  it('supports reduced-motion preferences in the featured presentation', () => {
-    const styles = readFileSync(new URL('./mobile-home.css', import.meta.url), 'utf8');
+  it('respects reduced motion for Ken Burns and slide animation', () => {
     expect(styles).toContain('@media (prefers-reduced-motion: reduce)');
-    expect(styles).toContain('.panda-mobile-featured__hint button { transition: none; }');
+    expect(styles).toContain('panda-billboard-kenburns');
+    expect(styles).toContain('animation: none');
   });
 });
