@@ -129,3 +129,23 @@
 [data-motion-preference='minimal'] .panda-motion-play-cta::after {
   animation: none !important;
 }
+
+.panda-route-loading-keepalive {
+  position: relative;
+  width: 100%;
+  min-width: 0;
+  min-height: 45vh;
+}
+.panda-route-loading-overlay {
+  position: absolute;
+  inset: 0;
+  z-index: 5;
+  display: flex;
+  min-height: 45vh;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 14px;
+  background: rgba(0,0,0,.72);
+  backdrop-filter: blur(12px);
+}
