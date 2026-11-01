@@ -16,12 +16,17 @@ def render(source: Path, target: Path, width: int, height: int | None = None):
     cairosvg.svg2png(url=str(source), write_to=str(target), output_width=width, output_height=height or width)
 
 icon = ASSETS / "panda-icon.svg"
-maskable = ASSETS / "panda-icon-maskable.svg"
 banner = ASSETS / "panda-tv-banner.svg"
 
 render(icon, PUBLIC / "panda-192.png", 192)
 render(icon, PUBLIC / "panda-512.png", 512)
-render(maskable, PUBLIC / "panda-512-maskable.png", 512)
+# Derive the maskable export from the same canonical icon. The mark is
+# scaled into the centered Android/PWA safe zone on a full-bleed black canvas.
+base = Image.new("RGBA", (512, 512), (5, 5, 5, 255))
+mark = Image.open(PUBLIC / "panda-512.png").convert("RGBA")
+safe_mark = mark.resize((398, 398), Image.Resampling.LANCZOS)
+base.alpha_composite(safe_mark, ((512 - 398) // 2, (512 - 398) // 2))
+base.save(PUBLIC / "panda-512-maskable.png", format="PNG")
 render(icon, PUBLIC / "apple-touch-icon.png", 180)
 render(icon, PUBLIC / "favicon-32x32.png", 32)
 
