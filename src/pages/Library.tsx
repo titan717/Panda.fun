@@ -132,7 +132,8 @@ export function Library() {
     const season = Math.max(1, Number(item.seasonNumber) || 1);
     const episode = Math.max(1, Number(item.episodeNumber) || 1);
     return (
-      <m.div className="panda-library__shelf-card" key={item.episodeId || item.slug} layout={motionPreference === 'full'} initial={{ opacity: 0, y: motionPreference === 'full' ? 10 : 0 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, scale: motionPreference === 'full' ? 0.94 : 1 }} transition={{ duration: motionPreference === 'full' ? 0.24 : 0.12 }}>
+      <m.div className="panda-library__shelf-card" key={item.episodeId || item.slug} layout={motionPreference === 'full'} initial={false} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, scale: motionPreference === 'full' ? 0.94 : 1 }} transition={{ duration: motionPreference === 'full' ? 0.24 : 0.12 }}>
+        <Reveal>
         <ModernCard
           item={{ id: mediaId, title: item.title || 'Untitled', image: item.image, type }}
           layout="wide"
@@ -141,13 +142,14 @@ export function Library() {
           subText={`S${season} E${episode}`}
           onRemove={() => removeHistory(item.slug)}
         />
+        </Reveal>
       </m.div>
     );
   };
 
   const renderPosterCard = (item: LibraryItem, type: 'watchlist' | 'favorites' | 'completed') => (
-    <m.div className="panda-library__poster-card" key={item.id} layout={motionPreference === 'full'} initial={{ opacity: 0, y: motionPreference === 'full' ? 10 : 0 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, scale: motionPreference === 'full' ? 0.94 : 1 }} transition={{ duration: motionPreference === 'full' ? 0.24 : 0.12 }}>
-      <LibraryPosterCard item={item} onRemove={() => removeLibrary(item.id, type)} />
+    <m.div className="panda-library__poster-card" key={item.id} layout={motionPreference === 'full'} initial={false} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, scale: motionPreference === 'full' ? 0.94 : 1 }} transition={{ duration: motionPreference === 'full' ? 0.24 : 0.12 }}>
+      <Reveal><LibraryPosterCard item={item} onRemove={() => removeLibrary(item.id, type)} /></Reveal>
     </m.div>
   );
 
