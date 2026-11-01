@@ -1,0 +1,31 @@
+import { describe, expect, it } from 'vitest';
+import { motionDurations, motionEasings, motionSprings, resolveMotionPreference } from './tokens';
+
+describe('motion tokens', () => {
+  it('defines the shared OTT timing scale', () => {
+    expect(motionDurations).toEqual({ instant: 0.09, fast: 0.16, base: 0.24, slow: 0.38, hero: 0.6 });
+  });
+  it('defines standard, emphasized and exit easing curves', () => {
+    expect(motionEasings.standard).toEqual([0.2, 0, 0, 1]);
+    expect(motionEasings.emphasized).toEqual([0.16, 1, 0.3, 1]);
+    expect(motionEasings.exit).toEqual([0.4, 0, 1, 1]);
+  });
+  it('provides named spring presets', () => {
+    expect(motionSprings.snappy.type).toBe('spring');
+    expect(motionSprings.soft.type).toBe('spring');
+    expect(motionSprings.bouncy.type).toBe('spring');
+  });
+});
+
+describe('motion preference resolution', () => {
+  it('prioritizes low-end device constraints', () => {
+    expect(resolveMotionPreference({ prefersReducedMotion: true, saveData: true, lowEndDevice: true })).toBe('minimal');
+  });
+  it('uses opacity-only reduced motion for OS preference or data saver', () => {
+    expect(resolveMotionPreference({ prefersReducedMotion: true, saveData: false, lowEndDevice: false })).toBe('reduced');
+    expect(resolveMotionPreference({ prefersReducedMotion: false, saveData: true, lowEndDevice: false })).toBe('reduced');
+  });
+  it('uses full motion when no constraint applies', () => {
+    expect(resolveMotionPreference({ prefersReducedMotion: false, saveData: false, lowEndDevice: false })).toBe('full');
+  });
+});
