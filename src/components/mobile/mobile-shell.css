@@ -105,8 +105,8 @@
   .panda-mobile-header__action {
     display: grid;
     place-items: center;
-    width: 38px;
-    height: 38px;
+    width: 44px;
+    height: 44px;
     color: #e6dfe1;
     background: #080808;
     border: 1px solid rgba(255,255,255,.11);
