@@ -12,12 +12,13 @@ describe('installed app launch and recovery contract', () => {
     expect(app).toContain("setLocation('/home', { replace: true })");
     expect(app).toContain('nativeBridge || standalone');
     expect(app).toContain('return isInstalledAppShell() ? <Layout><Home /></Layout> : <Landing />');
-    expect(app).toContain('if (showIntro && !appShell)');
+    expect(app).toContain('if (showIntro)');
+    expect(app).toContain('if (appShell) setLocation(\'/home\', { replace: true })');
     expect(app).toContain('shouldShowPandaIntro');
   });
 
   it('starts Android WebView at /home and never locks MainActivity orientation', () => {
-    expect(activity).toContain('WEB_ENTRY_URL = "https://$APP_DOMAIN/home"');
+    expect(activity).toContain('WEB_ENTRY_URL = "https://$APP_DOMAIN/"');
     const mainActivity = (manifest.split('<activity').find(section => section.includes('android:name=".ui.MainActivity"')) || '').split('</activity>')[0];
     expect(mainActivity).not.toContain('android:screenOrientation');
     expect(manifest).toContain('android:screenOrientation="landscape"'); // PlayerActivity only.
