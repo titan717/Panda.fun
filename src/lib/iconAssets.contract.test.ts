@@ -25,13 +25,13 @@ describe('Panda.fun single-source icon exports', () => {
     png('public/panda-512-maskable.png', 512);
     png('public/apple-touch-icon.png', 180);
     png('public/favicon-32x32.png', 32);
-    expect(existsSync(file('public/favicon.ico'))).toBe(true);
-    expect(existsSync(file('public/icon.svg'))).toBe(true);
-    const html = readFileSync(file('index.html'), 'utf8');
+    expect(existsSync(resolve(root, 'public/favicon.ico'))).toBe(true);
+    expect(existsSync(resolve(root, 'public/icon.svg'))).toBe(true);
+    const html = readFileSync(resolve(root, 'index.html'), 'utf8');
     expect(html).toContain('href="/apple-touch-icon.png"');
     expect(html).toContain('href="/favicon.ico"');
     expect(html).toContain('href="/panda-192.png"');
-    const vite = readFileSync(file('vite.config.ts'), 'utf8');
+    const vite = readFileSync(resolve(root, 'vite.config.ts'), 'utf8');
     expect(vite).toContain("src: '/panda-512-maskable.png'");
   });
 
