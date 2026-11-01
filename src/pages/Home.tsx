@@ -274,19 +274,19 @@ export function Home() {
           if (active) setAnime((result.results || []) as unknown as MovieApiMedia[]);
         }).catch(() => undefined);
 
-      const genreDefinitions: Array<[string, string, string]> = [
+      const genreDefinitions: Array<[string, string, string?]> = [
         ['Action', 'Action', 'Action & Adventure'],
         ['Comedy', 'Comedy', 'Comedy'],
         ['Drama', 'Drama', 'Drama'],
         ['Sci-Fi & Fantasy', 'Science Fiction', 'Sci-Fi & Fantasy'],
-        ['Horror', 'Horror', 'Mystery'],
+        ['Horror', 'Horror'],
         ['Animation & Family', 'Animation', 'Animation'],
         ['Documentary', 'Documentary', 'Documentary'],
       ];
       Promise.all(genreDefinitions.map(async ([label, movieGenre, tvGenre]) => {
         const [movies, shows] = await Promise.allSettled([
           api.getGenreMedia(movieGenre, 'movie', 12),
-          api.getGenreMedia(tvGenre, 'tv', 12),
+          tvGenre ? api.getGenreMedia(tvGenre, 'tv', 12) : Promise.resolve({ results: [] as MovieApiMedia[] }),
         ]);
         const combined = [
           ...(movies.status === 'fulfilled' ? movies.value.results : []),
