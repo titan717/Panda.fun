@@ -13,7 +13,7 @@ html.tv-mode .panda-tv-app-shell .kinoma-app-main {
 html.tv-mode body { overflow-x: hidden; }
 html.tv-mode .panda-mobile-header,
 html.tv-mode .panda-mobile-bottom-nav { display: none !important; }
-html.tv-mode .panda-tv-app-shell { --tv-white: #fff; --tv-muted: #a5a5ad; --tv-blue: #1769ff; --tv-pink: #d81272; }
+html.tv-mode .panda-tv-app-shell { --tv-white: #fff; --tv-muted: #a5a5ad; --tv-blue: #b84d41; --tv-pink: #c1935f; }
 html.tv-mode .panda-tv-app-shell .kinoma-sidebar {
   position: fixed;
   z-index: 50;
@@ -65,8 +65,8 @@ html.tv-mode .panda-tv-app-shell .kinoma-sidebar.is-expanded .kinoma-sidebar__it
 html.tv-mode .panda-tv-app-shell .kinoma-sidebar:focus-within .kinoma-sidebar__item span { opacity:1; width:auto; }
 html.tv-mode .panda-tv-app-shell .kinoma-sidebar__item.is-active {
   color:#fff;
-  background:linear-gradient(90deg,#1a367b 0%,#311142 60%,#520935 100%);
-  box-shadow:0 0 20px 2px rgba(37,99,235,.35);
+  background:linear-gradient(90deg,#542c25 0%,#7c2f28 60%,#b84d41 100%);
+  box-shadow:0 0 20px 2px rgba(184,77,65,.35);
 }
 html.tv-mode .panda-tv-app-shell .kinoma-sidebar__item:focus-visible,
 html.tv-mode .panda-tv-app-shell .kinoma-sidebar__item:focus {
@@ -74,8 +74,8 @@ html.tv-mode .panda-tv-app-shell .kinoma-sidebar__item:focus {
   color:#fff;
   outline:3px solid rgba(255,255,255,.94);
   outline-offset:2px;
-  background:linear-gradient(90deg,#1a367b 0%,#311142 60%,#520935 100%);
-  box-shadow:0 0 24px rgba(37,99,235,.48);
+  background:linear-gradient(90deg,#542c25 0%,#7c2f28 60%,#b84d41 100%);
+  box-shadow:0 0 24px rgba(184,77,65,.48);
   transform:scale(1.035);
 }
 html.tv-mode .panda-tv-app-shell .panda-app-content { margin-left:var(--sidebar-width,64px); min-width:0; transition:margin-left 220ms ease; }
@@ -84,7 +84,7 @@ html.tv-mode .panda-tv-app-shell .kinoma-app-main { min-height:100vh; outline:no
 html.tv-mode .panda-tv-app-shell :is(button,a,[role="button"],input,select,textarea,[tabindex]):focus-visible {
   outline:3px solid rgba(255,255,255,.95) !important;
   outline-offset:3px;
-  box-shadow:0 0 0 2px #000,0 0 20px rgba(35,105,255,.38);
+  box-shadow:0 0 0 2px #000,0 0 20px rgba(184,77,65,.38);
 }
 html.tv-mode .panda-tv-app-shell :is(button,a,[role="button"]) { scroll-margin: 36px; }
 html.tv-mode .panda-tv-app-shell :is(.panda-home-v2__section-title h3,.kinoma-search-head h1,.kinoma-details-title) { color:#fff; }
@@ -96,7 +96,7 @@ html.tv-mode .panda-tv-app-shell .kinoma-home-hero__copy h1 { font-size:clamp(44
 html.tv-mode .panda-tv-app-shell .kinoma-home-hero__copy p { max-width:720px; font-size:17px; line-height:1.65; color:#d0d0d5; }
 html.tv-mode .panda-tv-app-shell .kinoma-home-hero__actions { gap:18px; }
 html.tv-mode .panda-tv-app-shell .kinoma-home-hero__actions .kinoma-3d-button { min-height:52px; padding-inline:30px; border-radius:999px; }
-html.tv-mode .panda-tv-app-shell .kinoma-home-hero__actions .kinoma-3d-button:first-child { background:linear-gradient(90deg,#0052d4 0%,#4364f7 50%,#e21170 100%); color:#fff; }
+html.tv-mode .panda-tv-app-shell .kinoma-home-hero__actions .kinoma-3d-button:first-child { background:linear-gradient(90deg,#7c2f28 0%,#b84d41 50%,#c1935f 100%); color:#fff; }
 html.tv-mode .panda-tv-app-shell .panda-home-v2__inner { width:100%; }
 html.tv-mode .panda-tv-app-shell .panda-home-top10__rail { overflow-x:auto; gap:18px; padding:10px 8px 20px; }
 html.tv-mode .panda-tv-app-shell .panda-home-top10__rank { flex:0 0 clamp(220px,17vw,300px); }
@@ -142,7 +142,7 @@ html.tv-mode .panda-tv-app-shell .kinoma-details-hero { min-height:min(76vh,820p
 html.tv-mode .panda-tv-app-shell .kinoma-details-title { font-size:clamp(44px,4.2vw,64px); line-height:1.05; font-weight:800; }
 html.tv-mode .panda-tv-app-shell .kinoma-details-synopsis { max-width:760px; font-size:17px; line-height:1.65; color:#d0d0d5; }
 html.tv-mode .panda-tv-app-shell .kinoma-details-meta { font-size:15px; }
-html.tv-mode .panda-tv-app-shell .kinoma-details-3d-button--watch { min-height:52px; padding-inline:32px; border-radius:999px; background:linear-gradient(90deg,#0052d4 0%,#4364f7 50%,#e21170 100%); color:#fff; }
+html.tv-mode .panda-tv-app-shell .kinoma-details-3d-button--watch { min-height:52px; padding-inline:32px; border-radius:999px; background:linear-gradient(90deg,#7c2f28 0%,#b84d41 50%,#c1935f 100%); color:#fff; }
 html.tv-mode .panda-tv-app-shell .kinoma-details-section { margin-inline:clamp(28px,4vw,76px); }
 html.tv-mode .panda-tv-app-shell .kinoma-episode-card { border-radius:12px; }
 html.tv-mode .panda-tv-app-shell .kinoma-episode-card:focus-within { outline:3px solid #fff; outline-offset:3px; transform:scale(1.025); }
