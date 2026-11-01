@@ -483,12 +483,21 @@ class MainActivity : ComponentActivity() {
     }
 
     private fun isGestureNavigation(): Boolean {
-        return try {
+        try {
             val resourceId = resources.getIdentifier("config_navBarInteractionMode", "integer", "android")
-            resourceId != 0 && resources.getInteger(resourceId) == 2
+            if (resourceId != 0) {
+                val mode = resources.getInteger(resourceId)
+                if (mode == 2) return true
+                if (mode == 0 || mode == 1) return false
+            }
         } catch (_: Exception) {
-            false
+            // Fall back to the actual window insets on devices that hide this resource.
         }
+
+        val insets = ViewCompat.getRootWindowInsets(window.decorView) ?: return false
+        val gestureBottom = insets.getInsets(WindowInsetsCompat.Type.mandatorySystemGestures()).bottom
+        val navigationBottom = insets.getInsets(WindowInsetsCompat.Type.navigationBars()).bottom
+        return gestureBottom > 0 && (navigationBottom == 0 || navigationBottom <= gestureBottom)
     }
 
     private fun hideSystemUI() {
