@@ -14,6 +14,7 @@ import android.os.Bundle
 import android.provider.Settings
 import android.util.Log
 import android.view.KeyEvent
+import android.view.HapticFeedbackConstants
 import android.view.View
 import android.view.ViewGroup
 import android.view.WindowManager
@@ -728,15 +729,9 @@ class MainActivity : ComponentActivity() {
         }
 
         @JavascriptInterface
-        fun getAppVersionCode(): Int {
-            return try {
-                val info = context.packageManager.getPackageInfo(context.packageName, 0)
-                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.P) info.longVersionCode.toInt() else {
-                    @Suppress("DEPRECATION")
-                    info.versionCode
-                }
-            } catch (e: Exception) {
-                0
+        fun performHapticFeedback() {
+            runOnUiThread {
+                if (::webView.isInitialized) webView.performHapticFeedback(HapticFeedbackConstants.KEYBOARD_TAP)
             }
         }
 
