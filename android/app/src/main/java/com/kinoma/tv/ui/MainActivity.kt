@@ -61,7 +61,7 @@ class MainActivity : ComponentActivity() {
     companion object {
         private const val TAG = "KinomaTV"
         private const val APP_DOMAIN = "appassets.androidplatform.net"
-        private const val WEB_ENTRY_URL = "https://$APP_DOMAIN/home"
+        private const val WEB_ENTRY_URL = "https://$APP_DOMAIN/"
     }
 
     @SuppressLint("SetJavaScriptEnabled")
