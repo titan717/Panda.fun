@@ -4,7 +4,7 @@
   width: 100%;
   min-width: 0;
   min-height: 100dvh;
-  padding: 0 0 calc(86px + env(safe-area-inset-bottom, 0px));
+  padding: 0 0 calc(86px + var(--safe-bottom, 0px));
   margin: 0;
   color: #f5f2f2;
   background: #000;
@@ -106,15 +106,15 @@
   margin-top: 4px;
   padding: 0 15px;
   color: #fff;
-  background: #65172a;
-  border: 1px solid rgba(215,160,173,.24);
+  background: #b84d41;
+  border: 1px solid rgba(232,208,192,.24);
   border-radius: 999px;
   font-size: 12px;
   font-weight: 700;
   text-decoration: none;
 }
 .panda-mobile-featured__empty a:focus-visible {
-  outline: 2px solid #d7a0ad;
+  outline: 2px solid #e8d0c0;
   outline-offset: 3px;
 }
 
@@ -155,7 +155,7 @@
 .panda-mobile-featured__card:focus-visible,
 .panda-mobile-home__trending-card:focus-visible,
 .panda-mobile-home__top10-card:focus-visible {
-  outline: 2px solid #a44760;
+  outline: 2px solid #b84d41;
   outline-offset: 3px;
 }
 
@@ -192,6 +192,32 @@
   scroll-snap-align: start;
   text-decoration: none;
 }
+.panda-mobile-home__trending-card.is-wide {
+  flex-basis: 68vw;
+  width: 68vw;
+  max-width: 340px;
+  aspect-ratio: 16 / 9;
+  border-radius: 13px;
+}
+.panda-mobile-home__rail-skeleton {
+  display: flex;
+  gap: 10px;
+  overflow: hidden;
+  padding: 0 18px 8px;
+}
+.panda-mobile-home__rail-skeleton span {
+  display: block;
+  flex: 0 0 34vw;
+  max-width: 210px;
+  aspect-ratio: 2 / 3;
+  border-radius: 9px;
+  background: linear-gradient(110deg, #080808 25%, #171412 42%, #080808 62%);
+  background-size: 220% 100%;
+  animation: panda-mobile-rail-shimmer 1.5s ease-in-out infinite;
+}
+.panda-mobile-home__rail-skeleton.is-wide span { flex-basis: 68vw; aspect-ratio: 16 / 9; }
+@keyframes panda-mobile-rail-shimmer { to { background-position-x: -220%; } }
+
 .panda-mobile-home__trending-card img,
 .panda-mobile-home__top10-card img {
   display: block;
@@ -250,6 +276,7 @@
 }
 
 @media (prefers-reduced-motion: reduce) {
+  .panda-mobile-home__rail-skeleton span { animation: none; }
   .panda-mobile-featured__card,
   .panda-mobile-featured__hint span { transition: none; }
 }
@@ -263,7 +290,7 @@
 .panda-mobile-featured__art img, .panda-mobile-featured__art .panda-mobile-featured__no-art { display: block; width: 100%; height: 100%; object-fit: cover; object-position: center 25%; }
 .panda-mobile-featured__art::after { content: ""; background: linear-gradient(180deg, rgba(0,0,0,.02) 8%, rgba(0,0,0,.12) 32%, rgba(0,0,0,.78) 65%, #050505 100%), linear-gradient(90deg, rgba(0,0,0,.28), transparent 75%); }
 .panda-mobile-featured__copy { position: relative; z-index: 2; width: 100%; padding: 30px 19px 20px; }
-.panda-mobile-featured__kicker { display: inline-flex; align-items: center; min-height: 23px; padding: 0 9px; border: 1px solid rgba(255,255,255,.22); border-radius: 999px; background: rgba(12,12,14,.58); color: #f0c8d2; font-size: 9px; font-weight: 800; letter-spacing: .14em; }
+.panda-mobile-featured__kicker { display: inline-flex; align-items: center; min-height: 23px; padding: 0 9px; border: 1px solid rgba(255,255,255,.22); border-radius: 999px; background: rgba(12,12,14,.58); color: #e8d0c0; font-size: 9px; font-weight: 800; letter-spacing: .14em; }
 .panda-mobile-featured__meta { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 12px; color: rgba(255,255,255,.82); font-size: 10px; font-weight: 700; letter-spacing: .07em; }
 .panda-mobile-featured__meta span + span::before { content: "·"; margin-right: 8px; color: rgba(255,255,255,.48); }
 .panda-mobile-featured__copy h1 { max-width: 19ch; margin: 8px 0 0; color: #fff; font-size: clamp(27px, 7.4vw, 39px); font-weight: 820; line-height: 1.03; letter-spacing: -.045em; text-wrap: balance; }
@@ -551,7 +578,7 @@
 @keyframes panda-billboard-progress { from { background: linear-gradient(90deg, #fff 0%, #fff 0%, rgba(255,255,255,.36) 0%); } to { background: linear-gradient(90deg, #fff 100%, #fff 100%, rgba(255,255,255,.36) 100%); } }
 @keyframes panda-billboard-kenburns { from { transform: scale(1.025) translate3d(0,0,0); } to { transform: scale(1.105) translate3d(-.5%, -.4%, 0); } }
 @media (max-width: 767px) {
-  .panda-mobile-home { padding-bottom: calc(112px + env(safe-area-inset-bottom, 0px)); }
+  .panda-mobile-home { padding-bottom: calc(112px + var(--safe-bottom, env(safe-area-inset-bottom, 0px))); }
 }
 @media (max-width: 420px) {
   .panda-billboard .panda-mobile-featured__spotlight { height: 74dvh; min-height: min(74dvh, 570px); }
