@@ -41,4 +41,10 @@ jobs:
         run: |
           CURRENT_GZIP=$(find dist/assets -type f \( -name '*.js' -o -name '*.css' \) -print0 | xargs -0 cat | gzip -c | wc -c)
           DELTA=$((CURRENT_GZIP - BASELINE_GZIP))
-          printf 'main baseline: %s bytes gzipped\\nfeature branch: %s bytes gzipped\\ndelta: %+d bytes\\n' "$BASELINE_GZIP" "$CURRENT_GZIP" "$DELTA"
+          echo "main baseline: ${BASELINE_GZIP} bytes gzipped"
+          echo "feature branch: ${CURRENT_GZIP} bytes gzipped"
+          echo "delta: ${DELTA} bytes"
+          if [ "$DELTA" -gt 15360 ]; then
+            echo "::error::Gzipped asset delta exceeds the 15 KiB budget"
+            exit 1
+          fi
