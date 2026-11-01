@@ -6,7 +6,7 @@ const css = readFileSync(new URL('./search-ott.css', import.meta.url), 'utf8');
 
 describe('Search OTT UI contract', () => {
   it('debounces input and cancels stale requests', () => {
-    expect(source).toContain('setDebouncedQuery(query.trim()), 250');
+    expect(source).toContain('setSubmittedQuery(query.trim()), 250');
     expect(source).toContain('new AbortController()');
     expect(source).toContain('controller.abort()');
   });
@@ -22,13 +22,14 @@ describe('Search OTT UI contract', () => {
   it('provides All, Movies, TV, and Anime filters with a sliding indicator', () => {
     expect(source).toContain("{ id: 'anime', label: 'Anime' }");
     expect(source).toContain('panda-search__filter-indicator');
-    expect(source).toContain('aria-selected={filter === item.id}');
+    expect(source).toContain('aria-pressed={filter === item.id}');
   });
 
-  it('highlights matched titles and handles empty and offline states', () => {
+  it('restores ThinkingOrb and highlights matched titles', () => {
+    expect(source).toContain("import { ThinkingOrb } from 'thinking-orbs'");
+    expect(source).toContain('<ThinkingOrb state="searching"');
     expect(source).toContain('<mark>');
     expect(source).toContain('No results for');
-    expect(source).toContain('You’re offline');
   });
 
   it('keeps voice search conditional on Web Speech API support', () => {

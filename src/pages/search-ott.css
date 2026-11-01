@@ -30,7 +30,7 @@
   border-color: rgba(232, 208, 192, 0.42);
 }
 
-.panda-search__field svg:first-child {
+.panda-search__field > svg:first-child {
   color: var(--kinoma-muted);
 }
 
@@ -59,6 +59,10 @@
 .panda-search__field button.is-listening {
   color: var(--kinoma-accent-light);
   background: rgba(184, 77, 65, 0.16);
+}
+
+.panda-search__submit {
+  color: var(--kinoma-accent-light);
 }
 
 .panda-search__body {
@@ -91,13 +95,24 @@
   font-size: var(--text-small);
 }
 
-.panda-search__section-head button {
+.panda-search__section-head button,
+.panda-search__surprise {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
   min-height: 44px;
   border: 0;
   background: transparent;
   color: var(--kinoma-accent-light);
   font-weight: 700;
   cursor: pointer;
+}
+
+.panda-search__surprise {
+  padding: 0 14px;
+  border: 1px solid var(--kinoma-border);
+  border-radius: var(--radius-pill);
+  background: var(--kinoma-surface);
 }
 
 .panda-search__chips {
@@ -144,11 +159,6 @@
   color: #fffaf6;
   font-weight: 800;
   cursor: pointer;
-  transition: transform 160ms var(--ease-kinoma);
-}
-
-.panda-search__tile:active {
-  transform: scale(0.96);
 }
 
 .panda-search__tile.is-action { background: linear-gradient(135deg, #542c25, #b84d41); }
@@ -182,6 +192,10 @@
 .panda-search__filters button {
   position: relative;
   z-index: 1;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
   min-height: 44px;
   border: 0;
   background: transparent;
@@ -203,7 +217,6 @@
 
 .panda-search-card {
   position: relative;
-  animation: panda-search-rise 360ms var(--ease-kinoma) both;
 }
 
 .panda-search-card__link {
@@ -293,6 +306,26 @@
   border-color: rgba(232, 208, 192, 0.4);
 }
 
+.panda-search__loading {
+  display: grid;
+  place-items: center;
+  gap: 14px;
+  min-height: 300px;
+  padding: 24px;
+  text-align: center;
+}
+
+.panda-search__loading-copy span {
+  display: block;
+  font-weight: 800;
+}
+
+.panda-search__loading-copy p {
+  margin-top: 4px;
+  color: var(--kinoma-muted);
+  font-size: var(--text-small);
+}
+
 .panda-search__state {
   display: grid;
   place-items: center;
@@ -318,49 +351,6 @@
   color: #fffaf6;
   font-weight: 800;
   cursor: pointer;
-}
-
-.panda-search-card__skeleton {
-  display: grid;
-  gap: 8px;
-}
-
-.panda-search-card__skeleton > span {
-  aspect-ratio: 2 / 3;
-  border-radius: var(--radius-md);
-  background: var(--kinoma-surface);
-}
-
-.panda-search-card__skeleton strong {
-  height: 14px;
-  border-radius: var(--radius-sm);
-  background: var(--kinoma-surface);
-}
-
-.panda-search-card__skeleton small {
-  height: 11px;
-  width: 65%;
-  border-radius: var(--radius-sm);
-  background: var(--kinoma-surface);
-}
-
-.panda-shimmer {
-  position: relative;
-  overflow: hidden;
-}
-
-.panda-shimmer::after {
-  content: '';
-  position: absolute;
-  inset: 0;
-  transform: translateX(-100%);
-  background: linear-gradient(90deg, transparent, rgba(246, 242, 238, 0.07), transparent);
-  animation: panda-search-shimmer 1.6s infinite;
-}
-
-@keyframes panda-search-rise {
-  from { opacity: 0; transform: translateY(10px); }
-  to { opacity: 1; transform: translateY(0); }
 }
 
 @keyframes panda-search-shimmer {
@@ -389,11 +379,6 @@
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .panda-search-card {
-    animation: none;
-    opacity: 1;
-  }
-
   .panda-search__filter-indicator {
     transition: none;
   }

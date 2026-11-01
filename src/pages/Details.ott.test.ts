@@ -12,16 +12,23 @@ describe('Details OTT UI contract', () => {
     expect(source).toContain('resolveMediaIdFromSlug');
   });
 
+  it('uses the real favourite and watchlist library APIs', () => {
+    expect(source).toContain('libraryManager.toggleFavorite(');
+    expect(source).toContain('libraryManager.toggleWatchlist(');
+    expect(source).toContain('libraryManager.isFavorite(id)');
+    expect(source).not.toContain('toggleFavourite(');
+  });
+
   it('renders loading, error, and empty-episode states', () => {
     expect(source).toContain('aria-busy="true"');
     expect(source).toContain('role="alert"');
     expect(source).toContain('No episodes yet');
   });
 
-  it('delay trailer activation and exposes a labelled mute control', () => {
+  it('delays trailer autoplay and respects the motion preference', () => {
     expect(source).toContain('setTrailerActive(true), 1200');
+    expect(source).toContain("motionPreference !== 'full'");
     expect(source).toContain('aria-pressed={trailerMuted}');
-    expect(source).toContain('Unmute trailer');
   });
 
   it('uses tabs, a season sheet, and a compact sticky bar', () => {
@@ -31,13 +38,15 @@ describe('Details OTT UI contract', () => {
     expect(source).toContain('panda-details__compact');
   });
 
-  it('renders episode progress from existing history data', () => {
+  it('renders episode progress with the shared ProgressRing primitive', () => {
     expect(source).toContain('historyUtil.getAnimeEpisodesProgress');
-    expect(source).toContain('panda-details__progress');
+    expect(source).toContain('<ProgressRing value={progress}');
   });
 
-  it('keeps accessible icon actions and reduced-motion fallbacks', () => {
-    expect(source).toContain('aria-label="Share this title"');
+  it('uses motion primitives and accessible safe-area layout', () => {
+    expect(source).toContain("from '../motion'");
+    expect(source).toContain('<Stagger');
+    expect(source).toContain('<Pressable');
     expect(css).toContain('@media (prefers-reduced-motion: reduce)');
     expect(css).toContain('env(safe-area-inset-bottom)');
   });

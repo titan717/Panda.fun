@@ -1,6 +1,8 @@
+
 import React, { FormEvent, useEffect, useMemo, useRef, useState } from 'react';
-import { Link, useLocation } from 'wouter';
-import { Mic, MicOff, Search as SearchIcon, X, Clock3, Sparkles, Play, Plus, Check, WifiOff } from 'lucide-react';
+import { Footer } from '../components/ui/Footer';
+import { Link, useLocation, useSearch } from 'wouter';
+import { ArrowRight, Check, Clock3, Filter, Mic, MicOff, Plus, Play, Search as SearchIcon, Sparkles, WifiOff, X } from 'lucide-react';
 import { updateSEO } from '../lib/seo';
 import { trackGAEvent } from '../lib/analytics';
 import { buildDetailsHref } from '../lib/mediaRoute';
@@ -9,6 +11,9 @@ import { libraryManager } from '../lib/library';
 import { optimizeImageUrl } from '../lib/mediaImages';
 import { api, MovieApiError } from '../lib/api';
 import type { AnimeItem } from '../types';
+import { ThinkingOrb } from 'thinking-orbs';
+import { friendlyNetworkError } from '../lib/networkMessage';
+import { Pressable, Reveal, Stagger } from '../motion';
 import './search-ott.css';
 
 type SearchKind = 'movie' | 'series' | 'anime';
@@ -124,9 +129,10 @@ function ResultCard({ item, query, priority }: { item: SearchItem; query: string
 
 export function Search() {
   const [location, setLocation] = useLocation();
+  const searchString = useSearch();
   const initialQuery = useMemo(() => new URLSearchParams(window.location.search).get('keyword')?.trim() || '', []);
   const [query, setQuery] = useState(initialQuery);
-  const [debouncedQuery, setDebouncedQuery] = useState(initialQuery);
+  const [submittedQuery, setSubmittedQuery] = useState(initialQuery);
   const [recentSearches, setRecentSearches] = useState<string[]>([]);
   const [results, setResults] = useState<SearchItem[]>([]);
   const [loading, setLoading] = useState(false);
@@ -145,10 +151,19 @@ export function Search() {
   };
   const SpeechRecognitionApi = speechWindow.SpeechRecognition || speechWindow.webkitSpeechRecognition;
   const voiceSearchSupported = Boolean(SpeechRecognitionApi);
-  const isSearching = debouncedQuery.length > 0;
+  const isSearching = submittedQuery.length > 0;
+
+  useEffect(() => {
+    const params = new URLSearchParams(searchString);
+    const requestedType = params.get('type');
+    setFilter(requestedType === 'movie' || requestedType === 'series' || requestedType === 'anime' ? requestedType : 'all');
+    const keyword = params.get('keyword')?.trim() || '';
+    setSubmittedQuery(previous => (previous === keyword ? previous : keyword));
+    if (keyword) setQuery(previous => (previous.trim() === keyword ? previous : keyword));
+  }, [searchString]);
 
   const visibleResults = useMemo(() => {
-    const normalized = debouncedQuery.toLocaleLowerCase();
+    const normalized = submittedQuery.toLocaleLowerCase();
     return results
       .filter(item => filter === 'all' || item.type === filter)
       .sort((a, b) => {
@@ -162,19 +177,19 @@ export function Search() {
         };
         return score(b) - score(a);
       });
-  }, [results, filter, debouncedQuery]);
+  }, [results, filter, submittedQuery]);
 
   useEffect(() => {
     setRecentSearches(preferencesUtil.getRecentSearches());
     updateSEO({
-      title: isSearching ? `Search “${debouncedQuery}”` : 'Search',
+      title: isSearching ? `Search “${submittedQuery}”` : 'Search',
       description: 'Find movies, TV series and anime on Panda.fun.',
       type: 'website'
     });
-  }, [isSearching, debouncedQuery]);
+  }, [isSearching, submittedQuery]);
 
   useEffect(() => {
-    const timer = window.setTimeout(() => setDebouncedQuery(query.trim()), 250);
+    const timer = window.setTimeout(() => setSubmittedQuery(query.trim()), 250);
     return () => window.clearTimeout(timer);
   }, [query]);
 
@@ -183,14 +198,14 @@ export function Search() {
     const controller = new AbortController();
     setLoading(true);
     setError(null);
-    const request = isSearching ? api.search(debouncedQuery, controller.signal) : api.getTrending();
+    const request = isSearching ? api.search(submittedQuery, controller.signal) : api.getTrending();
 
     request.then(data => {
       if (active) setResults(data.results.map(mapItem));
     }).catch((err: unknown) => {
       if (!active) return;
       setResults([]);
-      setError(err instanceof MovieApiError ? err.message : 'MovieApi is unavailable right now.');
+      setError(friendlyNetworkError(err instanceof MovieApiError ? err : null, 'Search is unavailable right now. Please try again in a moment.'));
     }).finally(() => {
       if (active) setLoading(false);
     });
@@ -199,18 +214,18 @@ export function Search() {
       active = false;
       controller.abort();
     };
-  }, [isSearching, debouncedQuery, retryNonce]);
+  }, [isSearching, submittedQuery, retryNonce]);
 
   useEffect(() => {
     if (!isSearching) return;
-    setLocation(`/search?keyword=${encodeURIComponent(debouncedQuery)}`, { replace: true });
-  }, [debouncedQuery, isSearching, setLocation]);
+    setLocation(`/search?keyword=${encodeURIComponent(submittedQuery)}${filter !== 'all' ? `&type=${filter}` : ''}`, { replace: true });
+  }, [submittedQuery, filter, isSearching, setLocation]);
 
   useEffect(() => {
     const onPopState = () => {
       if (query) {
         setQuery('');
-        setDebouncedQuery('');
+        setSubmittedQuery('');
         setFilter('all');
       }
     };
@@ -266,13 +281,13 @@ export function Search() {
     if (!clean) return;
     preferencesUtil.addRecentSearch(clean);
     setRecentSearches(preferencesUtil.getRecentSearches());
-    setDebouncedQuery(clean);
+    setSubmittedQuery(clean);
     trackGAEvent('search', { content_type: 'catalog', has_query: true });
   };
 
   const clearAll = () => {
     setQuery('');
-    setDebouncedQuery('');
+    setSubmittedQuery('');
     setError(null);
     setFilter('all');
     setLocation('/search', { replace: true });
@@ -296,10 +311,18 @@ export function Search() {
 
   const runSearch = (value: string) => {
     setQuery(value);
-    setDebouncedQuery(value);
+    setSubmittedQuery(value);
     setFilter('all');
     preferencesUtil.addRecentSearch(value);
     setRecentSearches(preferencesUtil.getRecentSearches());
+  };
+
+  const surprisePool = useMemo(() => results.filter(item => item.id && item.title), [results]);
+  const surpriseMe = () => {
+    if (!surprisePool.length) return;
+    const pick = surprisePool[Math.floor(Math.random() * surprisePool.length)];
+    trackGAEvent('surprise_me', { source: 'search', content_type: pick.type, item_id: pick.id, title: pick.title });
+    setLocation(pick.href);
   };
 
   const filters: Array<{ id: SearchFilter; label: string }> = [
@@ -312,7 +335,7 @@ export function Search() {
   const offline = typeof navigator !== 'undefined' && navigator.onLine === false;
 
   return (
-    <main className={`panda-search ${isSearching ? 'is-searching' : ''}`}>
+    <div className={`panda-search ${isSearching ? 'is-searching' : ''}`}>
       <header className="panda-search__top">
         <form className="panda-search__field" onSubmit={submitSearch} role="search" aria-label="Search the catalogue">
           <SearchIcon size={18} aria-hidden="true" />
@@ -348,6 +371,9 @@ export function Search() {
               {voiceListening ? <MicOff size={17} /> : <Mic size={17} />}
             </button>
           )}
+          <button type="submit" className="panda-search__submit" aria-label="Search">
+            <ArrowRight size={15} aria-hidden="true" />
+          </button>
         </form>
       </header>
 
@@ -376,6 +402,9 @@ export function Search() {
             <section aria-label="Trending searches">
               <div className="panda-search__section-head">
                 <h2><Sparkles size={15} aria-hidden="true" /> Trending searches</h2>
+                <Pressable className="panda-search__surprise" onClick={surpriseMe} disabled={!surprisePool.length} aria-label="Pick a surprise title and open its details page">
+                  <Sparkles size={14} aria-hidden="true" /> Surprise Me
+                </Pressable>
               </div>
               <div className="panda-search__chips">
                 {results.slice(0, 8).map(item => (
@@ -392,14 +421,13 @@ export function Search() {
               </div>
               <div className="panda-search__tiles">
                 {GENRE_TILES.map(tile => (
-                  <button
+                  <Pressable
                     key={tile.label}
-                    type="button"
                     className={`panda-search__tile ${tile.className}`}
                     onClick={() => runSearch(tile.query)}
                   >
                     {tile.label}
-                  </button>
+                  </Pressable>
                 ))}
               </div>
             </section>
@@ -408,12 +436,12 @@ export function Search() {
 
         <section aria-label={isSearching ? 'Search results' : 'Trending titles'}>
           <div className="panda-search__section-head">
-            <h2>{isSearching ? `Results for “${debouncedQuery}”` : 'Trending now'}</h2>
-            {isSearching && !loading && <span>{visibleResults.length} {visibleResults.length === 1 ? 'result' : 'results'}</span>}
+            <h2>{isSearching ? `Results for “${submittedQuery}”` : 'Trending now'}</h2>
+            {isSearching && !loading && <span aria-live="polite">{visibleResults.length} {visibleResults.length === 1 ? 'result' : 'results'}</span>}
           </div>
 
           {(isSearching || results.length > 0) && (
-            <div className="panda-search__filters" role="tablist" aria-label="Filter results">
+            <div className="panda-search__filters" role="group" aria-label="Filter search results">
               <span
                 className="panda-search__filter-indicator"
                 style={{ transform: `translateX(${activeFilterIndex * 100}%)` }}
@@ -423,12 +451,11 @@ export function Search() {
                 <button
                   key={item.id}
                   type="button"
-                  role="tab"
-                  aria-selected={filter === item.id}
+                  aria-pressed={filter === item.id}
                   className={filter === item.id ? 'is-active' : ''}
                   onClick={() => setFilter(item.id)}
                 >
-                  {item.label}
+                  <Filter size={13} aria-hidden="true" /> {item.label}
                 </button>
               ))}
             </div>
@@ -442,14 +469,12 @@ export function Search() {
               <button type="button" onClick={() => setRetryNonce(value => value + 1)}>Retry</button>
             </div>
           ) : loading ? (
-            <div className="panda-search__grid" aria-live="polite" aria-busy="true">
-              {Array.from({ length: 9 }).map((_, index) => (
-                <div key={index} className="panda-search-card__skeleton">
-                  <span className="panda-shimmer" />
-                  <strong className="panda-shimmer" />
-                  <small className="panda-shimmer" />
-                </div>
-              ))}
+            <div className="panda-search__loading" role="status" aria-live="polite">
+              <ThinkingOrb state="searching" size={64} theme="dark" aria-label="Searching the catalogue" />
+              <div className="panda-search__loading-copy">
+                <span>Searching the catalogue</span>
+                <p>Finding movies, series and anime</p>
+              </div>
             </div>
           ) : error ? (
             <div className="panda-search__state" role="alert">
@@ -459,15 +484,15 @@ export function Search() {
               <button type="button" onClick={() => setRetryNonce(value => value + 1)}>Try again</button>
             </div>
           ) : visibleResults.length ? (
-            <div className="panda-search__grid">
+            <Stagger className="panda-search__grid">
               {visibleResults.map((item, index) => (
-                <ResultCard key={item.id} item={item} query={debouncedQuery} priority={index < 6} />
+                <ResultCard key={item.id} item={item} query={submittedQuery} priority={index < 6} />
               ))}
-            </div>
+            </Stagger>
           ) : (
             <div className="panda-search__state">
               <SearchIcon size={26} aria-hidden="true" />
-              <h3>{results.length ? 'No results in this filter' : `No results for “${debouncedQuery}”`}</h3>
+              <h3>{results.length ? 'No results in this filter' : `No results for “${submittedQuery}”`}</h3>
               <p>Try a different spelling, a broader title, or browse a mood below.</p>
               <button type="button" onClick={results.length ? () => setFilter('all') : clearAll}>
                 {results.length ? 'Show all results' : 'Back to discovery'}
@@ -476,6 +501,8 @@ export function Search() {
           )}
         </section>
       </div>
-    </main>
+
+      <Footer />
+    </div>
   );
 }
