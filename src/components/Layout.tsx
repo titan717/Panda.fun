@@ -36,6 +36,7 @@ export function Layout({ children }: { children: React.ReactNode }) {
   const [expanded, setExpanded] = useState(false);
   const [deviceMode, setDeviceMode] = useState(() => getCurrentDeviceMode());
   const [headerScrolled, setHeaderScrolled] = useState(false);
+  const [activeCategory, setActiveCategory] = useState('All');
   const [activeHomeCategory, setActiveHomeCategory] = useState('All');
   const [activeCategory, setActiveCategory] = useState('All');
   const tvMode = deviceMode === 'tv';
