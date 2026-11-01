@@ -36,6 +36,7 @@ export function Layout({ children }: { children: React.ReactNode }) {
   const [expanded, setExpanded] = useState(false);
   const [deviceMode, setDeviceMode] = useState(() => getCurrentDeviceMode());
   const [headerScrolled, setHeaderScrolled] = useState(false);
+  const [activeHomeCategory, setActiveHomeCategory] = useState('All');
   const [activeCategory, setActiveCategory] = useState('All');
   const tvMode = deviceMode === 'tv';
   const collapseTimer = useRef<number | null>(null);
@@ -60,6 +61,15 @@ export function Layout({ children }: { children: React.ReactNode }) {
     const onCategory = (event: Event) => {
       const category = (event as CustomEvent).detail;
       if (typeof category === 'string') setActiveCategory(category);
+    };
+    window.addEventListener('panda_home_category_select', onCategory);
+    return () => window.removeEventListener('panda_home_category_select', onCategory);
+  }, []);
+
+  useEffect(() => {
+    const onCategory = (event: Event) => {
+      const category = (event as CustomEvent).detail;
+      if (typeof category === 'string') setActiveHomeCategory(category);
     };
     window.addEventListener('panda_home_category_select', onCategory);
     return () => window.removeEventListener('panda_home_category_select', onCategory);
@@ -103,7 +113,7 @@ export function Layout({ children }: { children: React.ReactNode }) {
           {!tvMode && (location.split('?')[0] === '/home' || location.split('?')[0] === '/browse') ? (
             <nav className="panda-mobile-category-row" aria-label="Home categories">
               {['All', 'Movies', 'TV Shows', 'Anime', 'Kids', 'Action', 'Comedy', 'Drama', 'Sci-Fi & Fantasy', 'Horror', 'Documentary'].map(category => (
-                <button key={category} type="button" aria-pressed={activeCategory === category} className={activeCategory === category ? 'is-active' : ''} onClick={() => window.dispatchEvent(new CustomEvent('panda_home_category_select', { detail: category }))}>{category}</button>
+                <button key={category} type="button" aria-pressed={activeCategory === category} className={activeCategory === category ? 'is-active' : ''} onClick={() => { setActiveHomeCategory(category); window.dispatchEvent(new CustomEvent('panda_home_category_select', { detail: category })); }} aria-pressed={activeHomeCategory === category}>{category}</button>
               ))}
             </nav>
           ) : null}
