@@ -492,6 +492,14 @@ export const api = {
     return { results: data.results.map(toAnimeItem) };
   },
 
+  async getGenreMedia(genre: string, type: 'movie' | 'tv', limit = 12) {
+    const data = await request<{ results: MovieApiMedia[] }>(
+      '/api/v1/genres/' + encodeURIComponent(genre),
+      { type, page: 1 },
+    );
+    return { results: data.results.slice(0, limit) };
+  },
+
   async getGenreAnime(genre = 'animation', limit = 24) {
     // The verified /api/v1/genres/:genre endpoint supports both TMDB media types.
     // Keep this rail anime-specific by filtering on original Japanese language.
