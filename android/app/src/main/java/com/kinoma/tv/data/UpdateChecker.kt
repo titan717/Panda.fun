@@ -125,11 +125,21 @@ object UpdateChecker {
                 var finished = false
 
                 while (!finished) {
+                    if (cancelledDownloadId == downloadId) {
+                        finished = true
+                        activeDownloadId = null
+                        cancelledDownloadId = null
+                        return@Thread
+                    }
                     try {
                         val query = DownloadManager.Query().setFilterById(downloadId)
                         manager.query(query).use { cursor ->
                             if (!cursor.moveToFirst()) {
                                 activeDownloadId = null
+                                if (cancelledDownloadId == downloadId) {
+                                    cancelledDownloadId = null
+                                    return@Thread
+                                }
                                 mainHandler.post { onError("Update download disappeared.") }
                                 return@Thread
                             }
