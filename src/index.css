@@ -19,8 +19,8 @@
 
   /* Reference palette roles — exact colors exposed by the Animfanz reference. */
   --color-amber: #c1935f;
-  --color-rose: #9d6555;
-  --color-blue: #5383a9;
+  --color-rose: #b84d41;
+  --color-blue: #c1935f;
 
   /* Accent — used as a signal, never as a full-page wash. */
   --color-accent: #b84d41;
@@ -65,12 +65,12 @@
 
 :root {
   color-scheme: dark;
-  --kinoma-bg: #090808;
-  --kinoma-bg-elevated: #0f0e0e;
-  --kinoma-surface: #151312;
-  --kinoma-surface-hover: #24201f;
-  --kinoma-card: #121110;
-  --kinoma-card-hover: #1b1918;
+  --kinoma-bg: #000000;
+  --kinoma-bg-elevated: #050505;
+  --kinoma-surface: #0a0a0a;
+  --kinoma-surface-hover: #141414;
+  --kinoma-card: #080808;
+  --kinoma-card-hover: #111111;
   --kinoma-text: #f6f2ee;
   --kinoma-text-soft: #ded7d1;
   --kinoma-muted: #aaa19b;
@@ -80,8 +80,8 @@
   --kinoma-accent-soft: #e8d0c0;
   --kinoma-accent-deep: #542c25;
   --kinoma-amber: #c1935f;
-  --kinoma-rose: #9d6555;
-  --kinoma-blue: #5383a9;
+  --kinoma-rose: #b84d41;
+  --kinoma-blue: #c1935f;
   --kinoma-accent-neutral: #5e4e42;
   --kinoma-border: rgba(246, 242, 238, 0.10);
   --kinoma-border-soft: rgba(246, 242, 238, 0.06);
