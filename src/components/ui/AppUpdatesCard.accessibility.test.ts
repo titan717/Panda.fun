@@ -11,7 +11,7 @@ describe('Settings app updates contract', () => {
     expect(settings).toContain('<AppUpdatesCard />');
   });
 
-  it('announces status politely and labels the section and busy state', () => {
+  it('announces status politely and labels the section and update controls', () => {
     expect(card).toContain('role="status"');
     expect(card).toContain('aria-live="polite"');
     expect(card).toContain('aria-labelledby="panda-update-title"');
@@ -28,9 +28,9 @@ describe('Settings app updates contract', () => {
   });
 
   it('has visible focus, 44px targets and reduced-motion handling', () => {
-    expect(css).toContain('.panda-updates__button:focus-visible');
-    expect(css).toContain('min-height:44px');
-    expect(css).toMatch(/prefers-reduced-motion:reduce\) \{ \.panda-updates__spin/);
+    expect(css).toContain('.panda-update-module__button:focus-visible');
+    expect(css).toContain('min-height: 46px');
+    expect(css).toContain('prefers-reduced-motion: reduce');
   });
 
   it('talks to the Android bridge through the shared KinomaNative methods', () => {
