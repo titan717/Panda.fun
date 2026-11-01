@@ -36,7 +36,7 @@ describe('MYpanda.fun mobile shell contract', () => {
     expect(mobileShell).toContain('.panda-mobile-featured__loading');
     expect(mobileShell).toContain('right: 12px !important');
     expect(mobileShell).toContain('border-radius: 22px');
-    expect(mobileShell).toContain('bottom: var(--safe-bottom, env(safe-area-inset-bottom, 0px)) !important');
+    expect(mobileShell).toContain('bottom: calc(8px + var(--safe-bottom, 0px)) !important');
   });
 
   it('includes Top 10 and the planned catalogue rows without replacing the existing API', () => {
