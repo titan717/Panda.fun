@@ -543,6 +543,7 @@ class MainActivity : ComponentActivity() {
             payload["releaseNotes"] = update.releaseNotes
             payload["mandatory"] = update.mandatory
             payload["sha256"] = update.sha256
+            payload["sizeBytes"] = update.sizeBytes
         }
         if (message != null) payload["message"] = message
         val json = com.google.gson.Gson().toJson(payload)
