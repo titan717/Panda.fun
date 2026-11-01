@@ -82,7 +82,9 @@
     font-weight: 700;
     backdrop-filter: blur(12px);
   }
-  .panda-mobile-category-row button:active { background: rgba(184,77,65,.24); border-color: rgba(184,77,65,.45); }
+  .panda-mobile-category-row button:active,
+  .panda-mobile-category-row button[aria-pressed=true] { background: rgba(184,77,65,.24); border-color: rgba(184,77,65,.55); color: #fffaf6; }
+  .panda-mobile-category-row button:focus-visible { outline: 2px solid #e8d0c0; outline-offset: 3px; }
   .panda-mobile-category-row button.is-active { color: #fffaf6; border-color: rgba(184,77,65,.72); background: rgba(184,77,65,.24); box-shadow: inset 0 0 0 1px rgba(184,77,65,.12); }
   .panda-mobile-category-row button:focus-visible { outline: 2px solid #e8d0c0; outline-offset: 2px; }
 
