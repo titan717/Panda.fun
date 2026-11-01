@@ -24,5 +24,7 @@ describe('ModernCard accessibility contract', () => {
     expect(source).toContain('aspect-video');
     expect(source).toContain('bg-[#b84d41]');
     expect(source).toContain('aria-valuenow={Math.round(safeProgress * 100)}');
+    expect(source).toContain('Math.min(1, Math.max(0, progress))');
+    expect(source).toContain('height: 3px');
   });
 });
