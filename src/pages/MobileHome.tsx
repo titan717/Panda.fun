@@ -101,7 +101,6 @@ export function MobileHome({
   error = null,
 }: MobileHomeProps) {
   const [activeIndex, setActiveIndex] = useState(0);
-  const [libraryRevision, setLibraryRevision] = useState(0);
   const [activeCategory, setActiveCategory] = useState('All');
   const [isInList, setIsInList] = useState(false);
   const [swipeDirection, setSwipeDirection] = useState<'next' | 'previous'>('next');
@@ -133,13 +132,7 @@ export function MobileHome({
   ])), [trendingItems, popularMovies, popularTv, items, activeCategory]);
   const topTen = catalogue.slice(0, 10);
   const trending = uniqueItems(filterCategory(trendingItems?.length ? trendingItems : items));
-  const myList = libraryManager.getWatchlist().map(item => ({ id: item.id, title: item.title, poster: item.image, type: item.id.includes('_movie_') ? 'movie' : 'tv' } as MovieApiMedia));
-  void libraryRevision;
-  useEffect(() => {
-    const onLibraryUpdate = () => setLibraryRevision(value => value + 1);
-    window.addEventListener('kinoma_library_update', onLibraryUpdate);
-    return () => window.removeEventListener('kinoma_library_update', onLibraryUpdate);
-  }, []);
+  const myList = libraryManager.getWatchlist().map(item => ({ id: item.id, title: item.title, poster: item.image, type: item.id.toLowerCase().includes('movie') ? 'movie' : 'tv' } as MovieApiMedia));
   const genreItems = (genre: string) => uniqueItems(filterCategory(genreShelves[genre] || []));
 
   useEffect(() => {
