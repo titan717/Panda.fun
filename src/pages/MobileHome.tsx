@@ -22,6 +22,7 @@ type MobileHomeProps = {
   becauseWatched?: MovieApiMedia[];
   lastWatchedTitle?: string;
   anime?: MovieApiMedia[];
+  genreShelves?: Record<string, MovieApiMedia[]>;
   loading?: boolean;
   error?: string | null;
 };
@@ -95,6 +96,7 @@ export function MobileHome({
   becauseWatched = [],
   lastWatchedTitle = '',
   anime = [],
+  genreShelves = {},
   loading = false,
   error = null,
 }: MobileHomeProps) {
@@ -138,7 +140,7 @@ export function MobileHome({
     window.addEventListener('kinoma_library_update', onLibraryUpdate);
     return () => window.removeEventListener('kinoma_library_update', onLibraryUpdate);
   }, []);
-  const genreItems = (genre: string) => uniqueItems(filterCategory(catalogue.filter(item => (item.genres || []).some(value => value.toLowerCase().includes(genre.toLowerCase())))));
+  const genreItems = (genre: string) => uniqueItems(filterCategory(genreShelves[genre] || []));
 
   useEffect(() => {
     const onCategory = (event: Event) => {
@@ -313,9 +315,9 @@ export function MobileHome({
       <MobileRail title="Action" items={genreItems("Action")} genre="Action" />
       <MobileRail title="Comedy" items={genreItems("Comedy")} genre="Comedy" />
       <MobileRail title="Drama" items={genreItems("Drama")} genre="Drama" />
-      <MobileRail title="Sci-Fi & Fantasy" items={genreItems("Science Fiction")} genre="Sci-Fi & Fantasy" />
+      <MobileRail title="Sci-Fi & Fantasy" items={genreItems("Sci-Fi & Fantasy")} genre="Sci-Fi & Fantasy" />
       <MobileRail title="Horror" items={genreItems("Horror")} genre="Horror" />
-      <MobileRail title="Animation & Family" items={genreItems("Animation")} genre="Animation & Family" />
+      <MobileRail title="Animation & Family" items={genreItems("Animation & Family")} genre="Animation & Family" />
       <MobileRail title="Documentary" items={genreItems("Documentary")} genre="Documentary" />
     </div>
   );
