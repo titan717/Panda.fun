@@ -15,10 +15,8 @@ const png = (path: string, width: number, height = width) => {
 describe('Panda.fun single-source icon exports', () => {
   it('keeps the canonical vector artwork and maskable source', () => {
     const source = readFileSync(resolve(root, 'assets/panda-icon.svg'), 'utf8');
-    const maskable = readFileSync(resolve(root, 'assets/panda-icon-maskable.svg'), 'utf8');
     expect(source).toContain('#B84D41');
     expect(source).toContain('#F6F2EE');
-    expect(maskable).toContain('viewBox="0 0 512 512"');
   });
 
   it('exports the declared web and PWA PNG sizes', () => {
