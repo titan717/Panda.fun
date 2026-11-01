@@ -1,4 +1,5 @@
 import React, { useEffect, useMemo, useState } from 'react';
+import { Link } from 'wouter';
 import { Footer } from '../components/ui/Footer';
 import { Bookmark, CheckCircle2, Clock3, Heart, Search, X, Play } from 'lucide-react';
 import { buildDetailsHref, buildWatchHref } from '../lib/mediaRoute';
