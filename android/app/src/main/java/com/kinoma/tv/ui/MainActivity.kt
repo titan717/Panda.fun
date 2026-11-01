@@ -50,6 +50,7 @@ class MainActivity : ComponentActivity() {
     private lateinit var diagnosticContainer: LinearLayout
     private lateinit var diagnosticText: TextView
     private var pendingVerifiedUpdateUri: Uri? = null
+    private var isPlayerPage: Boolean = false
 
     companion object {
         private const val TAG = "KinomaTV"
@@ -96,7 +97,7 @@ class MainActivity : ComponentActivity() {
                 ViewGroup.LayoutParams.MATCH_PARENT
             )
             orientation = LinearLayout.VERTICAL
-            setBackgroundColor(Color.parseColor("#07080d"))
+            setBackgroundColor(Color.BLACK)
             setPadding(80, 80, 80, 80)
             visibility = View.GONE
         }
@@ -165,6 +166,8 @@ class MainActivity : ComponentActivity() {
             override fun onPageStarted(view: WebView, url: String, favicon: android.graphics.Bitmap?) {
                 super.onPageStarted(view, url, favicon)
                 Log.i(TAG, "WebView page started: $url")
+                isPlayerPage = url.substringBefore("?").contains("/watch")
+                hideSystemUI()
                 // Publish actual device capability; never force TV styling on touch devices.
                 view.evaluateJavascript(
                     """
@@ -182,6 +185,8 @@ class MainActivity : ComponentActivity() {
             override fun onPageFinished(view: WebView, url: String) {
                 super.onPageFinished(view, url)
                 Log.i(TAG, "WebView page finished: $url")
+                ViewCompat.requestApplyInsets(window.decorView)
+                hideSystemUI()
                 // Reconcile frontend mode after document navigation.
                 view.evaluateJavascript(
                     """
@@ -299,9 +304,12 @@ class MainActivity : ComponentActivity() {
             ViewCompat.requestApplyInsets(rootLayout)
         }
 
-        // Load the bundled production Kinoma TV application
-        Log.i(TAG, "Loading entry URL: $WEB_ENTRY_URL")
-        webView.loadUrl(WEB_ENTRY_URL)
+        // Restore WebView navigation state across configuration changes; otherwise start at Home.
+        val restoredWebView = savedInstanceState != null && webView.restoreState(savedInstanceState) != null
+        if (!restoredWebView) {
+            Log.i(TAG, "Loading bundled Panda.fun Home: $WEB_ENTRY_URL")
+            webView.loadUrl(WEB_ENTRY_URL)
+        }
         webView.requestFocus()
 
         // Background check for updates without blocking TV interface
@@ -448,7 +456,7 @@ class MainActivity : ComponentActivity() {
         val controller = WindowInsetsControllerCompat(window, window.decorView)
         controller.isAppearanceLightStatusBars = false
         controller.isAppearanceLightNavigationBars = false
-        if (isGestureNavigation()) {
+        if (isPlayerPage || isGestureNavigation()) {
             controller.show(WindowInsetsCompat.Type.navigationBars())
         } else {
             controller.systemBarsBehavior = WindowInsetsControllerCompat.BEHAVIOR_SHOW_TRANSIENT_BARS_BY_SWIPE
@@ -475,6 +483,11 @@ class MainActivity : ComponentActivity() {
     override fun onPause() {
         super.onPause()
         webView.onPause()
+    }
+
+    override fun onSaveInstanceState(outState: Bundle) {
+        if (::webView.isInitialized) webView.saveState(outState)
+        super.onSaveInstanceState(outState)
     }
 
     override fun onDestroy() {
