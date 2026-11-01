@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Link } from 'wouter';
 import { Play, Info, Plus } from 'lucide-react';
-import { motion, AnimatePresence } from 'motion/react';
+import { m, AnimatePresence } from 'motion/react';
 import { AnimatedCheck, Pressable, Reveal, useMotionPreference } from '../../../motion';
 import { AnimeItem, DEFAULT_BANNER } from '../../../types';
 import { libraryManager } from '../../../lib/library';
@@ -109,7 +109,7 @@ export function ModernHero({ items }: ModernHeroProps) {
       
       {/* Background Cinematic Backdrop Artwork with Breakpoint-Optimized Focal Cropping */}
       <AnimatePresence mode="popLayout">
-        <motion.div
+        <m.div
           key={currentItem.id || currentIndex}
           initial={{ opacity: 0, scale: motionPreference === 'full' ? 1.04 : 1 }}
           animate={{ opacity: 1, scale: 1 }}
@@ -124,7 +124,7 @@ export function ModernHero({ items }: ModernHeroProps) {
             loading="eager"
             referrerPolicy="no-referrer"
           />
-        </motion.div>
+        </m.div>
       </AnimatePresence>
 
       {/* Responsive Cinematic Gradient Masks */}
@@ -143,12 +143,12 @@ export function ModernHero({ items }: ModernHeroProps) {
       {/* Hero Content Area */}
       <div className="relative z-10 w-full max-w-[1680px] mx-auto px-4 sm:px-6 md:px-8 lg:px-10 pb-8 sm:pb-12 lg:pb-16">
         <AnimatePresence mode="wait">
-          <motion.div
+          <m.div
             key={`modern-hero-content-${currentItem.id || currentIndex}`}
-            initial={{ opacity: 0, y: 20 }}
+            initial={{ opacity: 0, y: motionPreference === 'full' ? 20 : 0 }}
             animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: -15 }}
-            transition={{ duration: 0.4, ease: [0.16, 1, 0.3, 1] }}
+            exit={{ opacity: 0, y: motionPreference === 'full' ? -15 : 0 }}
+            transition={{ duration: motionPreference === 'full' ? 0.4 : 0.12, ease: [0.16, 1, 0.3, 1] }}
             className="max-w-2xl flex flex-col gap-2.5 sm:gap-3.5"
           >
             <div className="hidden lg:block absolute right-8 xl:right-12 bottom-10 w-[150px] xl:w-[180px] aspect-[2/3] rounded-[22px] overflow-hidden border border-white/15 shadow-[0_24px_70px_rgba(0,0,0,.55)] rotate-[2deg]">
@@ -217,7 +217,7 @@ export function ModernHero({ items }: ModernHeroProps) {
 
             </div>
 
-          </motion.div>
+          </m.div>
         </AnimatePresence>
 
         {/* Hero Carousel Navigation Dots */}
