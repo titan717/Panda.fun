@@ -12,6 +12,20 @@ import './settings-page.css';
 
 declare const __APP_VERSION__: string | undefined;
 
+function getInstalledBuildInfo() {
+  let version = typeof __APP_VERSION__ === 'string' && __APP_VERSION__ ? __APP_VERSION__ : 'Production';
+  let build = import.meta.env.MODE;
+  if (typeof window !== 'undefined') {
+    const native = (window as Window & { KinomaNative?: { getAppVersion?: () => string; getAppVersionCode?: () => number } }).KinomaNative;
+    try {
+      version = native?.getAppVersion?.() || version;
+      const versionCode = native?.getAppVersionCode?.();
+      if (typeof versionCode === 'number' && versionCode > 0) build = String(versionCode);
+    } catch {}
+  }
+  return { version, build };
+}
+
 function SettingSwitch({ label, description, checked, onChange }: { label: string; description: string; checked: boolean; onChange: () => void }) {
   return (
     <div className="panda-settings-row">
@@ -25,6 +39,7 @@ function SettingSwitch({ label, description, checked, onChange }: { label: strin
 
 export function Settings() {
   const { user } = useAuth();
+  const buildInfo = getInstalledBuildInfo();
   const { playerSettings, updatePlayerSetting, playbackPreferences, updatePlaybackPreference } = useAppearance();
   const [devToolsOpen, setDevToolsOpen] = useState(false);
   const [historyCount, setHistoryCount] = useState(() => historyUtil.getHistory().length);
@@ -149,7 +164,7 @@ export function Settings() {
       <section className="panda-settings-v3__group" aria-labelledby="panda-settings-about">
         <div className="panda-settings-v3__group-heading"><Info size={17} /><h2 id="panda-settings-about">About</h2></div>
         <div className="panda-settings-v3__surface">
-          <div className="panda-settings-row"><span className="panda-settings-row__copy"><strong>Panda.fun</strong><small>Version {typeof __APP_VERSION__ === 'string' && __APP_VERSION__ ? __APP_VERSION__ : 'Production'} · Build {import.meta.env.MODE}</small></span><span className="panda-settings-v3__wordmark">PANDA<span>.FUN</span></span></div>
+          <div className="panda-settings-row"><span className="panda-settings-row__copy"><strong>Panda.fun</strong><small>Version {buildInfo.version} · Build {buildInfo.build}</small></span><span className="panda-settings-v3__wordmark">PANDA<span>.FUN</span></span></div>
           <Link href="/terms" className="panda-settings-row panda-settings-row--button"><span className="panda-settings-row__copy"><strong>Terms of service</strong></span><ChevronLeft className="panda-settings-row__chevron" size={17} /></Link>
           <Link href="/privacy-policy" className="panda-settings-row panda-settings-row--button"><span className="panda-settings-row__copy"><strong>Privacy policy</strong></span><ChevronLeft className="panda-settings-row__chevron" size={17} /></Link>
         </div>
