@@ -222,7 +222,7 @@ export function Library() {
               <h2>{latestHistory.title || 'Continue watching'}</h2>
               <p>S{Math.max(1, Number(latestHistory.seasonNumber) || 1)} E{Math.max(1, Number(latestHistory.episodeNumber) || 1)}</p>
               <div className="panda-library__resume-progress" role="progressbar" aria-label="Playback progress" aria-valuemin={0} aria-valuemax={100} aria-valuenow={Math.round(Math.min(100, Math.max(0, latestHistory.completionPercentage || 0)))}>
-                <m.span initial={{ width: '0%' }} animate={{ width: `${Math.min(100, Math.max(0, latestHistory.completionPercentage || 0))}%` }} transition={{ duration: motionPreference === 'full' ? 0.65 : 0 }} />
+                <m.span style={{ width: '100%', transformOrigin: 'left center' }} initial={{ scaleX: 0 }} animate={{ scaleX: Math.min(100, Math.max(0, latestHistory.completionPercentage || 0)) / 100 }} transition={{ duration: motionPreference === 'full' ? 0.65 : 0 }} />
               </div>
               <Link
                 className="panda-library__resume-button"
