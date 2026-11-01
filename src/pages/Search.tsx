@@ -71,7 +71,7 @@ async function getGenreSearchResults(genre: string): Promise<{ results: AnimeIte
       image: item.poster || item.backdrop || '',
       rating: item.rating,
       releaseDate: item.releaseDate,
-      contentType: item.type === 'movie' ? 'movie' : 'tv',
+      contentType: item.type === 'movie' ? 'movie' : 'series',
       genres: item.genres || [],
     })),
   };
