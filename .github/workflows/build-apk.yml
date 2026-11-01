@@ -208,8 +208,9 @@ jobs:
         run: |
           set -euo pipefail
           SHA256="$(sha256sum release/Panda.fun-Android-TV.apk | awk '{print $1}')"
+          APK_SIZE_BYTES="$(stat -c%s release/Panda.fun-Android-TV.apk)"
           APK_URL="https://github.com/titan717/Panda.fun/releases/download/${RELEASE_TAG}/Panda.fun-Android-TV.apk"
-          export SHA256 APK_URL
+          export SHA256 APK_URL APK_SIZE_BYTES
 
           python - <<'PY'
           import json, os
@@ -220,6 +221,7 @@ jobs:
               "releaseNotes": f"Panda.fun Android TV {os.environ['VERSION_NAME']}",
               "apkUrl": os.environ["APK_URL"],
               "sha256": os.environ["SHA256"],
+              "sizeBytes": int(os.environ["APK_SIZE_BYTES"]),
               "mandatory": False,
               "channel": "stable",
               "prerelease": False
