@@ -20,7 +20,7 @@ describe('Android edge-to-edge and player system bars', () => {
     expect(activity).toContain('private fun isGestureNavigation()');
     expect(activity).toContain('systemNavFallback');
     expect(activity).toContain('WindowInsetsControllerCompat.BEHAVIOR_SHOW_TRANSIENT_BARS_BY_SWIPE');
-    expect(css).toContain('var(--safe-bottom, 0px)');
+    expect(css).toContain('var(--safe-bottom, env(safe-area-inset-bottom, 0px))');
     expect(css).toContain('.system-nav-visible .panda-mobile-bottom-nav');
   });
 
