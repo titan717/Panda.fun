@@ -1564,7 +1564,7 @@ p {
     margin-left: 0;
     min-height: 100dvh;
     padding-top: 62px;
-    padding-bottom: env(safe-area-inset-bottom);
+    padding-bottom: var(--safe-bottom, env(safe-area-inset-bottom, 0px));
   }
   .kinoma-sidebar [data-tooltip]::after { display: none; }
 }
@@ -5751,7 +5751,7 @@ body { min-width: 320px; overflow-x: hidden; }
   .panda-app-content {
     width: 100% !important;
     margin-left: 0 !important;
-    padding-bottom: calc(72px + env(safe-area-inset-bottom));
+    padding-bottom: calc(72px + var(--safe-bottom, env(safe-area-inset-bottom, 0px)));
   }
 
   .kinoma-sidebar {
@@ -5759,10 +5759,10 @@ body { min-width: 320px; overflow-x: hidden; }
     inset: auto 0 0 0 !important;
     z-index: 120;
     width: 100% !important;
-    height: calc(62px + env(safe-area-inset-bottom)) !important;
+    height: calc(62px + var(--safe-bottom, env(safe-area-inset-bottom, 0px))) !important;
     min-height: 62px;
     max-height: 82px;
-    padding: 0 8px env(safe-area-inset-bottom) !important;
+    padding: 0 8px var(--safe-bottom, env(safe-area-inset-bottom, 0px)) !important;
     display: flex !important;
     align-items: stretch;
     border: 0 !important;
@@ -5853,7 +5853,7 @@ body { min-width: 320px; overflow-x: hidden; }
 
 @media (max-width: 420px) {
   .panda-app-content {
-    padding-bottom: calc(68px + env(safe-area-inset-bottom));
+    padding-bottom: calc(68px + var(--safe-bottom, env(safe-area-inset-bottom, 0px)));
   }
 
   .kinoma-sidebar__item {
@@ -6042,7 +6042,7 @@ body { min-width: 320px; overflow-x: hidden; }
     align-items:center;
     justify-content:space-between;
     padding:0 14px;
-    padding-top:env(safe-area-inset-top);
+    padding-top:var(--safe-top, env(safe-area-inset-top, 0px));
     background:rgba(9,8,8,.84);
     border-bottom:1px solid rgba(232,208,192,.07);
     box-shadow:0 8px 30px rgba(0,0,0,.18);
@@ -6184,12 +6184,12 @@ body { min-width: 320px; overflow-x: hidden; }
     z-index: var(--z-header);
     left: 10px;
     right: 10px;
-    bottom: max(10px, env(safe-area-inset-bottom));
+    bottom: max(10px, var(--safe-bottom, env(safe-area-inset-bottom, 0px)));
     display: grid;
     grid-template-columns: repeat(4, minmax(0, 1fr));
     align-items: stretch;
     padding: 7px;
-    padding-bottom: max(7px, calc(7px + env(safe-area-inset-bottom)));
+    padding-bottom: max(7px, calc(7px + var(--safe-bottom, env(safe-area-inset-bottom, 0px))));
     border: 1px solid rgba(246, 242, 238, 0.10);
     border-radius: 20px;
     background: rgba(20, 17, 16, 0.92);
@@ -6244,7 +6244,7 @@ body { min-width: 320px; overflow-x: hidden; }
     letter-spacing: .01em;
   }
 
-  .panda-app-content { padding-bottom: calc(82px + env(safe-area-inset-bottom)); }
+  .panda-app-content { padding-bottom: calc(82px + var(--safe-bottom, env(safe-area-inset-bottom, 0px))); }
   .kinoma-sidebar, .panda-mobile-topbar { display: none !important; }
 }
 
@@ -10884,7 +10884,7 @@ html.tv-mode .panda-content-card:focus-within { scroll-margin-inline: 32px; }
 }
 .panda-library__empty button:focus-visible { outline: 2px solid var(--color-accent-light); outline-offset: 3px; }
 @media (max-width: 767px) {
-  .panda-library__inner { padding: 14px 0 calc(120px + env(safe-area-inset-bottom, 0px)); }
+  .panda-library__inner { padding: 14px 0 calc(120px + var(--safe-bottom, env(safe-area-inset-bottom, 0px))); }
   .panda-library__head { padding: 0 18px; margin-bottom: 12px; }
   .panda-library__head h1 { font-size: 26px; }
   .panda-library__head .kinoma-eyebrow { font-size: 8px; }
