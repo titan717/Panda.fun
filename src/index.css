@@ -10649,9 +10649,9 @@ html.tv-mode .panda-content-card:focus-within { scroll-margin-inline: 32px; }
 .panda-library__search-field input::placeholder { color: rgba(246,242,238,.52); }
 .panda-library__search-field button {
   display: grid;
-  width: 40px;
-  height: 40px;
-  flex: 0 0 40px;
+  width: 44px;
+  height: 44px;
+  flex: 0 0 44px;
   place-items: center;
   border: 0;
   border-radius: 50%;
@@ -10813,7 +10813,7 @@ html.tv-mode .panda-content-card:focus-within { scroll-margin-inline: 32px; }
   font-size: 10px;
 }
 .panda-library__shelf-heading button {
-  min-height: 40px;
+  min-height: 44px;
   padding: 0 10px;
   border: 0;
   color: var(--color-accent-light);
@@ -10871,7 +10871,7 @@ html.tv-mode .panda-content-card:focus-within { scroll-margin-inline: 32px; }
 .panda-library__empty h3 { margin: 12px 0 4px; color: var(--color-foreground); font-size: 14px; font-weight: 800; }
 .panda-library__empty p { max-width: 38ch; margin: 0; color: rgba(246,242,238,.68); font-size: 11px; line-height: 1.5; }
 .panda-library__empty button {
-  min-height: 42px;
+  min-height: 44px;
   margin-top: 12px;
   padding: 0 15px;
   border: 0;
