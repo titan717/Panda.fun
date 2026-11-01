@@ -105,7 +105,6 @@
   .panda-mobile-bottom-nav__active-pill { transition: none; }
 }
 [data-motion-preference='reduced'] .panda-motion-shimmer::after,
-[data-motion-preference='reduced'] .panda-motion-shimmer::after,
 [data-motion-preference='minimal'] .panda-motion-shimmer::after { animation: none; }
 
 .panda-motion-play-cta {
@@ -154,4 +153,9 @@
   gap: 14px;
   background: rgba(0,0,0,.72);
   backdrop-filter: blur(12px);
+}
+
+[data-motion-preference='reduced'] .modern-card__poster img,
+[data-motion-preference='minimal'] .modern-card__poster img {
+  transform: none !important;
 }
