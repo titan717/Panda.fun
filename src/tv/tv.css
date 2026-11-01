@@ -1,29 +1,68 @@
-.tv-shell {
-  --tv-overscan: 48px;
-  min-height: 100dvh;
-  padding: var(--tv-overscan);
-  background: var(--kinoma-bg);
-  color: var(--kinoma-text);
-  display: flex;
-  flex-direction: column;
+.tv-hero { position: relative; min-height: 480px; border-radius: 20px; overflow: hidden; }
+.tv-hero__backdrop { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; }
+.tv-hero__scrim { position: absolute; inset: 0; background: linear-gradient(90deg, rgba(0,0,0,.85), transparent 60%); }
+.tv-hero__content { position: relative; z-index: 1; padding: 48px; max-width: 640px; }
+.tv-hero__title { font-size: clamp(2.5rem, 5vw, 4.5rem); line-height: 1; }
+.tv-hero__actions { display: flex; gap: 16px; margin-top: 24px; }
+.tv-hero__button {
+  min-height: 56px; padding: 0 28px; border-radius: 999px;
+  font-weight: 800; display: inline-flex; align-items: center; gap: 10px;
+  transition: transform 160ms, box-shadow 160ms;
 }
-.tv-topnav { display: flex; gap: 24px; padding: 16px 0 32px; }
-.tv-topnav__item {
-  display: inline-flex; align-items: center; gap: 8px;
-  min-height: 48px; padding: 0 20px; border-radius: 999px;
-  color: var(--kinoma-muted); font-weight: 700;
+.tv-hero__button:focus-visible {
+  transform: scale(1.08);
+  box-shadow: 0 0 0 3px rgba(232,208,192,.7), 0 0 32px rgba(184,77,65,.5);
+}
+.tv-hero__dots { position: absolute; bottom: 24px; right: 48px; display: flex; gap: 8px; }
+.tv-hero__dot { width: 10px; height: 10px; border-radius: 50%; background: rgba(255,255,255,.3); }
+.tv-hero__dot.is-active { background: #e8d0c0; }
+.tv-rail { margin: 32px 0; }
+.tv-rail__title { font-size: 1.5rem; margin-bottom: 16px; }
+.tv-rail__track { position: relative; height: 420px; overflow-x: auto; scroll-behavior: smooth; }
+.tv-rail__card {
+  width: 220px; background: none; border: 0; color: inherit; text-align: left; cursor: pointer;
   transition: transform 160ms var(--ease-kinoma), box-shadow 160ms;
 }
-.tv-topnav__item.is-active,
-.tv-topnav__item:focus-visible {
-  color: #fff;
-  background: rgba(184,77,65,.18);
-  box-shadow: 0 0 0 3px rgba(232,208,192,.6), 0 0 24px rgba(184,77,65,.4);
-  transform: scale(1.06);
+.tv-rail__card:focus-visible {
+  transform: scale(1.08);
+  box-shadow: 0 0 0 3px rgba(232,208,192,.7), 0 0 32px rgba(184,77,65,.5);
+  z-index: 2;
+}
+.tv-rail__label { display: block; margin-top: 8px; font-size: .9rem; color: var(--kinoma-text-soft); }
+.tv-search__input {
+  width: 100%; min-height: 64px; padding: 0 24px;
+  border-radius: 16px; border: 1px solid var(--kinoma-border);
+  background: var(--kinoma-surface); color: var(--kinoma-text); font-size: 1.25rem;
+}
+.tv-search__input:focus-visible { box-shadow: 0 0 0 3px rgba(232,208,192,.6); }
+.tv-keyboard { display: grid; grid-template-columns: repeat(10, 1fr); gap: 8px; margin: 24px 0; }
+.tv-key {
+  min-height: 56px; border-radius: 12px; border: 1px solid var(--kinoma-border);
+  background: var(--kinoma-surface); color: var(--kinoma-text); font-weight: 700;
+}
+.tv-key:focus-visible { box-shadow: 0 0 0 3px rgba(232,208,192,.6); }
+.tv-search__filters { display: flex; gap: 12px; margin-bottom: 24px; }
+.tv-filter {
+  min-height: 48px; padding: 0 20px; border-radius: 999px;
+  border: 1px solid var(--kinoma-border); background: var(--kinoma-surface); color: var(--kinoma-muted);
+}
+.tv-filter.is-active, .tv-filter:focus-visible { color: #fff; box-shadow: 0 0 0 3px rgba(232,208,192,.6); }
+.tv-search__grid { display: grid; grid-template-columns: repeat(6, 1fr); gap: 20px; }
+.tv-search__card { background: none; border: 0; color: inherit; cursor: pointer; }
+.tv-search__card:focus-visible { transform: scale(1.06); box-shadow: 0 0 0 3px rgba(232,208,192,.6); }
+.tv-details__hero { display: grid; grid-template-columns: 480px 1fr; gap: 48px; align-items: center; }
+.tv-details__actions { display: flex; gap: 16px; margin-top: 24px; }
+.tv-details__actions button {
+  min-height: 56px; padding: 0 24px; border-radius: 999px;
+  display: inline-flex; align-items: center; gap: 10px; font-weight: 800;
+  transition: transform 160ms, box-shadow 160ms;
+}
+.tv-details__actions button:focus-visible {
+  transform: scale(1.08);
+  box-shadow: 0 0 0 3px rgba(232,208,192,.7), 0 0 32px rgba(184,77,65,.5);
 }
 @media (prefers-reduced-motion: reduce) {
-  .tv-shell *, .tv-shell *::before, .tv-shell *::after {
+  .tv-hero__slide, .tv-rail__card, .tv-search__card, .tv-details__actions button {
     transition-duration: 0.01ms !important;
-    animation-duration: 0.01ms !important;
   }
 }
