@@ -146,7 +146,7 @@
   place-items: center;
   width: 30px;
   height: 30px;
-  color: #d7a0ad;
+  color: #e8d0c0;
   border: 1px solid rgba(255,255,255,.1);
   border-radius: 50%;
   text-decoration: none;
@@ -281,7 +281,7 @@
 .panda-mobile-featured__step { display: grid; place-items: center; width: 30px; height: 30px; padding: 0; border: 1px solid rgba(255,255,255,.22); border-radius: 50%; background: #101012; color: #fff; cursor: pointer; }
 .panda-mobile-featured__hint { display: flex; align-items: center; justify-content: center; gap: 6px; min-height: 30px; padding: 0; }
 .panda-mobile-featured__hint button { display: block; width: 6px; height: 6px; flex: 0 0 6px; padding: 0; border: 0; border-radius: 99px; background: rgba(255,255,255,.4); cursor: pointer; transition: width 180ms ease, background 180ms ease; }
-.panda-mobile-featured__hint button.is-active { width: 19px; flex-basis: 19px; background: #d7a0ad; }
+.panda-mobile-featured__hint button.is-active { width: 19px; flex-basis: 19px; background: #e8d0c0; }
 @media (min-width: 520px) and (max-width: 767px) { .panda-mobile-featured { max-width: 680px; margin-inline: auto; } .panda-mobile-featured__spotlight { min-height: min(68svh, 620px); } .panda-mobile-featured__copy { padding: 34px 26px 25px; } }
 @media (max-width: 380px) { .panda-mobile-featured__spotlight { min-height: 440px; } .panda-mobile-featured__copy { padding: 24px 15px 16px; } .panda-mobile-featured__copy p { -webkit-line-clamp: 2; } .panda-mobile-featured__details { padding-inline: 11px; } }
 @media (prefers-reduced-motion: reduce) { .panda-mobile-featured__hint button { transition: none; } }
