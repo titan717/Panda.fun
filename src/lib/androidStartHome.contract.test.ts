@@ -6,7 +6,7 @@ describe('installed app launch routing', () => {
 
   it('routes native and standalone app launches from root to Home', () => {
     expect(app).toContain('function isInstalledAppShell()');
-    expect(app).toContain('setLocation(\'/home\')');
+    expect(app).toContain("setLocation('/home', { replace: true })");
     expect(app).toContain('nativeBridge || standalone');
   });
 
