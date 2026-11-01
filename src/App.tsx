@@ -57,7 +57,10 @@ function AnimatedRoutes() {
     trackPageView(location);
   }, [location]);
 
-  if (location === '/') return <Landing />;
+  if (location === '/') {
+    // Render Home immediately in installed shells so the marketing Landing page never flashes before route replacement.
+    return isInstalledAppShell() ? <Layout><Home /></Layout> : <Landing />;
+  }
 
   return (
     <Layout>
