@@ -7,3 +7,6 @@ coverage/
 .env*
 !.env.example
 dev-dist/
+
+# Generated Vite build copied into the Android WebView bundle
+android/app/src/main/assets/web/
