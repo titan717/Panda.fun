@@ -50,7 +50,7 @@ export function ModernCard({
         <div className={`relative w-full overflow-hidden rounded-2xl border border-white/5 bg-[#0e1017] transition-[transform,border-color,box-shadow] duration-300 group-hover:-translate-y-1 group-hover:border-white/20 group-hover:shadow-[0_12px_32px_rgba(0,0,0,0.6)] ${isWide ? 'aspect-video' : 'aspect-[2/3]'}`}>
           <span className="kinoma-focus absolute inset-0 z-0 block rounded-2xl">
             {!imageLoaded && (
-              <div className="absolute inset-0 animate-pulse bg-[#12141c]" aria-hidden="true" />
+              <div className="modern-card__skeleton absolute inset-0" aria-hidden="true" />
             )}
             <img
               src={cardImage}
