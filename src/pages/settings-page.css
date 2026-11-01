@@ -56,3 +56,17 @@
   font-size: 12px;
 }
 .panda-settings-select:focus-visible { outline: 2px solid #e8d0c0; outline-offset: 3px; }
+
+.panda-settings-select {
+  width: 100%;
+  min-height: 44px;
+  padding: 0 13px;
+  border: 1px solid rgba(246,242,238,.12);
+  border-radius: 12px;
+  background: #141414;
+  color: #f6f2ee;
+  font: inherit;
+  font-size: 12px;
+}
+.panda-settings-select:focus-visible { outline: 2px solid #e8d0c0; outline-offset: 3px; }
+@media (prefers-reduced-motion: reduce) { .panda-settings-switch::before { transition: none; } }
