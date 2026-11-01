@@ -75,13 +75,13 @@ export function Layout({ children }: { children: React.ReactNode }) {
       <a className="panda-skip-link" href="#panda-main-content">Skip to main content</a>
       {!isPlayerRoute && (
         <header className="panda-mobile-header">
-          <Link href="/home" className="panda-mobile-header__brand" aria-label="MYpanda.fun home"><KinomaLogo size="md" variant="full" /></Link>
+          <Link href="/home" className="panda-mobile-header__brand" aria-label="Panda.fun home"><KinomaLogo size="md" variant="full" /></Link>
           <nav className="panda-mobile-header__actions" aria-label="Quick actions"><Link href="/settings" className={`panda-mobile-header__action${location.split("?")[0] === "/settings" ? " is-active" : ""}`} aria-label="Settings" aria-current={location.split("?")[0] === "/settings" ? "page" : undefined} title="Settings"><Settings size={20} strokeWidth={1.8} /></Link></nav>
         </header>
       )}
       {!isPlayerRoute && (
-        <nav className="panda-mobile-bottom-nav" aria-label="MYpanda.fun mobile navigation">
-          {ITEMS.filter(({ href }) => href !== '/settings').map(({ href, label, Icon }) => {
+        <nav className="panda-mobile-bottom-nav" aria-label="Panda.fun mobile navigation">
+          {ITEMS.map(({ href, label, Icon }) => {
             const mobileLabel = href === '/library' ? 'Library' : label;
             const pathname = location.split('?')[0];
             const active = (href === '/home' && (pathname === '/home' || pathname === '/browse')) ||
