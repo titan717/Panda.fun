@@ -10572,8 +10572,8 @@ html.tv-mode .panda-content-card:focus-within { scroll-margin-inline: 32px; }
 /* Panda Library — profile hub and OTT-style shelves */
 .panda-library {
   min-height: 100vh;
-  color: #f6f2ee;
-  background: #000;
+  color: var(--color-foreground);
+  background: var(--color-background);
 }
 .panda-library .kinoma-library-page__ambient,
 .panda-library .kinoma-library-head__art,
@@ -10592,14 +10592,14 @@ html.tv-mode .panda-content-card:focus-within { scroll-margin-inline: 32px; }
   margin: 0 0 18px;
 }
 .panda-library__head .kinoma-eyebrow {
-  color: #c1935f;
+  color: var(--color-amber);
   font-size: 9px;
   font-weight: 800;
   letter-spacing: .16em;
 }
 .panda-library__head h1 {
   margin: 3px 0 0;
-  color: #f6f2ee;
+  color: var(--color-foreground);
   font-size: clamp(25px, 4vw, 34px);
   font-weight: 820;
   line-height: 1.12;
@@ -10613,8 +10613,8 @@ html.tv-mode .panda-content-card:focus-within { scroll-margin-inline: 32px; }
   place-items: center;
   border: 1px solid rgba(246,242,238,.18);
   border-radius: 50%;
-  color: #f6f2ee;
-  background: #101010;
+  color: var(--color-foreground);
+  background: var(--color-surface);
   cursor: pointer;
 }
 .panda-library__search-toggle:hover { background: #1a1716; border-color: rgba(232,208,192,.55); }
@@ -10622,7 +10622,7 @@ html.tv-mode .panda-content-card:focus-within { scroll-margin-inline: 32px; }
 .panda-library__filters button:focus-visible,
 .panda-library__shelf-heading button:focus-visible,
 .panda-library__resume-button:focus-visible {
-  outline: 2px solid #e8d0c0;
+  outline: 2px solid var(--color-accent-light);
   outline-offset: 3px;
 }
 .panda-library__search-field {
@@ -10634,15 +10634,15 @@ html.tv-mode .panda-content-card:focus-within { scroll-margin-inline: 32px; }
   padding: 0 15px;
   border: 1px solid rgba(246,242,238,.2);
   border-radius: 12px;
-  color: #e8d0c0;
-  background: #101010;
+  color: var(--color-accent-light);
+  background: var(--color-surface);
 }
 .panda-library__search-field input {
   width: 100%;
   min-width: 0;
   border: 0;
   outline: 0;
-  color: #f6f2ee;
+  color: var(--color-foreground);
   background: transparent;
   font-size: 14px;
 }
@@ -10655,7 +10655,7 @@ html.tv-mode .panda-content-card:focus-within { scroll-margin-inline: 32px; }
   place-items: center;
   border: 0;
   border-radius: 50%;
-  color: #f6f2ee;
+  color: var(--color-foreground);
   background: transparent;
 }
 .panda-library__resume {
@@ -10671,7 +10671,7 @@ html.tv-mode .panda-content-card:focus-within { scroll-margin-inline: 32px; }
   margin: 8px 0 22px;
   border: 1px solid rgba(255,255,255,.12);
   border-radius: 18px;
-  background: #151211;
+  background: var(--color-surface);
 }
 .panda-library__resume-backdrop {
   position: absolute;
@@ -10695,7 +10695,7 @@ html.tv-mode .panda-content-card:focus-within { scroll-margin-inline: 32px; }
   padding: clamp(18px, 4vw, 32px);
 }
 .panda-library__resume-label {
-  color: #e8d0c0;
+  color: var(--color-accent-light);
   font-size: 9px;
   font-weight: 850;
   letter-spacing: .18em;
@@ -10722,7 +10722,7 @@ html.tv-mode .panda-content-card:focus-within { scroll-margin-inline: 32px; }
   border-radius: 9px;
   background: rgba(255,255,255,.35);
 }
-.panda-library__resume-progress span { display: block; height: 100%; background: #b84d41; }
+.panda-library__resume-progress span { display: block; height: 100%; background: var(--color-accent); }
 .panda-library__resume-button {
   display: inline-flex;
   min-width: 132px;
@@ -10733,7 +10733,7 @@ html.tv-mode .panda-content-card:focus-within { scroll-margin-inline: 32px; }
   margin-top: 15px;
   padding: 0 18px;
   border-radius: 999px;
-  color: #090909;
+  color: var(--color-background);
   background: #fff;
   font-size: 13px;
   font-weight: 800;
@@ -10750,7 +10750,7 @@ html.tv-mode .panda-content-card:focus-within { scroll-margin-inline: 32px; }
   margin: 0 0 28px;
   padding: 8px 0 12px;
   border: 0;
-  background: linear-gradient(180deg, #000 78%, rgba(0,0,0,0));
+  background: linear-gradient(180deg, var(--color-background) 78%, rgba(0,0,0,0));
   scrollbar-width: none;
   scroll-snap-type: x mandatory;
   -webkit-overflow-scrolling: touch;
@@ -10767,16 +10767,16 @@ html.tv-mode .panda-content-card:focus-within { scroll-margin-inline: 32px; }
   border: 1px solid rgba(246,242,238,.16);
   border-radius: 999px;
   color: rgba(246,242,238,.78);
-  background: #101010;
+  background: var(--color-surface);
   font-size: 11px;
   font-weight: 750;
   white-space: nowrap;
   scroll-snap-align: start;
 }
 .panda-library__filters button.is-active {
-  border-color: #e8d0c0;
+  border-color: var(--color-accent-light);
   color: #17100d;
-  background: #e8d0c0;
+  background: var(--color-accent-light);
 }
 .panda-library__filter-count {
   display: inline-grid;
@@ -10801,7 +10801,7 @@ html.tv-mode .panda-content-card:focus-within { scroll-margin-inline: 32px; }
 }
 .panda-library__shelf-heading h2 {
   margin: 0;
-  color: #f6f2ee;
+  color: var(--color-foreground);
   font-size: clamp(17px, 2vw, 21px);
   font-weight: 800;
   letter-spacing: -.035em;
@@ -10816,7 +10816,7 @@ html.tv-mode .panda-content-card:focus-within { scroll-margin-inline: 32px; }
   min-height: 40px;
   padding: 0 10px;
   border: 0;
-  color: #e8d0c0;
+  color: var(--color-accent-light);
   background: transparent;
   font-size: 11px;
   font-weight: 750;
@@ -10856,7 +10856,7 @@ html.tv-mode .panda-content-card:focus-within { scroll-margin-inline: 32px; }
   padding: 22px 18px;
   border: 1px solid rgba(246,242,238,.1);
   border-radius: 14px;
-  background: #090909;
+  background: var(--color-background);
 }
 .panda-library__empty .kinoma-library-empty__icon {
   display: grid;
@@ -10865,10 +10865,10 @@ html.tv-mode .panda-content-card:focus-within { scroll-margin-inline: 32px; }
   place-items: center;
   border: 1px solid rgba(232,208,192,.25);
   border-radius: 50%;
-  color: #e8d0c0;
+  color: var(--color-accent-light);
   background: rgba(184,77,65,.12);
 }
-.panda-library__empty h3 { margin: 12px 0 4px; color: #f6f2ee; font-size: 14px; font-weight: 800; }
+.panda-library__empty h3 { margin: 12px 0 4px; color: var(--color-foreground); font-size: 14px; font-weight: 800; }
 .panda-library__empty p { max-width: 38ch; margin: 0; color: rgba(246,242,238,.68); font-size: 11px; line-height: 1.5; }
 .panda-library__empty button {
   min-height: 42px;
@@ -10876,13 +10876,13 @@ html.tv-mode .panda-content-card:focus-within { scroll-margin-inline: 32px; }
   padding: 0 15px;
   border: 0;
   border-radius: 999px;
-  color: #090909;
+  color: var(--color-background);
   background: #fff;
   font-size: 11px;
   font-weight: 800;
   cursor: pointer;
 }
-.panda-library__empty button:focus-visible { outline: 2px solid #e8d0c0; outline-offset: 3px; }
+.panda-library__empty button:focus-visible { outline: 2px solid var(--color-accent-light); outline-offset: 3px; }
 @media (max-width: 767px) {
   .panda-library__inner { padding: 14px 0 calc(120px + env(safe-area-inset-bottom, 0px)); }
   .panda-library__head { padding: 0 18px; margin-bottom: 12px; }
