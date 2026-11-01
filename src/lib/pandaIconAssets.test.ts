@@ -11,11 +11,12 @@ const pngSize = (path: string) => {
 describe('Panda.fun icon asset contract', () => {
   it('keeps a single warm-black panda SVG source and a safe-zone maskable source', () => {
     const source = readFileSync(file('../../assets/panda-icon.svg'), 'utf8');
-    const maskable = readFileSync(file('../../assets/panda-icon-maskable.svg'), 'utf8');
+    const exporter = readFileSync(file('../../scripts/generate-icons.py'), 'utf8');
     expect(source).toContain('#050505');
     expect(source).toContain('#F6F2EE');
     expect(source).toContain('#B84D41');
-    expect(maskable).toContain('translate(56 56) scale(.78)');
+    expect(exporter).toContain('safe_mark = mark.resize((398, 398)');
+    expect(exporter).toContain('base.alpha_composite(safe_mark');
   });
 
   it('generates all declared PWA and Apple raster icon sizes', () => {
