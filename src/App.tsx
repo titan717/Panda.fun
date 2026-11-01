@@ -1,7 +1,7 @@
 import React, { lazy, Suspense, useEffect, useRef, useState } from 'react';
 import { Route, Switch, useLocation } from 'wouter';
 import { AnimatePresence, m } from 'motion/react';
-import { useMotionPreference } from './motion';
+import { getMotionOffset, useMotionPreference } from './motion';
 import { SWRConfig } from 'swr';
 import { localCache } from './lib/localCache';
 import { Layout } from './components/Layout';
@@ -88,9 +88,9 @@ function AnimatedRoutes() {
       <AnimatePresence mode="sync" initial={false}>
         <m.div
           key={location}
-          initial={{ opacity: 0, x: preference === 'full' && direction !== 0 ? direction * 22 : 0 }}
+          initial={{ opacity: 0, x: getMotionOffset(preference, direction * 22) }}
           animate={{ opacity: 1, x: 0 }}
-          exit={{ opacity: 0, x: preference === 'full' && direction !== 0 ? direction * -14 : 0 }}
+          exit={{ opacity: 0, x: getMotionOffset(preference, direction * -14) }}
           transition={{ duration: preference === 'full' ? (isDetailTransition ? 0.28 : 0.16) : 0.12, ease: [0.16, 1, 0.3, 1] }}
           className="w-full flex-1 flex flex-col"
         >
