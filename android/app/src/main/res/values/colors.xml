@@ -9,4 +9,5 @@
     <color name="teal_200">#C1935F</color>
     <color name="black">#FF000000</color>
     <color name="white">#FFF6F2EE</color>
+    <color name="launcher_background">#050505</color>
 </resources>
