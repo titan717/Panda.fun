@@ -15,7 +15,7 @@ import type { AnimeItem } from '../types';
 import { ThinkingOrb } from 'thinking-orbs';
 import { friendlyNetworkError } from '../lib/networkMessage';
 
-type SearchItem = { key?: React.Key; id: string; title: string; type: 'movie' | 'series'; meta: string; image?: string; href: string; rating?: number; year?: number; };
+type SearchItem = { key?: React.Key; id: string; title: string; type: 'movie' | 'series'; meta: string; image?: string; href: string; rating?: number; year?: number; genres?: string[]; };
 type SpeechRecognitionLike = {
   lang: string;
   interimResults: boolean;
@@ -38,6 +38,7 @@ const mapItem = (item: AnimeItem): SearchItem => {
     image: item.image,
     rating: Number(item.rating || 0) || 0,
     year: item.releaseDate ? Number(String(item.releaseDate).slice(0, 4)) || undefined : undefined,
+    genres: item.genres || [],
     href: buildDetailsHref(titleOf(item), type, item.id),
   };
 };
@@ -102,8 +103,10 @@ function ContentCard({ item, priority = false }: { key?: React.Key; item: Search
 export function Search() {
   const [location, setLocation] = useLocation();
   const initialQuery = useMemo(() => new URLSearchParams(window.location.search).get('keyword')?.trim() || '', []);
+  const initialGenre = useMemo(() => new URLSearchParams(window.location.search).get('genre')?.trim() || '', []);
   const [query, setQuery] = useState(initialQuery);
   const [submittedQuery, setSubmittedQuery] = useState(initialQuery);
+  const [genre, setGenre] = useState(initialGenre);
   const [recentSearches, setRecentSearches] = useState<string[]>([]);
   const [results, setResults] = useState<SearchItem[]>([]);
   const [loading, setLoading] = useState(false);
@@ -123,6 +126,8 @@ export function Search() {
     const requestedType = params.get('type');
     setFilter(requestedType === 'movie' || requestedType === 'series' ? requestedType : 'all');
     const keyword = params.get('keyword')?.trim() || '';
+    const requestedGenre = params.get('genre')?.trim() || '';
+    setGenre(previous => previous === requestedGenre ? previous : requestedGenre);
     setSubmittedQuery(previous => (previous === keyword ? previous : keyword));
     if (keyword) setQuery(previous => (previous.trim() === keyword ? previous : keyword));
   }, [searchString]);
@@ -131,7 +136,7 @@ export function Search() {
   const SpeechRecognitionApi = speechWindow.SpeechRecognition || speechWindow.webkitSpeechRecognition;
   const voiceSearchSupported = Boolean(SpeechRecognitionApi);
   const resultsRef = useRef<HTMLElement>(null);
-  const isSearching = submittedQuery.length > 0;
+  const isSearching = submittedQuery.length > 0 || genre.length > 0;
   const visibleResults = useMemo(() => {
     const normalized = submittedQuery.toLocaleLowerCase();
     return results
@@ -156,7 +161,25 @@ export function Search() {
     const controller = new AbortController();
     setLoading(true);
     setError(null);
-    const request = isSearching ? api.search(submittedQuery, controller.signal) : api.getTrending();
+    const genreMap: Record<string, { movie: string; tv: string }> = {
+      Action: { movie: 'Action', tv: 'Action & Adventure' },
+      Comedy: { movie: 'Comedy', tv: 'Comedy' },
+      Drama: { movie: 'Drama', tv: 'Drama' },
+      'Sci-Fi & Fantasy': { movie: 'Science Fiction', tv: 'Sci-Fi & Fantasy' },
+      Horror: { movie: 'Horror', tv: 'Horror' },
+      'Animation & Family': { movie: 'Animation', tv: 'Animation' },
+      Documentary: { movie: 'Documentary', tv: 'Documentary' },
+    };
+    const genreRequest = genre.toLowerCase() === 'anime'
+      ? api.getGenreAnime('animation', 24)
+      : Promise.allSettled([
+          api.getGenreMedia(genreMap[genre]?.movie || genre, 'movie', 24, controller.signal),
+          api.getGenreMedia(genreMap[genre]?.tv || genre, 'tv', 24, controller.signal),
+        ]).then(values => ({
+          results: values.flatMap(value => value.status === 'fulfilled' ? value.value.results : [])
+            .filter((item, index, all) => all.findIndex(other => other.id === item.id) === index),
+        }));
+    const request = genre ? genreRequest : isSearching ? api.search(submittedQuery, controller.signal) : api.getTrending();
     request.then(data => active && setResults(data.results.map(mapItem)))
       .catch((err: unknown) => {
         if (!active) return;
@@ -165,7 +188,7 @@ export function Search() {
       })
       .finally(() => active && setLoading(false));
     return () => { active = false; controller.abort(); };
-  }, [isSearching, submittedQuery, retryNonce]);
+  }, [isSearching, submittedQuery, genre, retryNonce]);
 
   useEffect(() => {
     if (!submittedQuery) return;
