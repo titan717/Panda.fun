@@ -1,6 +1,7 @@
 import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { Link } from 'wouter';
-import { ArrowRight, Check, Info, Play, Plus } from 'lucide-react';
+import { ArrowRight, Info, Play, Plus } from 'lucide-react';
+import { AnimatedCheck, Pressable, Reveal, Shimmer, useMotionPreference } from '../motion';
 import { ThinkingOrb } from 'thinking-orbs';
 import { ModernContinueWatching } from '../components/ui/modern/ModernContinueWatching';
 import { MovieApiMedia } from '../lib/api';
@@ -79,7 +80,8 @@ export function MobileHome({
   const [swipeDirection, setSwipeDirection] = useState<'next' | 'previous'>('next');
   const [touchPaused, setTouchPaused] = useState(false);
   const [documentHidden, setDocumentHidden] = useState(() => typeof document !== 'undefined' && document.hidden);
-  const [motionAllowed, setMotionAllowed] = useState(true);
+  const motionPreference = useMotionPreference();
+  const motionAllowed = motionPreference === 'full';
   const touchStartX = useRef<number | null>(null);
   const suppressSwipeClick = useRef(false);
   const touchResumeTimer = useRef<number | null>(null);
@@ -96,14 +98,6 @@ export function MobileHome({
   useEffect(() => {
     setActiveIndex(current => Math.min(current, Math.max(0, featuredItems.length - 1)));
   }, [featuredItems.length]);
-
-  useEffect(() => {
-    const media = window.matchMedia('(prefers-reduced-motion: reduce)');
-    const updateMotion = () => setMotionAllowed(!media.matches);
-    updateMotion();
-    media.addEventListener?.('change', updateMotion);
-    return () => media.removeEventListener?.('change', updateMotion);
-  }, []);
 
   useEffect(() => {
     const updateVisibility = () => setDocumentHidden(document.hidden);
@@ -190,29 +184,35 @@ export function MobileHome({
                 })()}
               </div>
               <div className="panda-mobile-featured__copy" aria-live="polite">
-                <div className="panda-mobile-featured__meta">
-                  <span className="panda-mobile-featured__type">{featured.type === 'movie' ? 'MOVIE' : 'SERIES'}</span>
-                  {featured.year && <span className="panda-mobile-featured__chip">{featured.year}</span>}
-                  {featured.rating != null && <span className="panda-mobile-featured__chip">★ {Number(featured.rating).toFixed(1)}</span>}
-                </div>
-                <h1>{featured.title}</h1>
-                {featured.overview && <p>{featured.overview}</p>}
-                {!!featured.genres?.length && (
-                  <div className="panda-mobile-featured__genres" aria-label="Genres">
-                    {featured.genres.slice(0, 3).map(genre => <span key={genre}>{genre}</span>)}
+                <Reveal className="panda-mobile-featured__reveal" delay={0}>
+                  <div className="panda-mobile-featured__meta">
+                    <span className="panda-mobile-featured__type">{featured.type === 'movie' ? 'MOVIE' : 'SERIES'}</span>
+                    {featured.year && <span className="panda-mobile-featured__chip">{featured.year}</span>}
+                    {featured.rating != null && <span className="panda-mobile-featured__chip">★ {Number(featured.rating).toFixed(1)}</span>}
                   </div>
+                </Reveal>
+                <Reveal className="panda-mobile-featured__reveal" delay={0.06}><h1>{featured.title}</h1></Reveal>
+                {featured.overview && <Reveal className="panda-mobile-featured__reveal" delay={0.12}><p>{featured.overview}</p></Reveal>}
+                {!!featured.genres?.length && (
+                  <Reveal className="panda-mobile-featured__reveal" delay={0.18}>
+                    <div className="panda-mobile-featured__genres" aria-label="Genres">
+                      {featured.genres.slice(0, 3).map(genre => <span key={genre}>{genre}</span>)}
+                    </div>
+                  </Reveal>
                 )}
-                <div className="panda-mobile-featured__actions">
-                  <Link href={buildWatchHref(featured.id, featured.type === 'movie' ? 'movie' : 'series')} className="panda-mobile-featured__watch" aria-label={`Play ${featured.title}`}>
-                    <Play size={17} fill="currentColor" aria-hidden="true" /> Play
-                  </Link>
-                  <button type="button" className="panda-mobile-featured__list" onClick={toggleFeaturedList} aria-pressed={isInList} aria-label={isInList ? `Remove ${featured.title} from My List` : `Add ${featured.title} to My List`}>
-                    {isInList ? <Check size={19} aria-hidden="true" /> : <Plus size={19} aria-hidden="true" />}
-                  </button>
-                  <Link href={buildDetailsHref(featured, featured.type === 'movie' ? 'movie' : 'series')} className="panda-mobile-featured__info" aria-label={`More information about ${featured.title}`}>
-                    <Info size={19} aria-hidden="true" />
-                  </Link>
-                </div>
+                <Reveal className="panda-mobile-featured__reveal" delay={0.24}>
+                  <div className="panda-mobile-featured__actions">
+                    <Link href={buildWatchHref(featured.id, featured.type === 'movie' ? 'movie' : 'series')} className="panda-mobile-featured__watch panda-motion-play-cta" aria-label={`Play ${featured.title}`}>
+                      <Play size={17} fill="currentColor" aria-hidden="true" /> Play
+                    </Link>
+                    <Pressable haptic className="panda-mobile-featured__list" onClick={toggleFeaturedList} aria-pressed={isInList} aria-label={isInList ? `Remove ${featured.title} from My List` : `Add ${featured.title} to My List`}>
+                      {isInList ? <AnimatedCheck checked size={19} /> : <Plus size={19} aria-hidden="true" />}
+                    </Pressable>
+                    <Link href={buildDetailsHref(featured, featured.type === 'movie' ? 'movie' : 'series')} className="panda-mobile-featured__info" aria-label={`More information about ${featured.title}`}>
+                      <Info size={19} aria-hidden="true" />
+                    </Link>
+                  </div>
+                </Reveal>
               </div>
             </article>
             {featuredItems.length > 1 && (
@@ -227,6 +227,7 @@ export function MobileHome({
           </>
         ) : loading ? (
           <div className="panda-mobile-featured__loading" role="status" aria-live="polite">
+            <Shimmer className="panda-mobile-featured__loading-shimmer" />
             <ThinkingOrb state="searching" size={64} theme="dark" aria-label="Loading featured titles" />
             <span className="panda-mobile-featured__loading-copy">Finding your next watch</span>
           </div>
