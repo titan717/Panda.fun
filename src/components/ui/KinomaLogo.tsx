@@ -18,19 +18,15 @@ function PandaMark({ size, className = '' }: { size: number; className?: string 
   return (
     <span className={`panda-logo-mark ${className}`} style={{ width: size, height: size }} aria-hidden="true">
       <svg viewBox="0 0 64 64" width="100%" height="100%" fill="none">
-        <circle cx="16" cy="15" r="10" fill="#1A1A1A" />
-        <circle cx="48" cy="15" r="10" fill="#1A1A1A" />
-        <rect x="11" y="12" width="42" height="42" rx="20" fill="#FFFFFF" />
-        <ellipse cx="22" cy="30" rx="8" ry="11" transform="rotate(28 22 30)" fill="#1A1A1A" />
-        <ellipse cx="42" cy="30" rx="8" ry="11" transform="rotate(-28 42 30)" fill="#1A1A1A" />
-        <circle cx="24" cy="29" r="2.4" fill="#FFFFFF" />
-        <circle cx="40" cy="29" r="2.4" fill="#FFFFFF" />
-        <path d="M29 39c1.8-2.2 4.2-2.2 6 0-1 3.4-5 4.1-6 0Z" fill="#1A1A1A" />
-        <path d="M32 42v3" stroke="#1A1A1A" strokeWidth="2" strokeLinecap="round" />
-        <circle cx="18" cy="40" r="3" fill="#FFEBEE" opacity=".9" />
-        <circle cx="46" cy="40" r="3" fill="#FFEBEE" opacity=".9" />
-        <path d="M8 50c7-4 13-2 17 3H8Z" fill="#E8F5E9" />
-        <path d="M56 50c-7-4-13-2-17 3h17Z" fill="#E8F5E9" />
+        <ellipse cx="16" cy="15" rx="10" ry="12" transform="rotate(-24 16 15)" fill="#171514" />
+        <ellipse cx="48" cy="15" rx="10" ry="12" transform="rotate(24 48 15)" fill="#171514" />
+        <path d="M32 8C18 8 8 20 8 35c0 13 10 22 24 22s24-9 24-22C56 20 46 8 32 8Z" fill="#F6F2EE" />
+        <ellipse cx="23" cy="31" rx="7" ry="9" transform="rotate(24 23 31)" fill="#171514" />
+        <ellipse cx="41" cy="31" rx="7" ry="9" transform="rotate(-24 41 31)" fill="#171514" />
+        <ellipse cx="23" cy="31" rx="2.1" ry="2.8" fill="#B84D41" />
+        <ellipse cx="41" cy="31" rx="2.1" ry="2.8" fill="#B84D41" />
+        <path d="M28.5 41c1.2-2.2 5.8-2.2 7 0 0 2.8-1.6 4.5-3.5 4.5s-3.5-1.7-3.5-4.5Z" fill="#171514" />
+        <path d="M32 45.5v3m0 0c-2.8 2.5-5.2 2.5-7.5.6m7.5-.6c2.8 2.5 5.2 2.5 7.5.6" stroke="#171514" strokeWidth="2" strokeLinecap="round" />
       </svg>
     </span>
   );

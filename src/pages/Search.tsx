@@ -9,7 +9,7 @@ import { buildDetailsHref } from '../lib/mediaRoute';
 import { preferencesUtil } from '../lib/preferences';
 import { libraryManager } from '../lib/library';
 import { optimizeImageUrl } from '../lib/mediaImages';
-import { api, MovieApiError } from '../lib/api';
+import { api, MovieApiError, type MovieApiMedia } from '../lib/api';
 import type { AnimeItem } from '../types';
 import { ThinkingOrb } from 'thinking-orbs';
 import { friendlyNetworkError } from '../lib/networkMessage';
@@ -28,6 +28,7 @@ type SearchItem = {
   href: string;
   rating?: number;
   year?: number;
+  genres?: string[];
 };
 
 type SpeechRecognitionLike = {
@@ -49,7 +50,8 @@ const titleOf = (item: AnimeItem) =>
     : item.title.english || item.title.romaji || item.title.native || 'Untitled';
 
 const mapItem = (item: AnimeItem): SearchItem => {
-  const type: SearchKind = item.contentType === 'movie' ? 'movie' : item.contentType === 'anime' ? 'anime' : 'series';
+  const routeType = item.contentType === 'movie' ? 'movie' : 'series';
+  const type: SearchKind = item.genres?.some(genre => genre.toLowerCase() === 'anime') ? 'anime' : routeType;
   return {
     id: item.id,
     title: titleOf(item),
@@ -60,11 +62,46 @@ const mapItem = (item: AnimeItem): SearchItem => {
       type === 'movie' ? 'Movie' : type === 'anime' ? 'Anime' : 'Series'
     ].filter(Boolean).join(' • ') || 'Panda.fun',
     image: item.image,
+    genres: item.genres || [],
     rating: Number(item.rating || 0) || 0,
     year: item.releaseDate ? Number(String(item.releaseDate).slice(0, 4)) || undefined : undefined,
-    href: buildDetailsHref(titleOf(item), type === 'movie' ? 'movie' : 'series', item.id)
+    href: buildDetailsHref(titleOf(item), routeType, item.id)
   };
 };
+
+async function getGenreSearchResults(genre: string): Promise<{ results: AnimeItem[] }> {
+  if (genre.toLowerCase() === 'anime') return api.getGenreAnime('animation', 24);
+  const key = genre.toLowerCase();
+  const aliases: Record<string, [string, string]> = {
+    action: ['Action', 'Action & Adventure'],
+    comedy: ['Comedy', 'Comedy'],
+    drama: ['Drama', 'Drama'],
+    'sci-fi & fantasy': ['Science Fiction', 'Sci-Fi & Fantasy'],
+    horror: ['Horror', 'Horror'],
+    'animation & family': ['Animation', 'Animation'],
+    documentary: ['Documentary', 'Documentary'],
+  };
+  const [movieGenre, tvGenre] = aliases[key] || [genre, genre];
+  const [movies, shows] = await Promise.allSettled([
+    api.getGenreMedia(movieGenre, 'movie', 24),
+    api.getGenreMedia(tvGenre, 'tv', 24),
+  ]);
+  const merged = [
+    ...(movies.status === 'fulfilled' ? movies.value.results : []),
+    ...(shows.status === 'fulfilled' ? shows.value.results : []),
+  ].filter((item, index, all) => item?.id && all.findIndex(other => other.id === item.id) === index);
+  return {
+    results: merged.map((item: MovieApiMedia) => ({
+      id: item.id,
+      title: item.title,
+      image: item.poster || item.backdrop || '',
+      rating: item.rating ?? undefined,
+      releaseDate: item.releaseDate || undefined,
+      contentType: item.type === 'movie' ? 'movie' : 'series',
+      genres: item.genres || [],
+    })),
+  };
+}
 
 function HighlightedTitle({ title, query }: { title: string; query: string }) {
   const normalized = query.trim().toLocaleLowerCase();
@@ -134,6 +171,7 @@ export function Search() {
   const [query, setQuery] = useState(initialQuery);
   const [submittedQuery, setSubmittedQuery] = useState(initialQuery);
   const [recentSearches, setRecentSearches] = useState<string[]>([]);
+  const [genreFilter, setGenreFilter] = useState('');
   const [results, setResults] = useState<SearchItem[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -158,6 +196,7 @@ export function Search() {
     const requestedType = params.get('type');
     setFilter(requestedType === 'movie' || requestedType === 'series' || requestedType === 'anime' ? requestedType : 'all');
     const keyword = params.get('keyword')?.trim() || '';
+    setGenreFilter(params.get('genre')?.trim() || '');
     setSubmittedQuery(previous => (previous === keyword ? previous : keyword));
     if (keyword) setQuery(previous => (previous.trim() === keyword ? previous : keyword));
   }, [searchString]);
@@ -166,6 +205,15 @@ export function Search() {
     const normalized = submittedQuery.toLocaleLowerCase();
     return results
       .filter(item => filter === 'all' || item.type === filter)
+      .filter(item => {
+        if (!genreFilter) return true;
+        const wanted = genreFilter.toLowerCase();
+        const genres = (item.genres || []).map(value => value.toLowerCase());
+        if (wanted === 'sci-fi & fantasy') return genres.some(value => /science fiction|sci-fi|fantasy/.test(value));
+        if (wanted === 'animation & family') return genres.some(value => /animation|family/.test(value));
+        if (wanted === 'action') return genres.some(value => /action|adventure/.test(value));
+        return genres.some(value => value.includes(wanted));
+      })
       .sort((a, b) => {
         if (!normalized) return b.rating - a.rating;
         const score = (item: SearchItem) => {
@@ -177,16 +225,16 @@ export function Search() {
         };
         return score(b) - score(a);
       });
-  }, [results, filter, submittedQuery]);
+  }, [results, filter, submittedQuery, genreFilter]);
 
   useEffect(() => {
     setRecentSearches(preferencesUtil.getRecentSearches());
     updateSEO({
-      title: isSearching ? `Search “${submittedQuery}”` : 'Search',
+      title: isSearching ? `Search “${submittedQuery}”` : genreFilter ? `${genreFilter} on Panda.fun` : 'Search',
       description: 'Find movies, TV series and anime on Panda.fun.',
       type: 'website'
     });
-  }, [isSearching, submittedQuery]);
+  }, [isSearching, submittedQuery, genreFilter]);
 
   useEffect(() => {
     const timer = window.setTimeout(() => setSubmittedQuery(query.trim()), 250);
@@ -198,7 +246,7 @@ export function Search() {
     const controller = new AbortController();
     setLoading(true);
     setError(null);
-    const request = isSearching ? api.search(submittedQuery, controller.signal) : api.getTrending();
+    const request = isSearching ? api.search(submittedQuery, controller.signal) : genreFilter ? getGenreSearchResults(genreFilter) : api.getTrending();
 
     request.then(data => {
       if (active) setResults(data.results.map(mapItem));
@@ -214,12 +262,12 @@ export function Search() {
       active = false;
       controller.abort();
     };
-  }, [isSearching, submittedQuery, retryNonce]);
+  }, [isSearching, submittedQuery, genreFilter, retryNonce]);
 
   useEffect(() => {
     if (!isSearching) return;
-    setLocation(`/search?keyword=${encodeURIComponent(submittedQuery)}${filter !== 'all' ? `&type=${filter}` : ''}`, { replace: true });
-  }, [submittedQuery, filter, isSearching, setLocation]);
+    setLocation(`/search?keyword=${encodeURIComponent(submittedQuery)}${filter !== 'all' ? `&type=${filter}` : ''}${genreFilter ? `&genre=${encodeURIComponent(genreFilter)}` : ''}`, { replace: true });
+  }, [submittedQuery, filter, genreFilter, isSearching, setLocation]);
 
   useEffect(() => {
     const onPopState = () => {
@@ -290,6 +338,7 @@ export function Search() {
     setSubmittedQuery('');
     setError(null);
     setFilter('all');
+    setGenreFilter('');
     setLocation('/search', { replace: true });
     inputRef.current?.focus();
   };
@@ -317,7 +366,7 @@ export function Search() {
     setRecentSearches(preferencesUtil.getRecentSearches());
   };
 
-  const surprisePool = useMemo(() => results.filter(item => item.id && item.title), [results]);
+  const surprisePool = useMemo(() => visibleResults.filter(item => item.id && item.title), [visibleResults]);
   const surpriseMe = () => {
     if (!surprisePool.length) return;
     const pick = surprisePool[Math.floor(Math.random() * surprisePool.length)];
@@ -378,7 +427,7 @@ export function Search() {
       </header>
 
       <div className="panda-search__body">
-        {!isSearching && (
+        {!isSearching && !genreFilter && (
           <section className="panda-search__idle" aria-label="Discovery">
             {!!recentSearches.length && (
               <section aria-label="Recent searches">
@@ -436,11 +485,11 @@ export function Search() {
 
         <section aria-label={isSearching ? 'Search results' : 'Trending titles'}>
           <div className="panda-search__section-head">
-            <h2>{isSearching ? `Results for “${submittedQuery}”` : 'Trending now'}</h2>
+            <h2>{isSearching ? `Results for “${submittedQuery}”` : genreFilter ? genreFilter : 'Trending now'}</h2>
             {isSearching && !loading && <span aria-live="polite">{visibleResults.length} {visibleResults.length === 1 ? 'result' : 'results'}</span>}
           </div>
 
-          {(isSearching || results.length > 0) && (
+          {(isSearching || genreFilter || results.length > 0) && (
             <div className="panda-search__filters" role="group" aria-label="Filter search results">
               <span
                 className="panda-search__filter-indicator"
@@ -492,7 +541,7 @@ export function Search() {
           ) : (
             <div className="panda-search__state">
               <SearchIcon size={26} aria-hidden="true" />
-              <h3>{results.length ? 'No results in this filter' : `No results for “${submittedQuery}”`}</h3>
+              <h3>{results.length ? 'No results in this filter' : genreFilter ? `No ${genreFilter} titles found` : `No results for “${submittedQuery}”`}</h3>
               <p>Try a different spelling, a broader title, or browse a mood below.</p>
               <button type="button" onClick={results.length ? () => setFilter('all') : clearAll}>
                 {results.length ? 'Show all results' : 'Back to discovery'}

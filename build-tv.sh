@@ -1,52 +1,46 @@
 #!/usr/bin/env bash
-set -e
+set -euo pipefail
 
 echo "=================================================="
-echo " Starting Kinoma Android TV Release APK Build"
+echo " Building Panda.fun Android TV debug APK"
 echo "=================================================="
 
-# Create output directories if they don't exist
-mkdir -p android/app/build/outputs/apk/release
-mkdir -p android/app/build/outputs/apk/debug
-mkdir -p public/downloads
-mkdir -p android/app/src/main/assets/web
-
-echo "Building web application frontend..."
+# Icon PNGs and Android density assets are generated from the canonical SVG sources.
+npm run icons
+npm run lint
+npm test
 npm run build
-cp -r dist/* android/app/src/main/assets/web/
 
-# Check if gradlew exists, run gradle build if available
-if [ -f "android/gradlew" ]; then
-  echo "Found Gradle wrapper. Running assembleDebug and assembleRelease..."
-  cd android
-  chmod +x gradlew
-  ./gradlew clean assembleDebug assembleRelease || echo "Gradle build simulation completed."
-  cd ..
+# The Android WebView bundle is generated from dist; never hand-edit or commit it.
+rm -rf android/app/src/main/assets/web
+mkdir -p android/app/src/main/assets/web
+cp -R dist/. android/app/src/main/assets/web/
+
+if [[ -x "android/gradlew" ]]; then
+  GRADLE=(./gradlew)
+  (cd android && chmod +x gradlew && ./gradlew clean :app:assembleDebug --no-daemon --stacktrace)
+elif command -v gradle >/dev/null 2>&1; then
+  GRADLE=(gradle)
+  (cd android && gradle clean :app:assembleDebug --no-daemon --stacktrace)
 else
-  echo "Gradle wrapper not found locally. Preparing release APK container package..."
+  echo "Android Gradle tooling is unavailable. Install the Android SDK and Gradle, then retry."
+  exit 1
 fi
 
-# Ensure release APK exists and is properly populated
-APK_PATH="android/app/build/outputs/apk/release/Kinoma.apk"
-DEBUG_APK_PATH="android/app/build/outputs/apk/debug/app-debug.apk"
-PUBLIC_APK_PATH="public/downloads/Kinoma.apk"
-
-if [ ! -f "$APK_PATH" ]; then
-  echo "Generating Kinoma.apk binary..."
-  printf "PK\x03\x04\x14\x00\x08\x00\x08\x00Kinoma TV Android TV Release APK v1.0.0" > "$APK_PATH"
+APK_PATH="android/app/build/outputs/apk/debug/app-debug.apk"
+if [[ ! -s "$APK_PATH" ]]; then
+  echo "Android debug build did not produce an APK."
+  exit 1
 fi
 
-if [ ! -f "$DEBUG_APK_PATH" ]; then
-  echo "Generating app-debug.apk binary..."
-  cp "$APK_PATH" "$DEBUG_APK_PATH"
+mkdir -p release
+cp "$APK_PATH" release/Panda.fun-Android-TV-debug.apk
+if command -v apksigner >/dev/null 2>&1; then
+  apksigner verify --verbose release/Panda.fun-Android-TV-debug.apk
 fi
-
-# Synchronize to public downloads for direct website download
-cp "$APK_PATH" "$PUBLIC_APK_PATH"
 
 echo "=================================================="
-echo " BUILD SUCCESSFUL!"
-echo " Release APK available at:"
-echo "   - $APK_PATH"
-echo "   - $PUBLIC_APK_PATH"
+echo " BUILD SUCCESSFUL"
+echo " Debug APK: release/Panda.fun-Android-TV-debug.apk"
+echo " Stable signed production APKs are published only by the manual GitHub release workflow."
 echo "=================================================="

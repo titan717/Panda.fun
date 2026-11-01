@@ -492,9 +492,32 @@ export const api = {
     return { results: data.results.map(toAnimeItem) };
   },
 
-  async getGenreAnime(genre = '', limit?: number) {
-    const data = await request<{ type: 'tv' | 'movie'; genreId: number; page: number; totalPages: number; totalResults: number; results: MovieApiMedia[] }>('/api/v1/genres/' + encodeURIComponent(genre), { type: 'tv', page: 1 });
-    return { results: data.results.slice(0, limit ?? data.results.length).map(toAnimeItem) };
+  async getGenreMedia(genre: string, type: 'movie' | 'tv', limit = 12) {
+    const data = await request<{ results: MovieApiMedia[] }>(
+      '/api/v1/genres/' + encodeURIComponent(genre),
+      { type, page: 1 },
+    );
+    return { results: data.results.slice(0, limit) };
+  },
+
+  async getGenreAnime(genre = 'animation', limit = 24) {
+    // The verified /api/v1/genres/:genre endpoint supports both TMDB media types.
+    // Keep this rail anime-specific by filtering on original Japanese language.
+    const endpoint = '/api/v1/genres/' + encodeURIComponent(genre);
+    const [movies, shows] = await Promise.allSettled([
+      request<{ results: MovieApiMedia[] }>(endpoint, { type: 'movie', page: 1 }),
+      request<{ results: MovieApiMedia[] }>(endpoint, { type: 'tv', page: 1 }),
+    ]);
+    const japaneseMovies = (movies.status === 'fulfilled' ? movies.value.results : [])
+      .filter(item => item.language?.toLowerCase() === 'ja');
+    const japaneseShows = (shows.status === 'fulfilled' ? shows.value.results : [])
+      .filter(item => item.language?.toLowerCase() === 'ja');
+    const mixed: MovieApiMedia[] = [];
+    for (let index = 0; mixed.length < limit && (index < japaneseMovies.length || index < japaneseShows.length); index += 1) {
+      if (japaneseMovies[index]) mixed.push(japaneseMovies[index]);
+      if (mixed.length < limit && japaneseShows[index]) mixed.push(japaneseShows[index]);
+    }
+    return { results: mixed.map(item => ({ ...toAnimeItem(item), genres: [...(item.genres || []), 'Anime'] })) };
   },
 
   async search(query: string, signal?: AbortSignal) {
