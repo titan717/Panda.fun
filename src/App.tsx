@@ -71,8 +71,9 @@ function AnimatedRoutes() {
   const previousLocation = useRef(location);
   const previousPath = previousLocation.current.split('?')[0];
   const currentPath = location.split('?')[0];
-  const isDetailTransition = /\\/(details|watch)\\//.test(currentPath) || /\\/(details|watch)\\//.test(previousPath);
-  const direction = /\\/(details|watch)\\//.test(currentPath) ? 1 : /\\/(details|watch)\\//.test(previousPath) ? -1 : 0;
+  const routeDepth = (path: string) => /\\/watch\\//.test(path) ? 2 : /\\/details\\//.test(path) ? 1 : 0;
+  const isDetailTransition = routeDepth(currentPath) > 0 || routeDepth(previousPath) > 0;
+  const direction = Math.sign(routeDepth(currentPath) - routeDepth(previousPath));
   useEffect(() => { previousLocation.current = location; }, [location]);
 
   useEffect(() => {
