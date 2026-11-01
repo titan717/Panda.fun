@@ -40,9 +40,9 @@
     justify-content: space-between;
     width: 100%;
     box-sizing: border-box;
-    height: calc(56px + var(--safe-top, var(--safe-top, env(safe-area-inset-top, 0px))));
-    min-height: calc(56px + var(--safe-top, var(--safe-top, env(safe-area-inset-top, 0px))));
-    padding: var(--safe-top, var(--safe-top, env(safe-area-inset-top, 0px))) 16px 0;
+    height: calc(56px + var(--safe-top, env(safe-area-inset-top, 0px)));
+    min-height: calc(56px + var(--safe-top, env(safe-area-inset-top, 0px)));
+    padding: var(--safe-top, env(safe-area-inset-top, 0px)) 16px 0;
     margin: 0;
     background: transparent;
     border-bottom: 1px solid transparent;
@@ -90,7 +90,7 @@
     position: fixed !important;
     z-index: 50 !important;
     right: 12px !important;
-    bottom: calc(8px + var(--safe-bottom, var(--safe-bottom, env(safe-area-inset-bottom, 0px)))) !important;
+    bottom: calc(8px + var(--safe-bottom, env(safe-area-inset-bottom, 0px))) !important;
     left: 12px !important;
     display: grid !important;
     grid-template-columns: repeat(4, minmax(0, 1fr));
