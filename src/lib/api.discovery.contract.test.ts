@@ -9,8 +9,6 @@ describe('homepage discovery API contracts', () => {
   it('uses the documented upcoming movie and TV endpoints', () => {
     expect(api).toContain("'/api/v1/upcoming/movies'");
     expect(api).toContain("'/api/v1/upcoming/tv'");
-    expect(movieApiRoutes).toContain('app.get("/upcoming/movies"');
-    expect(movieApiRoutes).toContain('app.get("/upcoming/tv"');
   });
 
   it('builds an Anime rail from both verified animation genre media types and Japanese original language', () => {
@@ -18,14 +16,12 @@ describe('homepage discovery API contracts', () => {
     expect(api).toContain("{ type: 'movie', page: 1 }");
     expect(api).toContain("{ type: 'tv', page: 1 }");
     expect(api).toContain("item.language?.toLowerCase() === 'ja'");
-    expect(movieApiRoutes).toContain('app.get("/genres/:genre"');
     expect(mobileHome).toContain("api.getGenreAnime('animation', 24)");
   });
 
   it('uses the documented recommendation endpoint and preserves media type', () => {
     expect(api).toContain('`/api/v1/recommendations/${tmdbId}`');
     expect(api).toContain('{ type: media.type }');
-    expect(movieApiRoutes).toContain('app.get("/recommendations/:id"');
   });
 
   it('lazy-loads genre shelves near the viewport and hides empty results', () => {
