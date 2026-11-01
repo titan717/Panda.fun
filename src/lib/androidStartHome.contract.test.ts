@@ -38,6 +38,7 @@ describe('installed app launch and recovery contract', () => {
     expect(activity).toContain('installSplashScreen()');
     expect(manifest).toContain('@style/Theme.KinomaTV.Splash');
     expect(theme).toContain('windowSplashScreenBackground');
-    expect(theme).toContain('@drawable/panda_splash_background');
+    expect(theme).toContain('@drawable/panda_launcher_foreground');
+    expect(theme).toContain('@color/launcher_background');
   });
 });
