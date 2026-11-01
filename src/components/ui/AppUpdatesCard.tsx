@@ -1,10 +1,13 @@
 import React from 'react';
+import { m } from 'motion/react';
+import { AnimatedCheck, Pressable, ProgressRing, useMotionPreference } from '../../motion';
 import { CheckCircle2, Download, Loader2, RefreshCw, TriangleAlert } from 'lucide-react';
 import { useAppUpdates } from '../../lib/appUpdates';
 import { statusMessage } from '../../lib/appUpdateState';
 
 export function AppUpdatesCard() {
   const { state, check, apply } = useAppUpdates();
+  const preference = useMotionPreference();
   const busy = state.status === 'checking' || state.status === 'applying';
   const isAndroid = state.source === 'android';
   const Icon =
@@ -12,9 +15,16 @@ export function AppUpdatesCard() {
 
   return (
     <section className="panda-updates" aria-labelledby="panda-updates-title">
-      <div className="panda-updates__icon" aria-hidden="true">
-        {busy ? <Loader2 size={18} className="panda-updates__spin" /> : <Icon size={18} />}
-      </div>
+      <m.div
+        key={state.status}
+        className="panda-updates__icon"
+        aria-hidden="true"
+        initial={false}
+        animate={state.status === 'error' && preference === 'full' ? { x: [0, -5, 5, -3, 3, 0] } : { x: 0 }}
+        transition={{ duration: 0.34 }}
+      >
+        {busy ? <Loader2 size={18} className="panda-updates__spin" /> : state.status === 'up-to-date' ? <span className="panda-updates__success-ring"><ProgressRing value={100} size={34} strokeWidth={2.5} /><AnimatedCheck checked size={18} className="panda-updates__success-check" /></span> : <Icon size={18} />}
+      </m.div>
 
       <div className="panda-updates__copy">
         <span className="panda-settings-page__eyebrow">APP UPDATES</span>
@@ -32,15 +42,15 @@ export function AppUpdatesCard() {
 
       <div className="panda-updates__actions">
         {state.status === 'available' ? (
-          <button type="button" className="panda-updates__button is-primary" onClick={() => void apply()} disabled={busy}>
+          <Pressable className="panda-updates__button is-primary" onClick={() => void apply()} disabled={busy}>
             <Download size={15} aria-hidden="true" />
             {isAndroid ? 'Download update' : 'Reload to update'}
-          </button>
+          </Pressable>
         ) : null}
-        <button type="button" className="panda-updates__button" onClick={() => void check()} disabled={busy} aria-busy={busy}>
+        <Pressable className="panda-updates__button" onClick={() => void check()} disabled={busy} aria-busy={busy}>
           <RefreshCw size={15} aria-hidden="true" />
           {state.status === 'error' ? 'Try again' : 'Check for updates'}
-        </button>
+        </Pressable>
       </div>
     </section>
   );

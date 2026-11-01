@@ -1,0 +1,157 @@
+:root {
+  --motion-duration-instant: 90ms;
+  --motion-duration-fast: 160ms;
+  --motion-duration-base: 240ms;
+  --motion-duration-slow: 380ms;
+  --motion-duration-hero: 600ms;
+  --motion-ease-standard: cubic-bezier(.2, 0, 0, 1);
+  --motion-ease-emphasized: cubic-bezier(.16, 1, .3, 1);
+  --motion-ease-exit: cubic-bezier(.4, 0, 1, 1);
+}
+
+.panda-motion-shimmer {
+  position: relative;
+  overflow: hidden;
+  background: rgba(255,255,255,.055);
+  border-radius: inherit;
+  contain: paint;
+}
+.panda-motion-shimmer::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  transform: translateX(-100%);
+  background: linear-gradient(90deg, transparent, rgba(255,255,255,.09), transparent);
+  animation: panda-motion-shimmer 1.8s linear infinite;
+}
+@keyframes panda-motion-shimmer {
+  to { transform: translateX(100%); }
+}
+
+.modern-card__poster {
+  transition: transform var(--motion-duration-fast) var(--motion-ease-emphasized);
+  transform-origin: center;
+}
+.modern-card__poster:active {
+  transform: scale(.96);
+}
+@media (hover: hover) and (pointer: fine) {
+  .modern-card__poster:hover:not(:active) {
+    transform: translateY(-3px);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .panda-motion-shimmer::after { animation: none; }
+}
+
+[data-motion-preference='reduced'] .panda-billboard-kenburns,
+[data-motion-preference='reduced'] .panda-featured-swipe-in,
+[data-motion-preference='minimal'] .panda-billboard-kenburns,
+[data-motion-preference='minimal'] .panda-featured-swipe-in {
+  animation: none !important;
+  transform: none !important;
+}
+[data-motion-preference='reduced'] .modern-card__poster:hover,
+[data-motion-preference='reduced'] .modern-card__poster:active,
+[data-motion-preference='minimal'] .modern-card__poster:hover,
+[data-motion-preference='minimal'] .modern-card__poster:active {
+  transform: none !important;
+}
+
+.panda-route-transition-shell {
+  position: relative;
+  isolation: isolate;
+  width: 100%;
+  min-width: 0;
+}
+.panda-route-transition-page {
+  width: 100%;
+  min-width: 0;
+}
+@media (hover: hover) and (pointer: fine) {
+  .modern-card__poster:hover:not(:active) {
+    transform: translateY(-3px);
+  }
+}
+
+.panda-mobile-bottom-nav__item {
+  position: relative;
+  isolation: isolate;
+}
+.panda-mobile-bottom-nav__active-pill {
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  border-radius: inherit;
+  background: rgba(255,255,255,.09);
+  box-shadow: inset 0 1px rgba(255,255,255,.07), 0 4px 18px rgba(0,0,0,.2);
+}
+.panda-mobile-bottom-nav__icon,
+.panda-mobile-bottom-nav__label {
+  position: relative;
+  z-index: 1;
+}
+.panda-updates__success-ring {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+.panda-updates__success-check {
+  position: absolute;
+}
+@media (prefers-reduced-motion: reduce) {
+  .panda-mobile-bottom-nav__active-pill { transition: none; }
+}
+[data-motion-preference='reduced'] .panda-motion-shimmer::after,
+[data-motion-preference='reduced'] .panda-motion-shimmer::after,
+[data-motion-preference='minimal'] .panda-motion-shimmer::after { animation: none; }
+
+.panda-motion-play-cta {
+  position: relative;
+  overflow: hidden;
+  isolation: isolate;
+}
+.panda-motion-play-cta::after {
+  content: '';
+  position: absolute;
+  inset: -20% auto -20% -55%;
+  width: 42%;
+  pointer-events: none;
+  background: linear-gradient(105deg, transparent, rgba(255,255,255,.28), transparent);
+  transform: skewX(-18deg);
+  animation: panda-motion-cta-sweep 900ms cubic-bezier(.2,0,0,1) 650ms both;
+}
+@keyframes panda-motion-cta-sweep {
+  from { transform: translateX(0) skewX(-18deg); opacity: 0; }
+  20% { opacity: 1; }
+  to { transform: translateX(390%) skewX(-18deg); opacity: 0; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .panda-motion-play-cta::after { animation: none !important; }
+}
+[data-motion-preference='reduced'] .panda-motion-play-cta::after,
+[data-motion-preference='minimal'] .panda-motion-play-cta::after {
+  animation: none !important;
+}
+
+.panda-route-loading-keepalive {
+  position: relative;
+  width: 100%;
+  min-width: 0;
+  min-height: 45vh;
+}
+.panda-route-loading-overlay {
+  position: absolute;
+  inset: 0;
+  z-index: 5;
+  display: flex;
+  min-height: 45vh;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 14px;
+  background: rgba(0,0,0,.72);
+  backdrop-filter: blur(12px);
+}
