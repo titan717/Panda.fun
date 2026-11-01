@@ -70,19 +70,22 @@ describe('MYpanda.fun mobile shell contract', () => {
     expect(search).not.toContain('<h3>Searching…</h3>');
   });
 
-  it('keeps search mascot-free with a sticky accessible search field', () => {
+  it('keeps search mascot-free with an accessible search field', () => {
     expect(search).not.toContain('panda-search-companion');
     expect(search).toContain('role="search" aria-label="Search the catalogue"');
     expect(search).toContain('aria-label="Search movies, series or anime"');
     expect(search).toContain('panda-search__field');
   });
 
-  it('preserves the existing search API, recent searches, and supported filters', () => {
+  it('preserves the search API, recent searches, and All/Movies/TV/Anime filters', () => {
     expect(search).toContain('api.search(submittedQuery, controller.signal)');
     expect(search).toContain('api.getTrending()');
     expect(search).toContain('preferencesUtil.addRecentSearch(clean)');
-    expect(search).toContain("filter === 'movie'");
-    expect(search).toContain("filter === 'series'");
+    expect(search).toContain('preferencesUtil.removeRecentSearch');
+    expect(search).toContain('preferencesUtil.clearRecentSearches');
+    expect(search).toContain("{ id: 'all', label: 'All' }");
+    expect(search).toContain("{ id: 'movie', label: 'Movies' }");
+    expect(search).toContain("{ id: 'series', label: 'TV' }");
     expect(search).toContain("{ id: 'anime', label: 'Anime' }");
     expect(search).toContain('Try again');
   });
