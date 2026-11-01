@@ -9,13 +9,14 @@ const pngSize = (path: string) => {
 };
 
 describe('Panda.fun icon asset contract', () => {
-  it('keeps a single warm-black panda SVG source and a safe-zone maskable source', () => {
+  it('keeps one canonical warm-black panda SVG and derives the maskable safe zone from it', () => {
     const source = readFileSync(file('../../assets/panda-icon.svg'), 'utf8');
-    const maskable = readFileSync(file('../../assets/panda-icon-maskable.svg'), 'utf8');
+    const generator = readFileSync(file('../../scripts/generate-icons.py'), 'utf8');
     expect(source).toContain('#050505');
     expect(source).toContain('#F6F2EE');
     expect(source).toContain('#B84D41');
-    expect(maskable).toContain('translate(56 56) scale(.78)');
+    expect(generator).toContain('safe_mark = mark.resize((398, 398)');
+    expect(generator).toContain('base.alpha_composite(safe_mark');
   });
 
   it('generates all declared PWA and Apple raster icon sizes', () => {
@@ -27,13 +28,15 @@ describe('Panda.fun icon asset contract', () => {
     expect(existsSync(file('../../public/favicon.ico'))).toBe(true);
   });
 
-  it('generates legacy launcher icons for every Android density and the TV banner', () => {
+  it('generates legacy launcher icons for every Android density and all TV banner targets', () => {
     const densities: Array<[string, number]> = [['mdpi', 48], ['hdpi', 72], ['xhdpi', 96], ['xxhdpi', 144], ['xxxhdpi', 192]];
     for (const [density, size] of densities) {
       expect(pngSize('../../android/app/src/main/res/mipmap-' + density + '/ic_launcher.png')).toEqual({ width: size, height: size });
       expect(pngSize('../../android/app/src/main/res/mipmap-' + density + '/ic_launcher_round.png')).toEqual({ width: size, height: size });
     }
+    expect(pngSize('../../android/app/src/main/res/drawable/tv_banner.png')).toEqual({ width: 320, height: 180 });
     expect(pngSize('../../android/app/src/main/res/drawable-xhdpi/tv_banner.png')).toEqual({ width: 320, height: 180 });
+    expect(pngSize('../../android/app/src/main/res/drawable-xhdpi/banner.png')).toEqual({ width: 320, height: 180 });
   });
 
   it('uses adaptive foreground, background and Android 13 monochrome layers', () => {
