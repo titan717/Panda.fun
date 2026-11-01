@@ -48,6 +48,10 @@ object UpdateChecker {
             if (!updateInfo.apkUrl.startsWith("https://")) throw java.io.IOException("Update package URL must use HTTPS.")
             if (!updateInfo.sha256.matches(Regex("(?i)^[a-f0-9]{64}$"))) throw java.io.IOException("Update manifest checksum is invalid.")
             if (updateInfo.channel !in setOf("stable", "beta")) throw java.io.IOException("Update manifest release channel is missing or invalid.")
+            val expectedApkName = if (updateInfo.prerelease) "Panda.fun-Android-TV-beta.apk" else "Panda.fun-Android-TV.apk"
+            if (!updateInfo.apkUrl.endsWith("/$expectedApkName")) {
+                throw java.io.IOException("Update package does not match its declared release channel.")
+            }
             // Beta builds can receive beta updates; production builds must never receive prereleases.
             val installedIsPrerelease = BuildConfig.VERSION_NAME.contains("beta", ignoreCase = true)
             val channelMatches = if (installedIsPrerelease) {
