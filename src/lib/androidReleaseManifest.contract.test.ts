@@ -20,8 +20,17 @@ describe('Android stable update release contract', () => {
 
   it('offers only stable non-prerelease builds and compares numeric version codes', () => {
     expect(checker).toContain('updateInfo.channel == "stable" && !updateInfo.prerelease');
-    expect(checker).toContain('updateInfo.latestVersionCode > BuildConfig.VERSION_CODE');
+    expect(checker).toContain('updateInfo.latestVersionCode < BuildConfig.VERSION_CODE');
+    expect(checker).toContain('updateInfo.latestVersionCode == BuildConfig.VERSION_CODE');
+    expect(checker).toContain('No stable production release is currently published.');
     expect(checker).toContain('Update manifest checksum is invalid.');
+  });
+
+  it('does not mistake the currently published beta manifest for a stable production update', () => {
+    expect(manifest.channel).toBe('beta');
+    expect(manifest.prerelease).toBe(true);
+    expect(checker).toContain('val installedIsPrerelease = BuildConfig.VERSION_NAME.contains("beta", ignoreCase = true)');
+    expect(checker).toContain('if (!channelMatches)');
   });
 
   it('publishes the same signed APK filename, size and checksum through the stable workflow', () => {
