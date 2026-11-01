@@ -1,6 +1,6 @@
 import React, { createContext, useContext, useEffect, useRef, useState } from 'react';
 import { m, useReducedMotion } from 'motion/react';
-import { motionDurations, motionEasings, motionSprings } from './tokens';
+import { getMotionOffset, motionDurations, motionEasings, motionSprings } from './tokens';
 import { useMotionPreference } from './useMotionPreference';
 
 const MotionPreferenceContext = createContext<'full' | 'reduced' | 'minimal'>('full');
@@ -60,7 +60,7 @@ export function Reveal({ children, className, delay = 0, once = true }: {
       ref={ref}
       className={className}
       initial={false}
-      animate={visible ? { opacity: 1, y: 0 } : { opacity: 0, y: reduced ? 0 : 12 }}
+      animate={visible ? { opacity: 1, y: 0 } : { opacity: 0, y: getMotionOffset(preference, 12) }}
       transition={{ duration: reduced ? motionDurations.fast : motionDurations.base, delay: reduced ? 0 : delay, ease: motionEasings.emphasized }}
     >
       {children}
@@ -72,10 +72,11 @@ export function Stagger({ children, className, interval = 0.04 }: {
   children: React.ReactNode; className?: string; interval?: number;
 }) {
   const preference = useContext(MotionPreferenceContext);
-  const reduced = preference !== 'full';
   return (
-    <div className={className} data-motion-stagger={reduced ? 'off' : 'on'} style={{ '--motion-stagger': reduced ? '0ms' : `${interval * 1000}ms` } as React.CSSProperties}>
-      {children}
+    <div className={className}>
+      {React.Children.toArray(children).map((child, index) => (
+        <Reveal key={index} delay={preference === 'full' ? index * interval : 0}>{child}</Reveal>
+      ))}
     </div>
   );
 }
