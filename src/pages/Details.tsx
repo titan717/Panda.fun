@@ -11,7 +11,9 @@ import { updateSEO } from '../lib/seo';
 import { trackGAEvent } from '../lib/analytics';
 import { buildDetailsHref, buildWatchHref, parseDetailsRouteSearch } from '../lib/mediaRoute';
 import { createEpisodeRailObserver } from '../lib/safeResizeObserver';
+import { usePrefersReducedMotion } from '../lib/usePrefersReducedMotion';
 import { calculateEpisodeRailStep, sortEpisodesForDisplay } from '../lib/episodeRail';
+import { friendlyNetworkError } from '../lib/networkMessage';
 
 function cleanText(value: unknown) { return typeof value === 'string' ? value.replace(/<[^>]*>/g, '').trim() : ''; }
 function titleOf(data: any, fallback: string) { return typeof data?.title === 'string' ? data.title : data?.title?.english || data?.title?.romaji || data?.title?.native || fallback; }
@@ -38,7 +40,7 @@ function trailerSrc(url: unknown) {
     return url;
   }
 }
-function formatDuration(value: unknown) { const n = Number(value); if (!Number.isFinite(n) || n <= 0) return 'Series'; const h = Math.floor(n / 60); const m = Math.round(n % 60); return h ? h + 'h ' + String(m).padStart(2, '0') + 'm' : m + 'm'; }
+function formatDuration(value: unknown) { const n = Number(value); if (!Number.isFinite(n) || n <= 0) return 'Movie'; const h = Math.floor(n / 60); const m = Math.round(n % 60); return h ? h + 'h ' + String(m).padStart(2, '0') + 'm' : m + 'm'; }
 
 export function Details() {
   const [, params] = useRoute<{ id: string }>('/details/:id');
@@ -60,6 +62,9 @@ export function Details() {
   const [retryKey, setRetryKey] = useState(0);
   const [episodeView, setEpisodeView] = useState<'list' | 'grid'>('grid');
   const [seasonMenuOpen, setSeasonMenuOpen] = useState(false);
+  const reducedMotion = usePrefersReducedMotion();
+  const [trailerRequested, setTrailerRequested] = useState(false);
+  const seasonTriggerRef = useRef<HTMLButtonElement | null>(null);
   const [episodeSearch, setEpisodeSearch] = useState('');
   const [episodeSort, setEpisodeSort] = useState<'asc' | 'desc'>('asc');
   const episodeRailRef = useRef<HTMLDivElement | null>(null);
@@ -99,7 +104,7 @@ export function Details() {
       });
     }).catch(err => {
       if (!active) return;
-      setError(err instanceof Error ? err.message : 'Unable to load this title.'); setLoading(false);
+      setError(friendlyNetworkError(err, 'Unable to load this title.')); setLoading(false);
     });
     return () => { active = false; controller.abort(); };
   }, [routeSlug, type, retryKey]);
@@ -253,13 +258,15 @@ export function Details() {
     trackGAEvent(next ? 'add_to_list' : 'remove_from_list', { content_type: kind });
   };
 
+  const hasTrailer = Boolean(trailer?.trailer?.embedUrl) && !trailerFailed;
+
   return (
-    <main className="kinoma-details-page">
+    <div className="kinoma-details-page">
       {loading && <div className="panda-state-card" role="status"><span className="panda-state-card__spinner" aria-hidden="true" /><div><strong>Loading title</strong><small>Fetching the latest details…</small></div></div>}
       {error && !loading && <div className="panda-state-card is-error" role="alert"><div><strong>We couldn't load this title.</strong><small>{error}</small></div><button type="button" onClick={() => setRetryKey(value => value + 1)}>Retry</button></div>}
       <section id="trailers-more" className="kinoma-details-hero kinoma-details-hero--trailer">
-        <div className="kinoma-details-hero__trailer-bg" aria-label={title + ' trailer preview'}>
-          {trailer?.trailer?.embedUrl && !trailerFailed ? <iframe
+        <div className="kinoma-details-hero__trailer-bg">
+          {hasTrailer && (!reducedMotion || trailerRequested) ? <iframe
             src={trailerSrc(trailer.trailer.embedUrl)}
             title={title + ' trailer'}
             className="kinoma-details-hero__trailer-video"
@@ -268,7 +275,10 @@ export function Details() {
             allowFullScreen
             onError={() => setTrailerFailed(true)}
           /> : (
-            <div className="kinoma-details-hero__trailer-placeholder"><div><Film size={42} /></div><span>TRAILER PREVIEW</span><strong>Trailer preview unavailable</strong><small>MovieApi did not return a trailer for this title.</small></div>
+            <div className="kinoma-details-hero__still">
+              <img src={backdrop} alt="" aria-hidden="true" decoding="async" onError={(event) => { if (event.currentTarget.src !== DEFAULT_BANNER) event.currentTarget.src = DEFAULT_BANNER; }} />
+              {!hasTrailer && !loading && <span className="kinoma-details-hero__trailer-note"><Film size={13} aria-hidden="true" /> No trailer available</span>}
+            </div>
           )}
         </div>
         <div className="kinoma-details-hero__content">
@@ -285,6 +295,7 @@ export function Details() {
             <div className="kinoma-details-actions">
               <button ref={watchButtonRef} className="kinoma-details-3d-button kinoma-details-3d-button--watch" onClick={watch}><span><Play size={18} fill="currentColor" /> {watchLabel}</span></button>
               <button className={'kinoma-details-3d-button kinoma-details-3d-button--list ' + (isInList ? 'is-added' : '')} onClick={toggleList}><span>{isInList ? <Check size={18} /> : <Plus size={18} />} {isInList ? 'In My List' : 'Add to My List'}</span></button>
+              {hasTrailer && reducedMotion && !trailerRequested && <button type="button" className="kinoma-details-share kinoma-details-trailer-toggle" aria-label="Play trailer" title="Play trailer" onClick={() => setTrailerRequested(true)}><span><Film size={16} aria-hidden="true" /> Play trailer</span></button>}
               <button className="kinoma-details-share" type="button" onClick={share} aria-label="Share this title"><span><Share2 className="kinoma-details-share__icon" size={16} /> Share</span></button>
             </div>
             <p className="kinoma-details-share-feedback" role="status" aria-live="polite">{shareFeedback}</p>
@@ -304,14 +315,14 @@ export function Details() {
             <div className="kinoma-season-heading">
               <span className="kinoma-section-accent" aria-hidden="true" />
               <div className="kinoma-season-picker">
-                <button type="button" className="kinoma-season-picker__trigger" onClick={() => setSeasonMenuOpen(value => !value)} aria-expanded={seasonMenuOpen} aria-haspopup="listbox">
+                <button ref={seasonTriggerRef} type="button" className="kinoma-season-picker__trigger" onClick={() => setSeasonMenuOpen(value => !value)} onKeyDown={(event) => { if (event.key === 'Escape' && seasonMenuOpen) { event.preventDefault(); setSeasonMenuOpen(false); } }} aria-expanded={seasonMenuOpen} aria-haspopup="listbox">
                   <span className="kinoma-season-picker__label">Season {selectedSeason}</span>
                   <span className="kinoma-season-picker__chevron" aria-hidden="true">⌄</span>
                 </button>
                 {seasonMenuOpen && (
-                  <div className="kinoma-season-picker__menu" role="listbox" aria-label="Choose season">
+                  <div className="kinoma-season-picker__menu" role="listbox" aria-label="Choose season" onKeyDown={(event) => { if (event.key === 'Escape') { event.preventDefault(); setSeasonMenuOpen(false); seasonTriggerRef.current?.focus(); } }}>
                     {modelSeasons.map(season => (
-                      <button type="button" key={season.number} role="option" aria-selected={selectedSeason === season.number} className={selectedSeason === season.number ? 'is-selected' : ''} onClick={() => { setSelectedSeason(season.number); setSeasonMenuOpen(false); }}>
+                      <button type="button" key={season.number} role="option" aria-selected={selectedSeason === season.number} className={selectedSeason === season.number ? 'is-selected' : ''} onClick={() => { setSelectedSeason(season.number); setSeasonMenuOpen(false); seasonTriggerRef.current?.focus(); }}>
                         Season {season.number}
                       </button>
                     ))}
@@ -397,6 +408,6 @@ export function Details() {
         </div>
       </section>
       <div className="kinoma-details-bottom"><Clock3 size={14} /> Metadata and playback are powered by MovieApi.</div>
-    </main>
+    </div>
   );
 }

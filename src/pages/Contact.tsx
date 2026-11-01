@@ -4,7 +4,7 @@ import { ArrowLeft, Mail, MessageCircle } from 'lucide-react';
 
 export function Contact() {
   return (
-    <main className="kinoma-simple-page">
+    <div className="kinoma-simple-page">
       <article className="kinoma-simple-page__document">
         <div className="kinoma-simple-page__icon"><MessageCircle size={20} /></div>
         <span className="kinoma-eyebrow">SUPPORT</span>
@@ -13,6 +13,6 @@ export function Contact() {
         <div className="kinoma-simple-page__notice"><Mail size={16} /> Support contact will be published here when the service is ready.</div>
         <Link href="/home" className="kinoma-simple-page__button"><ArrowLeft size={15} /> Back home</Link>
       </article>
-    </main>
+    </div>
   );
 }

@@ -10,6 +10,7 @@ import { DEFAULT_POSTER } from '../types';
 import { updateSEO } from '../lib/seo';
 import { trackGAEvent } from '../lib/analytics';
 import { buildDetailsHref, buildWatchHref } from '../lib/mediaRoute';
+import { friendlyNetworkError } from '../lib/networkMessage';
 
 function clean(value: unknown) {
   return typeof value === 'string' ? value.replace(/<[^>]*>/g, '').trim() : '';
@@ -42,6 +43,7 @@ export function Watch() {
   const [playbackRetry, setPlaybackRetry] = useState(0);
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(true);
+  const [detailsRetry, setDetailsRetry] = useState(0);
   const [inList, setInList] = useState(false);
   const [shareMessage, setShareMessage] = useState('');
 
@@ -72,11 +74,11 @@ export function Watch() {
         .catch(() => undefined);
     }).catch(err => {
       if (!active) return;
-      setError(err instanceof Error ? err.message : 'Unable to load this title.');
+      setError(friendlyNetworkError(err, 'Unable to load this title.'));
       setLoading(false);
     });
     return () => { active = false; controller.abort(); };
-  }, [id]);
+  }, [id, detailsRetry]);
 
   useEffect(() => {
     if (!data || type !== 'series') return;
@@ -113,7 +115,7 @@ export function Watch() {
     setError('');
     api.getWatchLink(id, type === 'series' ? season : 1, type === 'series' ? episode : 1, controller.signal, playbackProgress)
       .then(result => { if (!active) return; setSource(result.url); setSourceLoading(true); trackGAEvent('watch_start', { content_type: type, title }); })
-      .catch(err => { if (!active) return; setSourceLoading(false); setError(err instanceof Error ? err.message : 'Playback source unavailable.'); });
+      .catch(err => { if (!active) return; setSourceLoading(false); setError(friendlyNetworkError(err, 'Playback source unavailable.')); });
     return () => { active = false; controller.abort(); };
   }, [data, id, type, season, episode, playbackRetry]);
 
@@ -218,13 +220,21 @@ export function Watch() {
     }
   };
 
+  const detailsHref = buildDetailsHref(data ? { ...data, title } : title, type, id);
+  const goBack = () => {
+    if (window.history.length > 1) window.history.back();
+    else setLocation(detailsHref);
+  };
+  const backButton = <button type="button" className="panda-watch-back" onClick={goBack} aria-label={'Back from ' + title}><ArrowLeft size={18} aria-hidden="true" /><span>Back</span></button>;
+
   if (loading) {
-    return <main className="panda-watch-page"><div className="panda-watch-loading"><span /></div></main>;
+    return <div className="panda-watch-page">{backButton}<div className="panda-watch-loading" role="status" aria-live="polite"><span aria-hidden="true" /><span className="panda-visually-hidden">Loading player</span></div></div>;
   }
 
   return (
-    <main className="panda-watch-page">
-      <section className="panda-watch-stage">
+    <div className="panda-watch-page">
+      {backButton}
+      <section className="panda-watch-stage" aria-label={'Now playing: ' + title}>
         <div className="panda-watch-player">
           {source ? (
             <iframe
@@ -240,15 +250,20 @@ export function Watch() {
           ) : sourceLoading ? (
             <div className="panda-watch-player-loading" role="status" aria-live="polite">
               <span aria-hidden="true" />
+              <span className="panda-visually-hidden">Preparing playback</span>
             </div>
           ) : (
-            <div className="panda-watch-player-empty">
+            <div className="panda-watch-player-empty" role="alert">
               <strong>Playback unavailable</strong>
               <span>{error || 'The player could not be resolved for this title.'}</span>
+              <div className="panda-watch-player-empty__actions">
+                <button type="button" className="panda-ux-button panda-ux-button--primary" onClick={() => (data ? setPlaybackRetry(value => value + 1) : setDetailsRetry(value => value + 1))}>Try again</button>
+                <button type="button" className="panda-ux-button" onClick={() => setLocation(detailsHref)}>Title details</button>
+              </div>
             </div>
           )}
         </div>
       </section>
-    </main>
+    </div>
   );
 }

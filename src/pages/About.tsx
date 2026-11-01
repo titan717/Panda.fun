@@ -13,7 +13,7 @@ export function About() {
   }, []);
 
   return (
-    <main className="min-h-[70vh] w-full bg-[var(--kinoma-bg)] text-white">
+    <div className="min-h-[70vh] w-full bg-[var(--kinoma-bg)] text-white">
       <section className="mx-auto flex w-full max-w-5xl flex-col px-5 pb-20 pt-12 sm:px-8 sm:pt-20">
         <div className="max-w-3xl">
           <div className="mb-5 inline-flex items-center gap-2 rounded-full border border-white/10 bg-white/[0.04] px-3 py-1.5 text-xs font-semibold text-white/60">
@@ -54,6 +54,6 @@ export function About() {
           <ChevronRight className="h-4 w-4" />
         </Link>
       </section>
-    </main>
+    </div>
   );
 }

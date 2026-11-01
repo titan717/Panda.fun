@@ -182,7 +182,7 @@ export function Library() {
   };
 
   return (
-    <main className="kinoma-library-page panda-library">
+    <div className="kinoma-library-page panda-library">
       <div className="kinoma-library-page__inner panda-library__inner">
         <header className="kinoma-library-head panda-library__head">
           <div>
@@ -258,6 +258,6 @@ export function Library() {
 
         <Footer />
       </div>
-    </main>
+    </div>
   );
 }

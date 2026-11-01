@@ -154,7 +154,7 @@ export function Privacy() {
         </Link>
       </header>
 
-      <main className="kinoma-terms__main">
+      <div className="kinoma-terms__main">
         <div className="kinoma-terms__intro">
           <div className="kinoma-terms__icon" aria-hidden="true"><ShieldCheck className="h-5 w-5" /></div>
           <p>LEGAL / PRIVACY</p>
@@ -173,7 +173,7 @@ export function Privacy() {
             </section>
           ))}
         </article>
-      </main>
+      </div>
 
       <footer className="kinoma-terms__footer">
         <span>MyPanda Privacy Policy</span>

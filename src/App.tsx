@@ -1,6 +1,6 @@
 import React, { lazy, Suspense, useEffect, useState } from 'react';
 import { Route, Switch, useLocation } from 'wouter';
-import { AnimatePresence, motion } from 'motion/react';
+import { AnimatePresence, MotionConfig, motion } from 'motion/react';
 import { SWRConfig } from 'swr';
 import { localCache } from './lib/localCache';
 import { Layout } from './components/Layout';
@@ -12,9 +12,18 @@ import { Privacy } from './pages/Privacy';
 import { Contact } from './pages/Contact';
 import { Docs } from './pages/Docs';
 import { Home } from './pages/Home';
+import { NotFound } from './pages/NotFound';
 function retryLazyImport<T>(importer: () => Promise<T>, chunkName: string) {
   return importer().catch(error => {
     if (!isRecoverableChunkLoadError(error)) throw error;
+    // Offline: reloading now would replace the app with the browser's offline page.
+    // Keep the route's loading state (the offline banner explains why) and reload once
+    // back online — browsers cache failed module imports, so re-importing is not enough.
+    if (typeof navigator !== 'undefined' && navigator.onLine === false) {
+      return new Promise<T>(() => {
+        window.addEventListener('online', () => window.location.reload(), { once: true });
+      });
+    }
     try {
       const retryKey = 'panda-lazy-retry:' + chunkName + ':' + window.location.pathname;
       if (!sessionStorage.getItem(retryKey)) {
@@ -61,6 +70,7 @@ function AnimatedRoutes() {
 
   return (
     <Layout>
+      <MotionConfig reducedMotion="user">
       <AnimatePresence mode="wait">
         <motion.div
           key={location}
@@ -99,12 +109,13 @@ function AnimatedRoutes() {
               <Route path="/library" component={Library} />
               <Route path="/history" component={Library} />
               <Route>
-                <main className="flex min-h-[60vh] items-center justify-center px-6 text-center text-gray-500 font-medium" role="main"><div><h1 className="text-xl font-semibold text-white">Page not found</h1><p className="mt-2">The Panda wandered somewhere else.</p></div></main>
+                <NotFound />
               </Route>
             </Switch>
           </Suspense>
         </motion.div>
       </AnimatePresence>
+      </MotionConfig>
     </Layout>
   );
 }

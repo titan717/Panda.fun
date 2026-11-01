@@ -65,7 +65,7 @@ export function Docs() {
   }
 
   return (
-    <main className="min-h-screen bg-[var(--kinoma-bg)] text-white">
+    <div className="min-h-screen bg-[var(--kinoma-bg)] text-white">
       <div className="mx-auto w-full max-w-6xl px-5 py-10 sm:px-8">
         <header className="flex flex-col gap-6 border-b border-white/10 pb-8 sm:flex-row sm:items-end sm:justify-between">
           <div>
@@ -125,6 +125,6 @@ export function Docs() {
           <p>Responses are live requests to the selected API base. Do not enter or store private API keys in this page.</p>
         </footer>
       </div>
-    </main>
+    </div>
   );
 }
