@@ -10,14 +10,25 @@ jobs:
   quality:
     runs-on: ubuntu-latest
     steps:
-      - name: Check out source
+      - name: Check out feature branch
         uses: actions/checkout@v4
+      - name: Check out main for bundle baseline
+        uses: actions/checkout@v4
+        with:
+          ref: main
+          path: baseline
       - name: Set up Node
         uses: actions/setup-node@v4
         with:
           node-version: 22
           cache: npm
-      - name: Install dependencies
+      - name: Build main baseline
+        run: |
+          npm ci --prefix baseline
+          npm --prefix baseline run build
+          BASELINE_GZIP=$(find baseline/dist/assets -type f \( -name '*.js' -o -name '*.css' \) -print0 | xargs -0 cat | gzip -c | wc -c)
+          echo "BASELINE_GZIP=$BASELINE_GZIP" >> "$GITHUB_ENV"
+      - name: Install feature dependencies
         run: npm ci
       - name: TypeScript lint
         run: npm run lint
@@ -25,7 +36,9 @@ jobs:
         run: npm test
       - name: Production build
         run: npm run build
-      - name: Report compressed frontend assets
+      - name: Compare compressed frontend assets
         shell: bash
         run: |
-          find dist -type f \( -name '*.js' -o -name '*.css' \) -print0 | xargs -0 -r gzip -c | wc -c | awk '{ printf "Combined gzipped JS/CSS bytes: %s\\n", $1 }'
+          CURRENT_GZIP=$(find dist/assets -type f \( -name '*.js' -o -name '*.css' \) -print0 | xargs -0 cat | gzip -c | wc -c)
+          DELTA=$((CURRENT_GZIP - BASELINE_GZIP))
+          printf 'main baseline: %s bytes gzipped\\nfeature branch: %s bytes gzipped\\ndelta: %+d bytes\\n' "$BASELINE_GZIP" "$CURRENT_GZIP" "$DELTA"
