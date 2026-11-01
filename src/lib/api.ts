@@ -470,12 +470,18 @@ export const api = {
       request<{ results: MovieApiMedia[] }>(endpoint, { type: 'movie', page: 1 }),
       request<{ results: MovieApiMedia[] }>(endpoint, { type: 'tv', page: 1 }),
     ]);
-    const combined = [
-      ...(movies.status === 'fulfilled' ? movies.value.results : []),
-      ...(shows.status === 'fulfilled' ? shows.value.results : []),
-    ];
-    const japaneseAnimation = combined.filter(item => item.language?.toLowerCase() === 'ja');
-    return { results: japaneseAnimation.slice(0, limit).map(toAnimeItem) };
+    const japaneseMovies = (movies.status === 'fulfilled' ? movies.value.results : [])
+      .filter(item => item.language?.toLowerCase() === 'ja');
+    const japaneseShows = (shows.status === 'fulfilled' ? shows.value.results : [])
+      .filter(item => item.language?.toLowerCase() === 'ja');
+    const mixed: MovieApiMedia[] = [];
+    for (let index = 0; mixed.length < limit && (index < japaneseMovies.length || index < japaneseShows.length); index += 1) {
+      if (japaneseMovies[index]) mixed.push(japaneseMovies[index]);
+      if (mixed.length < limit && japaneseShows[index]) mixed.push(japaneseShows[index]);
+    }
+    return {
+      results: mixed.map(item => ({ ...toAnimeItem(item), genres: [...(item.genres || []), 'Anime'] })),
+    };
   },
 
   async search(query: string, signal?: AbortSignal) {
