@@ -1,5 +1,6 @@
 import React, { useRef, useState, useEffect } from 'react';
 import { ChevronLeft, ChevronRight } from 'lucide-react';
+import { Reveal } from '../../../motion';
 
 interface ModernCarouselProps {
   title: string;
@@ -131,11 +132,8 @@ export function ModernCarousel({
  */
 export function ModernCarouselSlot({ children }: { children: React.ReactNode; key?: React.Key }) {
   return (
-    <div 
-      className="shrink-0 w-[42vw] xs:w-[39vw] sm:w-[28vw] md:w-[22vw] lg:w-[18%] xl:w-[15.2%] min-w-[130px] sm:min-w-[155px] max-w-[220px]"
-      style={{ scrollSnapAlign: 'start' }}
-    >
-      {children}
-    </div>
+    <Reveal className="shrink-0 w-[42vw] xs:w-[39vw] sm:w-[28vw] md:w-[22vw] lg:w-[18%] xl:w-[15.2%] min-w-[130px] sm:min-w-[155px] max-w-[220px]" >
+      <div style={{ scrollSnapAlign: 'start' }}>{children}</div>
+    </Reveal>
   );
 }
