@@ -44,7 +44,7 @@ describe('Android stable update release contract', () => {
   });
 
   it('never falls back to a fake manifest or a placeholder APK', () => {
-    expect(server).toContain('No verified Panda.fun release manifest has been published yet.');
+    expect(server).toContain('No verified stable Panda.fun production release has been published yet.');
     expect(server).toContain('validReleaseAsset');
     expect(server).toContain('return res.redirect(302, apkUrl)');
     expect(server).not.toContain('sha256: \'PENDING\'');
