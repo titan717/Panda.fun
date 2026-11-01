@@ -55,7 +55,8 @@ object UpdateChecker {
             // Beta builds can receive beta updates; production builds must never receive prereleases.
             val installedIsPrerelease = BuildConfig.VERSION_NAME.contains("beta", ignoreCase = true)
             val channelMatches = if (installedIsPrerelease) {
-                updateInfo.channel == "beta" && updateInfo.prerelease
+                (updateInfo.channel == "beta" && updateInfo.prerelease) ||
+                    (updateInfo.channel == "stable" && !updateInfo.prerelease)
             } else {
                 updateInfo.channel == "stable" && !updateInfo.prerelease
             }
