@@ -26,21 +26,6 @@ function getInstalledBuildInfo() {
   return { version, build };
 }
 
-
-function getInstalledBuildInfo() {
-  let version = typeof __APP_VERSION__ === 'string' && __APP_VERSION__ ? __APP_VERSION__ : 'Production';
-  let build = import.meta.env.MODE;
-  if (typeof window !== 'undefined') {
-    const native = (window as Window & { KinomaNative?: { getAppVersion?: () => string; getAppVersionCode?: () => number } }).KinomaNative;
-    try {
-      version = native?.getAppVersion?.() || version;
-      const versionCode = native?.getAppVersionCode?.();
-      if (typeof versionCode === 'number' && versionCode > 0) build = String(versionCode);
-    } catch {}
-  }
-  return { version, build };
-}
-
 function SettingSwitch({ label, description, checked, onChange }: { label: string; description: string; checked: boolean; onChange: () => void }) {
   return (
     <div className="panda-settings-row">
@@ -54,7 +39,6 @@ function SettingSwitch({ label, description, checked, onChange }: { label: strin
 
 export function Settings() {
   const { user } = useAuth();
-  const buildInfo = getInstalledBuildInfo();
   const buildInfo = getInstalledBuildInfo();
   const { playerSettings, updatePlayerSetting, playbackPreferences, updatePlaybackPreference } = useAppearance();
   const [devToolsOpen, setDevToolsOpen] = useState(false);
