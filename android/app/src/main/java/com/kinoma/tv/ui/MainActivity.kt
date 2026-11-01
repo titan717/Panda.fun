@@ -731,7 +731,7 @@ class MainActivity : ComponentActivity() {
         @JavascriptInterface
         fun performHapticFeedback() {
             runOnUiThread {
-                if (::webView.isInitialized) webView.performHapticFeedback(HapticFeedbackConstants.KEYBOARD_TAP)
+                if (this@MainActivity::webView.isInitialized) this@MainActivity.webView.performHapticFeedback(HapticFeedbackConstants.KEYBOARD_TAP)
             }
         }
 
