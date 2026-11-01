@@ -158,7 +158,7 @@ jobs:
             -PKINOMA_VERSION_CODE="${KINOMA_VERSION_CODE}" \
             -PKINOMA_VERSION_NAME="${KINOMA_VERSION_NAME}"
 
-      - name: Verify beta APK
+      - name: Verify production APK
         shell: bash
         run: |
           set -euo pipefail
@@ -188,8 +188,8 @@ jobs:
             - APK: Panda.fun-Android-TV.apk
             - SHA-256 is attached alongside the APK.
           files: |
-            beta/Panda.fun-Android-TV-beta.apk
-            beta/Panda.fun-Android-TV-beta.apk.sha256
+            release/Panda.fun-Android-TV.apk
+            release/Panda.fun-Android-TV.apk.sha256
           generate_release_notes: true
 
       - name: Publish stable update manifest to main
@@ -201,8 +201,8 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           set -euo pipefail
-          SHA256="$(sha256sum beta/Panda.fun-Android-TV-beta.apk | awk '{print $1}')"
-          APK_URL="https://github.com/titan717/Panda.fun/releases/download/${BETA_TAG}/Panda.fun-Android-TV-beta.apk"
+          SHA256="$(sha256sum release/Panda.fun-Android-TV.apk | awk '{print $1}')"
+          APK_URL="https://github.com/titan717/Panda.fun/releases/download/${RELEASE_TAG}/Panda.fun-Android-TV.apk"
           export SHA256 APK_URL
 
           python - <<'PY'
@@ -210,7 +210,7 @@ jobs:
           data = {
               "latestVersionCode": int(os.environ["VERSION_CODE"]),
               "latestVersionName": os.environ["VERSION_NAME"],
-              "releaseTag": os.environ["BETA_TAG"],
+              "releaseTag": os.environ["RELEASE_TAG"],
               "releaseNotes": f"Panda.fun Android TV {os.environ['VERSION_NAME']}",
               "apkUrl": os.environ["APK_URL"],
               "sha256": os.environ["SHA256"],
