@@ -126,7 +126,7 @@ function AnimatedRoutes() {
   useEffect(() => { previousLocation.current = location; }, [location]);
   useEffect(() => { trackPageView(location); }, [location]);
 
-  if (location === '/') return <Landing />;
+  if (location === '/') return isInstalledAppShell() ? <Layout><Home /></Layout> : <Landing />;
 
   return (
     <Layout>
@@ -200,18 +200,30 @@ class AppErrorBoundary extends React.Component<{ children: React.ReactNode; rese
 }
 
 function PWAUpdateBridge() { usePWAUpdate(); return null; }
+
+function isInstalledAppShell() {
+  if (typeof window === 'undefined') return false;
+  const nativeBridge = Boolean((window as Window & { KinomaNative?: unknown }).KinomaNative);
+  const standalone = window.matchMedia?.('(display-mode: standalone)').matches === true
+    || (navigator as Navigator & { standalone?: boolean }).standalone === true;
+  return nativeBridge || standalone;
+}
+
 function MainAppShell() {
-  const [location] = useLocation();
-  const [showIntro, setShowIntro] = useState(() => location === '/' && shouldShowPandaIntro());
+  const [location, setLocation] = useLocation();
+  const appShell = isInstalledAppShell();
+  const [showIntro, setShowIntro] = useState(() => location === '/' && !appShell && shouldShowPandaIntro());
 
   useEffect(() => {
+    if (appShell && location === '/') {
+      setShowIntro(false);
+      setLocation('/home', { replace: true });
+      return;
+    }
     if (location !== '/') setShowIntro(false);
-  }, [location]);
+  }, [appShell, location, setLocation]);
 
-  if (showIntro) {
-    return <PandaIntro onComplete={() => setShowIntro(false)} />;
-  }
-
+  if (showIntro && !appShell) return <PandaIntro onComplete={() => setShowIntro(false)} />;
   return <AppErrorBoundary resetKey={location}><AnimatedRoutes /></AppErrorBoundary>;
 }
 
