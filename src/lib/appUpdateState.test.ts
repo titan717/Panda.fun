@@ -59,11 +59,13 @@ describe('native status parsing', () => {
   it('maps every status the Android app can send', () => {
     expect(parseNativeStatus({ status: 'checking' }, 1)).toEqual({ type: 'check-started' });
     expect(parseNativeStatus({ status: 'up-to-date' }, 5)).toEqual({ type: 'up-to-date', at: 5 });
-    expect(parseNativeStatus({ status: 'downloading' }, 1)).toEqual({ type: 'applying' });
+    expect(parseNativeStatus({ status: 'downloading', percent: 42, downloadedBytes: 420, totalBytes: 1000 }, 1)).toEqual({ type: 'download-progress', percent: 42, downloadedBytes: 420, totalBytes: 1000 });
     expect(parseNativeStatus({ status: 'available', versionName: '1.2.3', releaseNotes: 'n', mandatory: true }, 7)).toEqual({
       type: 'available', at: 7, versionName: '1.2.3', releaseNotes: 'n', mandatory: true,
     });
-    expect(parseNativeStatus({ status: 'error', message: 'nope' }, 9)).toEqual({ type: 'error', at: 9, message: 'nope' });
+    expect(parseNativeStatus({ status: 'ready-to-install', sha256: 'a'.repeat(64) }, 8)).toEqual({ type: 'ready-to-install', at: 8, sha256: 'a'.repeat(64) });
+    expect(parseNativeStatus({ status: 'permission-required', message: 'Allow installs' }, 9)).toEqual({ type: 'permission-required', message: 'Allow installs' });
+    expect(parseNativeStatus({ status: 'error', message: 'nope' }, 10)).toEqual({ type: 'error', at: 10, message: 'nope' });
   });
 
   it('ignores malformed or unknown payloads', () => {
@@ -71,5 +73,35 @@ describe('native status parsing', () => {
     expect(parseNativeStatus('x', 1)).toBeNull();
     expect(parseNativeStatus({ status: 'weird' }, 1)).toBeNull();
     expect(parseNativeStatus({}, 1)).toBeNull();
+  });
+});
+
+
+describe('native update download lifecycle', () => {
+  it('retains byte counts and clamps progress to a valid percentage', () => {
+    let state = initialUpdateState('android');
+    state = updateReducer(state, { type: 'download-progress', percent: 140, downloadedBytes: 1500, totalBytes: 1000 });
+    expect(state.status).toBe('downloading');
+    expect(state.progressPercent).toBe(100);
+    expect(state.downloadedBytes).toBe(1500);
+    expect(state.totalBytes).toBe(1000);
+  });
+
+  it('requires a verified checksum before the UI can offer installation', () => {
+    let state = initialUpdateState('android');
+    state = updateReducer(state, { type: 'available', at: 1, versionName: '1.0.0', sha256: 'abc' });
+    state = updateReducer(state, { type: 'ready-to-install', at: 2, sha256: 'abc' });
+    expect(state.status).toBe('ready-to-install');
+    expect(state.verifiedSha256).toBe('abc');
+    expect(statusMessage(state)).toContain('verified');
+  });
+
+  it('surfaces the install-source permission state and retryable error', () => {
+    let state = updateReducer(initialUpdateState('android'), { type: 'permission-required', message: 'Allow installs' });
+    expect(state.status).toBe('permission-required');
+    expect(statusMessage(state)).toBe('Allow installs');
+    state = updateReducer(state, { type: 'error', at: 3, message: 'Download failed' });
+    expect(state.status).toBe('error');
+    expect(statusMessage(state)).toBe('Download failed');
   });
 });
