@@ -528,7 +528,7 @@ export const api = {
     return { results: data.results.map(toAnimeItem), total: data.total };
   },
 
-  async getRecommendations(id: string, signal?: AbortSignal): Promise<{ results: MovieApiMedia[] }> {
+  async getRecommendationsMedia(id: string, signal?: AbortSignal): Promise<{ results: MovieApiMedia[] }> {
     const media = mediaFromId(id);
     if (!media) return { results: [] };
     const tmdbId = await resolveTmdbId(media, signal);
@@ -539,6 +539,11 @@ export const api = {
       { signal }
     );
     return { results: data.results };
+  },
+
+  async getRecommendations(id: string, signal?: AbortSignal): Promise<{ results: AnimeItem[] }> {
+    const data = await this.getRecommendationsMedia(id, signal);
+    return { results: data.results.map(toAnimeItem) };
   },
 
   async getTrailer(id: string, signal?: AbortSignal) {
