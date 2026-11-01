@@ -70,3 +70,34 @@
     transform: translateY(-3px);
   }
 }
+
+.panda-mobile-bottom-nav__item {
+  position: relative;
+  isolation: isolate;
+}
+.panda-mobile-bottom-nav__active-pill {
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  border-radius: inherit;
+  background: rgba(255,255,255,.09);
+  box-shadow: inset 0 1px rgba(255,255,255,.07), 0 4px 18px rgba(0,0,0,.2);
+}
+.panda-mobile-bottom-nav__icon,
+.panda-mobile-bottom-nav__label {
+  position: relative;
+  z-index: 1;
+}
+.panda-updates__success-ring {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+.panda-updates__success-check {
+  position: absolute;
+}
+@media (prefers-reduced-motion: reduce) {
+  .panda-mobile-bottom-nav__active-pill { transition: none; }
+}
+[data-motion-preference='minimal'] .panda-motion-shimmer::after { animation: none; }
