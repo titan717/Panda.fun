@@ -5,9 +5,9 @@
     <color name="tv_accent">#B84D41</color>
     <color name="tv_accent_light">#E8D0C0</color>
     <color name="tv_amber">#C1935F</color>
-    <color name="purple_700">#B84D41</color>
-    <color name="teal_200">#C1935F</color>
     <color name="black">#FF000000</color>
     <color name="white">#FFF6F2EE</color>
     <color name="launcher_background">#050505</color>
+    <color name="panda_accent">#B84D41</color>
+    <color name="panda_amber">#C1935F</color>
 </resources>
