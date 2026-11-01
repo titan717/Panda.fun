@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { getCurrentDeviceMode } from '../lib/deviceCapabilities';
-import { MotionPreference, resolveMotionPreference } from './tokens';
+import { isLowEndDevice, MotionPreference, resolveMotionPreference } from './tokens';
 
 function readMotionPreference(): MotionPreference {
   if (typeof window === 'undefined') return 'full';
@@ -12,10 +12,10 @@ function readMotionPreference(): MotionPreference {
   }
   const connection = (navigator as Navigator & { connection?: { saveData?: boolean } }).connection;
   const hardware = navigator as Navigator & { deviceMemory?: number };
-  const lowEndDevice = getCurrentDeviceMode() !== 'tv' && (
-    (typeof navigator.hardwareConcurrency === 'number' && navigator.hardwareConcurrency > 0 && navigator.hardwareConcurrency <= 4) ||
-    (typeof hardware.deviceMemory === 'number' && hardware.deviceMemory <= 4)
-  );
+  const lowEndDevice = getCurrentDeviceMode() !== 'tv' && isLowEndDevice({
+    hardwareConcurrency: navigator.hardwareConcurrency,
+    deviceMemory: hardware.deviceMemory,
+  });
   return resolveMotionPreference({
     prefersReducedMotion,
     saveData: connection?.saveData === true,
