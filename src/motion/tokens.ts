@@ -33,3 +33,13 @@ export function resolveMotionPreference(input: {
 export function getMotionOffset(preference: MotionPreference, distance: number): number {
   return preference === 'full' ? distance : 0;
 }
+
+export function isLowEndDevice(input: {
+  hardwareConcurrency?: number;
+  deviceMemory?: number;
+}): boolean {
+  return (
+    (typeof input.hardwareConcurrency === 'number' && input.hardwareConcurrency > 0 && input.hardwareConcurrency <= 2) ||
+    (typeof input.deviceMemory === 'number' && input.deviceMemory > 0 && input.deviceMemory <= 2)
+  );
+}
