@@ -175,6 +175,7 @@ function PandaRail({
   priority?: boolean;
 }) {
   if (!items.length) return null;
+  const exploreHref = kind === 'genre' || kind === 'anime' ? `/search?genre=${encodeURIComponent(title)}` : '/search';
   return (
     <section className="panda-home-v2__section" aria-labelledby={`panda-${kind}-heading`}>
       <div className="panda-home-v2__section-head">
@@ -183,7 +184,7 @@ function PandaRail({
           <h2 id={`panda-${kind}-heading`}>{title}</h2>
           {subtitle && <p>{subtitle}</p>}
         </div>
-        {action && <Link href="/search" className="panda-home-v2__see-all" aria-label={`Explore more like ${title}`}>Explore <ArrowRight size={13} aria-hidden="true" /></Link>}
+        {action && <Link href={exploreHref} className="panda-home-v2__see-all" aria-label={`Explore more like ${title}`}>Explore <ArrowRight size={13} aria-hidden="true" /></Link>}
       </div>
       <div className="panda-home-v2__rail">
         {items.slice(0, 5).map((item, index) => React.createElement(PandaContentCard, { key: `${kind}-${item.id}-${index}`, item, onHover, onLeave, badge, priority: priority && index < 5, analyticsSection: kind }))}
