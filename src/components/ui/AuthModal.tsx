@@ -93,7 +93,7 @@ export function AuthModal() {
           className="relative w-full max-w-md bg-[#0e0f14] border border-[#242432] rounded-2xl p-6 sm:p-8 shadow-[0_20px_50px_rgba(0,0,0,0.8)] overflow-hidden"
         >
           {/* Ambient Glow */}
-          <div className="absolute -top-24 -left-24 w-48 h-48 bg-[#7b1fa2]/20 rounded-full blur-3xl pointer-events-none" />
+          <div className="absolute -top-24 -left-24 w-48 h-48 bg-[#b84d41]/20 rounded-full blur-3xl pointer-events-none" />
           <div className="absolute -bottom-24 -right-24 w-48 h-48 bg-[#9c27b0]/15 rounded-full blur-3xl pointer-events-none" />
 
           {/* Close button */}
@@ -108,7 +108,7 @@ export function AuthModal() {
           <div className="mb-6">
             <div className="flex items-center mb-2">
               <span className="text-2xl font-black tracking-tight text-white">Kino</span>
-              <span className="text-2xl font-black tracking-tight text-[#c084fc] drop-shadow-[0_0_12px_rgba(156,39,176,0.6)]">ma</span>
+              <span className="text-2xl font-black tracking-tight text-[#e8d0c0] drop-shadow-[0_0_12px_rgba(156,39,176,0.6)]">ma</span>
             </div>
             <h3 className="text-2xl font-bold text-white tracking-tight">
               {isSignUp ? 'Create your account' : 'Welcome back'}
@@ -137,7 +137,7 @@ export function AuthModal() {
             type="button"
             onClick={handleGoogleSignIn}
             disabled={loading}
-            className="w-full flex items-center justify-center gap-3 py-3 px-4 rounded-xl bg-[#171720] hover:bg-[#20202c] border border-[#2b2b3a] text-white text-sm font-semibold transition-all shadow-sm hover:border-[#7b1fa2]/50 disabled:opacity-50"
+            className="w-full flex items-center justify-center gap-3 py-3 px-4 rounded-xl bg-[#171720] hover:bg-[#20202c] border border-[#2b2b3a] text-white text-sm font-semibold transition-all shadow-sm hover:border-[#b84d41]/50 disabled:opacity-50"
           >
             <svg className="w-4 h-4" viewBox="0 0 24 24">
               <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" />
@@ -169,7 +169,7 @@ export function AuthModal() {
                     value={displayName}
                     onChange={(e) => setDisplayName(e.target.value)}
                     placeholder="Otaku" 
-                    className="w-full bg-[#13131a] border border-[#262634] focus:border-[#7b1fa2] rounded-xl pl-10 pr-4 py-2.5 text-sm text-white placeholder-gray-500 outline-none transition-colors"
+                    className="w-full bg-[#13131a] border border-[#262634] focus:border-[#b84d41] rounded-xl pl-10 pr-4 py-2.5 text-sm text-white placeholder-gray-500 outline-none transition-colors"
                   />
                 </div>
               </div>
@@ -187,7 +187,7 @@ export function AuthModal() {
                   onChange={(e) => setEmail(e.target.value)}
                   placeholder="name@example.com" 
                   required
-                  className="w-full bg-[#13131a] border border-[#262634] focus:border-[#7b1fa2] rounded-xl pl-10 pr-4 py-2.5 text-sm text-white placeholder-gray-500 outline-none transition-colors"
+                  className="w-full bg-[#13131a] border border-[#262634] focus:border-[#b84d41] rounded-xl pl-10 pr-4 py-2.5 text-sm text-white placeholder-gray-500 outline-none transition-colors"
                 />
               </div>
             </div>
@@ -204,7 +204,7 @@ export function AuthModal() {
                   onChange={(e) => setPassword(e.target.value)}
                   placeholder="••••••••" 
                   required
-                  className="w-full bg-[#13131a] border border-[#262634] focus:border-[#7b1fa2] rounded-xl pl-10 pr-4 py-2.5 text-sm text-white placeholder-gray-500 outline-none transition-colors"
+                  className="w-full bg-[#13131a] border border-[#262634] focus:border-[#b84d41] rounded-xl pl-10 pr-4 py-2.5 text-sm text-white placeholder-gray-500 outline-none transition-colors"
                 />
               </div>
             </div>
@@ -212,7 +212,7 @@ export function AuthModal() {
             <button 
               type="submit" 
               disabled={loading}
-              className="mt-2 w-full py-3 rounded-xl bg-gradient-to-r from-[#7b1fa2] via-[#9c27b0] to-[#ba68c8] hover:from-[#6a1b9a] hover:to-[#ab47bc] text-white text-sm font-bold shadow-[0_4px_20px_rgba(156,39,176,0.35)] transition-all flex items-center justify-center gap-2 disabled:opacity-50"
+              className="mt-2 w-full py-3 rounded-xl bg-gradient-to-r from-[#b84d41] via-[#9c27b0] to-[#ba68c8] hover:from-[#6a1b9a] hover:to-[#ab47bc] text-white text-sm font-bold shadow-[0_4px_20px_rgba(156,39,176,0.35)] transition-all flex items-center justify-center gap-2 disabled:opacity-50"
             >
               {loading && <Loader2 className="w-4 h-4 animate-spin" />}
               <span>{isSignUp ? 'Create Account' : 'Sign In'}</span>
@@ -227,7 +227,7 @@ export function AuthModal() {
                 <button 
                   type="button"
                   onClick={() => openAuthModal('signin')}
-                  className="text-[#c084fc] hover:underline font-semibold"
+                  className="text-[#e8d0c0] hover:underline font-semibold"
                 >
                   Sign in
                 </button>
@@ -238,7 +238,7 @@ export function AuthModal() {
                 <button 
                   type="button"
                   onClick={() => openAuthModal('signup')}
-                  className="text-[#c084fc] hover:underline font-semibold"
+                  className="text-[#e8d0c0] hover:underline font-semibold"
                 >
                   Sign up
                 </button>
