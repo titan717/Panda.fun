@@ -1,6 +1,6 @@
 import React, { lazy, Suspense, useEffect, useRef, useState } from 'react';
 import { Route, Switch, useLocation } from 'wouter';
-import { AnimatePresence, m } from 'motion/react';
+import { AnimatePresence, MotionConfig, m } from 'motion/react';
 import { getMotionOffset, getRouteTransitionDirection, getRouteDepth, useMotionPreference } from './motion';
 import { SWRConfig } from 'swr';
 import { localCache } from './lib/localCache';
@@ -13,9 +13,15 @@ import { Privacy } from './pages/Privacy';
 import { Contact } from './pages/Contact';
 import { Docs } from './pages/Docs';
 import { Home } from './pages/Home';
+import { NotFound } from './pages/NotFound';
 function retryLazyImport<T>(importer: () => Promise<T>, chunkName: string) {
   return importer().catch(error => {
     if (!isRecoverableChunkLoadError(error)) throw error;
+    if (typeof navigator !== 'undefined' && navigator.onLine === false) {
+      return new Promise<T>(() => {
+        window.addEventListener('online', () => window.location.reload(), { once: true });
+      });
+    }
     try {
       const retryKey = 'panda-lazy-retry:' + chunkName + ':' + window.location.pathname;
       if (!sessionStorage.getItem(retryKey)) {
@@ -72,9 +78,7 @@ function RouteContent({ location }: { location: string }) {
       <Route path="/watch/:id" component={Watch} />
       <Route path="/library" component={Library} />
       <Route path="/history" component={Library} />
-      <Route>
-        <main className="flex min-h-[60vh] items-center justify-center px-6 text-center text-gray-500 font-medium" role="main"><div><h1 className="text-xl font-semibold text-white">Page not found</h1><p className="mt-2">The Panda wandered somewhere else.</p></div></main>
-      </Route>
+      <Route><NotFound /></Route>
     </Switch>
   );
 }
@@ -126,6 +130,7 @@ function AnimatedRoutes() {
 
   return (
     <Layout>
+      <MotionConfig reducedMotion="user">
       <div className="panda-route-transition-shell">
         <AnimatePresence mode="popLayout" initial={false}>
           <m.div
@@ -161,6 +166,7 @@ function AnimatedRoutes() {
           </m.div>
         </AnimatePresence>
       </div>
+      </MotionConfig>
     </Layout>
   );
 }
