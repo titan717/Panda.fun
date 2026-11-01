@@ -10930,3 +10930,16 @@ html.tv-mode .panda-content-card:focus-within { scroll-margin-inline: 32px; }
   .modern-card__skeleton { animation: none; background: #171413; }
 }
 .panda-library__resume { min-height: 0; }
+
+
+/* Shared Panda motion tokens — mirrored from src/motion/tokens.ts. */
+:root {
+  --motion-duration-instant: 90ms;
+  --motion-duration-fast: 160ms;
+  --motion-duration-base: 240ms;
+  --motion-duration-slow: 380ms;
+  --motion-duration-hero: 600ms;
+  --motion-ease-standard: cubic-bezier(.2, 0, 0, 1);
+  --motion-ease-emphasized: cubic-bezier(.16, 1, .3, 1);
+  --motion-ease-exit: cubic-bezier(.4, 0, 1, 1);
+}
