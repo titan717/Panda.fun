@@ -7,6 +7,10 @@ const MotionPreferenceContext = createContext<'full' | 'reduced' | 'minimal'>('f
 
 export function MotionPreferenceProvider({ children }: { children: React.ReactNode }) {
   const preference = useMotionPreference();
+  useEffect(() => {
+    document.documentElement.dataset.motionPreference = preference;
+    return () => { delete document.documentElement.dataset.motionPreference; };
+  }, [preference]);
   return <MotionPreferenceContext.Provider value={preference}>{children}</MotionPreferenceContext.Provider>;
 }
 
@@ -35,8 +39,8 @@ export function Pressable({
   );
 }
 
-export function Reveal({ children, className, delay = 0, once = true }: {
-  children: React.ReactNode; className?: string; delay?: number; once?: boolean;
+export function Reveal({ children, className, delay = 0, once = true, style }: {
+  children: React.ReactNode; className?: string; delay?: number; once?: boolean; style?: React.CSSProperties;
 }) {
   const preference = useContext(MotionPreferenceContext);
   const [visible, setVisible] = useState(false);
@@ -59,6 +63,7 @@ export function Reveal({ children, className, delay = 0, once = true }: {
     <m.div
       ref={ref}
       className={className}
+      style={style}
       initial={false}
       animate={visible ? { opacity: 1, y: 0 } : { opacity: 0, y: getMotionOffset(preference, 12) }}
       transition={{ duration: reduced ? motionDurations.fast : motionDurations.base, delay: reduced ? 0 : delay, ease: motionEasings.emphasized }}
