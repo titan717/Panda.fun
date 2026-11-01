@@ -75,7 +75,7 @@ export function Settings() {
       </header>
 
       <section className="panda-settings-v3__profile">
-        <span className="panda-settings-v3__avatar"><KinomaLogo variant="mark" size="lg" /></span>
+        <span className="panda-settings-v3__avatar"><KinomaLogo variant="mark" size="md" /></span>
         <div><span className="panda-settings-v3__eyebrow">PANDA ACCOUNT</span><h2>{user?.displayName || user?.email?.split('@')[0] || 'Your Panda'}</h2><p>{user ? 'Your preferences and saved titles' : 'Personalise the way you watch'}</p></div>
         <Link href="/profile" className="panda-settings-v3__profile-link" aria-label="Open profile"><UserRound size={18} /></Link>
       </section>
