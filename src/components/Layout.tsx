@@ -39,6 +39,8 @@ export function Layout({ children }: { children: React.ReactNode }) {
   const motionPreference = useMotionPreference();
   const [expanded, setExpanded] = useState(false);
   const [deviceMode, setDeviceMode] = useState(() => getCurrentDeviceMode());
+  const [headerScrolled, setHeaderScrolled] = useState(false);
+  const [activeCategory, setActiveCategory] = useState('All');
   const tvMode = deviceMode === 'tv';
   const collapseTimer = useRef<number | null>(null);
   const mainRef = useRef<HTMLElement | null>(null);
@@ -56,6 +58,13 @@ export function Layout({ children }: { children: React.ReactNode }) {
     syncDeviceMode();
     window.addEventListener('resize', syncDeviceMode);
     return () => window.removeEventListener('resize', syncDeviceMode);
+  }, []);
+
+  useEffect(() => {
+    const onScroll = () => setHeaderScrolled(window.scrollY > 80);
+    onScroll();
+    window.addEventListener('scroll', onScroll, { passive: true });
+    return () => window.removeEventListener('scroll', onScroll);
   }, []);
 
   useEffect(() => {
@@ -78,10 +87,23 @@ export function Layout({ children }: { children: React.ReactNode }) {
     <div className={`panda-app-shell kinoma-app-shell${isPlayerRoute ? ' panda-app-shell--player' : ''}${tvMode ? ' panda-tv-app-shell' : ''}`} style={{ '--sidebar-width': expanded ? '260px' : '64px' } as React.CSSProperties}>
       <a className="panda-skip-link" href="#panda-main-content">Skip to main content</a>
       {!isPlayerRoute && (
-        <header className="panda-mobile-header">
-          <Link href="/home" className="panda-mobile-header__brand" aria-label="Panda.fun home"><KinomaLogo size="md" variant="full" /></Link>
-          <nav className="panda-mobile-header__actions" aria-label="Quick actions"><Link href="/settings" className={`panda-mobile-header__action${location.split("?")[0] === "/settings" ? " is-active" : ""}`} aria-label="Settings" aria-current={location.split("?")[0] === "/settings" ? "page" : undefined} title="Settings"><Settings size={20} strokeWidth={1.8} /></Link></nav>
-        </header>
+        <>
+          <header className={`panda-mobile-header${headerScrolled ? ' is-scrolled' : ''}`}>
+            <Link href="/home" className="panda-mobile-header__brand" aria-label="Panda.fun home"><KinomaLogo size="md" variant="full" /></Link>
+            <nav className="panda-mobile-header__actions" aria-label="Quick actions">
+              <Link href="/search" className="panda-mobile-header__action" aria-label="Search"><Search size={20} strokeWidth={1.9} /></Link>
+              <Link href="/profile" className="panda-mobile-header__action" aria-label="Profile"><UserRound size={20} strokeWidth={1.9} /></Link>
+            </nav>
+          </header>
+          {location.split('?')[0] === '/home' || location.split('?')[0] === '/browse' ? (
+            <nav className="panda-mobile-category-row" aria-label="Home categories">
+              {['All', 'Movies', 'TV Shows', 'Anime', 'Kids', 'Action', 'Comedy', 'Drama'].map(category => (
+                <button key={category} type="button" className={activeCategory === category ? 'is-active' : ''} aria-pressed={activeCategory === category}
+                  onClick={() => { setActiveCategory(category); window.dispatchEvent(new CustomEvent('panda_home_category_select', { detail: category })); }}>{category}</button>
+              ))}
+            </nav>
+          ) : null}
+        </>
       )}
       {!isPlayerRoute && (
         <nav className="panda-mobile-bottom-nav" aria-label="Panda.fun mobile navigation">
