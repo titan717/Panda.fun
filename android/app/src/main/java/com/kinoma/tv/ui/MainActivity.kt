@@ -290,6 +290,7 @@ class MainActivity : ComponentActivity() {
                 val status = insets.getInsets(WindowInsetsCompat.Type.statusBars())
                 val navigation = insets.getInsets(WindowInsetsCompat.Type.navigationBars())
                 val gesture = insets.getInsets(WindowInsetsCompat.Type.mandatorySystemGestures())
+                val systemNavFallback = insets.isVisible(WindowInsetsCompat.Type.navigationBars()) && !isGestureNavigation() && !isPlayerPage
                 val safeBottom = maxOf(navigation.bottom, gesture.bottom)
                 val ime = insets.getInsets(WindowInsetsCompat.Type.ime())
                 val script = """
@@ -300,6 +301,7 @@ class MainActivity : ComponentActivity() {
                       root.style.setProperty('--safe-left', '0px');
                       root.style.setProperty('--safe-right', '0px');
                       root.style.setProperty('--keyboard-bottom', '${ime.bottom}px');
+                      root.classList.toggle('system-nav-visible', ${systemNavFallback});
                       var shell = document.querySelector('.panda-app-shell');
                       if (shell) shell.classList.toggle('keyboard-open', ${ime.bottom} > 0);
                     })();
