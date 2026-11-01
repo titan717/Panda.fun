@@ -17,7 +17,7 @@
   --color-muted-foreground: #817873;
   --color-disabled: #5e5753;
 
-  /* Reference palette roles — exact colors exposed by the Animfanz reference. */
+  /* Supporting roles stay within the warm Panda palette. */
   --color-amber: #c1935f;
   --color-rose: #b84d41;
   --color-blue: #c1935f;
