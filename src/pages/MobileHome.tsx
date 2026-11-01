@@ -185,7 +185,7 @@ export function MobileHome({
       const genres = (item.genres || []).map(genre => genre.toLowerCase());
       if (category === 'movies') return item.type === 'movie';
       if (category === 'tv shows') return item.type === 'tv';
-      if (category === 'anime') return item.type === 'anime' || genres.some(genre => /anime|animation/.test(genre));
+      if (category === 'anime') return genres.some(genre => /anime|animation/.test(genre)) || item.language?.toLowerCase() === 'ja';
       if (category === 'kids') return genres.some(genre => /family|kids|animation/.test(genre));
       if (category === 'sci-fi & fantasy') return genres.some(genre => /science fiction|sci-fi|fantasy/.test(genre));
       if (category === 'action') return genres.some(genre => /action|adventure/.test(genre));
