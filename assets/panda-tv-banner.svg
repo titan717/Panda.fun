@@ -1,0 +1,17 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1280 720">
+  <defs><linearGradient id="bg" x1="0" y1="0" x2="1" y2="1"><stop stop-color="#000"/><stop offset="1" stop-color="#11100f"/></linearGradient></defs>
+  <rect width="1280" height="720" fill="url(#bg)"/>
+  <circle cx="1060" cy="140" r="360" fill="#B84D41" opacity=".08"/>
+  <g transform="translate(110 104) scale(1)">
+    <circle cx="170" cy="140" r="66" fill="#171514"/>
+    <circle cx="390" cy="140" r="66" fill="#171514"/>
+    <ellipse cx="280" cy="290" rx="205" ry="225" fill="#F6F2EE"/>
+    <ellipse cx="205" cy="270" rx="48" ry="65" fill="#171514" transform="rotate(24 205 270)"/>
+    <ellipse cx="355" cy="270" rx="48" ry="65" fill="#171514" transform="rotate(-24 355 270)"/>
+    <circle cx="205" cy="270" r="14" fill="#B84D41"/><circle cx="355" cy="270" r="14" fill="#B84D41"/>
+    <path d="M255 355q25-30 50 0q0 28-25 28t-25-28m25 28v30m0 0q-24 20-44 2m44-2q24 20 44 2" fill="none" stroke="#171514" stroke-width="12" stroke-linecap="round"/>
+  </g>
+  <text x="650" y="330" fill="#F6F2EE" font-family="Arial,sans-serif" font-size="112" font-weight="800" letter-spacing="-5">PANDA</text>
+  <text x="650" y="430" fill="#B84D41" font-family="Arial,sans-serif" font-size="90" font-weight="700">.FUN</text>
+  <text x="656" y="510" fill="#AAA19B" font-family="Arial,sans-serif" font-size="30" letter-spacing="8">YOUR NEXT STORY STARTS HERE</text>
+</svg>

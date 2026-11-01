@@ -153,11 +153,11 @@ export function SearchBar() {
                     aria-selected={activeIndex === index}
                     onMouseEnter={() => setActiveIndex(index)}
                     onClick={() => selectSuggestion(item)}
-                    className={`flex w-[calc(100%-16px)] items-center gap-3 p-2.5 mx-2 rounded-lg text-left transition-colors group/item focus-visible:outline focus-visible:outline-2 focus-visible:outline-[#c084fc] ${activeIndex === index ? 'bg-[#252533]' : 'hover:bg-[#252533]'}`}
+                    className={`flex w-[calc(100%-16px)] items-center gap-3 p-2.5 mx-2 rounded-lg text-left transition-colors group/item focus-visible:outline focus-visible:outline-2 focus-visible:outline-[#e8d0c0] ${activeIndex === index ? 'bg-[#252533]' : 'hover:bg-[#252533]'}`}
                   >
                     <img src={item.image || DEFAULT_POSTER} alt="" className="w-10 h-14 object-cover rounded-md shadow-sm group-hover/item:scale-105 transition-transform" />
                     <div className="flex flex-col min-w-0">
-                      <span className="text-sm font-semibold text-gray-200 group-hover/item:text-[#c084fc] transition-colors truncate">
+                      <span className="text-sm font-semibold text-gray-200 group-hover/item:text-[#e8d0c0] transition-colors truncate">
                         {typeof item.title === 'string' ? item.title : (item.title?.english || item.title?.romaji)}
                       </span>
                       <div className="flex items-center gap-2 text-xs text-gray-400 mt-1">
@@ -174,7 +174,7 @@ export function SearchBar() {
                     setLocation('/search?keyword=' + encodeURIComponent(query.trim() || debouncedQuery));
                     setIsOpen(false);
                   }}
-                  className="mt-1 w-full p-3 text-center text-xs font-bold text-[#c084fc] hover:text-white border-t border-[#262635] hover:bg-[#252533] transition-colors tracking-wide focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-[-2px] focus-visible:outline-[#c084fc]"
+                  className="mt-1 w-full p-3 text-center text-xs font-bold text-[#e8d0c0] hover:text-white border-t border-[#262635] hover:bg-[#252533] transition-colors tracking-wide focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-[-2px] focus-visible:outline-[#e8d0c0]"
                 >
                   View all results for "{debouncedQuery}"
                 </button>
