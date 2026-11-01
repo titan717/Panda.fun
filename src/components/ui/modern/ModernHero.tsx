@@ -1,7 +1,8 @@
-import React, { useState, useEffect, useMemo } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Link } from 'wouter';
-import { Play, Info, Star, Plus, Check, Calendar, Film } from 'lucide-react';
-import { motion, AnimatePresence } from 'motion/react';
+import { Play, Info, Plus } from 'lucide-react';
+import { m, AnimatePresence } from 'motion/react';
+import { AnimatedCheck, Pressable, Reveal, useMotionPreference } from '../../../motion';
 import { AnimeItem, DEFAULT_BANNER } from '../../../types';
 import { libraryManager } from '../../../lib/library';
 import { historyUtil, HistoryItem } from '../../../lib/history';
@@ -12,6 +13,7 @@ interface ModernHeroProps {
 }
 
 export function ModernHero({ items }: ModernHeroProps) {
+  const motionPreference = useMotionPreference();
   const [currentIndex, setCurrentIndex] = useState(0);
   const [isPaused, setIsPaused] = useState(false);
   const [history, setHistory] = useState<HistoryItem[]>([]);
@@ -30,12 +32,12 @@ export function ModernHero({ items }: ModernHeroProps) {
   // Auto-rotate hero every 4.2 seconds if not hovered/paused.
   // Keep the derived list above the effect so the dependency is always initialized.
   useEffect(() => {
-    if (visibleItems.length <= 1 || isPaused) return;
+    if (visibleItems.length <= 1 || isPaused || motionPreference !== 'full') return;
     const interval = window.setInterval(() => {
       setCurrentIndex((prev) => (prev + 1) % visibleItems.length);
     }, 4200);
     return () => window.clearInterval(interval);
-  }, [visibleItems.length, isPaused]);
+  }, [visibleItems.length, isPaused, motionPreference]);
   const currentItem = visibleItems[currentIndex] || visibleItems[0];
 
   // Watchlist status tracking for currentItem
@@ -107,12 +109,12 @@ export function ModernHero({ items }: ModernHeroProps) {
       
       {/* Background Cinematic Backdrop Artwork with Breakpoint-Optimized Focal Cropping */}
       <AnimatePresence mode="popLayout">
-        <motion.div
+        <m.div
           key={currentItem.id || currentIndex}
-          initial={{ opacity: 0, scale: 1.04 }}
+          initial={{ opacity: 0, scale: motionPreference === 'full' ? 1.04 : 1 }}
           animate={{ opacity: 1, scale: 1 }}
           exit={{ opacity: 0 }}
-          transition={{ duration: 1.2, ease: [0.16, 1, 0.3, 1] }}
+          transition={{ duration: motionPreference === 'full' ? 1.2 : 0.16, ease: [0.16, 1, 0.3, 1] }}
           className="absolute inset-0 z-0"
         >
           <img
@@ -122,7 +124,7 @@ export function ModernHero({ items }: ModernHeroProps) {
             loading="eager"
             referrerPolicy="no-referrer"
           />
-        </motion.div>
+        </m.div>
       </AnimatePresence>
 
       {/* Responsive Cinematic Gradient Masks */}
@@ -140,13 +142,13 @@ export function ModernHero({ items }: ModernHeroProps) {
 
       {/* Hero Content Area */}
       <div className="relative z-10 w-full max-w-[1680px] mx-auto px-4 sm:px-6 md:px-8 lg:px-10 pb-8 sm:pb-12 lg:pb-16">
-        <AnimatePresence mode="wait">
-          <motion.div
+        <AnimatePresence mode="popLayout">
+          <m.div
             key={`modern-hero-content-${currentItem.id || currentIndex}`}
-            initial={{ opacity: 0, y: 20 }}
+            initial={{ opacity: 0, y: motionPreference === 'full' ? 20 : 0 }}
             animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: -15 }}
-            transition={{ duration: 0.4, ease: [0.16, 1, 0.3, 1] }}
+            exit={{ opacity: 0, y: motionPreference === 'full' ? -15 : 0 }}
+            transition={{ duration: motionPreference === 'full' ? 0.4 : 0.12, ease: [0.16, 1, 0.3, 1] }}
             className="max-w-2xl flex flex-col gap-2.5 sm:gap-3.5"
           >
             <div className="hidden lg:block absolute right-8 xl:right-12 bottom-10 w-[150px] xl:w-[180px] aspect-[2/3] rounded-[22px] overflow-hidden border border-white/15 shadow-[0_24px_70px_rgba(0,0,0,.55)] rotate-[2deg]">
@@ -162,34 +164,28 @@ export function ModernHero({ items }: ModernHeroProps) {
             </div>
 
             {/* Title */}
-            <h1 className="text-2xl xs:text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-black text-white leading-[1.12] tracking-tight drop-shadow-xl font-['Outfit']">
+            <Reveal delay={0.06}><h1 className="text-2xl xs:text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-black text-white leading-[1.12] tracking-tight drop-shadow-xl font-['Outfit']">
               {title}
-            </h1>
+            </h1></Reveal>
 
             {/* Synopsis Description */}
-            <p className="text-xs sm:text-sm md:text-base text-gray-200 line-clamp-2 sm:line-clamp-3 leading-relaxed drop-shadow max-w-xl font-normal opacity-90">
+            <Reveal delay={0.12}><p className="text-xs sm:text-sm md:text-base text-gray-200 line-clamp-2 sm:line-clamp-3 leading-relaxed drop-shadow max-w-xl font-normal opacity-90">
               {cleanDescription}
-            </p>
+            </p></Reveal>
 
             {/* Action Buttons: Primary Watch/Resume, My List, More Info */}
-            <div className="flex flex-wrap items-center gap-2.5 sm:gap-3 pt-2">
+            <Reveal delay={0.18}><div className="flex flex-wrap items-center gap-2.5 sm:gap-3 pt-2">
               
               {/* Primary CTA (Continue Watching or Watch Now) */}
               <Link href={watchUrl}>
-                <motion.button
-                  whileHover={{ scale: 1.02 }}
-                  whileTap={{ scale: 0.98 }}
-                  className="flex items-center justify-center gap-2 bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-500 hover:to-indigo-500 text-white px-5 sm:px-7 py-2.5 sm:py-3 rounded-full text-xs sm:text-sm font-semibold shadow-sm transition-all cursor-pointer kinoma-focus"
-                >
+                <Pressable className="panda-motion-play-cta flex items-center justify-center gap-2 bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-500 hover:to-indigo-500 text-white px-5 sm:px-7 py-2.5 sm:py-3 rounded-full text-xs sm:text-sm font-semibold shadow-sm transition-all cursor-pointer kinoma-focus">
                   <Play className="w-4 h-4 fill-white text-white ml-0.5" />
                   <span>{primaryLabel}</span>
-                </motion.button>
+                </Pressable>
               </Link>
 
               {/* Secondary CTA (Add to My List / In My List) */}
-              <motion.button
-                whileHover={{ scale: 1.03 }}
-                whileTap={{ scale: 0.97 }}
+              <Pressable haptic
                 onClick={handleToggleWatchlist}
                 className={`flex items-center justify-center gap-1.5 px-4 sm:px-5 py-2.5 sm:py-3 rounded-full text-xs sm:text-sm font-semibold backdrop-blur-md border transition-all cursor-pointer kinoma-focus ${
                   inWatchlist
@@ -200,7 +196,7 @@ export function ModernHero({ items }: ModernHeroProps) {
               >
                 {inWatchlist ? (
                   <>
-                    <Check className="w-4 h-4 text-purple-300" />
+                    <AnimatedCheck checked size={16} className="text-purple-300" />
                     <span>In My List</span>
                   </>
                 ) : (
@@ -209,23 +205,19 @@ export function ModernHero({ items }: ModernHeroProps) {
                     <span>My List</span>
                   </>
                 )}
-              </motion.button>
+              </Pressable>
 
               {/* Tertiary CTA: More Info */}
               <Link href={buildDetailsHref(title, currentItem.type === 'movie' ? 'movie' : 'series', currentItem.id)}>
-                <motion.button
-                  whileHover={{ scale: 1.03 }}
-                  whileTap={{ scale: 0.97 }}
-                  className="flex items-center justify-center gap-1.5 bg-white/10 hover:bg-white/15 border border-white/20 text-white px-4 sm:px-5 py-2.5 sm:py-3 rounded-full text-xs sm:text-sm font-semibold backdrop-blur-md transition-all cursor-pointer kinoma-focus"
-                >
+                <Pressable className="flex items-center justify-center gap-1.5 bg-white/10 hover:bg-white/15 border border-white/20 text-white px-4 sm:px-5 py-2.5 sm:py-3 rounded-full text-xs sm:text-sm font-semibold backdrop-blur-md transition-all cursor-pointer kinoma-focus">
                   <Info className="w-4 h-4 text-gray-300" />
                   <span>More Info</span>
-                </motion.button>
+                </Pressable>
               </Link>
 
-            </div>
+            </div></Reveal>
 
-          </motion.div>
+          </m.div>
         </AnimatePresence>
 
         {/* Hero Carousel Navigation Dots */}

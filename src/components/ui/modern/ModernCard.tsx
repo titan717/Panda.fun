@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { Link } from 'wouter';
 import { Play, X } from 'lucide-react';
+import { Shimmer } from '../../../motion';
 import { AnimeItem, DEFAULT_POSTER } from '../../../types';
 import { buildDetailsHref } from '../../../lib/mediaRoute';
 import { optimizeImageUrl } from '../../../lib/mediaImages';
@@ -47,10 +48,10 @@ export function ModernCard({
         className="block rounded-2xl outline-none focus-visible:ring-2 focus-visible:ring-[#e8d0c0] focus-visible:ring-offset-2 focus-visible:ring-offset-black"
         aria-label={`Open ${title}`}
       >
-        <div className={`relative w-full overflow-hidden rounded-2xl border border-white/5 bg-[#0e1017] transition-[transform,border-color,box-shadow] duration-300 group-hover:-translate-y-1 group-hover:border-white/20 group-hover:shadow-[0_12px_32px_rgba(0,0,0,0.6)] ${isWide ? 'aspect-video' : 'aspect-[2/3]'}`}>
+        <div className={`modern-card__poster relative w-full overflow-hidden rounded-2xl border border-white/5 bg-[#0e1017] transition-[transform,border-color,box-shadow] duration-300 group-hover:border-white/20 group-hover:shadow-[0_12px_32px_rgba(0,0,0,0.6)] ${isWide ? 'aspect-video' : 'aspect-[2/3]'}`}>
           <span className="kinoma-focus absolute inset-0 z-0 block rounded-2xl">
             {!imageLoaded && (
-              <div className="modern-card__skeleton absolute inset-0" aria-hidden="true" />
+              <Shimmer className="modern-card__skeleton absolute inset-0" />
             )}
             <img
               src={cardImage}
@@ -85,7 +86,7 @@ export function ModernCard({
               aria-valuemax={100}
               aria-valuenow={Math.round(safeProgress * 100)}
             >
-              <span className="block h-full bg-[#b84d41]" style={{ width: `${safeProgress * 100}%` }} />
+              <span className="modern-card__progress-fill block h-full bg-[#b84d41]" style={{ width: `${safeProgress * 100}%` }} />
             </div>
           )}
         </div>

@@ -1,4 +1,5 @@
 import React, { useEffect, useMemo, useState } from 'react';
+import { AnimatePresence, m } from 'motion/react';
 import { Link } from 'wouter';
 import { Footer } from '../components/ui/Footer';
 import { Bookmark, CheckCircle2, Clock3, Heart, Search, X, Play } from 'lucide-react';
@@ -6,6 +7,7 @@ import { buildDetailsHref, buildWatchHref } from '../lib/mediaRoute';
 import { ModernCard } from '../components/ui/modern/ModernCard';
 import { historyUtil, HistoryItem } from '../lib/history';
 import { libraryManager, LibraryItem } from '../lib/library';
+import { Pressable, Reveal, useMotionPreference } from '../motion';
 
 type Tab = 'continue' | 'watchlist' | 'favorites' | 'completed';
 
@@ -50,6 +52,7 @@ function LibraryPosterCard({ item, onRemove }: { key?: React.Key; item: LibraryI
 }
 
 export function Library() {
+  const motionPreference = useMotionPreference();
   const [active, setActive] = useState<Tab | null>(null);
   const [query, setQuery] = useState('');
   const [searchOpen, setSearchOpen] = useState(false);
@@ -129,7 +132,8 @@ export function Library() {
     const season = Math.max(1, Number(item.seasonNumber) || 1);
     const episode = Math.max(1, Number(item.episodeNumber) || 1);
     return (
-      <div className="panda-library__shelf-card" key={item.episodeId || item.slug}>
+      <m.div className="panda-library__shelf-card" key={item.episodeId || item.slug} layout={motionPreference === 'full'} initial={false} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, scale: motionPreference === 'full' ? 0.94 : 1 }} transition={{ duration: motionPreference === 'full' ? 0.24 : 0.12 }}>
+        <Reveal>
         <ModernCard
           item={{ id: mediaId, title: item.title || 'Untitled', image: item.image, type }}
           layout="wide"
@@ -138,14 +142,15 @@ export function Library() {
           subText={`S${season} E${episode}`}
           onRemove={() => removeHistory(item.slug)}
         />
-      </div>
+        </Reveal>
+      </m.div>
     );
   };
 
   const renderPosterCard = (item: LibraryItem, type: 'watchlist' | 'favorites' | 'completed') => (
-    <div className="panda-library__poster-card" key={item.id}>
-      <LibraryPosterCard item={item} onRemove={() => removeLibrary(item.id, type)} />
-    </div>
+    <m.div className="panda-library__poster-card" key={item.id} layout={motionPreference === 'full'} initial={false} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, scale: motionPreference === 'full' ? 0.94 : 1 }} transition={{ duration: motionPreference === 'full' ? 0.24 : 0.12 }}>
+      <Reveal><LibraryPosterCard item={item} onRemove={() => removeLibrary(item.id, type)} /></Reveal>
+    </m.div>
   );
 
   const renderShelf = (tab: Tab) => {
@@ -161,9 +166,11 @@ export function Library() {
         </div>
         {items.length ? (
           <div className="panda-library__shelf-track">
-            {tab === 'continue'
-              ? (items as HistoryItem[]).map(renderHistoryCard)
-              : (items as LibraryItem[]).map(item => renderPosterCard(item, tab))}
+            <AnimatePresence initial={false}>
+              {tab === 'continue'
+                ? (items as HistoryItem[]).map(renderHistoryCard)
+                : (items as LibraryItem[]).map(item => renderPosterCard(item, tab))}
+            </AnimatePresence>
           </div>
         ) : (
           <EmptyState tab={tab} onBrowse={browse} />
@@ -176,9 +183,9 @@ export function Library() {
     const items = tabItems[tab];
     if (!items.length) return <EmptyState tab={tab} onBrowse={browse} />;
     if (tab === 'continue') {
-      return <div className="panda-library__selected-grid panda-library__selected-grid--wide">{(items as HistoryItem[]).map(renderHistoryCard)}</div>;
+      return <div className="panda-library__selected-grid panda-library__selected-grid--wide"><AnimatePresence initial={false}>{(items as HistoryItem[]).map(renderHistoryCard)}</AnimatePresence></div>;
     }
-    return <div className="panda-library__selected-grid">{(items as LibraryItem[]).map(item => renderPosterCard(item, tab))}</div>;
+    return <div className="panda-library__selected-grid"><AnimatePresence initial={false}>{(items as LibraryItem[]).map(item => renderPosterCard(item, tab))}</AnimatePresence></div>;
   };
 
   return (
@@ -209,7 +216,7 @@ export function Library() {
         )}
 
         {latestHistory && (
-          <section className="panda-library__resume" aria-label="Resume watching">
+          <Reveal className="panda-library__resume-reveal" delay={0}><section className="panda-library__resume" aria-label="Resume watching">
             {latestHistory.image && <img className="panda-library__resume-backdrop" src={latestHistory.image} alt="" aria-hidden="true" />}
             <div className="panda-library__resume-shade" aria-hidden="true" />
             <div className="panda-library__resume-content">
@@ -217,7 +224,7 @@ export function Library() {
               <h2>{latestHistory.title || 'Continue watching'}</h2>
               <p>S{Math.max(1, Number(latestHistory.seasonNumber) || 1)} E{Math.max(1, Number(latestHistory.episodeNumber) || 1)}</p>
               <div className="panda-library__resume-progress" role="progressbar" aria-label="Playback progress" aria-valuemin={0} aria-valuemax={100} aria-valuenow={Math.round(Math.min(100, Math.max(0, latestHistory.completionPercentage || 0)))}>
-                <span style={{ width: `${Math.min(100, Math.max(0, latestHistory.completionPercentage || 0))}%` }} />
+                <m.span style={{ width: '100%', transformOrigin: 'left center' }} initial={{ scaleX: 0 }} animate={{ scaleX: Math.min(100, Math.max(0, latestHistory.completionPercentage || 0)) / 100 }} transition={{ duration: motionPreference === 'full' ? 0.65 : 0 }} />
               </div>
               <Link
                 className="panda-library__resume-button"
@@ -226,16 +233,16 @@ export function Library() {
                 <Play size={16} fill="currentColor" /> Resume
               </Link>
             </div>
-          </section>
+          </section></Reveal>
         )}
 
         <nav className="kinoma-library-tabs panda-library__filters" aria-label="Library filters">
           {FILTERS.map(({ id, label, Icon }) => (
-            <button key={id} type="button" className={active === id ? 'is-active' : ''} aria-pressed={active === id} onClick={() => setActive(current => current === id ? null : id)}>
+            <Pressable key={id} className={active === id ? 'is-active' : ''} aria-pressed={active === id} onClick={() => setActive(current => current === id ? null : id)}>
               <Icon size={15} aria-hidden="true" />
               <span>{label}</span>
               <span className="panda-library__filter-count">{counts[id]}</span>
-            </button>
+            </Pressable>
           ))}
         </nav>
 

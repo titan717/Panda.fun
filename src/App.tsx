@@ -1,6 +1,7 @@
-import React, { lazy, Suspense, useEffect, useState } from 'react';
+import React, { lazy, Suspense, useEffect, useRef, useState } from 'react';
 import { Route, Switch, useLocation } from 'wouter';
-import { AnimatePresence, MotionConfig, motion } from 'motion/react';
+import { AnimatePresence, MotionConfig, m } from 'motion/react';
+import { getMotionOffset, getRouteTransitionDirection, getRouteDepth, useMotionPreference } from './motion';
 import { SWRConfig } from 'swr';
 import { localCache } from './lib/localCache';
 import { Layout } from './components/Layout';
@@ -16,9 +17,6 @@ import { NotFound } from './pages/NotFound';
 function retryLazyImport<T>(importer: () => Promise<T>, chunkName: string) {
   return importer().catch(error => {
     if (!isRecoverableChunkLoadError(error)) throw error;
-    // Offline: reloading now would replace the app with the browser's offline page.
-    // Keep the route's loading state (the offline banner explains why) and reload once
-    // back online — browsers cache failed module imports, so re-importing is not enough.
     if (typeof navigator !== 'undefined' && navigator.onLine === false) {
       return new Promise<T>(() => {
         window.addEventListener('online', () => window.location.reload(), { once: true });
@@ -58,63 +56,116 @@ import './components/intro/panda-intro.css';
 import { handleTVRemoteKey } from './lib/tvRemoteNavigation';
 import { getCurrentDeviceMode } from './lib/deviceCapabilities';
 
+function RouteContent({ location }: { location: string }) {
+  return (
+    <Switch location={location}>
+      <Route path="/" component={Landing} />
+      <Route path="/browse" component={Home} />
+      <Route path="/home" component={Home} />
+      <Route path="/terms" component={Terms} />
+      <Route path="/privacy-policy" component={Privacy} />
+      <Route path="/privacy" component={Privacy} />
+      <Route path="/contact" component={Contact} />
+      <Route path="/docs" component={Docs} />
+      <Route path="/profile" component={Profile} />
+      <Route path="/about" component={About} />
+      <Route path="/admin" component={Admin} />
+      <Route path="/settings" component={SettingsPage} />
+      <Route path="/search" component={Search} />
+      <Route path="/explore" component={Search} />
+      <Route path="/whats-new" component={WhatsNew} />
+      <Route path="/details/:id" component={Details} />
+      <Route path="/watch/:id" component={Watch} />
+      <Route path="/library" component={Library} />
+      <Route path="/history" component={Library} />
+      <Route><NotFound /></Route>
+    </Switch>
+  );
+}
+
+function DelayedRouteFallback({ previousLocation }: { previousLocation: string }) {
+  const [show, setShow] = useState(false);
+  useEffect(() => {
+    const timer = window.setTimeout(() => setShow(true), 400);
+    return () => window.clearTimeout(timer);
+  }, []);
+  return (
+    <div className="panda-route-loading-keepalive">
+      <RouteContent location={previousLocation} />
+      {show && (
+        <div className="panda-route-loading-overlay" role="status" aria-live="polite">
+          <ThinkingOrb state="searching" size={64} theme="dark" aria-label="Loading Panda.fun" />
+          <div className="panda-route-loading__copy"><span>Loading Panda.fun</span><p>Preparing your next discovery</p></div>
+        </div>
+      )}
+    </div>
+  );
+}
+
 function AnimatedRoutes() {
   const [location] = useLocation();
+  const preference = useMotionPreference();
+  const previousLocation = useRef(location);
+  const previousPath = previousLocation.current.split('?')[0];
+  const currentPath = location.split('?')[0];
+  const isDetailTransition = getRouteDepth(currentPath) > 0 || getRouteDepth(previousPath) > 0;
+  const direction = getRouteTransitionDirection(previousPath, currentPath);
+  const lastScrolledLocation = useRef(location);
+  const transitionState = useRef({ location, outerDone: true, contentReady: true });
+  if (transitionState.current.location !== location) {
+    transitionState.current = { location, outerDone: false, contentReady: false };
+  }
+  const finishTransitionIfReady = () => {
+    const current = transitionState.current;
+    if (current.location === location && current.outerDone && current.contentReady && lastScrolledLocation.current !== location) {
+      lastScrolledLocation.current = location;
+      window.scrollTo({ top: 0, behavior: 'instant' });
+    }
+  };
 
-  useEffect(() => {
-    window.scrollTo({ top: 0, behavior: 'instant' });
-    trackPageView(location);
-  }, [location]);
+  useEffect(() => { previousLocation.current = location; }, [location]);
+  useEffect(() => { trackPageView(location); }, [location]);
 
   if (location === '/') return <Landing />;
 
   return (
     <Layout>
       <MotionConfig reducedMotion="user">
-      <AnimatePresence mode="wait">
-        <motion.div
-          key={location}
-          initial={{ opacity: 0, y: 8 }}
-          animate={{ opacity: 1, y: 0 }}
-          exit={{ opacity: 0, y: -8 }}
-          transition={{ duration: 0.22, ease: [0.16, 1, 0.3, 1] }}
-          className="w-full flex-1 flex flex-col will-change-transform"
-        >
-          <Suspense
-            fallback={
-              <div className="panda-route-loading min-h-[55vh] w-full" role="status" aria-live="polite">
-                <ThinkingOrb state="searching" size={64} theme="dark" aria-label="Loading Panda.fun" />
-                <div className="panda-route-loading__copy"><span>Loading Panda.fun</span><p>Preparing your next discovery</p></div>
-              </div>
-            }
+      <div className="panda-route-transition-shell">
+        <AnimatePresence mode="popLayout" initial={false}>
+          <m.div
+            key={location}
+            initial={{ opacity: 0, x: getMotionOffset(preference, direction * 22) }}
+            animate={{ opacity: 1, x: 0 }}
+            exit={{ opacity: 0, x: getMotionOffset(preference, direction * -14) }}
+            transition={{ duration: preference === 'full' ? (isDetailTransition ? 0.28 : 0.16) : 0.12, ease: [0.16, 1, 0.3, 1] }}
+            onAnimationComplete={() => {
+              if (transitionState.current.location === location) {
+                transitionState.current.outerDone = true;
+                finishTransitionIfReady();
+              }
+            }}
+            className="panda-route-transition-page w-full flex-1 flex flex-col"
           >
-            <Switch location={location}>
-              <Route path="/" component={Landing} />
-              <Route path="/browse" component={Home} />
-              <Route path="/home" component={Home} />
-              <Route path="/terms" component={Terms} />
-              <Route path="/privacy-policy" component={Privacy} />
-              <Route path="/privacy" component={Privacy} />
-              <Route path="/contact" component={Contact} />
-              <Route path="/docs" component={Docs} />
-              <Route path="/profile" component={Profile} />
-              <Route path="/about" component={About} />
-              <Route path="/admin" component={Admin} />
-              <Route path="/settings" component={SettingsPage} />
-              <Route path="/search" component={Search} />
-              <Route path="/explore" component={Search} />
-              <Route path="/whats-new" component={WhatsNew} />
-              <Route path="/details/:id" component={Details} />
-              <Route path="/watch/:id" component={Watch} />
-              <Route path="/library" component={Library} />
-              <Route path="/history" component={Library} />
-              <Route>
-                <NotFound />
-              </Route>
-            </Switch>
-          </Suspense>
-        </motion.div>
-      </AnimatePresence>
+            <Suspense fallback={<DelayedRouteFallback previousLocation={previousLocation.current} />}>
+              <m.div
+                key={`route-content-${location}`}
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                transition={{ duration: preference === 'full' ? 0.16 : 0.12 }}
+                onAnimationComplete={() => {
+                  if (transitionState.current.location === location) {
+                    transitionState.current.contentReady = true;
+                    finishTransitionIfReady();
+                  }
+                }}
+              >
+                <RouteContent location={location} />
+              </m.div>
+            </Suspense>
+          </m.div>
+        </AnimatePresence>
+      </div>
       </MotionConfig>
     </Layout>
   );
