@@ -215,14 +215,7 @@ async function startServer() {
       res.setHeader('Content-Type', 'application/json');
       return res.sendFile(latestJsonPath);
     }
-    res.json({
-      versionCode: 1,
-      versionName: '1.0.0',
-      apkUrl: 'https://github.com/titan717/Panda.fun/releases/latest/download/Panda.fun.apk',
-      releaseNotes: 'Initial release of Panda.fun Native Android TV App.',
-      mandatory: false,
-      sha256: 'PENDING'
-    });
+    return res.status(503).json({ error: 'No verified Panda.fun release manifest has been published yet.' });
   });
 
   app.use('/downloads', express.static(path.join(process.cwd(), 'public', 'downloads')));
@@ -239,7 +232,7 @@ async function startServer() {
         if (err && !res.headersSent) res.status(404).send('APK file not found');
       });
     }
-    res.redirect('https://github.com/titan717/Panda.fun/releases/latest/download/Panda.fun.apk');
+    res.redirect(302, 'https://github.com/titan717/Panda.fun/releases/latest/download/Panda.fun-Android-TV.apk');
   });
 
   if (process.env.NODE_ENV !== 'production') {
