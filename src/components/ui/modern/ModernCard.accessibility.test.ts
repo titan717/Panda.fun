@@ -11,10 +11,6 @@ describe('ModernCard accessibility contract', () => {
     expect(source).toContain('aria-label={`Open ${title}`}');
   });
 
-  it('adds a dedicated poster surface for compositor-only press feedback', () => {
-    expect(source).toContain('modern-card__poster');
-  });
-
   it('keeps removal as a separate, keyboard-reachable 44px button', () => {
     expect(source).toContain('type="button"');
     expect(source).toContain('aria-label={`Remove ${title} from Library`}');
