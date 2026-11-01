@@ -5,6 +5,8 @@ import { KinomaLogo } from './ui/KinomaLogo';
 import './mobile/mobile-shell.css';
 import '../styles/android-tv.css';
 import { getCurrentDeviceMode } from '../lib/deviceCapabilities';
+import { m } from 'motion/react';
+import { useMotionPreference } from '../motion';
 
 export const ABOUT_ITEMS = [
   { href: '/about', label: 'About' },
@@ -33,6 +35,7 @@ const TV_ITEMS = [
 
 export function Layout({ children }: { children: React.ReactNode }) {
   const [location] = useLocation();
+  const motionPreference = useMotionPreference();
   const [expanded, setExpanded] = useState(false);
   const [deviceMode, setDeviceMode] = useState(() => getCurrentDeviceMode());
   const tvMode = deviceMode === 'tv';
@@ -87,7 +90,11 @@ export function Layout({ children }: { children: React.ReactNode }) {
             const active = (href === '/home' && (pathname === '/home' || pathname === '/browse')) ||
               (href === '/search' && (pathname === '/search' || pathname === '/explore' || pathname === '/whats-new')) ||
               (href === '/library' && (pathname === '/library' || pathname === '/history'));
-            return <Link key={href} href={href} className={`panda-mobile-bottom-nav__item ${active ? 'is-active' : ''}`} aria-label={mobileLabel} aria-current={active ? 'page' : undefined}><span className="panda-mobile-bottom-nav__icon"><Icon size={21} strokeWidth={1.9} /></span><span className="panda-mobile-bottom-nav__label">{mobileLabel}</span></Link>;
+            return <Link key={href} href={href} className={`panda-mobile-bottom-nav__item ${active ? 'is-active' : ''}`} aria-label={mobileLabel} aria-current={active ? 'page' : undefined}>
+              {active && motionPreference === 'full' && <m.span layoutId="panda-bottom-nav-active" className="panda-mobile-bottom-nav__active-pill" transition={{ type: 'spring', stiffness: 420, damping: 34 }} aria-hidden="true" />}
+              <m.span className="panda-mobile-bottom-nav__icon" animate={active && motionPreference === 'full' ? { scale: [1, 1.12, 1], y: [0, -2, 0] } : { scale: 1, y: 0 }} transition={{ duration: 0.28 }}><Icon size={21} strokeWidth={1.9} fill={active && (href === '/home' || href === '/library') ? 'currentColor' : 'none'} /></m.span>
+              <span className="panda-mobile-bottom-nav__label">{mobileLabel}</span>
+            </Link>;
           })}
         </nav>
       )}
