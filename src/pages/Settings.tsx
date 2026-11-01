@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { Link } from 'wouter';
-import { ChevronLeft, Play, Database, Sparkles, ShieldCheck, X, RotateCcw, FlaskConical, Trash2, UserRound, Monitor, Info, Check } from 'lucide-react';
+import { ChevronLeft, Play, Database, Sparkles, X, RotateCcw, FlaskConical, Trash2, UserRound, Monitor, Info, Check } from 'lucide-react';
 import { useAppearance } from '../lib/AppearanceContext';
 import { useAuth } from '../lib/AuthContext';
 import { updateSEO } from '../lib/seo';
