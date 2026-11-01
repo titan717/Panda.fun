@@ -7,6 +7,7 @@ import App from './App';
 import './index.css';
 import './styles/accessibility.css';
 import './styles/readability.css';
+import './styles/ux-polish.css';
 import './motion/motion.css';
 import { MotionPreferenceProvider } from './motion';
 
