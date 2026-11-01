@@ -1,4 +1,3 @@
-import React from 'react';
 import { CheckCircle2, Download, Loader2, RefreshCw, ShieldCheck, TriangleAlert, X, PackageCheck, Smartphone } from 'lucide-react';
 import { useAppUpdates } from '../../lib/appUpdates';
 import { statusMessage } from '../../lib/appUpdateState';
