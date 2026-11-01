@@ -178,7 +178,7 @@ export function MobileHome({
 
   return (
     <div className="panda-mobile-home">
-      <section className="panda-mobile-featured panda-billboard" aria-label="Featured titles">
+      <section className={`panda-mobile-featured panda-billboard${touchPaused || documentHidden || !motionAllowed ? " is-paused" : ""}`} aria-label="Featured titles">
         {featuredItems.length > 0 && featured ? (
           <>
             <article key={featured.id} className={`panda-mobile-featured__spotlight panda-mobile-featured__spotlight-track is-${swipeDirection}`} aria-label={`Featured: ${featured.title}`} onTouchStart={handleFeaturedTouchStart} onTouchEnd={handleFeaturedTouchEnd} onTouchCancel={() => { touchStartX.current = null; resumeAfterTouch(); }} onClickCapture={event => { if (suppressSwipeClick.current) { event.preventDefault(); event.stopPropagation(); suppressSwipeClick.current = false; } }}>
