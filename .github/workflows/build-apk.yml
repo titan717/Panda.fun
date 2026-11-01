@@ -210,7 +210,10 @@ jobs:
           LOCAL_SHA="$(sha256sum release/Panda.fun-Android-TV.apk | awk '{print $1}')"
           REMOTE_SHA="$(sha256sum release/Panda.fun-Android-TV.remote.apk | awk '{print $1}')"
           test "$LOCAL_SHA" = "$REMOTE_SHA"
-          apksigner verify --verbose release/Panda.fun-Android-TV.remote.apk
+          SDK_ROOT="${ANDROID_HOME:-${ANDROID_SDK_ROOT:-$HOME/.android/sdk}}"
+          APKSIGNER="$(find "$SDK_ROOT/build-tools" -name apksigner -type f | sort -V | tail -n 1)"
+          test -x "$APKSIGNER"
+          "$APKSIGNER" verify --verbose release/Panda.fun-Android-TV.remote.apk
           echo "Verified release asset: $APK_URL"
 
       - name: Publish stable update manifest to main
