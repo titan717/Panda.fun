@@ -1,4 +1,4 @@
-import React, { act, type ReactNode } from 'react';
+import { act, type ReactNode, type ButtonHTMLAttributes, type HTMLAttributes, type AnchorHTMLAttributes } from 'react';
 import { createRoot, type Root } from 'react-dom/client';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
@@ -74,10 +74,10 @@ vi.mock('../components/ui/Footer', () => ({ Footer: () => null }));
 
 vi.mock('../motion', async () => {
   const ReactModule = await import('react');
-  const Pressable = ReactModule.forwardRef<HTMLButtonElement, React.ButtonHTMLAttributes<HTMLButtonElement>>(
+  const Pressable = ReactModule.forwardRef<HTMLButtonElement, ButtonHTMLAttributes<HTMLButtonElement>>(
     (props, ref) => ReactModule.createElement('button', { ...props, ref })
   );
-  const Wrapper = ({ children, ...props }: React.HTMLAttributes<HTMLDivElement>) =>
+  const Wrapper = ({ children, ...props }: HTMLAttributes<HTMLDivElement>) =>
     ReactModule.createElement('div', props, children);
   return {
     Pressable,
@@ -96,7 +96,7 @@ vi.mock('thinking-orbs', async () => {
 vi.mock('wouter', async () => {
   const ReactModule = await import('react');
   return {
-    Link: ({ href, children, ...props }: { href: string; children?: ReactNode } & React.AnchorHTMLAttributes<HTMLAnchorElement>) =>
+    Link: ({ href, children, ...props }: { href: string; children?: ReactNode } & AnchorHTMLAttributes<HTMLAnchorElement>) =>
       ReactModule.createElement('a', { href, ...props }, children),
     useLocation: () => ['/search', mocks.setLocation],
     useSearch: () => window.location.search.slice(1),
