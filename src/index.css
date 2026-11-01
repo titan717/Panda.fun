@@ -65,12 +65,16 @@
 
 :root {
   color-scheme: dark;
-  --kinoma-bg: #090808;
-  --kinoma-bg-elevated: #0f0e0e;
-  --kinoma-surface: #151312;
-  --kinoma-surface-hover: #24201f;
-  --kinoma-card: #121110;
-  --kinoma-card-hover: #1b1918;
+  --safe-top: env(safe-area-inset-top, 0px);
+  --safe-bottom: env(safe-area-inset-bottom, 0px);
+  --safe-left: env(safe-area-inset-left, 0px);
+  --safe-right: env(safe-area-inset-right, 0px);
+  --kinoma-bg: #000000;
+  --kinoma-bg-elevated: #050505;
+  --kinoma-surface: #0a0a0a;
+  --kinoma-surface-hover: #141414;
+  --kinoma-card: #080808;
+  --kinoma-card-hover: #111111;
   --kinoma-text: #f6f2ee;
   --kinoma-text-soft: #ded7d1;
   --kinoma-muted: #aaa19b;
