@@ -10914,3 +10914,19 @@ html.tv-mode .panda-content-card:focus-within { scroll-margin-inline: 32px; }
   .panda-library *::before,
   .panda-library *::after { scroll-behavior: auto; transition-duration: .01ms; animation-duration: .01ms; }
 }
+
+
+/* Shared OTT card loading shimmer and fixed-ratio shelf cards. */
+.modern-card__skeleton {
+  background: linear-gradient(105deg, #101010 20%, #25201e 38%, #101010 56%);
+  background-size: 220% 100%;
+  animation: modern-card-shimmer 1.35s ease-in-out infinite;
+}
+@keyframes modern-card-shimmer {
+  from { background-position: 100% 0; }
+  to { background-position: -120% 0; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .modern-card__skeleton { animation: none; background: #171413; }
+}
+.panda-library__resume { min-height: 0; }
