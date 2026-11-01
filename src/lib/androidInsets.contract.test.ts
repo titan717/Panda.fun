@@ -6,6 +6,7 @@ describe('Android edge-to-edge and player system bars', () => {
   const manifest = readFileSync(new URL('../../android/app/src/main/AndroidManifest.xml', import.meta.url), 'utf8');
   const layout = readFileSync(new URL('../components/Layout.tsx', import.meta.url), 'utf8');
   const css = readFileSync(new URL('../components/mobile/mobile-shell.css', import.meta.url), 'utf8');
+  const player = readFileSync(new URL('../pages/Watch.tsx', import.meta.url), 'utf8');
 
   it('uses transparent edge-to-edge bars and forwards native insets to CSS', () => {
     expect(activity).toContain('WindowCompat.setDecorFitsSystemWindows(window, false)');
@@ -27,6 +28,8 @@ describe('Android edge-to-edge and player system bars', () => {
   it('restores system navigation for the SPA player route without changing player orientation', () => {
     expect(layout).toContain('native?.setPlayerPage?.(isPlayerRoute)');
     expect(activity).toContain('fun setPlayerPage(isPlayer: Boolean)');
+    expect(player).toContain('paddingTop: "var(--safe-top, 0px)"');
+    expect(player).toContain('paddingBottom: "var(--safe-bottom, 0px)"');
     expect(manifest).toContain('android:screenOrientation="landscape"');
     expect(manifest).toContain('android:name=".ui.PlayerActivity"');
   });
