@@ -379,7 +379,7 @@ export function Home() {
     hoverTrailerController.current = null;
   }, []);
 
-  const myList = libraryManager.getWatchlist().map(item => ({ id: item.id, title: item.title, poster: item.image, type: item.id.includes('_movie_') ? 'movie' : 'tv' } as MovieApiMedia));
+  const myList = libraryManager.getWatchlist().map(item => ({ id: item.id, title: item.title, poster: item.image, type: item.id.toLowerCase().includes('movie') ? 'movie' : 'tv' } as MovieApiMedia));
   const genreShelf = (name: string) => genreShelves[name] || [];
 
   return isMobileLayout ? <MobileHome items={[...(featured ? [featured] : []), ...trending, ...popularMovies, ...popularTv]} trendingItems={trending} popularMovies={popularMovies} popularTv={popularTv} newOnNetflix={newOnNetflix} newOnDisneyPlus={newOnDisneyPlus} airing={airing} comingSoon={comingSoon} becauseWatched={becauseWatched} lastWatchedTitle={lastWatchedTitle} anime={anime} genreShelves={genreShelves} loading={!home && !error} error={error} /> : (
