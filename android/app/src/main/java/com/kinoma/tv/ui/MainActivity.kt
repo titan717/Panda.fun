@@ -289,6 +289,8 @@ class MainActivity : ComponentActivity() {
                       root.style.setProperty('--safe-left', '0px');
                       root.style.setProperty('--safe-right', '0px');
                       root.style.setProperty('--keyboard-bottom', '${ime.bottom}px');
+                      var shell = document.querySelector('.panda-app-shell');
+                      if (shell) shell.classList.toggle('keyboard-open', ${ime.bottom} > 0);
                     })();
                 """.trimIndent()
                 webView.evaluateJavascript(script, null)
