@@ -82,7 +82,7 @@ export function MobileHome({
   const [motionAllowed, setMotionAllowed] = useState(true);
   const touchStartX = useRef<number | null>(null);
   const suppressSwipeClick = useRef(false);
-  const touchResumeTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const touchResumeTimer = useRef<number | null>(null);
   const featuredItems = useMemo(() => uniqueItems(items).filter(item => item.poster || item.backdrop).slice(0, 5), [items]);
   const catalogue = useMemo(() => uniqueItems([
     ...(trendingItems || []),
