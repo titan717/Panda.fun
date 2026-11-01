@@ -179,7 +179,7 @@ export function ModernHero({ items }: ModernHeroProps) {
                 <motion.button
                   whileHover={{ scale: 1.02 }}
                   whileTap={{ scale: 0.98 }}
-                  className="flex items-center justify-center gap-2 bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-500 hover:to-indigo-500 text-white px-5 sm:px-7 py-2.5 sm:py-3 rounded-full text-xs sm:text-sm font-semibold shadow-sm transition-all cursor-pointer kinoma-focus"
+                  className="flex items-center justify-center gap-2 bg-gradient-to-r from-[var(--kinoma-accent)] to-indigo-600 hover:from-[var(--kinoma-accent)] hover:to-indigo-500 text-white px-5 sm:px-7 py-2.5 sm:py-3 rounded-full text-xs sm:text-sm font-semibold shadow-sm transition-all cursor-pointer kinoma-focus"
                 >
                   <Play className="w-4 h-4 fill-white text-white ml-0.5" />
                   <span>{primaryLabel}</span>
@@ -193,14 +193,14 @@ export function ModernHero({ items }: ModernHeroProps) {
                 onClick={handleToggleWatchlist}
                 className={`flex items-center justify-center gap-1.5 px-4 sm:px-5 py-2.5 sm:py-3 rounded-full text-xs sm:text-sm font-semibold backdrop-blur-md border transition-all cursor-pointer kinoma-focus ${
                   inWatchlist
-                    ? 'bg-purple-600/30 border-purple-500/60 text-purple-200 hover:bg-purple-600/40'
+                    ? 'bg-[var(--kinoma-accent)]/30 border-[var(--kinoma-accent)]/60 text-purple-200 hover:bg-[var(--kinoma-accent)]/40'
                     : 'bg-white/10 hover:bg-white/15 border-white/20 text-white'
                 }`}
                 title={inWatchlist ? 'Remove from My List' : 'Add to My List'}
               >
                 {inWatchlist ? (
                   <>
-                    <Check className="w-4 h-4 text-purple-300" />
+                    <Check className="w-4 h-4 text-[var(--kinoma-accent-soft)]" />
                     <span>In My List</span>
                   </>
                 ) : (
