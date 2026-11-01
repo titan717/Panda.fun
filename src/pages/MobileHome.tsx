@@ -3,7 +3,7 @@ import { Link } from 'wouter';
 import { ArrowRight, Check, Info, Play, Plus } from 'lucide-react';
 import { ThinkingOrb } from 'thinking-orbs';
 import { ModernContinueWatching } from '../components/ui/modern/ModernContinueWatching';
-import { MovieApiMedia } from '../lib/api';
+import { api, MovieApiMedia } from '../lib/api';
 import { buildDetailsHref, buildWatchHref } from '../lib/mediaRoute';
 import { libraryManager } from '../lib/library';
 import { optimizeImageUrl } from '../lib/mediaImages';
@@ -80,6 +80,67 @@ function MobileRail({ title, items, topTen = false, wide = false, genre }: { tit
           })}
         </div>
       )}
+    </section>
+  );
+}
+
+
+function LazyGenreRail({ title, genre, movieGenre, tvGenre, animeOnly = false, existingItems = [] }: {
+  title: string;
+  genre: string;
+  movieGenre?: string;
+  tvGenre?: string;
+  animeOnly?: boolean;
+  existingItems?: MovieApiMedia[];
+}) {
+  const sectionRef = useRef<HTMLElement | null>(null);
+  const [nearViewport, setNearViewport] = useState(existingItems.length > 0);
+  const [items, setItems] = useState<MovieApiMedia[]>(existingItems);
+  const [loading, setLoading] = useState(existingItems.length === 0);
+
+  useEffect(() => {
+    if (existingItems.length) {
+      setItems(existingItems);
+      setLoading(false);
+      return;
+    }
+    const node = sectionRef.current;
+    if (!node) return;
+    if (typeof IntersectionObserver === 'undefined') { setNearViewport(true); return; }
+    const observer = new IntersectionObserver(entries => {
+      if (entries.some(entry => entry.isIntersecting)) {
+        setNearViewport(true);
+        observer.disconnect();
+      }
+    }, { rootMargin: '480px 0px' });
+    observer.observe(node);
+    return () => observer.disconnect();
+  }, [existingItems]);
+
+  useEffect(() => {
+    if (!nearViewport || items.length || existingItems.length) return;
+    let active = true;
+    const requests = animeOnly
+      ? [api.getGenreAnime('animation', 24)]
+      : [
+          api.getGenreMedia(movieGenre || genre, 'movie', 12),
+          api.getGenreMedia(tvGenre || genre, 'tv', 12),
+        ];
+    Promise.allSettled(requests).then(results => {
+      if (!active) return;
+      const merged = results.flatMap(result => result.status === 'fulfilled' ? result.value.results : []) as unknown as MovieApiMedia[];
+      setItems(uniqueItems(merged));
+      setLoading(false);
+    });
+    return () => { active = false; };
+  }, [nearViewport, items.length, existingItems.length, animeOnly, movieGenre, tvGenre, genre]);
+
+  if (!items.length && !loading) return null;
+  if (items.length) return <MobileRail title={title} items={items} genre={genre} />;
+  return (
+    <section ref={sectionRef} className="panda-mobile-home__collection" aria-label={title}>
+      <div className="panda-mobile-home__section-head"><h2>{title}</h2><Link href={'/search?genre=' + encodeURIComponent(genre)} aria-label={'Explore ' + title}><ArrowRight size={17} /></Link></div>
+      <div className="panda-mobile-home__rail-skeleton" aria-hidden="true"><span /><span /><span /><span /></div>
     </section>
   );
 }
@@ -304,14 +365,14 @@ export function MobileHome({
       <MobileRail title="Airing Today" items={uniqueItems(filterCategory(airing))} />
       <MobileRail title="Coming Soon" items={uniqueItems(filterCategory(comingSoon))} wide />
       {lastWatchedTitle && <MobileRail title={"Because you watched " + lastWatchedTitle} items={uniqueItems(filterCategory(becauseWatched))} />}
-      <MobileRail title="Anime" items={uniqueItems(filterCategory(anime))} genre="anime" />
-      <MobileRail title="Action" items={genreItems("Action")} genre="Action" />
-      <MobileRail title="Comedy" items={genreItems("Comedy")} genre="Comedy" />
-      <MobileRail title="Drama" items={genreItems("Drama")} genre="Drama" />
-      <MobileRail title="Sci-Fi & Fantasy" items={genreItems("Sci-Fi & Fantasy")} genre="Sci-Fi & Fantasy" />
-      <MobileRail title="Horror" items={genreItems("Horror")} genre="Horror" />
-      <MobileRail title="Animation & Family" items={genreItems("Animation & Family")} genre="Animation & Family" />
-      <MobileRail title="Documentary" items={genreItems("Documentary")} genre="Documentary" />
+      <LazyGenreRail title="Anime" genre="anime" animeOnly existingItems={uniqueItems(filterCategory(anime))} />
+      <LazyGenreRail title="Action" genre="Action" movieGenre="Action" tvGenre="Action & Adventure" existingItems={genreItems("Action")} />
+      <LazyGenreRail title="Comedy" genre="Comedy" movieGenre="Comedy" tvGenre="Comedy" existingItems={genreItems("Comedy")} />
+      <LazyGenreRail title="Drama" genre="Drama" existingItems={genreItems("Drama")} />
+      <LazyGenreRail title="Sci-Fi & Fantasy" genre="Sci-Fi & Fantasy" movieGenre="Science Fiction" tvGenre="Sci-Fi & Fantasy" existingItems={genreItems("Sci-Fi & Fantasy")} />
+      <LazyGenreRail title="Horror" genre="Horror" existingItems={genreItems("Horror")} />
+      <LazyGenreRail title="Animation & Family" genre="Animation & Family" movieGenre="Animation" tvGenre="Animation" existingItems={genreItems("Animation & Family")} />
+      <LazyGenreRail title="Documentary" genre="Documentary" existingItems={genreItems("Documentary")} />
     </div>
   );
 }
