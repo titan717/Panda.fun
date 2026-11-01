@@ -8,11 +8,11 @@ const workflow = readFileSync(new URL('../../.github/workflows/build-apk.yml', i
 const gradle = readFileSync(new URL('../../android/app/build.gradle', import.meta.url), 'utf8');
 
 describe('Android stable update release contract', () => {
-  it('keeps a parseable HTTPS APK manifest with a real SHA-256 and monotonic version code', () => {
+  it('keeps a parseable HTTPS APK manifest with a valid SHA-256 and positive version code', () => {
     expect(manifest.latestVersionCode).toBeGreaterThan(0);
-    expect(manifest.latestVersionName).toMatch(/^\\d+\\.\\d+\\.\\d+(?:-[a-z0-9.]+)?$/i);
-    expect(manifest.apkUrl).toMatch(/^https:\\/\\//);
-    expect(manifest.apkUrl).toMatch(/\\.apk$/);
+    expect(manifest.latestVersionName).toMatch(/^\d+\.\d+\.\d+(?:-[a-z0-9.]+)?$/i);
+    expect(manifest.apkUrl).toMatch(/^https:\/\//);
+    expect(manifest.apkUrl).toMatch(/\.apk$/);
     expect(manifest.sha256).toMatch(/^[a-f0-9]{64}$/i);
     expect(['stable', 'beta']).toContain(manifest.channel);
     expect(typeof manifest.prerelease).toBe('boolean');
