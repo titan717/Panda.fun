@@ -457,14 +457,14 @@ export const api = {
     return { results: data.results.map(toAnimeItem) };
   },
 
-  async getUpcomingMovies() {
-    const data = await request<MovieApiPage>('/api/v1/upcoming/movies', { region: 'US' }, undefined, 300_000);
-    return { results: data.results.map(toAnimeItem) };
+  async getUpcomingMovies(): Promise<{ results: MovieApiMedia[] }> {
+    const data = await request<MovieApiPage<MovieApiMedia>>('/api/v1/upcoming/movies', { region: 'US' }, undefined, 300_000);
+    return { results: data.results };
   },
 
-  async getUpcomingTv() {
-    const data = await request<MovieApiPage>('/api/v1/upcoming/tv', undefined, undefined, 300_000);
-    return { results: data.results.map(toAnimeItem) };
+  async getUpcomingTv(): Promise<{ results: MovieApiMedia[] }> {
+    const data = await request<MovieApiPage<MovieApiMedia>>('/api/v1/upcoming/tv', undefined, undefined, 300_000);
+    return { results: data.results };
   },
 
   async getNewOnNetflix() {
@@ -483,8 +483,9 @@ export const api = {
     return { schedule: data.episodes || [], results };
   },
 
-  async getAiringToday() {
-    return this.getAiringSchedule();
+  async getAiringToday(): Promise<{ results: MovieApiMedia[] }> {
+    const data = await request<{ episodes?: Array<{ show?: MovieApiMedia }> }>('/api/v1/airing/today', { country: 'US' }, undefined, 300_000);
+    return { results: (data.episodes || []).map(episode => episode.show).filter((show): show is MovieApiMedia => Boolean(show?.id)) };
   },
 
   async getMovies() {
