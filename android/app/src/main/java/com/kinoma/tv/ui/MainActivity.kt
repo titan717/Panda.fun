@@ -39,6 +39,7 @@ import androidx.core.view.WindowInsetsCompat
 import androidx.core.view.WindowInsetsControllerCompat
 import androidx.lifecycle.lifecycleScope
 import androidx.webkit.WebViewAssetLoader
+import com.kinoma.tv.BuildConfig
 import com.kinoma.tv.data.UpdateChecker
 import com.kinoma.tv.data.UpdateInfo
 import kotlinx.coroutines.launch
