@@ -512,3 +512,13 @@
 @media (prefers-reduced-motion: reduce) {
   .panda-library .panda-library__shelf-track { scroll-behavior: auto; }
 }
+
+
+/* If a device refuses immersive three-button navigation, leave its system bar visible
+   and suppress the in-app bar rather than stacking two navigation surfaces. */
+@media (max-width: 767px) {
+  .system-nav-visible .panda-mobile-bottom-nav {
+    visibility: hidden;
+    pointer-events: none;
+  }
+}
