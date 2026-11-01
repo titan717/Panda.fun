@@ -65,7 +65,7 @@ describe('production APK release safety', () => {
     expect(server).toContain('No verified stable Panda.fun production release has been published yet.');
     expect(server).toContain('createHash(\'sha256\')');
     expect(server).toContain('localSha256 === manifest.sha256.toLowerCase()');
-    expect(server).toContain('Panda.fun-Android-TV\\.apk');
+    expect(server).toContain('Panda\\.fun-Android-TV\\.apk');
     expect(server).not.toContain('Panda.fun-Android-TV(?:-beta)?\\.apk');
   });
 });
