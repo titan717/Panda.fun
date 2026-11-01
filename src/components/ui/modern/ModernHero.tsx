@@ -1,6 +1,6 @@
-import React, { useState, useEffect, useMemo } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Link } from 'wouter';
-import { Play, Info, Star, Plus, Check, Calendar, Film } from 'lucide-react';
+import { Play, Info, Plus } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 import { AnimatedCheck, Pressable, Reveal, useMotionPreference } from '../../../motion';
 import { AnimeItem, DEFAULT_BANNER } from '../../../types';
