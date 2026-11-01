@@ -50,7 +50,7 @@ export function Schedule() {
           </div>
           
           <div className="flex items-center gap-2 mb-6">
-            <button className="px-3.5 py-1 bg-[#7b1fa2] text-white text-xs font-bold rounded-lg shadow-sm">SUB</button>
+            <button className="px-3.5 py-1 bg-[#b84d41] text-white text-xs font-bold rounded-lg shadow-sm">SUB</button>
             <button className="px-3.5 py-1 bg-[#1c1c22] text-gray-400 hover:text-white transition-colors text-xs font-bold rounded-lg">DUB</button>
           </div>
 
@@ -79,7 +79,7 @@ export function Schedule() {
                     {isActive ? (
                       <motion.div 
                         layoutId="activeScheduleDay"
-                        className="w-full h-1 bg-gradient-to-r from-[#7b1fa2] to-[#ba68c8] mt-2 rounded-full shadow-[0_0_10px_rgba(123,31,162,0.8)]" 
+                        className="w-full h-1 bg-gradient-to-r from-[#b84d41] to-[#ba68c8] mt-2 rounded-full shadow-[0_0_10px_rgba(123,31,162,0.8)]" 
                       />
                     ) : (
                       <div className="w-full h-1 mt-2" />
@@ -126,7 +126,7 @@ export function Schedule() {
                   return (
                     <div key={`schedule-${item.id}-${idx}`} className="flex items-center justify-between px-4 sm:px-8 py-3 border-b border-[#1c1c22] hover:bg-[#151518] cursor-pointer group transition-colors">
                       <div className="flex items-center gap-4 sm:gap-8 flex-1 min-w-0">
-                        <span className="text-sm font-semibold text-gray-400 w-16 shrink-0 group-hover:text-[#c084fc] transition-colors">
+                        <span className="text-sm font-semibold text-gray-400 w-16 shrink-0 group-hover:text-[#e8d0c0] transition-colors">
                           {`${hr12}:${mockMin} ${ampm}`}
                         </span>
                         <span className="text-sm font-medium text-gray-200 truncate group-hover:text-white transition-colors">
@@ -134,7 +134,7 @@ export function Schedule() {
                         </span>
                       </div>
                       
-                      <button className="flex items-center gap-1.5 px-3 py-1 rounded-full bg-[#1c1c22] border border-[#2c2c34] text-xs font-semibold text-gray-400 group-hover:bg-[#4a148c] group-hover:text-white group-hover:border-[#7b1fa2] transition-all shrink-0">
+                      <button className="flex items-center gap-1.5 px-3 py-1 rounded-full bg-[#1c1c22] border border-[#2c2c34] text-xs font-semibold text-gray-400 group-hover:bg-[#4a148c] group-hover:text-white group-hover:border-[#b84d41] transition-all shrink-0">
                         <Play className="w-3 h-3 fill-current" />
                         Episode {item.totalEpisodes || '?'}
                       </button>
