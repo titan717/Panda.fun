@@ -732,6 +732,14 @@ class MainActivity : ComponentActivity() {
         }
 
         @JavascriptInterface
+        fun setPlayerPage(isPlayer: Boolean) {
+            runOnUiThread {
+                isPlayerPage = isPlayer
+                hideSystemUI()
+            }
+        }
+
+        @JavascriptInterface
         fun isTV(): Boolean {
             return isTelevisionDevice()
         }
