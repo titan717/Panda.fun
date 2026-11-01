@@ -32,10 +32,17 @@ function imageFor(item: MovieApiMedia) {
 }
 
 function uniqueItems(items: MovieApiMedia[]) {
-  return items.filter((item, index, all) => Boolean(item?.id) && all.findIndex(other => other?.id === item.id) === index);
+  const seen = new Set<string>();
+  return items.filter(item => {
+    if (!item?.id) return false;
+    const titleKey = (item.title || '').trim().toLocaleLowerCase() + ':' + item.type;
+    if (seen.has(titleKey)) return false;
+    seen.add(titleKey);
+    return true;
+  });
 }
 
-function MobileRail({ title, items, topTen = false, wide = false, genre }: { title: string; items: MovieApiMedia[]; topTen?: boolean; wide?: boolean; genre?: string }) {
+function MobileRail({ title, items, topTen = false, wide = false, genre, loading = false }: { title: string; items: MovieApiMedia[]; topTen?: boolean; wide?: boolean; genre?: string; loading?: boolean }) {
   const sectionRef = useRef<HTMLElement | null>(null);
   const [nearViewport, setNearViewport] = useState(false);
   useEffect(() => {
@@ -48,7 +55,15 @@ function MobileRail({ title, items, topTen = false, wide = false, genre }: { tit
     observer.observe(node);
     return () => observer.disconnect();
   }, []);
-  if (!items.length) return null;
+  if (!items.length && !loading) return null;
+  if (!items.length && loading) {
+    return (
+      <section className="panda-mobile-home__collection" aria-label={title} aria-busy="true">
+        <div className="panda-mobile-home__section-head"><h2>{title}</h2></div>
+        <div className={wide ? "panda-mobile-home__rail-skeleton is-wide" : "panda-mobile-home__rail-skeleton"} aria-hidden="true"><span /><span /><span /><span /></div>
+      </section>
+    );
+  }
   const visible = items.slice(0, topTen ? 10 : 12);
   const railClass = topTen ? 'panda-mobile-home__top10' : wide ? 'panda-mobile-home__trending panda-mobile-home__trending--wide' : 'panda-mobile-home__trending';
   return (
@@ -346,17 +361,17 @@ export function MobileHome({
         )}
       </section>
 
-      <MobileRail title="Top 10" items={topTen} topTen />
+      <MobileRail title="Top 10" items={topTen} topTen  loading={loading} />
       <ModernContinueWatching />
       <MobileRail title="My List" items={uniqueItems(filterCategory(myList))} />
-      <MobileRail title="Trending Now" items={trending} />
-      <MobileRail title="New on Netflix" items={uniqueItems(filterCategory(newOnNetflix))} />
-      <MobileRail title="New on Disney+" items={uniqueItems(filterCategory(newOnDisneyPlus))} />
-      <MobileRail title="Popular Movies" items={uniqueItems(filterCategory(popularMovies))} />
-      <MobileRail title="Popular TV Shows" items={uniqueItems(filterCategory(popularTv))} />
-      <MobileRail title="Airing Today" items={uniqueItems(filterCategory(airing))} />
-      <MobileRail title="Coming Soon" items={uniqueItems(filterCategory(comingSoon))} wide />
-      {lastWatchedTitle && <MobileRail title={"Because you watched " + lastWatchedTitle} items={uniqueItems(filterCategory(becauseWatched))} />}
+      <MobileRail title="Trending Now" items={trending}  loading={loading} />
+      <MobileRail title="New on Netflix" items={uniqueItems(filterCategory(newOnNetflix))}  loading={loading} />
+      <MobileRail title="New on Disney+" items={uniqueItems(filterCategory(newOnDisneyPlus))}  loading={loading} />
+      <MobileRail title="Popular Movies" items={uniqueItems(filterCategory(popularMovies))}  loading={loading} />
+      <MobileRail title="Popular TV Shows" items={uniqueItems(filterCategory(popularTv))}  loading={loading} />
+      <MobileRail title="Airing Today" items={uniqueItems(filterCategory(airing))}  loading={loading} />
+      <MobileRail title="Coming Soon" items={uniqueItems(filterCategory(comingSoon))} wide  loading={loading} />
+      {lastWatchedTitle && <MobileRail title={"Because you watched " + lastWatchedTitle} items={uniqueItems(filterCategory(becauseWatched))} loading={loading} />}
       <LazyGenreRail title="Anime" genre="anime" animeOnly />
       <LazyGenreRail title="Action" genre="Action" movieGenre="Action" tvGenre="Action & Adventure" />
       <LazyGenreRail title="Comedy" genre="Comedy" movieGenre="Comedy" tvGenre="Comedy" />
