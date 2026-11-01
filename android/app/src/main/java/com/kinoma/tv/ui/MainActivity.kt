@@ -32,7 +32,6 @@ import android.net.Uri
 import android.widget.Button
 import androidx.activity.ComponentActivity
 import androidx.core.splashscreen.SplashScreen.Companion.installSplashScreen
-import androidx.core.splashscreen.SplashScreen.Companion.installSplashScreen
 import androidx.core.view.ViewCompat
 import androidx.core.view.WindowCompat
 import androidx.core.view.WindowInsetsCompat
@@ -55,7 +54,6 @@ class MainActivity : ComponentActivity() {
     private lateinit var diagnosticText: TextView
     private var pendingVerifiedUpdateUri: Uri? = null
     private var isPlayerPage: Boolean = false
-    private var webViewCrashed: Boolean = false
     private var webViewCrashed: Boolean = false
 
     companion object {
