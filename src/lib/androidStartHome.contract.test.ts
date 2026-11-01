@@ -18,7 +18,7 @@ describe('installed app launch and recovery contract', () => {
 
   it('starts Android WebView at /home and never locks MainActivity orientation', () => {
     expect(activity).toContain('WEB_ENTRY_URL = "https://$APP_DOMAIN/home"');
-    const mainActivity = manifest.match(/<activity[\\s\\S]*?android:name="\\.ui\\.MainActivity"[\\s\\S]*?<\\/activity>/)?.[0] ?? '';
+    const mainActivity = (manifest.split('<activity').find(section => section.includes('android:name=".ui.MainActivity"')) || '').split('</activity>')[0];
     expect(mainActivity).not.toContain('android:screenOrientation');
     expect(manifest).toContain('android:screenOrientation="landscape"'); // PlayerActivity only.
   });
