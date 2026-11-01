@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { motionDurations, motionEasings, motionSprings, resolveMotionPreference } from './tokens';
+import { getMotionOffset, motionDurations, motionEasings, motionSprings, resolveMotionPreference } from './tokens';
 
 describe('motion tokens', () => {
   it('defines the shared OTT timing scale', () => {
@@ -27,5 +27,13 @@ describe('motion preference resolution', () => {
   });
   it('uses full motion when no constraint applies', () => {
     expect(resolveMotionPreference({ prefersReducedMotion: false, saveData: false, lowEndDevice: false })).toBe('full');
+  });
+});
+
+describe('reduced-motion movement contract', () => {
+  it('never applies positional movement outside full motion mode', () => {
+    expect(getMotionOffset('reduced', 12)).toBe(0);
+    expect(getMotionOffset('minimal', -22)).toBe(0);
+    expect(getMotionOffset('full', 12)).toBe(12);
   });
 });
