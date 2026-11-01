@@ -1,4 +1,5 @@
 import express from 'express';
+import { createHash } from 'crypto';
 import path from 'path';
 import fs from 'fs';
 import { createServer as createViteServer } from 'vite';
@@ -238,18 +239,8 @@ async function startServer() {
 
   app.use('/downloads', express.static(path.join(process.cwd(), 'public', 'downloads')));
 
-  app.get('/downloads/Panda.fun.apk', async (req, res) => {
+  app.get('/downloads/Panda.fun.apk', (req, res) => {
     const filePath = path.join(process.cwd(), 'public', 'downloads', 'Panda.fun.apk');
-    if (fs.existsSync(filePath)) {
-      return res.download(filePath, 'Panda.fun.apk', {
-        headers: {
-          'Content-Type': 'application/vnd.android.package-archive',
-          'Cache-Control': 'no-store, no-cache, must-revalidate, proxy-revalidate'
-        }
-      }, (err) => {
-        if (err && !res.headersSent) res.status(404).send('APK file not found');
-      });
-    }
     try {
       const manifestPath = path.join(process.cwd(), 'update', 'latest.json');
       const manifest = JSON.parse(fs.readFileSync(manifestPath, 'utf8'));
@@ -258,11 +249,27 @@ async function startServer() {
       const validReleaseAsset = /^https:\/\/github\.com\/titan717\/Panda\.fun\/releases\/download\/[^/]+\/Panda\.fun-Android-TV\.apk$/.test(apkUrl);
       const validChecksum = typeof manifest.sha256 === 'string' && /^[a-f0-9]{64}$/i.test(manifest.sha256);
       const validVersion = Number.isInteger(manifest.latestVersionCode) && manifest.latestVersionCode > 0;
-      if (stableRelease && validReleaseAsset && validChecksum && validVersion) return res.redirect(302, apkUrl);
+      if (!stableRelease || !validReleaseAsset || !validChecksum || !validVersion) {
+        return res.status(503).json({ error: 'No verified stable Panda.fun APK release is currently published.' });
+      }
+
+      if (fs.existsSync(filePath)) {
+        const localSha256 = createHash('sha256').update(fs.readFileSync(filePath)).digest('hex');
+        if (localSha256 === manifest.sha256.toLowerCase()) {
+          return res.download(filePath, 'Panda.fun.apk', {
+            headers: {
+              'Content-Type': 'application/vnd.android.package-archive',
+              'Cache-Control': 'no-store, no-cache, must-revalidate, proxy-revalidate'
+            }
+          });
+        }
+        console.warn('[Panda.fun] Local APK checksum does not match stable update manifest; redirecting to verified release asset.');
+      }
+      return res.redirect(302, apkUrl);
     } catch (error) {
-      console.error('[Panda.fun] Could not resolve APK manifest:', error);
+      console.error('[Panda.fun] Could not resolve verified stable APK:', error);
+      return res.status(503).json({ error: 'No verified stable Panda.fun APK release is currently published.' });
     }
-    return res.status(503).json({ error: 'No verified Panda.fun APK release is currently published.' });
   });
 
   if (process.env.NODE_ENV !== 'production') {
