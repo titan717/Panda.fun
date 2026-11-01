@@ -5,9 +5,6 @@ import { motion } from 'motion/react';
 import { KinomaLogo } from '../components/ui/KinomaLogo';
 import { updateSEO } from '../lib/seo';
 
-const BACKDROP_URL = 'https://aniwaves.ru/assets/images/bg-index2.jpg';
-const REFERENCE_TEXTURE_URL = 'https://cdn.dribbble.com/userupload/14005335/file/original-d6adb157992d0492ed2fc3b2ab46cef9.jpg?resize=1200x1200&vertical=center';
-
 const FAQ = [
   { question: 'What is Panda.fun?', answer: 'Panda.fun is a streaming experience for anime, movies and series, built around fast discovery, beautiful artwork and a simple path from finding a title to pressing play.' },
   { question: 'Do I need an account to browse?', answer: 'No. You can enter Panda.fun and explore the catalog without signing in. An account is used for features such as your personal library and viewing progress.' },
@@ -18,8 +15,6 @@ const FAQ = [
 function CartoonButton({ children, href }: { children: React.ReactNode; href: string }) {
   return <Link href={href} className="kinoma-cartoon-button"><span className="kinoma-cartoon-button__face">{children}</span><span className="kinoma-cartoon-button__shadow" aria-hidden="true" /></Link>;
 }
-
-const WELCOME_IMAGE_URL = 'https://static.crunchyroll.com/cr-acquisition/assets/img/start/hero/india/background-desktop@2x.webp';
 
 export function Landing() {
   const [openFaq, setOpenFaq] = useState<number | null>(null);
@@ -44,8 +39,8 @@ export function Landing() {
 
   return (
     <div className="kinoma-welcome">
-      <div className="kinoma-welcome__backdrop" style={{ backgroundImage: `url("${BACKDROP_URL}")` }} />
-      <div className="kinoma-welcome__reference-texture" style={{ backgroundImage: `url("${REFERENCE_TEXTURE_URL}")` }} />
+      <div className="kinoma-welcome__backdrop" aria-hidden="true" />
+      <div className="kinoma-welcome__reference-texture" aria-hidden="true" />
       <div className="kinoma-welcome__grain" aria-hidden="true" />
 
       <header className="kinoma-welcome__header">
@@ -56,7 +51,7 @@ export function Landing() {
         <section className="kinoma-welcome__hero" aria-labelledby="welcome-title">
           <div className="kinoma-welcome__art">
             <motion.div initial={{ opacity: 0, y: 30, rotate: -3 }} animate={{ opacity: 1, y: 0, rotate: 0 }} transition={{ duration: 0.9, ease: [0.16, 1, 0.3, 1] }} className="kinoma-welcome__art-frame">
-              <div className="kinoma-welcome__art-glow" /><img src={WELCOME_IMAGE_URL} alt="Panda.fun streaming artwork" fetchPriority="high" decoding="async" referrerPolicy="no-referrer" /><div className="kinoma-welcome__art-vignette" />
+              <div className="kinoma-welcome__art-glow" /><img src="/icon.svg" alt="Panda.fun panda mark" fetchPriority="high" decoding="async" /><div className="kinoma-welcome__art-vignette" />
             </motion.div>
           </div>
           <motion.div initial={{ opacity: 0, x: -24 }} animate={{ opacity: 1, x: 0 }} transition={{ duration: 0.75, delay: 0.15, ease: [0.16, 1, 0.3, 1] }} className="kinoma-welcome__copy">

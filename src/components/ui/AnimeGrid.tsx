@@ -63,13 +63,13 @@ function AnimeCard({ item }: { item: AnimeItem }) {
 
           {/* Smooth Play overlay */}
           <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/30 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-center justify-center">
-            <div className="w-12 h-12 rounded-full bg-[#7b1fa2]/90 backdrop-blur-md flex items-center justify-center shadow-[0_0_20px_rgba(123,31,162,0.8)] transform scale-75 group-hover:scale-100 transition-transform duration-300">
+            <div className="w-12 h-12 rounded-full bg-[#b84d41]/90 backdrop-blur-md flex items-center justify-center shadow-[0_0_20px_rgba(123,31,162,0.8)] transform scale-75 group-hover:scale-100 transition-transform duration-300">
               <Play className="w-5 h-5 text-white fill-white ml-0.5" />
             </div>
           </div>
         </div>
         
-        <h3 className="text-sm font-semibold text-gray-200 line-clamp-2 group-hover:text-[#c084fc] transition-colors duration-200 leading-snug">
+        <h3 className="text-sm font-semibold text-gray-200 line-clamp-2 group-hover:text-[#e8d0c0] transition-colors duration-200 leading-snug">
           {itemTitle}
         </h3>
       </motion.div>

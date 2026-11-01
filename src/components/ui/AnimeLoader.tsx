@@ -27,14 +27,14 @@ export function AnimeLoader({ text = 'Summoning Anime...', size = 'md' }: AnimeL
             repeat: Infinity,
             ease: "easeInOut"
           }}
-          className="absolute inset-0 rounded-full bg-gradient-to-tr from-purple-600 via-fuchsia-500 to-pink-500 blur-md"
+          className="absolute inset-0 rounded-full bg-gradient-to-tr from-[var(--kinoma-accent)] via-fuchsia-500 to-pink-500 blur-md"
         />
 
         {/* Inner Spinning Rune / Ring */}
         <motion.div
           animate={{ rotate: 360 }}
           transition={{ duration: 3, repeat: Infinity, ease: "linear" }}
-          className="absolute inset-1 rounded-full border-2 border-dashed border-purple-300/60"
+          className="absolute inset-1 rounded-full border-2 border-dashed border-[var(--kinoma-accent-soft)]/60"
         />
 
         {/* Core Glowing Orb */}
@@ -48,7 +48,7 @@ export function AnimeLoader({ text = 'Summoning Anime...', size = 'md' }: AnimeL
             repeat: Infinity,
             ease: "easeInOut"
           }}
-          className="relative w-3/4 h-3/4 rounded-full bg-gradient-to-br from-purple-400 via-fuchsia-600 to-indigo-700 shadow-[0_0_25px_rgba(168,85,247,0.8)] flex items-center justify-center border-2 border-white/40"
+          className="relative w-3/4 h-3/4 rounded-full bg-gradient-to-br from-[var(--kinoma-accent-soft)] via-fuchsia-600 to-indigo-700 shadow-[0_0_25px_rgba(168,85,247,0.8)] flex items-center justify-center border-2 border-white/40"
         >
           <motion.div
             animate={{ rotate: -360 }}
@@ -65,7 +65,7 @@ export function AnimeLoader({ text = 'Summoning Anime...', size = 'md' }: AnimeL
           className="absolute inset-0 pointer-events-none"
         >
           <span className="absolute -top-1 left-1/2 text-xs text-pink-300 animate-pulse">✨</span>
-          <span className="absolute -bottom-1 right-1/4 text-xs text-purple-300 animate-pulse">⚡</span>
+          <span className="absolute -bottom-1 right-1/4 text-xs text-[var(--kinoma-accent-soft)] animate-pulse">⚡</span>
         </motion.div>
       </div>
 
@@ -76,13 +76,13 @@ export function AnimeLoader({ text = 'Summoning Anime...', size = 'md' }: AnimeL
           animate={{ opacity: 1, y: 0 }}
           className="flex items-center gap-2"
         >
-          <span className="text-xs sm:text-sm font-black tracking-wider bg-gradient-to-r from-purple-300 via-fuchsia-300 to-pink-300 bg-clip-text text-transparent uppercase">
+          <span className="text-xs sm:text-sm font-black tracking-wider bg-gradient-to-r from-[var(--kinoma-accent-soft)] via-fuchsia-300 to-pink-300 bg-clip-text text-transparent uppercase">
             {text}
           </span>
           <motion.span
             animate={{ opacity: [0, 1, 0] }}
             transition={{ duration: 1, repeat: Infinity }}
-            className="text-purple-400 font-bold"
+            className="text-[var(--kinoma-accent-soft)] font-bold"
           >
             ...
           </motion.span>

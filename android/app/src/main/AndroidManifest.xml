@@ -23,15 +23,17 @@
         android:label="@string/app_name"
         android:roundIcon="@mipmap/ic_launcher_round"
         android:supportsRtl="true"
-        android:theme="@style/Theme.KinomaTV"
+        android:theme="@style/Theme.KinomaTV.Splash"
         android:usesCleartextTraffic="false">
 
         <activity
             android:name=".ui.MainActivity"
+            android:theme="@style/Theme.KinomaTV.Splash"
             android:banner="@drawable/ic_tv_banner"
             android:configChanges="orientation|screenSize|keyboard|keyboardHidden|navigation"
             android:exported="true"
-            android:label="@string/app_name">
+            android:label="@string/app_name"
+            android:windowSoftInputMode="adjustResize">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
                 <category android:name="android.intent.category.LEANBACK_LAUNCHER" />

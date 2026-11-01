@@ -7,5 +7,6 @@
   "sha256": "dffc26642b673e093cbf7cca416954bec9a4bbf929908eb5dab4f4ebc5a12edd",
   "mandatory": false,
   "channel": "beta",
-  "prerelease": true
+  "prerelease": true,
+  "sizeBytes": 11064352
 }

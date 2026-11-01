@@ -16,6 +16,10 @@ jobs:
           node-version: 20
           cache: npm
       - run: npm install
+      - name: Generate Panda icon assets
+        run: |
+          python3 -m pip install --user CairoSVG Pillow
+          npm run icons
       - run: npm run lint
       - run: npm test
       - run: npm run build

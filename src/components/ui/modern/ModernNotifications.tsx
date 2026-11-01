@@ -86,13 +86,13 @@ export function ModernNotifications() {
               {/* Header */}
               <div className="flex items-center justify-between px-3 py-2 border-b border-[#1c1d29] pb-2.5">
                 <div className="flex items-center gap-2">
-                  <Sparkles className="w-4 h-4 text-[#c084fc]" />
+                  <Sparkles className="w-4 h-4 text-[#e8d0c0]" />
                   <h3 className="text-xs font-bold text-white uppercase tracking-wider">Updates & Episodes</h3>
                 </div>
                 {unreadCount > 0 && (
                   <button
                     onClick={markAllRead}
-                    className="text-[11px] text-[#c084fc] hover:underline font-semibold"
+                    className="text-[11px] text-[#e8d0c0] hover:underline font-semibold"
                   >
                     Mark all read
                   </button>
@@ -119,7 +119,7 @@ export function ModernNotifications() {
                       <div className="flex-1 min-w-0">
                         <div className="flex items-center justify-between">
                           <h4 className="text-xs font-bold text-white truncate">{n.title}</h4>
-                          {n.unread && <span className="w-1.5 h-1.5 rounded-full bg-[#c084fc]" />}
+                          {n.unread && <span className="w-1.5 h-1.5 rounded-full bg-[#e8d0c0]" />}
                         </div>
                         <p className="text-[11px] text-gray-300 truncate mt-0.5">{n.episode}</p>
                         <span className="text-[10px] text-gray-500">{n.time}</span>

@@ -1,20 +1,5 @@
 /* Mobile-only shell and route presentation. Desktop and Android TV layouts are intentionally untouched. */
 @media (max-width: 767px) {
-  :root {
-    --kinoma-bg: #000;
-    --kinoma-bg-elevated: #000;
-    --kinoma-surface: #000;
-    --kinoma-surface-hover: #080808;
-    --kinoma-card: #000;
-    --kinoma-card-hover: #080808;
-    --kinoma-accent: #65172a;
-    --kinoma-accent-hover: #84213a;
-    --kinoma-accent-soft: #d7a0ad;
-    --kinoma-accent-deep: #300b16;
-    --kinoma-border: rgba(255,255,255,.1);
-    --kinoma-border-soft: rgba(255,255,255,.06);
-  }
-
   html, body, #root,
   .panda-app-shell,
   .panda-app-content,
@@ -30,20 +15,63 @@
   }
 
   .panda-mobile-header {
-    position: relative;
+    position: fixed;
+    top: 0;
+    right: 0;
+    left: 0;
     z-index: 30;
     display: flex;
     align-items: center;
     justify-content: space-between;
     width: 100%;
     box-sizing: border-box;
-    height: calc(56px + env(safe-area-inset-top, 0px));
-    min-height: calc(56px + env(safe-area-inset-top, 0px));
-    padding: env(safe-area-inset-top, 0px) 16px 0;
+    height: calc(56px + var(--safe-top, env(safe-area-inset-top, 0px)));
+    min-height: calc(56px + var(--safe-top, env(safe-area-inset-top, 0px)));
+    padding: var(--safe-top, env(safe-area-inset-top, 0px)) 16px 0;
     margin: 0;
-    background: #000;
-    border-bottom: 1px solid rgba(255,255,255,.055);
+    background: transparent;
+    border-bottom: 1px solid transparent;
+    transition: background 180ms ease, border-color 180ms ease, backdrop-filter 180ms ease;
   }
+
+  .panda-mobile-header.is-scrolled {
+    background: rgba(0,0,0,.84);
+    border-bottom-color: rgba(246,242,238,.08);
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+  }
+
+  .panda-mobile-category-row {
+    position: fixed;
+    z-index: 40;
+    top: calc(56px + var(--safe-top, env(safe-area-inset-top, 0px)));
+    right: 0;
+    left: 0;
+    display: flex;
+    gap: 8px;
+    overflow-x: auto;
+    padding: 8px 16px 10px;
+    scrollbar-width: none;
+    background: linear-gradient(180deg, rgba(0,0,0,.62), rgba(0,0,0,0));
+  }
+  .panda-mobile-category-row::-webkit-scrollbar { display: none; }
+  .panda-mobile-category-row button {
+    min-height: 44px;
+    flex: 0 0 auto;
+    padding: 0 14px;
+    border: 1px solid rgba(246,242,238,.12);
+    border-radius: 999px;
+    background: rgba(8,8,8,.68);
+    color: #ded7d1;
+    font-size: 11px;
+    font-weight: 700;
+    backdrop-filter: blur(12px);
+  }
+  .panda-mobile-category-row button:active,
+  .panda-mobile-category-row button[aria-pressed=true] { background: rgba(184,77,65,.24); border-color: rgba(184,77,65,.55); color: #fffaf6; }
+  .panda-mobile-category-row button:focus-visible { outline: 2px solid #e8d0c0; outline-offset: 3px; }
+  .panda-mobile-category-row button.is-active { color: #fffaf6; border-color: rgba(184,77,65,.72); background: rgba(184,77,65,.24); box-shadow: inset 0 0 0 1px rgba(184,77,65,.12); }
+  .panda-mobile-category-row button:focus-visible { outline: 2px solid #e8d0c0; outline-offset: 2px; }
 
   .panda-mobile-header__brand {
     display: inline-flex;
@@ -64,8 +92,8 @@
   .panda-mobile-header__action {
     display: grid;
     place-items: center;
-    width: 38px;
-    height: 38px;
+    width: 44px;
+    height: 44px;
     color: #e6dfe1;
     background: #080808;
     border: 1px solid rgba(255,255,255,.11);
@@ -76,28 +104,30 @@
 
   .panda-mobile-header__action:active,
   .panda-mobile-header__action:focus-visible {
-    color: #f4c5d0;
-    border-color: #84213a;
-    outline: 2px solid rgba(132,33,58,.45);
+    color: #e8d0c0;
+    border-color: #b84d41;
+    outline: 2px solid rgba(184,77,65,.45);
     outline-offset: 2px;
   }
 
   .panda-mobile-bottom-nav {
     position: fixed !important;
     z-index: 50 !important;
-    right: 0 !important;
-    bottom: 0 !important;
-    left: 0 !important;
+    right: 12px !important;
+    bottom: calc(8px + var(--safe-bottom, env(safe-area-inset-bottom, 0px))) !important;
+    left: 12px !important;
     display: grid !important;
-    grid-template-columns: repeat(3, minmax(0, 1fr));
+    grid-template-columns: repeat(4, minmax(0, 1fr));
     gap: 4px;
-    width: 100%;
-    min-height: calc(64px + env(safe-area-inset-bottom, 0px));
-    padding: 7px 14px calc(7px + env(safe-area-inset-bottom, 0px));
+    width: auto;
+    min-height: 64px;
+    padding: 7px 9px;
     margin: 0 !important;
-    background: rgba(0,0,0,.97) !important;
-    border-top: 1px solid rgba(255,255,255,.09);
-    backdrop-filter: blur(18px);
+    background: rgba(5,5,5,.88) !important;
+    border: 1px solid rgba(246,242,238,.12);
+    border-radius: 22px;
+    box-shadow: 0 12px 38px rgba(0,0,0,.5);
+    backdrop-filter: blur(22px);
     -webkit-backdrop-filter: blur(18px);
   }
 
@@ -111,7 +141,7 @@
     min-width: 0;
     min-height: 48px;
     padding: 4px 6px;
-    color: #777174 !important;
+    color: #aaa19b !important;
     background: transparent !important;
     border: 1px solid transparent;
     border-radius: 13px;
@@ -122,27 +152,31 @@
   .panda-mobile-bottom-nav__icon { display: grid; place-items: center; transition: transform 170ms ease; }
   .panda-mobile-bottom-nav__label { font-size: 10px; font-weight: 650; line-height: 1.1; letter-spacing: .015em; }
 
+  .panda-mobile-bottom-nav__item:active { transform: scale(.96); }
+  .panda-mobile-bottom-nav__item.is-active::after { content: ''; position: absolute; bottom: 3px; left: 50%; width: 12px; height: 3px; border-radius: 99px; background: #b84d41; transform: translateX(-50%); }
+
   .panda-mobile-bottom-nav__item.is-active {
-    color: #f1c1cd !important;
-    background: linear-gradient(180deg, rgba(101,23,42,.23), rgba(101,23,42,.06)) !important;
-    border-color: rgba(132,33,58,.22);
-    box-shadow: inset 0 1px rgba(215,160,173,.06);
+    color: #e8d0c0 !important;
+    background: linear-gradient(180deg, rgba(184,77,65,.2), rgba(184,77,65,.04)) !important;
+    border-color: rgba(184,77,65,.25);
+    box-shadow: inset 0 1px rgba(232,208,192,.06);
   }
 
   .panda-mobile-bottom-nav__item.is-active .panda-mobile-bottom-nav__icon {
     transform: translateY(-1px) scale(1.07);
-    filter: drop-shadow(0 0 7px rgba(132,33,58,.55));
+    filter: drop-shadow(0 0 7px rgba(184,77,65,.35));
   }
 
   .panda-mobile-bottom-nav__item:focus-visible {
-    outline: 2px solid #84213a;
+    outline: 2px solid #b84d41;
     outline-offset: 2px;
   }
 
   .kinoma-sidebar { display: none !important; }
+  .panda-app-shell.keyboard-open .panda-mobile-bottom-nav { display: none !important; }
   .panda-app-content { width: 100% !important; min-width: 0 !important; margin: 0 !important; padding: 0 !important; }
   .kinoma-app-main { width: 100% !important; min-width: 0 !important; min-height: 0 !important; margin: 0 !important; padding-top: 0 !important; padding-right: 0 !important; padding-left: 0 !important; }
-  .panda-mobile-home { min-height: 0 !important; margin: 0 !important; padding: 0 0 calc(86px + env(safe-area-inset-bottom, 0px)) !important; background: #000 !important; }
+  .panda-mobile-home { min-height: 0 !important; margin: 0 !important; padding: 0 0 calc(86px + var(--safe-bottom, env(safe-area-inset-bottom, 0px))) !important; background: #000 !important; }
   .panda-mobile-home__header { display: none !important; }
 
   .kinoma-search-page,
@@ -161,7 +195,7 @@
     width: 100% !important;
     max-width: none !important;
     margin: 0 !important;
-    padding: 18px 16px calc(92px + env(safe-area-inset-bottom, 0px)) !important;
+    padding: 18px 16px calc(92px + var(--safe-bottom, env(safe-area-inset-bottom, 0px))) !important;
   }
 
   .kinoma-search-head { gap: 16px !important; }
@@ -169,7 +203,7 @@
   .kinoma-search-head__copy p { max-width: 34ch; font-size: 13px !important; line-height: 1.5 !important; }
   .kinoma-search-control { display: flex !important; width: 100% !important; min-height: 50px !important; border-radius: 15px !important; background: #090909 !important; border-color: rgba(255,255,255,.13) !important; }
   .kinoma-search-control input { min-width: 0 !important; font-size: 14px !important; }
-  .kinoma-search-control__submit { flex: 0 0 auto; padding-inline: 14px !important; background: #65172a !important; color: #fff !important; border-radius: 10px !important; }
+  .kinoma-search-control__submit { flex: 0 0 auto; padding-inline: 14px !important; background: #b84d41 !important; color: #fff !important; border-radius: 10px !important; }
   .kinoma-search-surprise, .panda-search-surprise { max-width: 100%; }
   .kinoma-search-recent { margin-top: 17px !important; }
   .kinoma-search-results { margin-top: 24px !important; scroll-margin-top: 12px; }
@@ -183,7 +217,7 @@
   .kinoma-library-head { gap: 12px !important; }
   .kinoma-library-tabs { max-width: 100%; overflow-x: auto; }
   .kinoma-library-grid { grid-template-columns: repeat(3, minmax(0, 1fr)) !important; gap: 14px 9px !important; }
-  .kinoma-details-page { padding-bottom: calc(84px + env(safe-area-inset-bottom, 0px)) !important; }
+  .kinoma-details-page { padding-bottom: calc(84px + var(--safe-bottom, env(safe-area-inset-bottom, 0px))) !important; }
   .kinoma-details-hero { margin-top: 0 !important; }
   .kinoma-details-bottom { padding-bottom: 20px !important; }
 
@@ -302,7 +336,7 @@
   .panda-mobile-bottom-nav {
     right: 12px !important;
     left: 12px !important;
-    bottom: calc(8px + env(safe-area-inset-bottom, 0px)) !important;
+    bottom: calc(8px + var(--safe-bottom, env(safe-area-inset-bottom, 0px))) !important;
     width: auto !important;
     min-height: 68px;
     padding: 7px 9px;
@@ -325,7 +359,7 @@
     right: 30%;
     height: 2px;
     border-radius: 2px;
-    background: linear-gradient(90deg, transparent, #c87883, transparent);
+    background: linear-gradient(90deg, transparent, #e8d0c0, transparent);
     opacity: .9;
   }
 
@@ -334,16 +368,16 @@
   }
 
   .panda-mobile-home {
-    padding-bottom: calc(112px + env(safe-area-inset-bottom, 0px)) !important;
+    padding-bottom: calc(112px + var(--safe-bottom, env(safe-area-inset-bottom, 0px))) !important;
   }
 
   .kinoma-search-page__inner,
   .kinoma-library-page__inner {
-    padding-bottom: calc(112px + env(safe-area-inset-bottom, 0px)) !important;
+    padding-bottom: calc(112px + var(--safe-bottom, env(safe-area-inset-bottom, 0px))) !important;
   }
 
   .kinoma-details-page {
-    padding-bottom: calc(112px + env(safe-area-inset-bottom, 0px)) !important;
+    padding-bottom: calc(112px + var(--safe-bottom, env(safe-area-inset-bottom, 0px))) !important;
   }
 }
 
@@ -450,11 +484,11 @@
     width: 100%;
     max-width: 100%;
     min-width: 0;
-    padding-bottom: calc(118px + env(safe-area-inset-bottom, 0px));
+    padding-bottom: calc(118px + var(--safe-bottom, env(safe-area-inset-bottom, 0px)));
   }
   .panda-library .panda-library__filters {
     position: sticky;
-    top: calc(58px + env(safe-area-inset-top, 0px));
+    top: calc(58px + var(--safe-top, 0px));
     z-index: 35;
     margin-inline: 0;
     overscroll-behavior-x: contain;
@@ -477,4 +511,30 @@
 }
 @media (prefers-reduced-motion: reduce) {
   .panda-library .panda-library__shelf-track { scroll-behavior: auto; }
+}
+
+
+/* If a device refuses immersive three-button navigation, leave its system bar visible
+   and suppress the in-app bar rather than stacking two navigation surfaces. */
+@media (max-width: 767px) {
+  .system-nav-visible .panda-mobile-bottom-nav {
+    visibility: hidden;
+    pointer-events: none;
+  }
+}
+
+
+@media (max-width: 767px) {
+  .panda-mobile-bottom-nav__active-pill {
+    position: absolute;
+    z-index: 0;
+    inset: 2px 3px;
+    border: 1px solid rgba(184, 77, 65, .3);
+    border-radius: 15px;
+    background: linear-gradient(180deg, rgba(184, 77, 65, .2), rgba(184, 77, 65, .04));
+    box-shadow: inset 0 1px rgba(232, 208, 192, .06);
+    pointer-events: none;
+  }
+  .panda-mobile-bottom-nav__icon,
+  .panda-mobile-bottom-nav__label { position: relative; z-index: 1; }
 }
