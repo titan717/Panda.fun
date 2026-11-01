@@ -492,16 +492,16 @@ export const api = {
     return { results: data.results.map(toAnimeItem) };
   },
 
-  async getGenreMedia(genre: string, type: 'movie' | 'tv', limit = 24, signal?: AbortSignal) {
-    const data = await request<{ results: MovieApiMedia[] }>(
+  async getGenreMedia(genre: string, type: 'movie' | 'tv', limit = 24, signal?: AbortSignal): Promise<{ results: MovieApiMedia[] }> {
+    const data = await request<MovieApiPage<MovieApiMedia>>(
       '/api/v1/genres/' + encodeURIComponent(genre),
       { type, page: 1 },
       signal ? { signal } : undefined
     );
-    return { results: data.results.slice(0, limit).map(toAnimeItem) };
+    return { results: data.results.slice(0, limit) };
   },
 
-  async getGenreAnime(genre = 'animation', limit = 24) {
+  async getGenreAnime(genre = 'animation', limit = 24): Promise<{ results: MovieApiMedia[] }> {
     // MovieApi's verified /genres/:genre route supports both TMDB media types.
     // Filter by original Japanese language before normalization so this rail is anime, not all animation.
     const endpoint = '/api/v1/genres/' + encodeURIComponent(genre);
@@ -514,7 +514,7 @@ export const api = {
       ...(shows.status === 'fulfilled' ? shows.value.results : []),
     ];
     const japaneseAnimation = combined.filter(item => item.language?.toLowerCase() === 'ja');
-    return { results: japaneseAnimation.slice(0, limit).map(toAnimeItem) };
+    return { results: japaneseAnimation.slice(0, limit) };
   },
 
   async search(query: string, signal?: AbortSignal) {
