@@ -1,6 +1,7 @@
-import React, { lazy, Suspense, useEffect, useState } from 'react';
+import React, { lazy, Suspense, useEffect, useRef, useState } from 'react';
 import { Route, Switch, useLocation } from 'wouter';
-import { AnimatePresence, motion } from 'motion/react';
+import { AnimatePresence, m } from 'motion/react';
+import { useMotionPreference } from './motion';
 import { SWRConfig } from 'swr';
 import { localCache } from './lib/localCache';
 import { Layout } from './components/Layout';
@@ -49,8 +50,30 @@ import './components/intro/panda-intro.css';
 import { handleTVRemoteKey } from './lib/tvRemoteNavigation';
 import { getCurrentDeviceMode } from './lib/deviceCapabilities';
 
+function DelayedRouteFallback() {
+  const [show, setShow] = useState(false);
+  useEffect(() => {
+    const timer = window.setTimeout(() => setShow(true), 400);
+    return () => window.clearTimeout(timer);
+  }, []);
+  if (!show) return null;
+  return (
+    <div className="panda-route-loading min-h-[55vh] w-full" role="status" aria-live="polite">
+      <ThinkingOrb state="searching" size={64} theme="dark" aria-label="Loading Panda.fun" />
+      <div className="panda-route-loading__copy"><span>Loading Panda.fun</span><p>Preparing your next discovery</p></div>
+    </div>
+  );
+}
+
 function AnimatedRoutes() {
   const [location] = useLocation();
+  const preference = useMotionPreference();
+  const previousLocation = useRef(location);
+  const previousPath = previousLocation.current.split('?')[0];
+  const currentPath = location.split('?')[0];
+  const isDetailTransition = /\\/(details|watch)\\//.test(currentPath) || /\\/(details|watch)\\//.test(previousPath);
+  const direction = /\\/(details|watch)\\//.test(currentPath) ? 1 : /\\/(details|watch)\\//.test(previousPath) ? -1 : 0;
+  useEffect(() => { previousLocation.current = location; }, [location]);
 
   useEffect(() => {
     window.scrollTo({ top: 0, behavior: 'instant' });
@@ -61,23 +84,16 @@ function AnimatedRoutes() {
 
   return (
     <Layout>
-      <AnimatePresence mode="wait">
-        <motion.div
+      <AnimatePresence mode="sync" initial={false}>
+        <m.div
           key={location}
-          initial={{ opacity: 0, y: 8 }}
-          animate={{ opacity: 1, y: 0 }}
-          exit={{ opacity: 0, y: -8 }}
-          transition={{ duration: 0.22, ease: [0.16, 1, 0.3, 1] }}
-          className="w-full flex-1 flex flex-col will-change-transform"
+          initial={{ opacity: 0, x: preference === 'full' && direction !== 0 ? direction * 22 : 0 }}
+          animate={{ opacity: 1, x: 0 }}
+          exit={{ opacity: 0, x: preference === 'full' && direction !== 0 ? direction * -14 : 0 }}
+          transition={{ duration: preference === 'full' ? (isDetailTransition ? 0.28 : 0.16) : 0.12, ease: [0.16, 1, 0.3, 1] }}
+          className="w-full flex-1 flex flex-col"
         >
-          <Suspense
-            fallback={
-              <div className="panda-route-loading min-h-[55vh] w-full" role="status" aria-live="polite">
-                <ThinkingOrb state="searching" size={64} theme="dark" aria-label="Loading Panda.fun" />
-                <div className="panda-route-loading__copy"><span>Loading Panda.fun</span><p>Preparing your next discovery</p></div>
-              </div>
-            }
-          >
+          <Suspense fallback={<DelayedRouteFallback />}>
             <Switch location={location}>
               <Route path="/" component={Landing} />
               <Route path="/browse" component={Home} />
@@ -103,7 +119,7 @@ function AnimatedRoutes() {
               </Route>
             </Switch>
           </Suspense>
-        </motion.div>
+        </m.div>
       </AnimatePresence>
     </Layout>
   );
