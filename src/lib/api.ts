@@ -503,7 +503,7 @@ export const api = {
   },
 
   async getGenreAnime(genre = 'animation', limit = 24): Promise<{ results: MovieApiMedia[] }> {
-    // MovieApi's verified /genres/:genre route supports both TMDB media types.
+    // Query the same genre route for both TMDB media types and keep the raw poster/backdrop fields for shelves.
     // Filter by original Japanese language before normalization so this rail is anime, not all animation.
     const endpoint = '/api/v1/genres/' + encodeURIComponent(genre);
     const [movies, shows] = await Promise.allSettled([
