@@ -11,6 +11,7 @@ describe('Panda.fun native Android shell contract', () => {
     expect(gradle).toContain('applicationId "com.kinoma.tv"');
     expect(manifest).toContain('android:name=".ui.PlayerActivity"');
     expect(manifest).toContain('android:screenOrientation="landscape"');
+    expect(manifest).toContain('android:windowSoftInputMode="adjustResize"');
   });
 
   it('starts at Home and has a branded offline retry fallback', () => {
