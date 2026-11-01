@@ -3562,26 +3562,27 @@ p {
    remain unchanged.
    ============================================================ */
 :root {
-  --panda-black: #1A1A1A;
-  --panda-green: #E8F5E9;
-  --panda-green-strong: #A5D6A7;
-  --panda-pink: #FFEBEE;
-  --panda-white: #FFFFFF;
-  --panda-text-soft: #626262;
-  --panda-border: rgba(26, 26, 26, 0.08);
-  --panda-shadow: 0 14px 40px rgba(26, 26, 26, 0.08);
-  --panda-shadow-hover: 0 20px 54px rgba(26, 26, 26, 0.13);
+  --panda-black: #f6f2ee;
+  --panda-green: #b84d41;
+  --panda-green-strong: #c1935f;
+  --panda-green-soft: rgba(184, 77, 65, 0.14);
+  --panda-pink: #e8d0c0;
+  --panda-white: #050505;
+  --panda-text-soft: #aaa19b;
+  --panda-border: rgba(246, 242, 238, 0.10);
+  --panda-shadow: 0 14px 40px rgba(0, 0, 0, 0.35);
+  --panda-shadow-hover: 0 20px 54px rgba(0, 0, 0, 0.48);
 }
 
 body {
-  background: var(--panda-white);
-  color: var(--panda-black);
+  background: #000000;
+  color: #f6f2ee;
 }
 
 .kinoma-app-shell {
   background:
-    radial-gradient(circle at 8% 0%, rgba(232,245,233,.92), transparent 24rem),
-    linear-gradient(180deg, #fff 0%, #fbfdfb 100%);
+    radial-gradient(circle at 8% 0%, rgba(184,77,65,.08), transparent 24rem),
+    linear-gradient(180deg, #050505 0%, #000000 100%);
 }
 
 .kinoma-app-main {
