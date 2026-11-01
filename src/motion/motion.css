@@ -32,7 +32,7 @@
   transition: transform var(--motion-duration-fast) var(--motion-ease-emphasized);
   transform-origin: center;
 }
-.kinoma-focus:active .modern-card__poster {
+.modern-card__poster:active {
   transform: scale(.96);
 }
 @media (hover: hover) and (pointer: fine) {
@@ -51,6 +51,22 @@
   transform: none !important;
 }
 [data-motion-preference='minimal'] .modern-card__poster:hover,
-[data-motion-preference='minimal'] .kinoma-focus:active .modern-card__poster {
+[data-motion-preference='minimal'] .modern-card__poster:active {
   transform: none !important;
+}
+
+.panda-route-transition-shell {
+  position: relative;
+  isolation: isolate;
+  width: 100%;
+  min-width: 0;
+}
+.panda-route-transition-page {
+  width: 100%;
+  min-width: 0;
+}
+@media (hover: hover) and (pointer: fine) {
+  .modern-card__poster:hover {
+    transform: translateY(-3px);
+  }
 }
