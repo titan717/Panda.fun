@@ -10,3 +10,9 @@ dev-dist/
 
 # Generated Vite build copied into the Android WebView bundle
 android/app/src/main/assets/web/
+
+# Android release and local SDK artifacts
+android/keystore/
+android/local.properties
+android/.gradle/
+public/downloads/*.apk
