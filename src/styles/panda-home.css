@@ -1956,3 +1956,29 @@
 .panda-watch-page .panda-watch-stage{width:100vw!important;max-width:none!important;height:100dvh!important;min-height:100dvh!important;margin:0!important;padding:0!important;display:flex!important;align-items:stretch!important;justify-content:stretch!important}
 .panda-watch-page .panda-watch-player{width:100vw!important;height:100dvh!important;min-height:100dvh!important;max-height:none!important;aspect-ratio:auto!important;border:0!important;border-radius:0!important;box-shadow:none!important}
 .panda-watch-page .panda-watch-player iframe{width:100%!important;height:100%!important}
+
+
+.panda-search-active-genre {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-top: 14px;
+  padding: 10px 13px;
+  border: 1px solid rgba(184,77,65,.3);
+  border-radius: 14px;
+  background: rgba(184,77,65,.09);
+  color: #e8d0c0;
+  font-size: 12px;
+  font-weight: 700;
+}
+.panda-search-active-genre button {
+  min-height: 44px;
+  padding: 0 12px;
+  border: 1px solid rgba(246,242,238,.13);
+  border-radius: 999px;
+  background: #0b0b0b;
+  color: #f6f2ee;
+  font-size: 11px;
+}
+.panda-search-active-genre button:focus-visible { outline: 2px solid #e8d0c0; outline-offset: 3px; }
