@@ -228,7 +228,7 @@ export function Watch() {
   const backButton = <button type="button" className="panda-watch-back" onClick={goBack} aria-label={'Back from ' + title}><ArrowLeft size={18} aria-hidden="true" /><span>Back</span></button>;
 
   if (loading) {
-    return <div className="panda-watch-page">{backButton}<div className="panda-watch-loading" role="status" aria-live="polite"><span aria-hidden="true" /><span className="panda-visually-hidden">Loading player</span></div></div>;
+    return <div className="panda-watch-page" style={{ paddingTop: "var(--safe-top, 0px)", paddingBottom: "var(--safe-bottom, 0px)" }}>{backButton}<div className="panda-watch-loading" role="status" aria-live="polite"><span aria-hidden="true" /><span className="panda-visually-hidden">Loading player</span></div></div>;
   }
 
   return (
