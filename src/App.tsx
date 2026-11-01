@@ -213,7 +213,7 @@ function isInstalledAppShell() {
 function MainAppShell() {
   const [location, setLocation] = useLocation();
   const appShell = isInstalledAppShell();
-  const [showIntro, setShowIntro] = useState(() => location === '/' && !appShell && shouldShowPandaIntro());
+  const [showIntro, setShowIntro] = useState(() => location === '/' && shouldShowPandaIntro());
 
   useEffect(() => {
     if (appShell && location === '/') {
@@ -224,7 +224,7 @@ function MainAppShell() {
     if (location !== '/') setShowIntro(false);
   }, [appShell, location, setLocation]);
 
-  if (showIntro && !appShell) {
+  if (showIntro) {
     return <PandaIntro onComplete={() => setShowIntro(false)} />;
   }
 
