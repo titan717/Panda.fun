@@ -4,7 +4,8 @@ import { Footer } from '../components/ui/Footer';
 import { Link } from 'wouter';
 import { KinomaLogo } from '../components/ui/KinomaLogo';
 import { ArrowRight, Check, Film, Github, Play, Plus, Search, Sparkles, Tv } from 'lucide-react';
-import { api, MovieApiError, MovieApiMedia } from '../lib/api';
+import { api, MovieApiError, type MovieApiMedia } from '../lib/api';
+import type { AnimeItem } from '../types';
 import { trackGAEvent } from '../lib/analytics';
 import { libraryManager } from '../lib/library';
 import { historyUtil } from '../lib/history';
@@ -15,6 +16,22 @@ import { ModernContinueWatching } from '../components/ui/modern/ModernContinueWa
 import '../styles/panda-home.css';
 import { MobileHome } from './MobileHome';
 import { friendlyNetworkError } from '../lib/networkMessage';
+
+function toHomeMedia(item: MovieApiMedia | AnimeItem): MovieApiMedia {
+  if ('poster' in item) return item;
+  return {
+    id: item.id,
+    type: item.type === 'movie' ? 'movie' : 'tv',
+    title: typeof item.title === 'string' ? item.title : item.title.english || item.title.romaji || 'Anime',
+    poster: item.image,
+    backdrop: item.cover || item.banner || item.image,
+    rating: typeof item.rating === 'number' ? item.rating : Number(item.rating) || null,
+    releaseDate: item.releaseDate || null,
+    overview: item.description || null,
+    genres: item.genres || [],
+    language: 'ja',
+  };
+}
 
 type RailKind = 'trending' | 'streamingNetflix' | 'streamingDisney' | 'popular' | 'tv' | 'movie' | 'airing' | 'upcoming' | 'recommendations' | 'anime' | 'genre';
 
@@ -265,11 +282,11 @@ export function Home() {
         api.getUpcomingTv()
       ]).then(([netflix, disney, today, upcomingMovies, upcomingTv]) => {
         if (!active) return;
-        if (netflix.status === 'fulfilled') setNewOnNetflix((netflix.value.results || []) as unknown as MovieApiMedia[]);
-        if (disney.status === 'fulfilled') setNewOnDisneyPlus((disney.value.results || []) as unknown as MovieApiMedia[]);
-        if (today.status === 'fulfilled') setAiring((today.value.results || []) as unknown as MovieApiMedia[]);
+        if (netflix.status === 'fulfilled') setNewOnNetflix((netflix.value.results || []).map(toHomeMedia));
+        if (disney.status === 'fulfilled') setNewOnDisneyPlus((disney.value.results || []).map(toHomeMedia));
+        if (today.status === 'fulfilled') setAiring((today.value.results || []).map(toHomeMedia));
         if (upcomingMovies.status === 'fulfilled' && upcomingTv.status === 'fulfilled') {
-          const merged = [...(upcomingMovies.value.results || []), ...(upcomingTv.value.results || [])] as MovieApiMedia[];
+          const merged = [...(upcomingMovies.value.results || []), ...(upcomingTv.value.results || [])].map(toHomeMedia);
           setComingSoon(merged.filter((item, index, list) => item?.id && list.findIndex(other => other.id === item.id) === index));
         }
       });
@@ -306,7 +323,7 @@ export function Home() {
       if (lastWatched?.animeId) {
         setLastWatchedTitle(lastWatched.title || 'your last watch');
         api.getRecommendations(lastWatched.animeId).then(result => {
-          if (active) setBecauseWatched((result.results || []) as unknown as MovieApiMedia[]);
+          if (active) setBecauseWatched((result.results || []).map(toHomeMedia));
         }).catch(() => undefined);
       }
     };
