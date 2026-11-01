@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { getMotionOffset, motionDurations, motionEasings, motionSprings, resolveMotionPreference } from './tokens';
+import { getMotionOffset, isLowEndDevice, motionDurations, motionEasings, motionSprings, resolveMotionPreference } from './tokens';
 
 describe('motion tokens', () => {
   it('defines the shared OTT timing scale', () => {
@@ -35,5 +35,21 @@ describe('reduced-motion movement contract', () => {
     expect(getMotionOffset('reduced', 12)).toBe(0);
     expect(getMotionOffset('minimal', -22)).toBe(0);
     expect(getMotionOffset('full', 12)).toBe(12);
+  });
+});
+
+describe('low-end device thresholds', () => {
+  it('keeps typical mid-range phones on full motion', () => {
+    expect(isLowEndDevice({ hardwareConcurrency: 8, deviceMemory: 6 })).toBe(false);
+    expect(isLowEndDevice({ hardwareConcurrency: 4, deviceMemory: 4 })).toBe(false);
+  });
+  it('uses minimal mode at two cores or two GB and below', () => {
+    expect(isLowEndDevice({ hardwareConcurrency: 2, deviceMemory: 6 })).toBe(true);
+    expect(isLowEndDevice({ hardwareConcurrency: 8, deviceMemory: 2 })).toBe(true);
+    expect(isLowEndDevice({ hardwareConcurrency: 1, deviceMemory: 1 })).toBe(true);
+  });
+  it('ignores missing and invalid device signals', () => {
+    expect(isLowEndDevice({})).toBe(false);
+    expect(isLowEndDevice({ hardwareConcurrency: 0, deviceMemory: 0 })).toBe(false);
   });
 });
