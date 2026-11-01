@@ -356,6 +356,7 @@ export function Home() {
     hoverTrailerController.current = null;
   }, []);
 
+  const myList = libraryManager.getWatchlist().map(item => ({ id: item.id, title: item.title, poster: item.image, type: item.id.includes('_movie_') ? 'movie' : 'tv' } as MovieApiMedia));
   const genreShelf = (name: string) => [...trending, ...popularMovies, ...popularTv].filter(item => (item.genres || []).some(genre => genre.toLowerCase().includes(name.toLowerCase()))).filter((item, index, list) => list.findIndex(other => other.id === item.id) === index).slice(0, 18);
 
   return isMobileLayout ? <MobileHome items={[...(featured ? [featured] : []), ...trending, ...popularMovies, ...popularTv]} trendingItems={trending} popularMovies={popularMovies} popularTv={popularTv} newOnNetflix={newOnNetflix} newOnDisneyPlus={newOnDisneyPlus} airing={airing} comingSoon={comingSoon} becauseWatched={becauseWatched} lastWatchedTitle={lastWatchedTitle} anime={anime} loading={!home && !error} error={error} /> : (
@@ -445,6 +446,7 @@ export function Home() {
               </section>
             )}
 
+            <PandaRail kind="popular" title="My List" items={myList} onHover={showHoverTrailer} onLeave={hideHoverTrailer} />
             <PandaRail priority kind="trending" title="Trending now" subtitle="The titles getting attention today." items={trending} onHover={showHoverTrailer} onLeave={hideHoverTrailer} />
             <PandaRail kind="streamingNetflix" title="New on Netflix" subtitle="Freshly released movies now showing on the service." items={newOnNetflix} onHover={showHoverTrailer} onLeave={hideHoverTrailer} badge="NETFLIX" />
             <PandaRail kind="streamingDisney" title="New on Disney+" subtitle="Recently added titles surfaced from TMDB." items={newOnDisneyPlus} onHover={showHoverTrailer} onLeave={hideHoverTrailer} badge="DISNEY+" />
