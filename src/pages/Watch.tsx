@@ -232,7 +232,7 @@ export function Watch() {
   }
 
   return (
-    <div className="panda-watch-page">
+    <div className="panda-watch-page" style={{ paddingTop: "var(--safe-top, 0px)", paddingBottom: "var(--safe-bottom, 0px)" }}>
       {backButton}
       <section className="panda-watch-stage" aria-label={'Now playing: ' + title}>
         <div className="panda-watch-player">
