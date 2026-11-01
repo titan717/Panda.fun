@@ -114,7 +114,7 @@
     position: fixed !important;
     z-index: 50 !important;
     right: 12px !important;
-    bottom: var(--safe-bottom, var(--safe-bottom, 0px)) !important;
+    bottom: calc(8px + var(--safe-bottom, env(safe-area-inset-bottom, 0px))) !important;
     left: 12px !important;
     display: grid !important;
     grid-template-columns: repeat(4, minmax(0, 1fr));
