@@ -1,7 +1,7 @@
 import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { Footer } from '../components/ui/Footer';
 import { useLocation, useRoute, useSearch } from 'wouter';
-import { Play, Plus, Check, Film, Tv, Clock3, Share2, List, Grid2X2, Search, ArrowUpDown, Star, ChevronRight } from 'lucide-react';
+import { Play, Plus, Check, Film, Tv, Clock3, Share2, List, Grid2X2, Search, ArrowUpDown, Star, ChevronRight, Volume2, VolumeX, Heart, X } from 'lucide-react';
 import { api, resolveMediaIdFromSlug } from '../lib/api';
 import type { AnimeItem, Episode, AnimeSeasonItem } from '../types';
 import { DEFAULT_POSTER, DEFAULT_BANNER } from '../types';
@@ -10,21 +10,31 @@ import { historyUtil } from '../lib/history';
 import { updateSEO } from '../lib/seo';
 import { trackGAEvent } from '../lib/analytics';
 import { buildDetailsHref, buildWatchHref, parseDetailsRouteSearch } from '../lib/mediaRoute';
-import { createEpisodeRailObserver } from '../lib/safeResizeObserver';
-import { usePrefersReducedMotion } from '../lib/usePrefersReducedMotion';
-import { calculateEpisodeRailStep, sortEpisodesForDisplay } from '../lib/episodeRail';
 import { friendlyNetworkError } from '../lib/networkMessage';
+import { Pressable, Reveal, Stagger, ProgressRing, useMotionPreference } from '../motion';
+import './details-ott.css';
 
-function cleanText(value: unknown) { return typeof value === 'string' ? value.replace(/<[^>]*>/g, '').trim() : ''; }
-function titleOf(data: any, fallback: string) { return typeof data?.title === 'string' ? data.title : data?.title?.english || data?.title?.romaji || data?.title?.native || fallback; }
-function kindOf(raw: string | null, data: any) { return raw === 'movie' || data?.contentType === 'movie' ? 'movie' : 'series'; }
-function trailerSrc(url: unknown) {
+function cleanText(value: unknown) {
+  return typeof value === 'string' ? value.replace(/<[^>]*>/g, '').trim() : '';
+}
+
+function titleOf(data: any, fallback: string) {
+  return typeof data?.title === 'string'
+    ? data.title
+    : data?.title?.english || data?.title?.romaji || data?.title?.native || fallback;
+}
+
+function kindOf(raw: string | null, data: any) {
+  return raw === 'movie' || data?.contentType === 'movie' ? 'movie' : 'series';
+}
+
+function trailerSrc(url: unknown, muted: boolean) {
   if (typeof url !== 'string' || !url) return '';
   try {
     const parsed = new URL(url);
     const isYouTube = /(^|\.)youtube(?:-nocookie)?\.com$/.test(parsed.hostname) || parsed.hostname === 'youtu.be';
     parsed.searchParams.set('autoplay', '1');
-    parsed.searchParams.set('mute', '0');
+    parsed.searchParams.set('mute', muted ? '1' : '0');
     parsed.searchParams.set('playsinline', '1');
     parsed.searchParams.set('controls', '0');
     parsed.searchParams.set('disablekb', '1');
@@ -40,7 +50,25 @@ function trailerSrc(url: unknown) {
     return url;
   }
 }
-function formatDuration(value: unknown) { const n = Number(value); if (!Number.isFinite(n) || n <= 0) return 'Movie'; const h = Math.floor(n / 60); const m = Math.round(n % 60); return h ? h + 'h ' + String(m).padStart(2, '0') + 'm' : m + 'm'; }
+
+function formatDuration(value: unknown) {
+  const n = Number(value);
+  if (!Number.isFinite(n) || n <= 0) return 'Series';
+  const h = Math.floor(n / 60);
+  const m = Math.round(n % 60);
+  return h ? `${h}h ${String(m).padStart(2, '0')}m` : `${m}m`;
+}
+
+function formatRemaining(seconds: number) {
+  const remaining = Math.max(1, Math.round(seconds / 60));
+  if (remaining >= 60) {
+    const hours = Math.floor(remaining / 60);
+    return `${hours}h ${String(remaining % 60).padStart(2, '0')}m left`;
+  }
+  return `${remaining}m left`;
+}
+
+type DetailsTab = 'episodes' | 'more' | 'details';
 
 export function Details() {
   const [, params] = useRoute<{ id: string }>('/details/:id');
@@ -48,35 +76,49 @@ export function Details() {
   const search = useSearch();
   const routeSlug = params?.id ? decodeURIComponent(params.id) : '';
   const { type, mediaId: routeMediaId } = parseDetailsRouteSearch(search);
+  const motionPreference = useMotionPreference();
   const [id, setId] = useState(routeMediaId || routeSlug);
   const [data, setData] = useState<any>(null);
   const [trailer, setTrailer] = useState<any>(null);
   const [trailerFailed, setTrailerFailed] = useState(false);
+  const [trailerActive, setTrailerActive] = useState(false);
+  const [trailerRequested, setTrailerRequested] = useState(false);
+  const [trailerMuted, setTrailerMuted] = useState(true);
   const [seasonItems, setSeasonItems] = useState<AnimeSeasonItem[]>([]);
   const [seasonEpisodes, setSeasonEpisodes] = useState<Episode[]>([]);
   const [selectedSeason, setSelectedSeason] = useState(1);
   const [recommendations, setRecommendations] = useState<AnimeItem[]>([]);
   const [isInList, setIsInList] = useState(false);
+  const [isFavourite, setIsFavourite] = useState(false);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [retryKey, setRetryKey] = useState(0);
-  const [episodeView, setEpisodeView] = useState<'list' | 'grid'>('grid');
-  const [seasonMenuOpen, setSeasonMenuOpen] = useState(false);
-  const reducedMotion = usePrefersReducedMotion();
-  const [trailerRequested, setTrailerRequested] = useState(false);
-  const seasonTriggerRef = useRef<HTMLButtonElement | null>(null);
+  const [activeTab, setActiveTab] = useState<DetailsTab>('episodes');
+  const [seasonSheetOpen, setSeasonSheetOpen] = useState(false);
   const [episodeSearch, setEpisodeSearch] = useState('');
   const [episodeSort, setEpisodeSort] = useState<'asc' | 'desc'>('asc');
-  const episodeRailRef = useRef<HTMLDivElement | null>(null);
-  const watchButtonRef = useRef<HTMLButtonElement | null>(null);
-  const [showEpisodeRailHint, setShowEpisodeRailHint] = useState(false);
+  const [episodeView, setEpisodeView] = useState<'list' | 'grid'>('list');
+  const [synopsisExpanded, setSynopsisExpanded] = useState(false);
+  const [compactBarVisible, setCompactBarVisible] = useState(false);
   const [shareFeedback, setShareFeedback] = useState('');
+  const heroRef = useRef<HTMLElement | null>(null);
+  const seasonTriggerRef = useRef<HTMLButtonElement | null>(null);
+  const watchButtonRef = useRef<HTMLButtonElement | null>(null);
   const kind = kindOf(type, data);
 
   useEffect(() => {
     let active = true;
     const controller = new AbortController();
-    setLoading(true); setError(null); setData(null); setTrailerFailed(false); setSeasonItems([]); setSeasonEpisodes([]); setRecommendations([]);
+    setLoading(true);
+    setError(null);
+    setData(null);
+    setTrailerFailed(false);
+    setTrailerActive(false);
+    setSeasonItems([]);
+    setSeasonEpisodes([]);
+    setRecommendations([]);
+    setActiveTab(type === 'movie' ? 'details' : 'episodes');
+
     const routeMedia = routeMediaId ? api.getDetailsMediaId(routeMediaId) : null;
     const routeTypeMatches = !routeMedia || !type || (type === 'movie' ? routeMedia.type === 'movie' : routeMedia.type === 'tv');
     const resolveSelectedMedia = routeMediaId && routeTypeMatches
@@ -104,10 +146,21 @@ export function Details() {
       });
     }).catch(err => {
       if (!active) return;
-      setError(friendlyNetworkError(err, 'Unable to load this title.')); setLoading(false);
+      setError(friendlyNetworkError(err, 'Unable to load this title.'));
+      setLoading(false);
     });
-    return () => { active = false; controller.abort(); };
+
+    return () => {
+      active = false;
+      controller.abort();
+    };
   }, [routeSlug, type, retryKey]);
+
+  useEffect(() => {
+    if (!trailer?.available || trailerFailed || motionPreference !== 'full') return;
+    const timer = window.setTimeout(() => setTrailerActive(true), 1200);
+    return () => window.clearTimeout(timer);
+  }, [trailer?.available, trailerFailed, motionPreference]);
 
   useEffect(() => {
     if (!data || kind !== 'series') return;
@@ -119,15 +172,23 @@ export function Details() {
       const saved = historyUtil.getAnimeProgress(id);
       setSelectedSeason(result.seasons.some(s => s.seasonNumber === saved?.seasonNumber) ? saved!.seasonNumber : (result.seasons[0]?.seasonNumber || 1));
     }).catch(() => active && setSeasonItems([]));
-    return () => { active = false; controller.abort(); };
+    return () => {
+      active = false;
+      controller.abort();
+    };
   }, [data, id, kind]);
 
   useEffect(() => {
     if (!data || kind !== 'series' || !seasonItems.length) return;
     let active = true;
     const controller = new AbortController();
-    api.getSeasonEpisodes(id, selectedSeason, controller.signal).then(result => active && setSeasonEpisodes(result.episodes)).catch(() => active && setSeasonEpisodes([]));
-    return () => { active = false; controller.abort(); };
+    api.getSeasonEpisodes(id, selectedSeason, controller.signal)
+      .then(result => active && setSeasonEpisodes(result.episodes))
+      .catch(() => active && setSeasonEpisodes([]));
+    return () => {
+      active = false;
+      controller.abort();
+    };
   }, [data, id, kind, selectedSeason, seasonItems.length]);
 
   useEffect(() => {
@@ -140,67 +201,42 @@ export function Details() {
     });
   }, [data, id, selectedSeason]);
 
+  useEffect(() => {
+    const hero = heroRef.current;
+    if (!hero || typeof IntersectionObserver === 'undefined') return;
+    const observer = new IntersectionObserver(([entry]) => {
+      setCompactBarVisible(!entry.isIntersecting);
+    }, { rootMargin: '-72px 0px 0px 0px' });
+    observer.observe(hero);
+    return () => observer.disconnect();
+  }, [loading, error]);
+
   const title = titleOf(data, id || 'Untitled');
   const synopsis = cleanText(data?.description) || 'No synopsis is available for this title yet.';
   const poster = data?.image || DEFAULT_POSTER;
   const backdrop = data?.cover || data?.banner || DEFAULT_BANNER;
   const resume = historyUtil.getAnimeProgress(id);
-  const watchLabel = resume && !resume.isCompleted ? 'Continue Watching' : resume?.isCompleted ? 'Watch Again' : 'Watch Now';
-  const modelSeasons = useMemo(() => seasonItems.map(season => ({
-    number: season.seasonNumber,
-    episodes: season.seasonNumber === selectedSeason ? sortEpisodesForDisplay(
-      [...seasonEpisodes].filter(ep => {
-        const q = episodeSearch.trim().toLowerCase();
-        return !q || ('episode ' + ep.number).includes(q) || cleanText(ep.title).toLowerCase().includes(q) || cleanText(ep.synopsis).toLowerCase().includes(q);
-      }),
-      episodeSort
-    ).map(ep => ({
-      number: ep.number,
-      title: cleanText(ep.title) || 'Episode ' + ep.number,
-      synopsis: cleanText(ep.synopsis),
-      image: ep.image || '',
-      duration: ep.duration,
-      rating: ep.rating
-    })) : []
-  })), [seasonItems, selectedSeason, seasonEpisodes, episodeSearch, episodeSort]);
+  const episodeProgress = historyUtil.getAnimeEpisodesProgress(id);
+  const resumeLabel = resume && !resume.isCompleted
+    ? `Resume S${resume.seasonNumber || selectedSeason} E${resume.episodeNumber || 1}${resume.duration ? ` · ${formatRemaining(resume.duration - resume.playbackTimestamp)}` : ''}`
+    : resume?.isCompleted ? 'Watch Again' : 'Play';
 
-  useEffect(() => {
-    if (kind !== 'series' || episodeView !== 'grid') {
-      setShowEpisodeRailHint(false);
-      return;
-    }
-    const rail = episodeRailRef.current;
-    if (!rail) return;
-
-    const updateHint = () => {
-      const maxScroll = rail.scrollWidth - rail.clientWidth;
-      setShowEpisodeRailHint(maxScroll > 8 && rail.scrollLeft < maxScroll - 8);
-    };
-
-    updateHint();
-    rail.addEventListener('scroll', updateHint, { passive: true });
-    const stopObserving = createEpisodeRailObserver(
-      typeof ResizeObserver !== 'undefined' ? ResizeObserver : undefined,
-      rail,
-      updateHint
-    );
-
-    return () => {
-      rail.removeEventListener('scroll', updateHint);
-      stopObserving();
-    };
-  }, [kind, episodeView, selectedSeason, seasonEpisodes, episodeSearch, episodeSort]);
-
-  const scrollEpisodeRail = () => {
-    const rail = episodeRailRef.current;
-    if (!rail) return;
-    const firstCard = rail.querySelector<HTMLElement>('.kinoma-episode-card');
-    if (!firstCard) return;
-    const styles = window.getComputedStyle(rail);
-    const gap = Number.parseFloat(styles.columnGap || styles.gap || '0') || 0;
-    const delta = calculateEpisodeRailStep(firstCard.getBoundingClientRect().width, gap);
-    rail.scrollBy({ left: delta, behavior: 'smooth' });
-  };
+  const episodes = useMemo(() => {
+    const query = episodeSearch.trim().toLowerCase();
+    const filtered = [...seasonEpisodes].filter(ep => {
+      if (!query) return true;
+      return (`episode ${ep.number}`).includes(query)
+        || cleanText(ep.title).toLowerCase().includes(query)
+        || cleanText(ep.synopsis).toLowerCase().includes(query);
+    });
+    filtered.sort((a, b) => episodeSort === 'asc' ? a.number - b.number : b.number - a.number);
+    return filtered.map(ep => ({
+      ...ep,
+      displayTitle: cleanText(ep.title) || `Episode ${ep.number}`,
+      displaySynopsis: cleanText(ep.synopsis),
+      progress: episodeProgress[String(ep.number)] || null
+    }));
+  }, [seasonEpisodes, episodeProgress, episodeSearch, episodeSort]);
 
   useEffect(() => {
     if (loading || error || !(window as Window & { isKinomaAndroidTV?: boolean }).isKinomaAndroidTV) return;
@@ -224,8 +260,27 @@ export function Details() {
     if (data && window.location.pathname !== new URL(canonicalPath, window.location.origin).pathname) {
       window.history.replaceState(window.history.state, '', canonicalPath);
     }
-    updateSEO({ title, description: `${title} — ${synopsis}`.slice(0, 160), image: poster, type: kind === 'movie' ? 'video.movie' : 'video.tv_show', keywords: [title, ...(data?.genres || []), kind === 'movie' ? 'movie' : 'TV series', 'Panda.fun', 'watch online'], schema: { '@context': 'https://schema.org', '@type': kind === 'movie' ? 'Movie' : 'TVSeries', name: title, description: synopsis, image: poster ? [poster] : undefined, url: window.location.origin + buildDetailsHref({ title: title || routeSlug, id }, kind), datePublished: data?.releaseDate || undefined, aggregateRating: data?.rating != null ? { '@type': 'AggregateRating', ratingValue: data.rating, bestRating: 10 } : undefined, genre: data?.genres || undefined, isPartOf: { '@type': 'WebSite', name: 'Panda.fun', url: window.location.origin } } });
+    updateSEO({
+      title,
+      description: `${title} — ${synopsis}`.slice(0, 160),
+      image: poster,
+      type: kind === 'movie' ? 'video.movie' : 'video.tv_show',
+      keywords: [title, ...(data?.genres || []), kind === 'movie' ? 'movie' : 'TV series', 'Panda.fun', 'watch online'],
+      schema: {
+        '@context': 'https://schema.org',
+        '@type': kind === 'movie' ? 'Movie' : 'TVSeries',
+        name: title,
+        description: synopsis,
+        image: poster ? [poster] : undefined,
+        url: window.location.origin + buildDetailsHref({ title: title || routeSlug, id }, kind),
+        datePublished: data?.releaseDate || undefined,
+        aggregateRating: data?.rating != null ? { '@type': 'AggregateRating', ratingValue: data.rating, bestRating: 10 } : undefined,
+        genre: data?.genres || undefined,
+        isPartOf: { '@type': 'WebSite', name: 'Panda.fun', url: window.location.origin }
+      }
+    });
     setIsInList(libraryManager.isInWatchlist(id));
+    setIsFavourite(libraryManager.isFavorite(id));
   }, [title, synopsis, poster, id, kind]);
 
   const share = async () => {
@@ -258,156 +313,345 @@ export function Details() {
     trackGAEvent(next ? 'add_to_list' : 'remove_from_list', { content_type: kind });
   };
 
+  const toggleFavourite = () => {
+    const next = libraryManager.toggleFavorite({ id, title, image: poster });
+    setIsFavourite(next);
+    trackGAEvent(next ? 'add_favorite' : 'remove_favorite', { content_type: kind });
+  };
+
+  const tabs: Array<{ id: DetailsTab; label: string; hidden?: boolean }> = [
+    { id: 'episodes', label: 'Episodes', hidden: kind !== 'series' },
+    { id: 'more', label: 'More Like This' },
+    { id: 'details', label: 'Details' }
+  ];
+  const visibleTabs = tabs.filter(tab => !tab.hidden);
+  const activeTabIndex = Math.max(0, visibleTabs.findIndex(tab => tab.id === activeTab));
   const hasTrailer = Boolean(trailer?.trailer?.embedUrl) && !trailerFailed;
+  const trailerShouldPlay = hasTrailer && (motionPreference === 'full' ? trailerActive : trailerRequested);
+
+  if (loading) {
+    return (
+      <main className="panda-details" aria-busy="true">
+        <div className="panda-details__skeleton-hero panda-shimmer" />
+        <div className="panda-details__shell">
+          <div className="panda-details__skeleton-title panda-shimmer" />
+          <div className="panda-details__skeleton-meta panda-shimmer" />
+          <div className="panda-details__skeleton-actions">
+            <div className="panda-details__skeleton-button panda-shimmer" />
+            <div className="panda-details__skeleton-circle panda-shimmer" />
+            <div className="panda-details__skeleton-circle panda-shimmer" />
+            <div className="panda-details__skeleton-circle panda-shimmer" />
+          </div>
+          <div className="panda-details__skeleton-tabs panda-shimmer" />
+          <div className="panda-details__skeleton-rail">
+            {Array.from({ length: 4 }).map((_, index) => (
+              <div key={index} className="panda-details__skeleton-card panda-shimmer" />
+            ))}
+          </div>
+        </div>
+      </main>
+    );
+  }
+
+  if (error) {
+    return (
+      <main className="panda-details panda-details--error">
+        <div className="panda-details__state" role="alert">
+          <Film aria-hidden="true" size={28} />
+          <h1>We couldn’t load this title</h1>
+          <p>{error}</p>
+          <button type="button" onClick={() => setRetryKey(value => value + 1)}>Try again</button>
+        </div>
+      </main>
+    );
+  }
 
   return (
-    <div className="kinoma-details-page">
-      {loading && <div className="panda-state-card" role="status"><span className="panda-state-card__spinner" aria-hidden="true" /><div><strong>Loading title</strong><small>Fetching the latest details…</small></div></div>}
-      {error && !loading && <div className="panda-state-card is-error" role="alert"><div><strong>We couldn't load this title.</strong><small>{error}</small></div><button type="button" onClick={() => setRetryKey(value => value + 1)}>Retry</button></div>}
-      <section id="trailers-more" className="kinoma-details-hero kinoma-details-hero--trailer">
-        <div className="kinoma-details-hero__trailer-bg">
-          {hasTrailer && (!reducedMotion || trailerRequested) ? <iframe
-            src={trailerSrc(trailer.trailer.embedUrl)}
-            title={title + ' trailer'}
-            className="kinoma-details-hero__trailer-video"
-            loading="eager"
-            allow="autoplay; encrypted-media; picture-in-picture"
-            allowFullScreen
-            onError={() => setTrailerFailed(true)}
-          /> : (
-            <div className="kinoma-details-hero__still">
-              <img src={backdrop} alt="" aria-hidden="true" decoding="async" onError={(event) => { if (event.currentTarget.src !== DEFAULT_BANNER) event.currentTarget.src = DEFAULT_BANNER; }} />
-              {!hasTrailer && !loading && <span className="kinoma-details-hero__trailer-note"><Film size={13} aria-hidden="true" /> No trailer available</span>}
-            </div>
+    <main className="panda-details">
+      <div className={`panda-details__compact ${compactBarVisible ? 'is-visible' : ''}`} aria-hidden={!compactBarVisible}>
+        <img src={poster} alt="" />
+        <strong>{title}</strong>
+        <Pressable onClick={watch} tabIndex={compactBarVisible ? 0 : -1}>
+          <Play size={15} fill="currentColor" aria-hidden="true" /> Play
+        </Pressable>
+      </div>
+
+      <section ref={heroRef} className="panda-details__hero" aria-label={`${title} details`}>
+        <div className="panda-details__backdrop">
+          <img src={backdrop} alt="" fetchPriority="high" decoding="async" onError={event => {
+            if (event.currentTarget.src !== DEFAULT_BANNER) event.currentTarget.src = DEFAULT_BANNER;
+          }} />
+          {trailerShouldPlay && (
+            <iframe
+              key={trailerMuted ? 'muted' : 'sound'}
+              src={trailerSrc(trailer?.trailer?.embedUrl, trailerMuted)}
+              title={`${title} trailer`}
+              className="panda-details__trailer"
+              loading="eager"
+              allow="autoplay; encrypted-media; picture-in-picture"
+              allowFullScreen
+              onError={() => setTrailerFailed(true)}
+            />
           )}
+          <div className="panda-details__scrim" />
         </div>
-        <div className="kinoma-details-hero__content">
-          <div className="kinoma-details-copy">
-            <div className="kinoma-details-eyebrow">{kind === 'movie' ? <Film size={13} /> : <Tv size={13} />} {kind === 'movie' ? 'Movie' : 'TV Series'}</div>
-            <h1 className={'kinoma-details-title kinoma-details-title--' + (kind === 'movie' ? 'movie' : 'series')}>{title}</h1>
-            <div className="kinoma-details-meta" aria-label="Title information">
-              {data?.releaseDate && <span>{String(data.releaseDate).slice(0, 4)}</span>}
-              {data?.rating != null && <span>★ {data.rating}</span>}
-              <span>{kind === 'movie' ? formatDuration(data?.runtime) : 'Series'}</span>
-              {(data?.genres || []).slice(0, 3).map((g: string) => <span key={g}>{g}</span>)}
+
+        {trailerShouldPlay && (
+          <Pressable
+            className="panda-details__mute"
+            onClick={() => setTrailerMuted(value => !value)}
+            aria-pressed={trailerMuted}
+            aria-label={trailerMuted ? 'Unmute trailer' : 'Mute trailer'}
+          >
+            {trailerMuted ? <VolumeX size={17} /> : <Volume2 size={17} />}
+          </Pressable>
+        )}
+
+        <div className="panda-details__hero-content">
+          <Reveal>
+            <div className="panda-details__chips">
+              <span className="panda-details__chip"><Tv size={12} aria-hidden="true" /> {kind === 'movie' ? 'Movie' : 'Series'}</span>
+              {data?.releaseDate && <span className="panda-details__chip">{String(data.releaseDate).slice(0, 4)}</span>}
+              {data?.rating != null && <span className="panda-details__chip"><Star size={12} aria-hidden="true" /> {data.rating}</span>}
+              <span className="panda-details__chip">{kind === 'movie' ? formatDuration(data?.runtime) : `${data?.totalEpisodes || seasonItems.reduce((total, season) => total + season.episodeCount, 0) || 0} episodes`}</span>
             </div>
-            <p className="kinoma-details-synopsis">{synopsis}</p>
-            <div className="kinoma-details-actions">
-              <button ref={watchButtonRef} className="kinoma-details-3d-button kinoma-details-3d-button--watch" onClick={watch}><span><Play size={18} fill="currentColor" /> {watchLabel}</span></button>
-              <button className={'kinoma-details-3d-button kinoma-details-3d-button--list ' + (isInList ? 'is-added' : '')} onClick={toggleList}><span>{isInList ? <Check size={18} /> : <Plus size={18} />} {isInList ? 'In My List' : 'Add to My List'}</span></button>
-              {hasTrailer && reducedMotion && !trailerRequested && <button type="button" className="kinoma-details-share kinoma-details-trailer-toggle" aria-label="Play trailer" title="Play trailer" onClick={() => setTrailerRequested(true)}><span><Film size={16} aria-hidden="true" /> Play trailer</span></button>}
-              <button className="kinoma-details-share" type="button" onClick={share} aria-label="Share this title"><span><Share2 className="kinoma-details-share__icon" size={16} /> Share</span></button>
+
+            <h1 className="panda-details__title">{title}</h1>
+
+            {!!data?.genres?.length && <p className="panda-details__genres">{data.genres.slice(0, 5).join(' • ')}</p>}
+
+            <div className="panda-details__actions">
+              <Pressable ref={watchButtonRef} className="panda-details__play" onClick={watch}>
+                <Play size={19} fill="currentColor" aria-hidden="true" />
+                <span>{resumeLabel}</span>
+              </Pressable>
+
+              <Pressable
+                className={`panda-details__icon-action ${isInList ? 'is-active' : ''}`}
+                onClick={toggleList}
+                aria-pressed={isInList}
+                aria-label={isInList ? 'Remove from My List' : 'Add to My List'}
+              >
+                {isInList ? <Check size={19} /> : <Plus size={19} />}
+              </Pressable>
+
+              <Pressable
+                className={`panda-details__icon-action panda-details__icon-action--heart ${isFavourite ? 'is-active' : ''}`}
+                onClick={toggleFavourite}
+                aria-pressed={isFavourite}
+                aria-label={isFavourite ? 'Remove from favourites' : 'Add to favourites'}
+              >
+                <Heart size={19} />
+              </Pressable>
+
+              <Pressable className="panda-details__icon-action" onClick={share} aria-label="Share this title">
+                <Share2 size={19} />
+              </Pressable>
             </div>
-            <p className="kinoma-details-share-feedback" role="status" aria-live="polite">{shareFeedback}</p>
-          </div>
+
+            {hasTrailer && motionPreference !== 'full' && !trailerRequested && (
+              <Pressable className="panda-details__trailer-toggle" onClick={() => setTrailerRequested(true)}>
+                <Film size={15} aria-hidden="true" /> Play trailer
+              </Pressable>
+            )}
+
+            <p className="panda-details__share-feedback" role="status" aria-live="polite">{shareFeedback}</p>
+          </Reveal>
         </div>
       </section>
 
-      <nav className="kinoma-tv-details-tabs" aria-label="Title sections">
-        {kind === 'series' && <a href="#episodes">Episodes</a>}
-        <a href="#more-like-this">More Like This</a>
-        <a href="#trailers-more">Trailers &amp; More</a>
-      </nav>
+      <div className="panda-details__shell">
+        <div className="panda-details__tabs" role="tablist" aria-label="Title sections">
+          <span
+            className="panda-details__tab-indicator"
+            style={{ transform: `translateX(${activeTabIndex * 100}%)`, width: `${100 / visibleTabs.length}%` }}
+            aria-hidden="true"
+          />
+          {visibleTabs.map(tab => (
+            <button
+              key={tab.id}
+              type="button"
+              role="tab"
+              aria-selected={activeTab === tab.id}
+              className={`panda-details__tab ${activeTab === tab.id ? 'is-active' : ''}`}
+              onClick={() => setActiveTab(tab.id)}
+            >
+              {tab.label}
+            </button>
+          ))}
+        </div>
 
-      {kind === 'series' && (
-        <section id="episodes" className="kinoma-details-section kinoma-details-seasons">
-          <div className="kinoma-details-section__heading kinoma-details-section__heading--episodes">
-            <div className="kinoma-season-heading">
-              <span className="kinoma-section-accent" aria-hidden="true" />
-              <div className="kinoma-season-picker">
-                <button ref={seasonTriggerRef} type="button" className="kinoma-season-picker__trigger" onClick={() => setSeasonMenuOpen(value => !value)} onKeyDown={(event) => { if (event.key === 'Escape' && seasonMenuOpen) { event.preventDefault(); setSeasonMenuOpen(false); } }} aria-expanded={seasonMenuOpen} aria-haspopup="listbox">
-                  <span className="kinoma-season-picker__label">Season {selectedSeason}</span>
-                  <span className="kinoma-season-picker__chevron" aria-hidden="true">⌄</span>
-                </button>
-                {seasonMenuOpen && (
-                  <div className="kinoma-season-picker__menu" role="listbox" aria-label="Choose season" onKeyDown={(event) => { if (event.key === 'Escape') { event.preventDefault(); setSeasonMenuOpen(false); seasonTriggerRef.current?.focus(); } }}>
-                    {modelSeasons.map(season => (
-                      <button type="button" key={season.number} role="option" aria-selected={selectedSeason === season.number} className={selectedSeason === season.number ? 'is-selected' : ''} onClick={() => { setSelectedSeason(season.number); setSeasonMenuOpen(false); seasonTriggerRef.current?.focus(); }}>
-                        Season {season.number}
-                      </button>
-                    ))}
-                  </div>
-                )}
-                <small className="kinoma-season-count">{seasonItems.find(s => s.seasonNumber === selectedSeason)?.episodeCount || seasonEpisodes.length} {((seasonItems.find(s => s.seasonNumber === selectedSeason)?.episodeCount || seasonEpisodes.length) === 1) ? 'episode' : 'episodes'}</small>
-              </div>
-            </div>
-            <div className="kinoma-details-section__controls">
-              <div className="kinoma-episode-search"><Search size={14} /><input id="episode-search" name="episode-search" autoComplete="off" value={episodeSearch} onChange={e => setEpisodeSearch(e.target.value)} placeholder="Search episodes" aria-label="Search episodes" /></div>
-              <button type="button" className="kinoma-episode-sort" onClick={() => setEpisodeSort(value => value === 'asc' ? 'desc' : 'asc')} title={episodeSort === 'asc' ? 'Sort descending' : 'Sort ascending'} aria-label={episodeSort === 'asc' ? 'Sort episodes descending' : 'Sort episodes ascending'}><ArrowUpDown size={15} /><span>{episodeSort === 'asc' ? 'ASC' : 'DESC'}</span></button>
-              <button type="button" className="kinoma-episode-view-toggle" onClick={() => setEpisodeView(value => value === 'list' ? 'grid' : 'list')} aria-label={episodeView === 'list' ? 'Switch to grid view' : 'Switch to list view'} title={episodeView === 'list' ? 'Grid view' : 'List view'}>
-                {episodeView === 'list' ? <Grid2X2 size={16} /> : <List size={17} />}
-              </button>
-            </div>
-          </div>
-          <nav className="kinoma-tv-season-rail" aria-label="Season navigation">
-            {seasonItems.map(season => (
-              <button type="button" key={season.seasonNumber} className={selectedSeason === season.seasonNumber ? 'is-selected' : ''} aria-pressed={selectedSeason === season.seasonNumber} onClick={() => setSelectedSeason(season.seasonNumber)}>
-                <span>Season {season.seasonNumber}</span>
-                <small>{season.episodeCount} {season.episodeCount === 1 ? 'Ep' : 'Eps'}</small>
-              </button>
-            ))}
-          </nav>
-          <div ref={episodeRailRef} className={'kinoma-episode-list kinoma-episode-list--' + episodeView}>
-            {(modelSeasons.find(s => s.number === selectedSeason)?.episodes || []).map(ep => (
-              <button
-                type="button"
-                key={ep.number}
-                className="kinoma-episode-card"
-                onClick={() => {
-                  trackGAEvent('episode_select', { content_type: 'series', season: selectedSeason, episode: ep.number, title });
-                  setLocation(buildWatchHref(id, 'series', selectedSeason, ep.number));
-                }}
+        {activeTab === 'episodes' && kind === 'series' && (
+          <section className="panda-details__panel" role="tabpanel" aria-label="Episodes">
+            <div className="panda-details__season-row">
+              <Pressable
+                ref={seasonTriggerRef}
+                className="panda-details__season-trigger"
+                onClick={() => setSeasonSheetOpen(true)}
+                aria-haspopup="dialog"
+                aria-expanded={seasonSheetOpen}
               >
-                <div className="kinoma-episode-art">
-                  {ep.image ? <img
-                    src={ep.image}
-                    alt=""
-                    loading="eager"
-                    fetchPriority={ep.number <= 3 ? 'high' : 'auto'}
-                    decoding="async"
-                  /> : <span><Play size={20} /></span>}
-                </div>
-                <div className="kinoma-episode-copy">
-                  <span className="kinoma-episode-kicker">EPISODE {ep.number}</span>
-                  <strong className="kinoma-episode-number">{ep.title || 'Episode ' + ep.number}</strong>
-                  {ep.synopsis && <p>{ep.synopsis}</p>}
-                  <div className="kinoma-episode-meta">
-                    <span>{ep.duration ? <>{episodeView === 'list' ? <Clock3 size={11} /> : <Play size={10} fill="currentColor" />} {formatDuration(ep.duration)}</> : <>{episodeView === 'list' ? <Clock3 size={11} /> : <Play size={10} fill="currentColor" />} Play</>}</span>
-                    {ep.rating != null && <span><Star size={10} fill="currentColor" aria-hidden="true" /> {Number(ep.rating).toFixed(1)}</span>}
-                  </div>
-                </div>
+                Season {selectedSeason}
+                <ChevronRight size={16} aria-hidden="true" />
+              </Pressable>
+              <span>{episodes.length} {episodes.length === 1 ? 'episode' : 'episodes'}</span>
+            </div>
 
-              </button>
-            ))}
-            {showEpisodeRailHint && (
-              <button type="button" className="kinoma-episode-rail-hint" onClick={scrollEpisodeRail} aria-label="Show the next three and a half episodes">
-                <ChevronRight size={30} strokeWidth={2.25} aria-hidden="true" />
-              </button>
+            <div className="panda-details__controls">
+              <div className="panda-details__episode-search">
+                <Search size={14} aria-hidden="true" />
+                <input
+                  value={episodeSearch}
+                  onChange={event => setEpisodeSearch(event.target.value)}
+                  placeholder="Search episodes"
+                  aria-label="Search episodes"
+                  autoComplete="off"
+                />
+              </div>
+              <Pressable
+                className="panda-details__control"
+                onClick={() => setEpisodeSort(value => value === 'asc' ? 'desc' : 'asc')}
+                aria-label={episodeSort === 'asc' ? 'Sort episodes descending' : 'Sort episodes ascending'}
+              >
+                <ArrowUpDown size={15} aria-hidden="true" /> {episodeSort.toUpperCase()}
+              </Pressable>
+              <Pressable
+                className="panda-details__control"
+                onClick={() => setEpisodeView(value => value === 'list' ? 'grid' : 'list')}
+                aria-label={episodeView === 'list' ? 'Switch to grid view' : 'Switch to list view'}
+              >
+                {episodeView === 'list' ? <Grid2X2 size={16} /> : <List size={16} />}
+              </Pressable>
+            </div>
+
+            {episodes.length ? (
+              <Stagger className={`panda-details__episodes ${episodeView === 'grid' ? 'is-grid' : ''}`}>
+                {episodes.map(ep => {
+                  const isCurrent = String(resume?.episodeNumber || '') === String(ep.number) && !resume?.isCompleted;
+                  const progress = ep.progress?.completionPercentage || 0;
+                  return (
+                    <button
+                      type="button"
+                      key={ep.id || ep.number}
+                      className={`panda-details__episode ${isCurrent ? 'is-current' : ''}`}
+                      onClick={() => {
+                        trackGAEvent('episode_select', { content_type: 'series', season: selectedSeason, episode: ep.number, title });
+                        setLocation(buildWatchHref(id, 'series', selectedSeason, ep.number));
+                      }}
+                    >
+                      <span className="panda-details__episode-art">
+                        {ep.image ? <img src={ep.image} alt="" loading="lazy" decoding="async" /> : <Play size={20} aria-hidden="true" />}
+                        <span className="panda-details__episode-number" aria-hidden="true">{ep.number}</span>
+                        {progress > 0 && <ProgressRing value={progress} size={30} className="panda-details__episode-ring" />}
+                      </span>
+                      <span className="panda-details__episode-copy">
+                        <strong>{ep.displayTitle}</strong>
+                        {ep.displaySynopsis && <p>{ep.displaySynopsis}</p>}
+                        <span className="panda-details__episode-meta">
+                          <Clock3 size={12} aria-hidden="true" />
+                          {ep.duration ? formatDuration(ep.duration) : 'Play'}
+                          {ep.rating != null && <><Star size={11} aria-hidden="true" /> {Number(ep.rating).toFixed(1)}</>}
+                        </span>
+                      </span>
+                    </button>
+                  );
+                })}
+              </Stagger>
+            ) : (
+              <div className="panda-details__state panda-details__state--inline">
+                <h2>No episodes yet</h2>
+                <p>Episodes for Season {selectedSeason} have not been added.</p>
+              </div>
             )}
-            {!loading && !(modelSeasons.find(s => s.number === selectedSeason)?.episodes.length) && <div className="kinoma-details-bottom">No episodes were returned for this season.</div>}
+          </section>
+        )}
+
+        {activeTab === 'more' && (
+          <section className="panda-details__panel" role="tabpanel" aria-label="More like this">
+            {recommendations.length ? (
+              <Stagger className="panda-details__rail">
+                {recommendations.slice(0, 18).map(item => {
+                  const itemTitle = typeof item.title === 'string' ? item.title : item.title.english || item.title.romaji || 'Untitled';
+                  const itemType = item.contentType === 'movie' ? 'movie' : 'series';
+                  return (
+                    <button
+                      type="button"
+                      key={item.id}
+                      className="panda-details__rail-card"
+                      onClick={() => setLocation(buildDetailsHref({ title: itemTitle, id: item.id }, itemType))}
+                      aria-label={`Open ${itemTitle}`}
+                    >
+                      <span className="panda-details__rail-art">
+                        {item.image ? <img src={item.image} alt="" loading="lazy" decoding="async" referrerPolicy="no-referrer" /> : <Film size={22} aria-hidden="true" />}
+                      </span>
+                      <strong>{itemTitle}</strong>
+                      <span>{item.genres?.[0] || 'Recommended'} • {itemType === 'movie' ? 'Movie' : 'Series'}</span>
+                    </button>
+                  );
+                })}
+              </Stagger>
+            ) : (
+              <div className="panda-details__state panda-details__state--inline">
+                <h2>No recommendations yet</h2>
+                <p>We couldn’t find similar titles right now.</p>
+              </div>
+            )}
+          </section>
+        )}
+
+        {activeTab === 'details' && (
+          <section className="panda-details__panel panda-details__about" role="tabpanel" aria-label="Details">
+            <Reveal>
+              <h2>Synopsis</h2>
+              <p className={synopsisExpanded ? 'is-expanded' : ''}>{synopsis}</p>
+              <button type="button" onClick={() => setSynopsisExpanded(value => !value)} aria-expanded={synopsisExpanded}>
+                {synopsisExpanded ? 'Show less' : 'More'}
+              </button>
+              <dl className="panda-details__facts">
+                {data?.releaseDate && <div><dt>Released</dt><dd>{String(data.releaseDate).slice(0, 4)}</dd></div>}
+                {data?.rating != null && <div><dt>Rating</dt><dd>{data.rating}/10</dd></div>}
+                {data?.status && <div><dt>Status</dt><dd>{data.status}</dd></div>}
+                {!!data?.genres?.length && <div><dt>Genres</dt><dd>{data.genres.join(', ')}</dd></div>}
+              </dl>
+            </Reveal>
+          </section>
+        )}
+      </div>
+
+      {seasonSheetOpen && (
+        <div className="panda-details__sheet-root" role="dialog" aria-modal="true" aria-label="Choose season">
+          <button type="button" className="panda-details__sheet-backdrop" onClick={() => setSeasonSheetOpen(false)} aria-label="Close season picker" />
+          <div className="panda-details__sheet">
+            <header>
+              <h2>Choose season</h2>
+              <button type="button" onClick={() => {
+                setSeasonSheetOpen(false);
+                seasonTriggerRef.current?.focus();
+              }} aria-label="Close season picker"><X size={18} /></button>
+            </header>
+            <div>
+              {seasonItems.map(season => (
+                <button
+                  type="button"
+                  key={season.seasonNumber}
+                  className={selectedSeason === season.seasonNumber ? 'is-selected' : ''}
+                  aria-current={selectedSeason === season.seasonNumber}
+                  onClick={() => {
+                    setSelectedSeason(season.seasonNumber);
+                    setSeasonSheetOpen(false);
+                    seasonTriggerRef.current?.focus();
+                  }}
+                >
+                  <span>Season {season.seasonNumber}</span>
+                  <small>{season.episodeCount} episodes</small>
+                </button>
+              ))}
+            </div>
           </div>
-        </section>
+        </div>
       )}
 
-      <section id="more-like-this" className="kinoma-details-section kinoma-details-more-section">
-        <div className="kinoma-details-section__heading kinoma-details-section__heading--more"><div><span className="kinoma-section-accent" aria-hidden="true" /><div><span>DISCOVER MORE</span><h2>More Like This</h2></div></div><small>Recommended for you</small></div>
-        <div className="kinoma-more-rail kinoma-more-grid-3rows">
-          {recommendations.slice(0, 15).map((item, i) => {
-            const itemTitle = typeof item.title === 'string' ? item.title : item.title.english || item.title.romaji || 'Untitled';
-            const itemType = item.contentType === 'movie' ? 'movie' : 'series';
-            return (
-              <button type="button" key={item.id} className="kinoma-more-card" onClick={() => setLocation(buildDetailsHref({ title: itemTitle, id: item.id }, itemType))} aria-label={'Open ' + itemTitle}>
-                <div className={'kinoma-more-card__art tone-' + (i % 5)}>
-                  {item.image ? <img src={item.image} alt="" loading="eager" fetchPriority={i < 5 ? 'high' : 'auto'} decoding="async" referrerPolicy="no-referrer" /> : <Film size={25} />}
-                </div>
-                <div className="kinoma-more-card__copy"><strong>{itemTitle}</strong><span>{item.genres?.[0] || 'Recommended'} <i>•</i> {itemType === 'movie' ? 'Movie' : 'Series'}</span></div>
-              </button>
-            );
-          })}
-          {!recommendations.length && !loading && <div className="kinoma-details-bottom">No recommendations are available right now.</div>}
-        </div>
-      </section>
-      <div className="kinoma-details-bottom"><Clock3 size={14} /> Metadata and playback are powered by MovieApi.</div>
-    </div>
+      <Footer />
+    </main>
   );
 }
