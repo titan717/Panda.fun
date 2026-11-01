@@ -87,7 +87,7 @@ function LazyGenreRail({ title, genre, movieGenre, tvGenre, animeOnly = false }:
   title: string;
   genre: string;
   movieGenre?: string;
-  tvGenre?: string;
+  tvGenre?: string | null;
   animeOnly?: boolean;
 }) {
   const sectionRef = useRef<HTMLElement | null>(null);
@@ -361,7 +361,7 @@ export function MobileHome({
       <LazyGenreRail title="Comedy" genre="Comedy" movieGenre="Comedy" tvGenre="Comedy" />
       <LazyGenreRail title="Drama" genre="Drama" />
       <LazyGenreRail title="Sci-Fi & Fantasy" genre="Sci-Fi & Fantasy" movieGenre="Science Fiction" tvGenre="Sci-Fi & Fantasy" />
-      <LazyGenreRail title="Horror" genre="Horror" />
+      <LazyGenreRail title="Horror" genre="Horror" movieGenre="Horror" tvGenre={null} />
       <LazyGenreRail title="Animation & Family" genre="Animation & Family" movieGenre="Animation" tvGenre="Animation" />
       <LazyGenreRail title="Documentary" genre="Documentary" />
     </div>
