@@ -1,7 +1,6 @@
 package com.kinoma.tv.ui
 
 import android.annotation.SuppressLint
-import android.app.AlertDialog
 import android.app.UiModeManager
 import android.content.Context
 import android.content.Intent
@@ -26,7 +25,6 @@ import android.webkit.WebView
 import android.webkit.WebViewClient
 import android.widget.FrameLayout
 import android.widget.LinearLayout
-import android.widget.ProgressBar
 import android.widget.TextView
 import android.net.Uri
 import android.widget.Button
@@ -470,14 +468,6 @@ class MainActivity : ComponentActivity() {
         webView.onResume()
         webView.requestFocus()
 
-        // If the user enabled "install unknown apps" after an update download,
-        // resume the already checksum-verified installation automatically.
-        pendingVerifiedUpdateUri?.let { uri ->
-            if (canInstallPackages()) {
-                pendingVerifiedUpdateUri = null
-                installVerifiedApk(uri)
-            }
-        }
     }
 
     override fun onPause() {
@@ -526,23 +516,33 @@ class MainActivity : ComponentActivity() {
 
     private var availableUpdate: UpdateInfo? = null
 
-    /** Sends update progress to the web Settings page (listens for "panda_native_update_status"). */
+    /** Sends update state and verified-download events to the in-app Settings UI. */
     private fun emitUpdateStatus(status: String, update: UpdateInfo? = null, message: String? = null) {
         val payload = HashMap<String, Any>()
         payload["status"] = status
         if (update != null) {
             payload["versionName"] = update.latestVersionName
+            payload["versionCode"] = update.latestVersionCode
             payload["releaseNotes"] = update.releaseNotes
             payload["mandatory"] = update.mandatory
+            payload["sha256"] = update.sha256
         }
         if (message != null) payload["message"] = message
         val json = com.google.gson.Gson().toJson(payload)
         runOnUiThread {
-            if (!isFinishing) {
-                webView.evaluateJavascript(
-                    "window.dispatchEvent(new CustomEvent('panda_native_update_status',{detail:$json}));",
-                    null
-                )
+            if (!isFinishing && ::webView.isInitialized) {
+                webView.evaluateJavascript("window.dispatchEvent(new CustomEvent('panda_native_update_status',{detail:$json}));", null)
+            }
+        }
+    }
+
+    private fun emitUpdateProgress(percent: Int, downloadedBytes: Long, totalBytes: Long) {
+        val json = com.google.gson.Gson().toJson(
+            mapOf("percent" to percent, "downloadedBytes" to downloadedBytes, "totalBytes" to totalBytes)
+        )
+        runOnUiThread {
+            if (!isFinishing && ::webView.isInitialized) {
+                webView.evaluateJavascript("window.dispatchEvent(new CustomEvent('kinoma_update_progress',{detail:$json}));", null)
             }
         }
     }
@@ -575,85 +575,32 @@ class MainActivity : ComponentActivity() {
         lifecycleScope.launch {
             try {
                 val update = UpdateChecker.checkForUpdate(this@MainActivity)
-                if (update != null && !isFinishing) {
-                    showUpdatePrompt(update)
-                }
+                availableUpdate = update
+                if (update != null && !isFinishing) emitUpdateStatus("available", update)
             } catch (e: Exception) {
                 Log.w(TAG, "Background update check error: ${e.message}")
             }
         }
     }
 
-    private fun showUpdatePrompt(update: UpdateInfo) {
-        val builder = AlertDialog.Builder(this, android.R.style.Theme_DeviceDefault_Dialog_Alert)
-        builder.setTitle("Panda.fun Update")
-        builder.setMessage("A new version (${update.latestVersionName}) is available.\n\n${update.releaseNotes}")
-
-        builder.setPositiveButton("Update Now") { dialog, _ ->
-            dialog.dismiss()
-            startDownloadAndInstall(update)
-        }
-
-        if (!update.mandatory) {
-            builder.setNegativeButton("Later") { dialog, _ ->
-                dialog.dismiss()
-            }
-        }
-
-        builder.setCancelable(!update.mandatory)
-        val alert = builder.create()
-        alert.show()
-    }
-
     private fun startDownloadAndInstall(update: UpdateInfo) {
-        val progressDialog = AlertDialog.Builder(this, android.R.style.Theme_DeviceDefault_Dialog_Alert)
-            .setTitle("Downloading Update")
-            .setView(ProgressBar(this).apply { isIndeterminate = false; max = 100 })
-            .setMessage("Downloading Panda.fun update...")
-            .setCancelable(false)
-            .create()
-
-        progressDialog.show()
-
+        emitUpdateStatus("downloading", update)
         UpdateChecker.downloadAndInstall(
             context = this,
             apkUrl = update.apkUrl,
             expectedSha256 = update.sha256,
-            onProgress = { percent ->
-                runOnUiThread {
-                    progressDialog.setMessage("Downloading: $percent%")
-                }
+            onProgress = { percent, downloadedBytes, totalBytes ->
+                emitUpdateProgress(percent, downloadedBytes, totalBytes)
             },
             onComplete = { apkUri ->
-                emitUpdateStatus("available", availableUpdate)
-                runOnUiThread {
-                    progressDialog.dismiss()
-                    if (canInstallPackages()) {
-                        installVerifiedApk(apkUri)
-                    } else {
-                        pendingVerifiedUpdateUri = apkUri
-                        AlertDialog.Builder(this, android.R.style.Theme_DeviceDefault_Dialog_Alert)
-                            .setTitle("Allow Panda.fun Updates")
-                            .setMessage("Android TV needs permission to install updates from Panda.fun. Enable \"Allow from this source\", then return to Panda.fun.")
-                            .setPositiveButton("Open Settings") { _, _ ->
-                                openInstallPermissionSettings()
-                            }
-                            .setNegativeButton("Later", null)
-                            .show()
-                    }
+                pendingVerifiedUpdateUri = apkUri
+                if (canInstallPackages()) {
+                    emitUpdateStatus("ready-to-install", update)
+                } else {
+                    emitUpdateStatus("permission-required", update, "Allow Panda.fun to install updates from this source, then return here.")
                 }
             },
-            onError = { error ->
-                emitUpdateStatus("error", message = error)
-                runOnUiThread {
-                    progressDialog.dismiss()
-                    AlertDialog.Builder(this, android.R.style.Theme_DeviceDefault_Dialog_Alert)
-                        .setTitle("Update Failed")
-                        .setMessage(error)
-                        .setPositiveButton("OK", null)
-                        .show()
-                }
-            }
+            onError = { error -> emitUpdateStatus("error", update, error) }
         )
     }
 
@@ -685,11 +632,7 @@ class MainActivity : ComponentActivity() {
             startActivity(installIntent)
         } catch (e: Exception) {
             pendingVerifiedUpdateUri = apkUri
-            AlertDialog.Builder(this, android.R.style.Theme_DeviceDefault_Dialog_Alert)
-                .setTitle("Unable to Start Update")
-                .setMessage(e.message ?: "Android could not start the package installer.")
-                .setPositiveButton("OK", null)
-                .show()
+            emitUpdateStatus("error", availableUpdate, e.message ?: "Android could not start the package installer.")
         }
     }
 
@@ -725,8 +668,34 @@ class MainActivity : ComponentActivity() {
 
         @JavascriptInterface
         fun downloadUpdate() {
+            runOnUiThread { downloadAvailableUpdate() }
+        }
+
+        @JavascriptInterface
+        fun cancelUpdateDownload() {
+            UpdateChecker.cancelDownload(context)
+            emitUpdateStatus("available", availableUpdate, "Download cancelled.")
+        }
+
+        @JavascriptInterface
+        fun openInstallPermissionSettings() {
+            runOnUiThread { this@MainActivity.openInstallPermissionSettings() }
+        }
+
+        @JavascriptInterface
+        fun installUpdate() {
             runOnUiThread {
-                downloadAvailableUpdate()
+                if (!canInstallPackages()) {
+                    emitUpdateStatus("permission-required", availableUpdate, "Allow installs from this source to continue.")
+                    return@runOnUiThread
+                }
+                val uri = pendingVerifiedUpdateUri
+                if (uri == null) {
+                    emitUpdateStatus("error", availableUpdate, "The verified update file is no longer available. Download it again.")
+                } else {
+                    pendingVerifiedUpdateUri = null
+                    installVerifiedApk(uri)
+                }
             }
         }
     }
