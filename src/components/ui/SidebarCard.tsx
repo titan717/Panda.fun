@@ -21,9 +21,9 @@ export function SidebarCard({ item, rank }: SidebarCardProps) {
         className="group flex items-center gap-3.5 py-3 border-b border-[#1c1c22] cursor-pointer hover:bg-[#16161d] px-2.5 -mx-2 rounded-xl transition-colors duration-200"
       >
         <div className={`w-7 text-center text-xl font-black ${
-          rank === 1 ? 'text-[#c084fc] drop-shadow-[0_0_8px_rgba(192,132,252,0.6)]' :
-          rank === 2 ? 'text-[#a855f7]' :
-          rank === 3 ? 'text-[#9333ea]' :
+          rank === 1 ? 'text-[#e8d0c0] drop-shadow-[0_0_8px_rgba(192,132,252,0.6)]' :
+          rank === 2 ? 'text-[#b84d41]' :
+          rank === 3 ? 'text-[#b84d41]' :
           'text-gray-600'
         }`}>
           {rank}
@@ -39,7 +39,7 @@ export function SidebarCard({ item, rank }: SidebarCardProps) {
         </div>
         
         <div className="flex-1 min-w-0 flex flex-col gap-1.5">
-          <h4 className="text-sm font-semibold text-gray-200 line-clamp-2 group-hover:text-[#c084fc] transition-colors leading-snug">
+          <h4 className="text-sm font-semibold text-gray-200 line-clamp-2 group-hover:text-[#e8d0c0] transition-colors leading-snug">
             {title}
           </h4>
           

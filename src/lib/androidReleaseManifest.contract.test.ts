@@ -1,0 +1,53 @@
+import { describe, expect, it } from 'vitest';
+import { readFileSync } from 'node:fs';
+
+const manifest = JSON.parse(readFileSync(new URL('../../update/latest.json', import.meta.url), 'utf8'));
+const checker = readFileSync(new URL('../../android/app/src/main/java/com/kinoma/tv/data/UpdateChecker.kt', import.meta.url), 'utf8');
+const server = readFileSync(new URL('../../server.ts', import.meta.url), 'utf8');
+const workflow = readFileSync(new URL('../../.github/workflows/build-apk.yml', import.meta.url), 'utf8');
+const gradle = readFileSync(new URL('../../android/app/build.gradle', import.meta.url), 'utf8');
+
+describe('Android stable update release contract', () => {
+  it('keeps a parseable HTTPS APK manifest with a valid SHA-256 and positive version code', () => {
+    expect(manifest.latestVersionCode).toBeGreaterThan(0);
+    expect(manifest.latestVersionName).toMatch(/^\d+\.\d+\.\d+(?:-[a-z0-9.]+)?$/i);
+    expect(manifest.apkUrl).toMatch(/^https:\/\//);
+    expect(manifest.apkUrl).toMatch(/\.apk$/);
+    expect(manifest.sha256).toMatch(/^[a-f0-9]{64}$/i);
+    expect(['stable', 'beta']).toContain(manifest.channel);
+    expect(typeof manifest.prerelease).toBe('boolean');
+  });
+
+  it('offers only stable non-prerelease builds and compares numeric version codes', () => {
+    expect(checker).toContain('updateInfo.channel == "stable" && !updateInfo.prerelease');
+    expect(checker).toContain('updateInfo.latestVersionCode < BuildConfig.VERSION_CODE');
+    expect(checker).toContain('updateInfo.latestVersionCode == BuildConfig.VERSION_CODE');
+    expect(checker).toContain('No stable production release is currently published.');
+    expect(checker).toContain('Update manifest checksum is invalid.');
+  });
+
+  it('does not mistake the currently published beta manifest for a stable production update', () => {
+    expect(manifest.channel).toBe('beta');
+    expect(manifest.prerelease).toBe(true);
+    expect(checker).toContain('val installedIsPrerelease = BuildConfig.VERSION_NAME.contains("beta", ignoreCase = true)');
+    expect(checker).toContain('if (!channelMatches)');
+  });
+
+  it('publishes the same signed APK filename, size and checksum through the stable workflow', () => {
+    expect(workflow).toContain('Panda.fun-Android-TV.apk');
+    expect(workflow).toContain('APK_SIZE_BYTES');
+    expect(workflow).toContain('"sizeBytes": int(os.environ["APK_SIZE_BYTES"])');
+    expect(workflow).toContain('"channel": "stable"');
+    expect(workflow).toContain('"prerelease": False');
+    expect(gradle).toContain('versionCode kinomaVersionCode');
+    expect(gradle).toContain('versionName kinomaVersionName');
+  });
+
+  it('never falls back to a fake manifest or a placeholder APK', () => {
+    expect(server).toContain('No verified stable Panda.fun production release has been published yet.');
+    expect(server).toContain('validReleaseAsset');
+    expect(server).toContain('return res.redirect(302, apkUrl)');
+    expect(server).not.toContain('sha256: \'PENDING\'');
+    expect(server).not.toContain('Panda.fun.apk binary v1.0.0');
+  });
+});

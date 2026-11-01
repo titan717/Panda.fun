@@ -67,7 +67,7 @@ describe('universal Android manifest contract', () => {
   });
 
   it('passes real loading/error state into the mobile homepage and has an empty state', () => {
-    expect(homePage).toContain('loading={!home && !error} error={error}');
+    expect(homePage).toContain('loading={!error && (!home || secondaryLoading)} error={error}');
     expect(mobileHome).toContain(') : loading ? (');
     expect(mobileHome).toContain('Your next watch is waiting.');
     expect(mobileHomeStyles).toContain('.panda-mobile-featured__empty');

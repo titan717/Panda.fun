@@ -18,10 +18,11 @@ describe('Panda sidebar navigation contract', () => {
   });
 });
 
-  it('uses the custom Settings page as the mobile header shortcut instead of Profile', async () => {
+  it('keeps Search and Profile in the mobile header and Settings in the bottom navigation', async () => {
     const source = await import('node:fs').then(({ readFileSync }) => readFileSync(new URL('./Layout.tsx', import.meta.url), 'utf8'));
-    expect(source).toContain('href="/settings"');
-    expect(source).toContain('aria-label="Settings"');
-    const mobileHeader = source.slice(source.indexOf('<header className="panda-mobile-header">'), source.indexOf('</header>'));
-    expect(mobileHeader).not.toContain('Profile');
+    expect(source).toContain("{ href: '/settings', label: 'Settings', Icon: Settings }");
+    const mobileHeader = source.slice(source.indexOf('panda-mobile-header'), source.indexOf('</header>'));
+    expect(mobileHeader).toContain('aria-label="Search"');
+    expect(mobileHeader).toContain('aria-label="Profile"');
+    expect(mobileHeader).not.toContain('aria-label="Settings"');
   });

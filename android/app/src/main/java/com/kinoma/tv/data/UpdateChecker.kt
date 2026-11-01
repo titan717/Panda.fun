@@ -17,6 +17,8 @@ import com.google.gson.Gson
 import java.io.File
 
 object UpdateChecker {
+    @Volatile private var activeDownloadId: Long? = null
+    @Volatile private var cancelledDownloadId: Long? = null
     // Public beta/stable manifest maintained in the Panda.fun repository
     private const val UPDATE_JSON_URL = "https://raw.githubusercontent.com/titan717/Panda.fun/main/update/latest.json"
 
@@ -41,7 +43,41 @@ object UpdateChecker {
             if (!body.startsWith("{")) throw java.io.IOException("Update manifest was not valid.")
             val updateInfo = Gson().fromJson(body, UpdateInfo::class.java)
                 ?: throw java.io.IOException("Update manifest could not be read.")
-            if (updateInfo.latestVersionCode > BuildConfig.VERSION_CODE) updateInfo else null
+            if (updateInfo.latestVersionCode <= 0) throw java.io.IOException("Update manifest versionCode is invalid.")
+            if (updateInfo.latestVersionName.isBlank()) throw java.io.IOException("Update manifest versionName is missing.")
+            if (!updateInfo.apkUrl.startsWith("https://")) throw java.io.IOException("Update package URL must use HTTPS.")
+            if (!updateInfo.sha256.matches(Regex("(?i)^[a-f0-9]{64}$"))) throw java.io.IOException("Update manifest checksum is invalid.")
+            if (updateInfo.sizeBytes <= 0L) throw java.io.IOException("Update manifest package size is invalid.")
+            if (updateInfo.channel !in setOf("stable", "beta")) throw java.io.IOException("Update manifest release channel is missing or invalid.")
+            val expectedApkName = if (updateInfo.prerelease) "Panda.fun-Android-TV-beta.apk" else "Panda.fun-Android-TV.apk"
+            if (!updateInfo.apkUrl.endsWith("/$expectedApkName")) {
+                throw java.io.IOException("Update package does not match its declared release channel.")
+            }
+            // Beta builds can receive beta updates; production builds must never receive prereleases.
+            val installedIsPrerelease = BuildConfig.VERSION_NAME.contains("beta", ignoreCase = true)
+            val channelMatches = if (installedIsPrerelease) {
+                (updateInfo.channel == "beta" && updateInfo.prerelease) ||
+                    (updateInfo.channel == "stable" && !updateInfo.prerelease)
+            } else {
+                updateInfo.channel == "stable" && !updateInfo.prerelease
+            }
+            if (!channelMatches) {
+                throw java.io.IOException(if (installedIsPrerelease) "No matching beta release is currently published." else "No stable production release is currently published.")
+            }
+            if (updateInfo.latestVersionCode < BuildConfig.VERSION_CODE) {
+                throw java.io.IOException("The published update is older than this installation. Update manifest versionCode must increase.")
+            }
+            if (updateInfo.latestVersionCode == BuildConfig.VERSION_CODE) null else updateInfo
+        }
+    }
+
+    fun cancelDownload(context: Context) {
+        val id = activeDownloadId ?: return
+        cancelledDownloadId = id
+        try {
+            (context.getSystemService(Context.DOWNLOAD_SERVICE) as DownloadManager).remove(id)
+        } finally {
+            activeDownloadId = null
         }
     }
 
@@ -49,7 +85,7 @@ object UpdateChecker {
         context: Context,
         apkUrl: String,
         expectedSha256: String,
-        onProgress: (Int) -> Unit,
+        onProgress: (Int, Long, Long) -> Unit,
         onComplete: (Uri) -> Unit,
         onError: (String) -> Unit
     ) {
@@ -66,13 +102,13 @@ object UpdateChecker {
 
             val destination = File(
                 context.getExternalFilesDir(Environment.DIRECTORY_DOWNLOADS),
-                "MyPanda-update.apk"
+                "Panda.fun-update.apk"
             )
             if (destination.exists()) destination.delete()
 
             val request = DownloadManager.Request(Uri.parse(apkUrl))
-                .setTitle("MyPanda Update")
-                .setDescription("Downloading the latest MyPanda release...")
+                .setTitle("Panda.fun")
+                .setDescription("Downloading the latest Panda.fun release...")
                 .setMimeType("application/vnd.android.package-archive")
                 .setDestinationInExternalFilesDir(
                     context,
@@ -86,17 +122,30 @@ object UpdateChecker {
                 )
 
             val manager = context.getSystemService(Context.DOWNLOAD_SERVICE) as DownloadManager
+            cancelledDownloadId = null
             val downloadId = manager.enqueue(request)
+            activeDownloadId = downloadId
 
             Thread {
                 val mainHandler = android.os.Handler(android.os.Looper.getMainLooper())
                 var finished = false
 
                 while (!finished) {
+                    if (cancelledDownloadId == downloadId) {
+                        finished = true
+                        activeDownloadId = null
+                        cancelledDownloadId = null
+                        return@Thread
+                    }
                     try {
                         val query = DownloadManager.Query().setFilterById(downloadId)
                         manager.query(query).use { cursor ->
                             if (!cursor.moveToFirst()) {
+                                activeDownloadId = null
+                                if (cancelledDownloadId == downloadId) {
+                                    cancelledDownloadId = null
+                                    return@Thread
+                                }
                                 mainHandler.post { onError("Update download disappeared.") }
                                 return@Thread
                             }
@@ -108,6 +157,7 @@ object UpdateChecker {
                             when (status) {
                                 DownloadManager.STATUS_SUCCESSFUL -> {
                                     finished = true
+                                    activeDownloadId = null
                                     if (destination.exists() && verifySha256(destination, expectedSha256)) {
                                         val uri = FileProvider.getUriForFile(
                                             context,
@@ -123,11 +173,14 @@ object UpdateChecker {
 
                                 DownloadManager.STATUS_FAILED -> {
                                     finished = true
-                                    val reason = cursor.getInt(
-                                        cursor.getColumnIndexOrThrow(DownloadManager.COLUMN_REASON)
-                                    )
-                                    mainHandler.post {
-                                        onError("Download failed (code $reason).")
+                                    activeDownloadId = null
+                                    val wasCancelled = cancelledDownloadId == downloadId
+                                    cancelledDownloadId = null
+                                    if (!wasCancelled) {
+                                        val reason = cursor.getInt(
+                                            cursor.getColumnIndexOrThrow(DownloadManager.COLUMN_REASON)
+                                        )
+                                        mainHandler.post { onError("Download failed (code $reason).") }
                                     }
                                 }
 
@@ -141,19 +194,21 @@ object UpdateChecker {
                                     )
                                     if (total > 0L) {
                                         val progress = ((soFar * 100L) / total).toInt().coerceIn(0, 100)
-                                        mainHandler.post { onProgress(progress) }
+                                        mainHandler.post { onProgress(progress, soFar, total) }
                                     } else {
-                                        mainHandler.post { onProgress(0) }
+                                        mainHandler.post { onProgress(0, soFar, total) }
                                     }
                                 }
                                 else -> {
                                     finished = true
+                                    activeDownloadId = null
                                     mainHandler.post { onError("Unknown update download status: $status") }
                                 }
                             }
                         }
                     } catch (e: Exception) {
                         finished = true
+                        activeDownloadId = null
                         mainHandler.post { onError(e.message ?: "Update download failed.") }
                     }
 
@@ -161,6 +216,7 @@ object UpdateChecker {
                 }
             }.start()
         } catch (e: Exception) {
+            activeDownloadId = null
             onError(e.message ?: "Update download failed.")
         }
     }

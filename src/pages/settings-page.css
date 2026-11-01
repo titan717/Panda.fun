@@ -1,0 +1,58 @@
+.panda-settings-v3 {
+  width: min(100%, 820px);
+  margin-inline: auto;
+  padding: calc(24px + var(--safe-top, 0px)) 18px calc(44px + var(--safe-bottom, 0px));
+  color: #f6f2ee;
+}
+.panda-settings-v3__header { display: flex; align-items: center; gap: 13px; margin: 2px 0 22px; }
+.panda-settings-v3__back { display: grid; place-items: center; width: 44px; height: 44px; flex: 0 0 auto; border: 1px solid rgba(246,242,238,.1); border-radius: 50%; color: #e8d0c0; background: #090909; }
+.panda-settings-v3__back:focus-visible, .panda-settings-row--button:focus-visible, .panda-settings-v3 button:focus-visible, .panda-settings-v3 a:focus-visible { outline: 2px solid #e8d0c0; outline-offset: 3px; }
+.panda-settings-v3__header span, .panda-settings-v3__eyebrow { color: #c1935f; font-size: 10px; font-weight: 800; letter-spacing: .16em; }
+.panda-settings-v3__header h1 { margin-top: 3px; font-size: clamp(27px, 7vw, 36px); line-height: 1; letter-spacing: -.045em; }
+.panda-settings-v3__profile { display: flex; align-items: center; gap: 13px; margin-bottom: 27px; padding: 17px; border: 1px solid rgba(246,242,238,.1); border-radius: 20px; background: linear-gradient(145deg,#111,#070707 76%); }
+.panda-settings-v3__avatar { display: grid; place-items: center; width: 54px; height: 54px; flex: 0 0 auto; overflow: hidden; border-radius: 17px; background: #050505; }
+.panda-settings-v3__profile h2 { margin: 3px 0 2px; font-size: 16px; font-weight: 750; }
+.panda-settings-v3__profile p { color: #aaa19b; font-size: 11px; }
+.panda-settings-v3__profile-link { display: grid; place-items: center; width: 44px; height: 44px; margin-left: auto; border: 1px solid rgba(246,242,238,.1); border-radius: 50%; color: #ded7d1; }
+.panda-settings-v3__group { display: grid; gap: 11px; margin-top: 23px; }
+.panda-settings-v3__group-heading { display: flex; align-items: center; gap: 9px; color: #e8d0c0; }
+.panda-settings-v3__group-heading h2 { color: #f6f2ee; font-size: 15px; font-weight: 750; }
+.panda-settings-v3__surface { overflow: hidden; border: 1px solid rgba(246,242,238,.09); border-radius: 18px; background: #080808; }
+.panda-settings-row { display: flex; align-items: center; gap: 12px; min-height: 66px; padding: 13px 15px; border-bottom: 1px solid rgba(246,242,238,.07); }
+.panda-settings-row:last-child { border-bottom: 0; }
+.panda-settings-row__copy { display: grid; min-width: 0; flex: 1; gap: 4px; text-align: left; }
+.panda-settings-row__copy strong { color: #f6f2ee; font-size: 13px; font-weight: 650; }
+.panda-settings-row__copy small { color: #918984; font-size: 11px; line-height: 1.45; }
+.panda-settings-row__icon { display: grid; place-items: center; width: 34px; height: 34px; flex: 0 0 auto; border-radius: 11px; color: #e8d0c0; background: rgba(184,77,65,.12); }
+.panda-settings-row--button { width: 100%; border: 0; border-bottom: 1px solid rgba(246,242,238,.07); background: transparent; color: inherit; text-align: left; text-decoration: none; cursor: pointer; }
+.panda-settings-row__chevron { transform: rotate(180deg); color: #817873; }
+ .panda-settings-switch { display: flex; align-items: center; justify-content: flex-start; position: relative; width: 52px; height: 44px; flex: 0 0 auto; padding: 3px; border: 1px solid rgba(246,242,238,.14); border-radius: 999px; background: #262220; transition: background 150ms ease; }
+.panda-settings-switch span { display: block; width: 20px; height: 20px; border-radius: 50%; background: #aaa19b; transition: transform 150ms ease, background 150ms ease; }
+.panda-settings-switch.is-on { border-color: #b84d41; background: #b84d41; }
+.panda-settings-switch.is-on span { transform: translateX(24px); background: #fffaf6; }
+.panda-settings-row--stack { align-items: flex-start; flex-direction: column; gap: 11px; }
+.panda-settings-segment { display: flex; width: 100%; padding: 3px; border-radius: 999px; background: #141211; }
+.panda-settings-segment button { min-height: 44px; flex: 1; border: 0; border-radius: 999px; background: transparent; color: #aaa19b; font-size: 12px; font-weight: 700; }
+.panda-settings-segment button.is-active { background: #b84d41; color: #fffaf6; }
+.panda-settings-v3__active { display: inline-flex; align-items: center; gap: 5px; color: #c1935f; font-size: 10px; font-weight: 750; white-space: nowrap; }
+.panda-settings-v3__text-action { min-height: 44px; padding: 0 12px; border: 1px solid rgba(184,77,65,.3); border-radius: 999px; background: rgba(184,77,65,.1); color: #e8d0c0; font-size: 11px; font-weight: 700; }
+.panda-settings-v3__text-action:disabled { opacity: .4; }
+.panda-settings-v3__footnote { padding: 12px 15px 15px; color: #817873; font-size: 10px; line-height: 1.5; }
+.panda-settings-v3__wordmark { color: #f6f2ee; font-size: 10px; font-weight: 900; letter-spacing: .12em; }
+.panda-settings-v3__wordmark span { color: #b84d41; }
+.panda-settings-v3 .panda-update-module { margin: 0; }
+@media (min-width: 768px) { .panda-settings-v3 { padding-inline: 28px; } }
+@media (prefers-reduced-motion: reduce) { .panda-settings-switch, .panda-settings-switch span { transition: none; } }
+
+
+.panda-settings-select {
+  width: 100%;
+  min-height: 44px;
+  padding: 0 13px;
+  border: 1px solid rgba(246,242,238,.12);
+  border-radius: 12px;
+  background: #121110;
+  color: #f6f2ee;
+  font-size: 12px;
+}
+.panda-settings-select:focus-visible { outline: 2px solid #e8d0c0; outline-offset: 3px; }

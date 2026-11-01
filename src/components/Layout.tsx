@@ -34,11 +34,26 @@ const TV_ITEMS = [
   { href: '/profile', label: 'My Space', Icon: UserRound },
 ];
 
+function triggerMobileNavHaptic() {
+  try {
+    const native = (window as Window & { KinomaNative?: { performHapticFeedback?: () => void } }).KinomaNative;
+    if (native?.performHapticFeedback) {
+      native.performHapticFeedback();
+      return;
+    }
+    if (typeof navigator !== 'undefined') navigator.vibrate?.(8);
+  } catch {
+    // Haptics are optional; navigation must never depend on device support.
+  }
+}
+
 export function Layout({ children }: { children: React.ReactNode }) {
   const [location] = useLocation();
   const motionPreference = useMotionPreference();
   const [expanded, setExpanded] = useState(false);
   const [deviceMode, setDeviceMode] = useState(() => getCurrentDeviceMode());
+  const [headerScrolled, setHeaderScrolled] = useState(false);
+  const [activeCategory, setActiveCategory] = useState('All');
   const tvMode = deviceMode === 'tv';
   const collapseTimer = useRef<number | null>(null);
   const mainRef = useRef<HTMLElement | null>(null);
@@ -57,6 +72,18 @@ export function Layout({ children }: { children: React.ReactNode }) {
     window.addEventListener('resize', syncDeviceMode);
     return () => window.removeEventListener('resize', syncDeviceMode);
   }, []);
+
+  useEffect(() => {
+    const onScroll = () => setHeaderScrolled(window.scrollY > 80);
+    onScroll();
+    window.addEventListener('scroll', onScroll, { passive: true });
+    return () => window.removeEventListener('scroll', onScroll);
+  }, []);
+
+  useEffect(() => {
+    const native = (window as Window & { KinomaNative?: { setPlayerPage?: (isPlayer: boolean) => void } }).KinomaNative;
+    native?.setPlayerPage?.(isPlayerRoute);
+  }, [isPlayerRoute]);
 
   useEffect(() => {
     // TV screens manage their own initial focus so the remote lands on the
@@ -78,20 +105,34 @@ export function Layout({ children }: { children: React.ReactNode }) {
     <div className={`panda-app-shell kinoma-app-shell${isPlayerRoute ? ' panda-app-shell--player' : ''}${tvMode ? ' panda-tv-app-shell' : ''}`} style={{ '--sidebar-width': expanded ? '260px' : '64px' } as React.CSSProperties}>
       <a className="panda-skip-link" href="#panda-main-content">Skip to main content</a>
       {!isPlayerRoute && (
-        <header className="panda-mobile-header">
-          <Link href="/home" className="panda-mobile-header__brand" aria-label="Panda.fun home"><KinomaLogo size="md" variant="full" /></Link>
-          <nav className="panda-mobile-header__actions" aria-label="Quick actions"><Link href="/settings" className={`panda-mobile-header__action${location.split("?")[0] === "/settings" ? " is-active" : ""}`} aria-label="Settings" aria-current={location.split("?")[0] === "/settings" ? "page" : undefined} title="Settings"><Settings size={20} strokeWidth={1.8} /></Link></nav>
-        </header>
+        <>
+          <header className={`panda-mobile-header${headerScrolled ? ' is-scrolled' : ''}`}>
+            <Link href="/home" className="panda-mobile-header__brand" aria-label="Panda.fun home"><KinomaLogo size="md" variant="full" /></Link>
+            <nav className="panda-mobile-header__actions" aria-label="Quick actions">
+              <Link href="/search" className="panda-mobile-header__action" aria-label="Search"><Search size={20} strokeWidth={1.9} /></Link>
+              <Link href="/profile" className="panda-mobile-header__action" aria-label="Profile"><UserRound size={20} strokeWidth={1.9} /></Link>
+            </nav>
+          </header>
+          {location.split('?')[0] === '/home' || location.split('?')[0] === '/browse' ? (
+            <nav className="panda-mobile-category-row" aria-label="Home categories">
+              {['All', 'Movies', 'TV Shows', 'Anime', 'Kids', 'Action', 'Comedy', 'Drama'].map(category => (
+                <button key={category} type="button" className={activeCategory === category ? 'is-active' : ''} aria-pressed={activeCategory === category}
+                  onClick={() => { setActiveCategory(category); window.dispatchEvent(new CustomEvent('panda_home_category_select', { detail: category })); }}>{category}</button>
+              ))}
+            </nav>
+          ) : null}
+        </>
       )}
       {!isPlayerRoute && (
         <nav className="panda-mobile-bottom-nav" aria-label="Panda.fun mobile navigation">
-          {ITEMS.filter(({ href }) => href !== '/settings').map(({ href, label, Icon }) => {
+          {ITEMS.map(({ href, label, Icon }) => {
             const mobileLabel = href === '/library' ? 'Library' : label;
             const pathname = location.split('?')[0];
             const active = (href === '/home' && (pathname === '/home' || pathname === '/browse')) ||
               (href === '/search' && (pathname === '/search' || pathname === '/explore' || pathname === '/whats-new')) ||
-              (href === '/library' && (pathname === '/library' || pathname === '/history'));
-            return <Link key={href} href={href} className={`panda-mobile-bottom-nav__item ${active ? 'is-active' : ''}`} aria-label={mobileLabel} aria-current={active ? 'page' : undefined}>
+              (href === '/library' && (pathname === '/library' || pathname === '/history')) ||
+              (href === '/settings' && pathname === '/settings');
+            return <Link key={href} href={href} className={`panda-mobile-bottom-nav__item ${active ? 'is-active' : ''}`} aria-label={mobileLabel} aria-current={active ? 'page' : undefined} onClick={triggerMobileNavHaptic}>
               {active && motionPreference === 'full' && <m.span layoutId="panda-bottom-nav-active" className="panda-mobile-bottom-nav__active-pill" transition={{ type: 'spring', stiffness: 420, damping: 34 }} aria-hidden="true" />}
               <m.span className="panda-mobile-bottom-nav__icon" animate={active && motionPreference === 'full' ? { scale: [1, 1.12, 1], y: [0, -2, 0] } : { scale: 1, y: 0 }} transition={{ duration: 0.28 }}><Icon size={21} strokeWidth={1.9} fill={active && (href === '/home' || href === '/library') ? 'currentColor' : 'none'} /></m.span>
               <span className="panda-mobile-bottom-nav__label">{mobileLabel}</span>

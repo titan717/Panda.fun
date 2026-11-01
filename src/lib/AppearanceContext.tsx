@@ -20,6 +20,8 @@ export interface PlayerSettings {
   skipIntro: boolean;
   skipOutro: boolean;
   preferredAudio: 'sub' | 'dub';
+  subtitleEnabled: boolean;
+  quality: 'auto' | '1080p' | '720p' | '480p';
 }
 
 export type SettingsTab = 'appearance' | 'player' | 'library';
@@ -51,6 +53,8 @@ const DEFAULT_PLAYER_SETTINGS: PlayerSettings = {
   skipIntro: true,
   skipOutro: false,
   preferredAudio: 'sub',
+  subtitleEnabled: true,
+  quality: 'auto',
 };
 
 const PLAYER_SETTINGS_KEY = 'panda_player_settings';

@@ -102,7 +102,7 @@ export function WhatsNew() {
         {/* Cinematic Header */}
         <div className="relative overflow-hidden rounded-3xl bg-gradient-to-r from-[#170e28] via-[#10121d] to-[#0a0b12] border border-white/10 p-6 sm:p-10 shadow-2xl">
           <div className="relative z-10 max-w-2xl">
-            <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-[#7b1fa2]/30 border border-[#ba68c8]/30 text-xs font-bold text-[#e1bee7] mb-3">
+            <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-[#b84d41]/30 border border-[#ba68c8]/30 text-xs font-bold text-[#e1bee7] mb-3">
               <Sparkles className="w-3.5 h-3.5 text-[#ba68c8]" />
               <span>Real-Time Catalog Updates</span>
             </div>
@@ -115,7 +115,7 @@ export function WhatsNew() {
           </div>
           
           {/* Subtle glowing ambient accent */}
-          <div className="absolute -right-16 -top-16 w-80 h-80 rounded-full bg-[#7b1fa2]/15 blur-3xl pointer-events-none" />
+          <div className="absolute -right-16 -top-16 w-80 h-80 rounded-full bg-[#b84d41]/15 blur-3xl pointer-events-none" />
         </div>
 
         {/* Filter Pills */}
@@ -128,7 +128,7 @@ export function WhatsNew() {
                 onClick={() => setActiveFilter(label)}
                 className={`flex items-center gap-1.5 px-4 py-2 rounded-full text-xs font-bold transition-all cursor-pointer whitespace-nowrap shrink-0 border ${
                   active
-                    ? 'bg-[#7b1fa2] text-white border-[#ba68c8]/60 shadow-[0_2px_12px_rgba(123,31,162,0.4)] scale-[1.02]'
+                    ? 'bg-[#b84d41] text-white border-[#ba68c8]/60 shadow-[0_2px_12px_rgba(123,31,162,0.4)] scale-[1.02]'
                     : 'bg-[#12131c] text-gray-300 hover:text-white border-white/5 hover:bg-[#191a26]'
                 }`}
               >

@@ -9,16 +9,19 @@ const homeStyles = read('../../pages/mobile-home.css');
 const search = read('../../pages/Search.tsx');
 
 describe('MYpanda.fun mobile shell contract', () => {
-  it('uses a shared mobile header and route-aware three-item navigation', () => {
+  it('uses a shared cinematic mobile header, category chips and four-item navigation', () => {
     expect(layout).toContain('panda-mobile-header');
-    expect(layout).toContain('aria-label="Settings"');
-    expect(layout).toContain('href="/settings"');
-    const mobileHeader = layout.slice(layout.indexOf('<header className="panda-mobile-header">'), layout.indexOf('</header>'));
-    expect(mobileHeader).toContain('aria-label="Settings"');
-    expect(mobileHeader).not.toContain('Profile');
+    expect(layout).toContain('aria-label="Search"');
+    expect(layout).toContain('aria-label="Profile"');
+    expect(layout).toContain("href: '/settings'");
+    const mobileHeader = layout.slice(layout.indexOf('panda-mobile-header'), layout.indexOf('</header>'));
+    expect(mobileHeader).toContain('is-scrolled');
+    expect(layout).toContain('panda-mobile-category-row');
+    expect(layout).toContain('panda_home_category_select');
     expect(layout).not.toContain('aria-label="Search movies and shows"');
     expect(layout).toContain('panda-mobile-bottom-nav');
     expect(layout).toContain("location.startsWith('/watch/')");
+    expect(layout).toContain('native?.setPlayerPage?.(isPlayerRoute)');
     expect(layout).toContain("href === '/library' ? 'Library' : label");
     expect(layout).toContain("const pathname = location.split('?')[0]");
     expect(layout).toContain("pathname === '/search'");
@@ -34,7 +37,9 @@ describe('MYpanda.fun mobile shell contract', () => {
     expect(mobileShell).toContain('.panda-mobile-featured__loading');
     expect(mobileShell).toContain('right: 12px !important');
     expect(mobileShell).toContain('border-radius: 22px');
-    expect(mobileShell).toContain('bottom: calc(8px + env(safe-area-inset-bottom, 0px)) !important');
+    expect(mobileShell).toContain('bottom: calc(8px + var(--safe-bottom, env(safe-area-inset-bottom, 0px))) !important');
+    expect(mobileShell).toContain('.system-nav-visible .panda-mobile-bottom-nav');
+    expect(mobileShell).toContain('visibility: hidden');
   });
 
   it('includes Top 10 and the planned catalogue rows without replacing the existing API', () => {
@@ -43,6 +48,10 @@ describe('MYpanda.fun mobile shell contract', () => {
     }
     expect(mobileHome).toContain('<ModernContinueWatching />');
     expect(mobileHome).toContain('buildDetailsHref');
+    expect(mobileHome).toContain('IntersectionObserver');
+    expect(mobileHome).toContain('Coming Soon');
+    expect(mobileHome).toContain('Because you watched');
+    expect(mobileHome).toContain('My List');
     expect(homeStyles).toContain('overflow-x: clip');
     expect(mobileHome).toContain('panda-mobile-featured__spotlight');
     expect(mobileHome).not.toContain('PANDA SPOTLIGHT');

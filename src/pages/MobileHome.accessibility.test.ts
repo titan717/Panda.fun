@@ -33,6 +33,18 @@ describe('Mobile cinematic billboard accessibility', () => {
     expect(styles).toContain('is-paused');
   });
 
+  it('loads the full discovery catalogue lazily with skeletons and hides empty rails', () => {
+    for (const shelf of ['Coming Soon', 'Because you watched', 'Action', 'Comedy', 'Drama', 'Sci-Fi & Fantasy', 'Horror', 'Animation & Family', 'Documentary', 'Anime']) {
+      expect(source).toContain(shelf);
+    }
+    expect(source).toContain('aria-busy="true"');
+    expect(source).toContain('panda-mobile-home__rail-skeleton');
+    expect(source).toContain('IntersectionObserver');
+    expect(source).toContain('uniqueItems');
+    expect(source).toContain('titleKey');
+    expect(source).toContain("'/search?genre=' + encodeURIComponent(genre)");
+  });
+
   it('retains swipe navigation and cinematic slide animation', () => {
     expect(source).toContain('Math.abs(distance) >= 48');
     expect(source).toContain('onTouchStart');

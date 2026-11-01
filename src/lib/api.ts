@@ -457,14 +457,14 @@ export const api = {
     return { results: data.results.map(toAnimeItem) };
   },
 
-  async getUpcomingMovies() {
-    const data = await request<MovieApiPage>('/api/v1/upcoming/movies', { region: 'US' }, undefined, 300_000);
-    return { results: data.results.map(toAnimeItem) };
+  async getUpcomingMovies(): Promise<{ results: MovieApiMedia[] }> {
+    const data = await request<MovieApiPage<MovieApiMedia>>('/api/v1/upcoming/movies', { region: 'US' }, undefined, 300_000);
+    return { results: data.results };
   },
 
-  async getUpcomingTv() {
-    const data = await request<MovieApiPage>('/api/v1/upcoming/tv', undefined, undefined, 300_000);
-    return { results: data.results.map(toAnimeItem) };
+  async getUpcomingTv(): Promise<{ results: MovieApiMedia[] }> {
+    const data = await request<MovieApiPage<MovieApiMedia>>('/api/v1/upcoming/tv', undefined, undefined, 300_000);
+    return { results: data.results };
   },
 
   async getNewOnNetflix() {
@@ -483,8 +483,9 @@ export const api = {
     return { schedule: data.episodes || [], results };
   },
 
-  async getAiringToday() {
-    return this.getAiringSchedule();
+  async getAiringToday(): Promise<{ results: MovieApiMedia[] }> {
+    const data = await request<{ episodes?: Array<{ show?: MovieApiMedia }> }>('/api/v1/airing/today', { country: 'US' }, undefined, 300_000);
+    return { results: (data.episodes || []).map(episode => episode.show).filter((show): show is MovieApiMedia => Boolean(show?.id)) };
   },
 
   async getMovies() {
@@ -492,9 +493,29 @@ export const api = {
     return { results: data.results.map(toAnimeItem) };
   },
 
-  async getGenreAnime(genre = '', limit?: number) {
-    const data = await request<{ type: 'tv' | 'movie'; genreId: number; page: number; totalPages: number; totalResults: number; results: MovieApiMedia[] }>('/api/v1/genres/' + encodeURIComponent(genre), { type: 'tv', page: 1 });
-    return { results: data.results.slice(0, limit ?? data.results.length).map(toAnimeItem) };
+  async getGenreMedia(genre: string, type: 'movie' | 'tv', limit = 24, signal?: AbortSignal): Promise<{ results: MovieApiMedia[] }> {
+    const data = await request<MovieApiPage<MovieApiMedia>>(
+      '/api/v1/genres/' + encodeURIComponent(genre),
+      { type, page: 1 },
+      signal ? { signal } : undefined
+    );
+    return { results: data.results.slice(0, limit) };
+  },
+
+  async getGenreAnime(genre = 'animation', limit = 24): Promise<{ results: MovieApiMedia[] }> {
+    // Query the same genre route for both TMDB media types and keep the raw poster/backdrop fields for shelves.
+    // Filter by original Japanese language before normalization so this rail is anime, not all animation.
+    const endpoint = '/api/v1/genres/' + encodeURIComponent(genre);
+    const [movies, shows] = await Promise.allSettled([
+      request<{ results: MovieApiMedia[] }>(endpoint, { type: 'movie', page: 1 }),
+      request<{ results: MovieApiMedia[] }>(endpoint, { type: 'tv', page: 1 }),
+    ]);
+    const combined = [
+      ...(movies.status === 'fulfilled' ? movies.value.results : []),
+      ...(shows.status === 'fulfilled' ? shows.value.results : []),
+    ];
+    const japaneseAnimation = combined.filter(item => item.language?.toLowerCase() === 'ja');
+    return { results: japaneseAnimation.slice(0, limit) };
   },
 
   async search(query: string, signal?: AbortSignal) {
@@ -507,16 +528,21 @@ export const api = {
     return { results: data.results.map(toAnimeItem), total: data.total };
   },
 
-  async getRecommendations(id: string, signal?: AbortSignal) {
+  async getRecommendationsMedia(id: string, signal?: AbortSignal): Promise<{ results: MovieApiMedia[] }> {
     const media = mediaFromId(id);
-    if (!media) return { results: [] as AnimeItem[] };
+    if (!media) return { results: [] };
     const tmdbId = await resolveTmdbId(media, signal);
-    if (!tmdbId) return { results: [] as AnimeItem[] };
-    const data = await request<MovieApiPage>(
+    if (!tmdbId) return { results: [] };
+    const data = await request<MovieApiPage<MovieApiMedia>>(
       `/api/v1/recommendations/${tmdbId}`,
       { type: media.type },
       { signal }
     );
+    return { results: data.results };
+  },
+
+  async getRecommendations(id: string, signal?: AbortSignal): Promise<{ results: AnimeItem[] }> {
+    const data = await this.getRecommendationsMedia(id, signal);
     return { results: data.results.map(toAnimeItem) };
   },
 
