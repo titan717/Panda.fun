@@ -204,6 +204,7 @@ export function Home() {
   const [genreShelves, setGenreShelves] = useState<Record<string, MovieApiMedia[]>>({});
   const [lastWatchedTitle, setLastWatchedTitle] = useState('');
   const [error, setError] = useState<string | null>(null);
+  const [secondaryLoading, setSecondaryLoading] = useState(true);
   const [trailer, setTrailer] = useState<any>(null);
   const [isInList, setIsInList] = useState(false);
   const soundEnabled = true;
@@ -264,6 +265,7 @@ export function Home() {
         api.getUpcomingTv()
       ]).then(([netflix, disney, today, upcomingMovies, upcomingTv]) => {
         if (!active) return;
+        setSecondaryLoading(false);
         if (netflix.status === 'fulfilled') setNewOnNetflix((netflix.value.results || []) as unknown as MovieApiMedia[]);
         if (disney.status === 'fulfilled') setNewOnDisneyPlus((disney.value.results || []) as unknown as MovieApiMedia[]);
         if (today.status === 'fulfilled') setAiring((today.value.results || []) as unknown as MovieApiMedia[]);
@@ -389,7 +391,7 @@ export function Home() {
   const myList = libraryManager.getWatchlist().map(item => ({ id: item.id, title: item.title, poster: item.image, type: item.id.toLowerCase().includes('movie') ? 'movie' : 'tv' } as MovieApiMedia));
   const genreShelf = (name: string) => genreShelves[name] || [];
 
-  return isMobileLayout ? <MobileHome items={[...(featured ? [featured] : []), ...trending, ...popularMovies, ...popularTv]} trendingItems={trending} popularMovies={popularMovies} popularTv={popularTv} newOnNetflix={newOnNetflix} newOnDisneyPlus={newOnDisneyPlus} airing={airing} comingSoon={comingSoon} becauseWatched={becauseWatched} lastWatchedTitle={lastWatchedTitle} loading={!home && !error} error={error} /> : (
+  return isMobileLayout ? <MobileHome items={[...(featured ? [featured] : []), ...trending, ...popularMovies, ...popularTv]} trendingItems={trending} popularMovies={popularMovies} popularTv={popularTv} newOnNetflix={newOnNetflix} newOnDisneyPlus={newOnDisneyPlus} airing={airing} comingSoon={comingSoon} becauseWatched={becauseWatched} lastWatchedTitle={lastWatchedTitle} loading={!error && (!home || secondaryLoading)} error={error} /> : (
     <div className="kinoma-home">
       <div className="kinoma-home__ambient" aria-hidden="true">
         <span className="kinoma-home__ambient-orb kinoma-home__ambient-orb--one" />
