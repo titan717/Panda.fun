@@ -20,7 +20,7 @@ describe('genre-prefilled Search collections', () => {
   });
 
   it('shows the selected genre as the collection heading', () => {
-    expect(search).toContain("genreFilter ? 'Genre collection' : 'Discover'");
-    expect(search).toContain("genreFilter ? genreFilter : filter === 'movie'");
+    expect(search).toContain("genreFilter ? genreFilter : 'Trending now'");
+    expect(search).toContain("genreFilter ? getGenreSearchResults(genreFilter) : api.getTrending()");
   });
 });
