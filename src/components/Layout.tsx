@@ -107,7 +107,7 @@ export function Layout({ children }: { children: React.ReactNode }) {
             const active = (href === '/home' && (pathname === '/home' || pathname === '/browse')) ||
               (href === '/search' && (pathname === '/search' || pathname === '/explore' || pathname === '/whats-new')) ||
               (href === '/library' && (pathname === '/library' || pathname === '/history'));
-            return <Link key={href} href={href} className={`panda-mobile-bottom-nav__item ${active ? 'is-active' : ''}`} aria-label={mobileLabel} aria-current={active ? 'page' : undefined}><span className="panda-mobile-bottom-nav__icon"><Icon size={21} strokeWidth={1.9} /></span><span className="panda-mobile-bottom-nav__label">{mobileLabel}</span></Link>;
+            return <Link key={href} href={href} onClick={() => { try { navigator.vibrate?.(8); } catch {} }} className={`panda-mobile-bottom-nav__item ${active ? 'is-active' : ''}`} aria-label={mobileLabel} aria-current={active ? 'page' : undefined}><span className="panda-mobile-bottom-nav__icon"><Icon size={21} strokeWidth={active ? 2.3 : 1.9} /></span><span className="panda-mobile-bottom-nav__label">{mobileLabel}</span></Link>;
           })}
         </nav>
       )}
