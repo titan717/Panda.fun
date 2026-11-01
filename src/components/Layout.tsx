@@ -81,6 +81,11 @@ export function Layout({ children }: { children: React.ReactNode }) {
   }, []);
 
   useEffect(() => {
+    const native = (window as Window & { KinomaNative?: { setPlayerPage?: (isPlayer: boolean) => void } }).KinomaNative;
+    native?.setPlayerPage?.(isPlayerRoute);
+  }, [isPlayerRoute]);
+
+  useEffect(() => {
     // TV screens manage their own initial focus so the remote lands on the
     // primary action/search field instead of an invisible main landmark.
     if (!tvMode) mainRef.current?.focus({ preventScroll: true });
