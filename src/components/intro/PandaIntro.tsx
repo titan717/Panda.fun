@@ -96,13 +96,13 @@ export function PandaIntro({ onComplete }: { onComplete: () => void }) {
   };
 
   return (
-    <div className={`panda-intro ${leaving ? 'is-leaving' : ''}`} role="presentation" aria-label="mypanda.fun">
+    <div className={`panda-intro ${leaving ? 'is-leaving' : ''}`} role="presentation" aria-label="Panda.fun">
       <div className="panda-intro__content">
         <div className="panda-intro__mascot">
           <KinomaLogo size="xl" variant="mark" className="panda-intro__mark" />
         </div>
         <div className="panda-intro__wordmark" aria-label="mypanda.fun">
-          mypanda<span>.fun</span>
+          panda<span>.fun</span>
         </div>
       </div>
 

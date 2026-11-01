@@ -1,7 +1,7 @@
 <resources>
-    <string name="app_name">MyPanda</string>
-    <string name="update_available">MyPanda Update Available</string>
-    <string name="update_prompt">A new version of MyPanda is ready to install.</string>
+    <string name="app_name">Panda.fun</string>
+    <string name="update_available">Panda.fun Update Available</string>
+    <string name="update_prompt">A new version of Panda.fun is ready to install.</string>
     <string name="update_now">Update Now</string>
     <string name="later">Later</string>
 </resources>

@@ -4,7 +4,7 @@ import { ArrowRight, Info, Play, Plus } from 'lucide-react';
 import { AnimatedCheck, Pressable, Reveal, Shimmer, useMotionPreference } from '../motion';
 import { ThinkingOrb } from 'thinking-orbs';
 import { ModernContinueWatching } from '../components/ui/modern/ModernContinueWatching';
-import { MovieApiMedia } from '../lib/api';
+import { api, type MovieApiMedia } from '../lib/api';
 import { buildDetailsHref, buildWatchHref } from '../lib/mediaRoute';
 import { libraryManager } from '../lib/library';
 import { optimizeImageUrl } from '../lib/mediaImages';
@@ -19,6 +19,9 @@ type MobileHomeProps = {
   newOnNetflix?: MovieApiMedia[];
   newOnDisneyPlus?: MovieApiMedia[];
   airing?: MovieApiMedia[];
+  comingSoon?: MovieApiMedia[];
+  becauseWatched?: MovieApiMedia[];
+  lastWatchedTitle?: string;
   loading?: boolean;
   error?: string | null;
 };
@@ -32,34 +35,105 @@ function uniqueItems(items: MovieApiMedia[]) {
   return items.filter((item, index, all) => Boolean(item?.id) && all.findIndex(other => other?.id === item.id) === index);
 }
 
-function MobileRail({ title, items, topTen = false }: { title: string; items: MovieApiMedia[]; topTen?: boolean }) {
+function MobileRail({ title, items, topTen = false, wide = false, genre }: { title: string; items: MovieApiMedia[]; topTen?: boolean; wide?: boolean; genre?: string }) {
+  const sectionRef = useRef<HTMLElement | null>(null);
+  const [nearViewport, setNearViewport] = useState(false);
+  useEffect(() => {
+    const node = sectionRef.current;
+    if (!node) return;
+    if (typeof IntersectionObserver === 'undefined') { setNearViewport(true); return; }
+    const observer = new IntersectionObserver(entries => {
+      if (entries.some(entry => entry.isIntersecting)) { setNearViewport(true); observer.disconnect(); }
+    }, { rootMargin: '420px 0px' });
+    observer.observe(node);
+    return () => observer.disconnect();
+  }, []);
   if (!items.length) return null;
   const visible = items.slice(0, topTen ? 10 : 12);
-
+  const railClass = topTen ? 'panda-mobile-home__top10' : wide ? 'panda-mobile-home__trending panda-mobile-home__trending--wide' : 'panda-mobile-home__trending';
   return (
-    <section className={`panda-mobile-home__collection${topTen ? ' panda-mobile-home__collection--top10' : ''}`} aria-label={title}>
+    <section ref={sectionRef} className={topTen ? 'panda-mobile-home__collection panda-mobile-home__collection--top10' : 'panda-mobile-home__collection'} aria-label={title}>
       <div className="panda-mobile-home__section-head">
         <h2>{title}</h2>
-        <Link href="/search" aria-label={`Explore ${title}`}><ArrowRight size={17} /></Link>
+        <Link href={genre ? '/search?genre=' + encodeURIComponent(genre) : '/search'} aria-label={'Explore ' + title}><ArrowRight size={17} /></Link>
       </div>
-      <div className={topTen ? 'panda-mobile-home__top10' : 'panda-mobile-home__trending'}>
-        {visible.map((item, index) => {
-          const image = imageFor(item);
-          const href = buildDetailsHref(item, item.type === 'movie' ? 'movie' : 'series');
-          return topTen ? (
-            <div className="panda-mobile-home__top10-item" key={item.id}>
-              <span className="panda-mobile-home__rank" aria-label={`Rank ${index + 1}`}>{index + 1}</span>
-              <Link href={href} className="panda-mobile-home__top10-card" aria-label={`Open ${item.title}, Top 10 rank ${index + 1}`}>
-                {image ? <img src={image} alt="" loading={index < 3 ? 'eager' : 'lazy'} decoding="async" referrerPolicy="no-referrer" /> : <span className="panda-mobile-featured__no-art" />}
+      {!nearViewport ? (
+        <div className={wide ? "panda-mobile-home__rail-skeleton is-wide" : "panda-mobile-home__rail-skeleton"} aria-hidden="true"><span /><span /><span /><span /></div>
+      ) : (
+        <div className={railClass}>
+          {visible.map((item, index) => {
+            const image = imageFor(item);
+            const href = buildDetailsHref(item, item.type === 'movie' ? 'movie' : 'series');
+            return topTen ? (
+              <div className="panda-mobile-home__top10-item" key={item.id}>
+                <span className="panda-mobile-home__rank" aria-label={'Rank ' + (index + 1)}>{index + 1}</span>
+                <Link href={href} className="panda-mobile-home__top10-card" aria-label={'Open ' + item.title + ', Top 10 rank ' + (index + 1)}>
+                  {image ? <img src={image} alt="" loading={index < 3 ? 'eager' : 'lazy'} decoding="async" referrerPolicy="no-referrer" /> : <span className="panda-mobile-featured__no-art" />}
+                </Link>
+              </div>
+            ) : (
+              <Link key={item.id} href={href} className={wide ? 'panda-mobile-home__trending-card is-wide' : 'panda-mobile-home__trending-card'} aria-label={'Open ' + item.title}>
+                {image ? <img src={image} alt="" loading="lazy" decoding="async" referrerPolicy="no-referrer" /> : <span className="panda-mobile-featured__no-art" />}
               </Link>
-            </div>
-          ) : (
-            <Link key={item.id} href={href} className="panda-mobile-home__trending-card" aria-label={`Open ${item.title}`}>
-              {image ? <img src={image} alt="" loading="lazy" decoding="async" referrerPolicy="no-referrer" /> : <span className="panda-mobile-featured__no-art" />}
-            </Link>
-          );
-        })}
-      </div>
+            );
+          })}
+        </div>
+      )}
+    </section>
+  );
+}
+
+
+function LazyGenreRail({ title, genre, movieGenre, tvGenre, animeOnly = false }: {
+  title: string;
+  genre: string;
+  movieGenre?: string;
+  tvGenre?: string | null;
+  animeOnly?: boolean;
+}) {
+  const sectionRef = useRef<HTMLElement | null>(null);
+  const [nearViewport, setNearViewport] = useState(false);
+  const [items, setItems] = useState<MovieApiMedia[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    const node = sectionRef.current;
+    if (!node) return;
+    if (typeof IntersectionObserver === 'undefined') { setNearViewport(true); return; }
+    const observer = new IntersectionObserver(entries => {
+      if (entries.some(entry => entry.isIntersecting)) {
+        setNearViewport(true);
+        observer.disconnect();
+      }
+    }, { rootMargin: '480px 0px' });
+    observer.observe(node);
+    return () => observer.disconnect();
+  }, []);
+
+  useEffect(() => {
+    if (!nearViewport) return;
+    let active = true;
+    const requests = animeOnly
+      ? [api.getGenreAnime('animation', 24)]
+      : [
+          api.getGenreMedia(movieGenre || genre, 'movie', 12),
+          api.getGenreMedia(tvGenre || genre, 'tv', 12),
+        ];
+    Promise.allSettled(requests).then(results => {
+      if (!active) return;
+      const merged = results.flatMap(result => result.status === 'fulfilled' ? result.value.results : []) as unknown as MovieApiMedia[];
+      setItems(uniqueItems(merged));
+      setLoading(false);
+    });
+    return () => { active = false; };
+  }, [nearViewport, animeOnly, movieGenre, tvGenre, genre]);
+
+  if (!items.length && !loading) return null;
+  if (items.length) return <MobileRail title={title} items={items} genre={genre} />;
+  return (
+    <section ref={sectionRef} className="panda-mobile-home__collection" aria-label={title}>
+      <div className="panda-mobile-home__section-head"><h2>{title}</h2><Link href={'/search?genre=' + encodeURIComponent(genre)} aria-label={'Explore ' + title}><ArrowRight size={17} /></Link></div>
+      <div className="panda-mobile-home__rail-skeleton" aria-hidden="true"><span /><span /><span /><span /></div>
     </section>
   );
 }
@@ -72,10 +146,14 @@ export function MobileHome({
   newOnNetflix = [],
   newOnDisneyPlus = [],
   airing = [],
+  comingSoon = [],
+  becauseWatched = [],
+  lastWatchedTitle = '',
   loading = false,
   error = null,
 }: MobileHomeProps) {
   const [activeIndex, setActiveIndex] = useState(0);
+  const [activeCategory, setActiveCategory] = useState('All');
   const [isInList, setIsInList] = useState(false);
   const [swipeDirection, setSwipeDirection] = useState<'next' | 'previous'>('next');
   const [touchPaused, setTouchPaused] = useState(false);
@@ -85,15 +163,43 @@ export function MobileHome({
   const touchStartX = useRef<number | null>(null);
   const suppressSwipeClick = useRef(false);
   const touchResumeTimer = useRef<number | null>(null);
-  const featuredItems = useMemo(() => uniqueItems(items).filter(item => item.poster || item.backdrop).slice(0, 5), [items]);
-  const catalogue = useMemo(() => uniqueItems([
+  const filterCategory = (list: MovieApiMedia[]) => {
+    if (activeCategory === 'All') return list;
+    const category = activeCategory.toLowerCase();
+    return list.filter(item => {
+      const genres = (item.genres || []).map(genre => genre.toLowerCase());
+      if (category === 'movies') return item.type === 'movie';
+      if (category === 'tv shows') return item.type === 'tv';
+      if (category === 'anime') return genres.some(genre => /anime|animation/.test(genre));
+      if (category === 'kids') return genres.some(genre => /family|kids|animation/.test(genre));
+      if (category === 'sci-fi & fantasy') return genres.some(genre => /science fiction|sci-fi|fantasy/.test(genre));
+      if (category === 'action') return genres.some(genre => /action|adventure/.test(genre));
+      return genres.some(genre => genre.includes(category));
+    });
+  };
+  const categorizedItems = useMemo(() => filterCategory(items), [items, activeCategory]);
+  const featuredItems = useMemo(() => uniqueItems(categorizedItems).filter(item => item.poster || item.backdrop).slice(0, 5), [categorizedItems]);
+  const catalogue = useMemo(() => uniqueItems(filterCategory([
     ...(trendingItems || []),
     ...popularMovies,
     ...popularTv,
     ...items,
-  ]), [trendingItems, popularMovies, popularTv, items]);
+  ])), [trendingItems, popularMovies, popularTv, items, activeCategory]);
   const topTen = catalogue.slice(0, 10);
-  const trending = uniqueItems(trendingItems?.length ? trendingItems : items);
+  const trending = uniqueItems(filterCategory(trendingItems?.length ? trendingItems : items));
+  const myList = libraryManager.getWatchlist().map(item => ({ id: item.id, title: item.title, poster: item.image, type: item.id.toLowerCase().includes('movie') ? 'movie' : 'tv' } as MovieApiMedia));
+
+  useEffect(() => {
+    const onCategory = (event: Event) => {
+      const category = (event as CustomEvent).detail;
+      if (typeof category === 'string') {
+        setActiveCategory(category);
+        setActiveIndex(0);
+      }
+    };
+    window.addEventListener('panda_home_category_select', onCategory);
+    return () => window.removeEventListener('panda_home_category_select', onCategory);
+  }, []);
 
   useEffect(() => {
     setActiveIndex(current => Math.min(current, Math.max(0, featuredItems.length - 1)));
@@ -242,12 +348,23 @@ export function MobileHome({
 
       <MobileRail title="Top 10" items={topTen} topTen />
       <ModernContinueWatching />
+      <MobileRail title="My List" items={uniqueItems(filterCategory(myList))} />
       <MobileRail title="Trending Now" items={trending} />
-      <MobileRail title="New on Netflix" items={uniqueItems(newOnNetflix)} />
-      <MobileRail title="New on Disney+" items={uniqueItems(newOnDisneyPlus)} />
-      <MobileRail title="Popular Movies" items={uniqueItems(popularMovies)} />
-      <MobileRail title="Popular TV Shows" items={uniqueItems(popularTv)} />
-      <MobileRail title="Airing Today" items={uniqueItems(airing)} />
+      <MobileRail title="New on Netflix" items={uniqueItems(filterCategory(newOnNetflix))} />
+      <MobileRail title="New on Disney+" items={uniqueItems(filterCategory(newOnDisneyPlus))} />
+      <MobileRail title="Popular Movies" items={uniqueItems(filterCategory(popularMovies))} />
+      <MobileRail title="Popular TV Shows" items={uniqueItems(filterCategory(popularTv))} />
+      <MobileRail title="Airing Today" items={uniqueItems(filterCategory(airing))} />
+      <MobileRail title="Coming Soon" items={uniqueItems(filterCategory(comingSoon))} wide />
+      {lastWatchedTitle && <MobileRail title={"Because you watched " + lastWatchedTitle} items={uniqueItems(filterCategory(becauseWatched))} />}
+      <LazyGenreRail title="Anime" genre="anime" animeOnly />
+      <LazyGenreRail title="Action" genre="Action" movieGenre="Action" tvGenre="Action & Adventure" />
+      <LazyGenreRail title="Comedy" genre="Comedy" movieGenre="Comedy" tvGenre="Comedy" />
+      <LazyGenreRail title="Drama" genre="Drama" />
+      <LazyGenreRail title="Sci-Fi & Fantasy" genre="Sci-Fi & Fantasy" movieGenre="Science Fiction" tvGenre="Sci-Fi & Fantasy" />
+      <LazyGenreRail title="Horror" genre="Horror" movieGenre="Horror" tvGenre={null} />
+      <LazyGenreRail title="Animation & Family" genre="Animation & Family" movieGenre="Animation" tvGenre="Animation" />
+      <LazyGenreRail title="Documentary" genre="Documentary" />
     </div>
   );
 }

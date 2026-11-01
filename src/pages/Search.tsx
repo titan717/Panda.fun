@@ -1,35 +1,21 @@
 
 import React, { FormEvent, useEffect, useMemo, useRef, useState } from 'react';
 import { Footer } from '../components/ui/Footer';
+import { ArrowRight, Check, Clock3, Filter, Mic, MicOff, Plus, Play, Search as SearchIcon, Sparkles, X } from 'lucide-react';
 import { Link, useLocation, useSearch } from 'wouter';
-import { ArrowRight, Check, Clock3, Filter, Mic, MicOff, Plus, Play, Search as SearchIcon, Sparkles, WifiOff, X } from 'lucide-react';
 import { updateSEO } from '../lib/seo';
 import { trackGAEvent } from '../lib/analytics';
 import { buildDetailsHref } from '../lib/mediaRoute';
 import { preferencesUtil } from '../lib/preferences';
 import { libraryManager } from '../lib/library';
 import { optimizeImageUrl } from '../lib/mediaImages';
-import { api, MovieApiError } from '../lib/api';
+import '../styles/panda-home.css';
+import { api, MovieApiError, type MovieApiMedia } from '../lib/api';
 import type { AnimeItem } from '../types';
 import { ThinkingOrb } from 'thinking-orbs';
 import { friendlyNetworkError } from '../lib/networkMessage';
-import { Pressable, Reveal, Stagger } from '../motion';
-import './search-ott.css';
 
-type SearchKind = 'movie' | 'series' | 'anime';
-type SearchFilter = 'all' | SearchKind;
-
-type SearchItem = {
-  id: string;
-  title: string;
-  type: SearchKind;
-  meta: string;
-  image?: string;
-  href: string;
-  rating?: number;
-  year?: number;
-};
-
+type SearchItem = { key?: React.Key; id: string; title: string; type: 'movie' | 'series'; meta: string; image?: string; href: string; rating?: number; year?: number; genres?: string[]; };
 type SpeechRecognitionLike = {
   lang: string;
   interimResults: boolean;
@@ -40,59 +26,60 @@ type SpeechRecognitionLike = {
   start: () => void;
   stop: () => void;
 };
-
 type SpeechRecognitionConstructor = new () => SpeechRecognitionLike;
-
-const titleOf = (item: AnimeItem) =>
-  typeof item.title === 'string'
-    ? item.title
-    : item.title.english || item.title.romaji || item.title.native || 'Untitled';
-
+const titleOf = (item: AnimeItem) => typeof item.title === 'string' ? item.title : item.title.english || item.title.romaji || item.title.native || 'Untitled';
 const mapItem = (item: AnimeItem): SearchItem => {
-  const type: SearchKind = item.contentType === 'movie' ? 'movie' : item.contentType === 'anime' ? 'anime' : 'series';
+  const type = item.contentType === 'movie' ? 'movie' : 'series';
   return {
     id: item.id,
     title: titleOf(item),
     type,
-    meta: [
-      item.releaseDate ? String(item.releaseDate).slice(0, 4) : null,
-      item.rating ? `★ ${item.rating}` : null,
-      type === 'movie' ? 'Movie' : type === 'anime' ? 'Anime' : 'Series'
-    ].filter(Boolean).join(' • ') || 'Panda.fun',
+    meta: [item.releaseDate ? String(item.releaseDate).slice(0, 4) : null, item.rating ? '★ ' + item.rating : null, type === 'movie' ? 'Movie' : 'Series'].filter(Boolean).join(' • ') || 'MovieApi',
     image: item.image,
     rating: Number(item.rating || 0) || 0,
     year: item.releaseDate ? Number(String(item.releaseDate).slice(0, 4)) || undefined : undefined,
-    href: buildDetailsHref(titleOf(item), type === 'movie' ? 'movie' : 'series', item.id)
+    href: buildDetailsHref(titleOf(item), type, item.id),
+    genres: item.genres || [],
   };
 };
 
-function HighlightedTitle({ title, query }: { title: string; query: string }) {
-  const normalized = query.trim().toLocaleLowerCase();
-  if (!normalized) return <>{title}</>;
-  const index = title.toLocaleLowerCase().indexOf(normalized);
-  if (index < 0) return <>{title}</>;
-  return (
-    <>
-      {title.slice(0, index)}
-      <mark>{title.slice(index, index + normalized.length)}</mark>
-      {title.slice(index + normalized.length)}
-    </>
-  );
+async function getGenreSearchResults(genre: string): Promise<{ results: AnimeItem[] }> {
+  if (genre.toLowerCase() === 'anime') return api.getGenreAnime('animation', 24);
+  const key = genre.toLowerCase();
+  const aliases: Record<string, [string, string]> = {
+    action: ['Action', 'Action & Adventure'],
+    comedy: ['Comedy', 'Comedy'],
+    drama: ['Drama', 'Drama'],
+    'sci-fi & fantasy': ['Science Fiction', 'Sci-Fi & Fantasy'],
+    horror: ['Horror', 'Horror'],
+    'animation & family': ['Animation', 'Animation'],
+    documentary: ['Documentary', 'Documentary'],
+  };
+  const [movieGenre, tvGenre] = aliases[key] || [genre, genre];
+  const [movies, shows] = await Promise.allSettled([
+    api.getGenreMedia(movieGenre, 'movie', 24),
+    api.getGenreMedia(tvGenre, 'tv', 24),
+  ]);
+  const merged = [
+    ...(movies.status === 'fulfilled' ? movies.value.results : []),
+    ...(shows.status === 'fulfilled' ? shows.value.results : []),
+  ].filter((item, index, all) => item?.id && all.findIndex(other => other.id === item.id) === index);
+  return {
+    results: merged.map((item: MovieApiMedia) => ({
+      id: item.id,
+      title: item.title,
+      image: item.poster || item.backdrop || '',
+      rating: item.rating,
+      releaseDate: item.releaseDate,
+      contentType: item.type === 'movie' ? 'movie' : 'series',
+      genres: item.genres || [],
+    })),
+  };
 }
 
-const GENRE_TILES: Array<{ label: string; query: string; className: string }> = [
-  { label: 'Action', query: 'action', className: 'is-action' },
-  { label: 'Comedy', query: 'comedy', className: 'is-comedy' },
-  { label: 'Sci-Fi', query: 'science fiction', className: 'is-scifi' },
-  { label: 'Romance', query: 'romance', className: 'is-romance' },
-  { label: 'Thriller', query: 'thriller', className: 'is-thriller' },
-  { label: 'Anime', query: 'anime', className: 'is-anime' }
-];
-
-function ResultCard({ item, query, priority }: { item: SearchItem; query: string; priority: boolean }) {
+function ContentCard({ item, priority = false }: { key?: React.Key; item: SearchItem; priority?: boolean }) {
   const [inList, setInList] = useState(() => libraryManager.isInWatchlist(item.id));
   const image = item.image ? optimizeImageUrl(item.image, 'w342') || item.image : '';
-
   const toggleList = (event: React.MouseEvent<HTMLButtonElement>) => {
     event.preventDefault();
     event.stopPropagation();
@@ -100,26 +87,46 @@ function ResultCard({ item, query, priority }: { item: SearchItem; query: string
   };
 
   return (
-    <article className="panda-search-card">
+    <article className="panda-content-card">
       <Link
         href={item.href}
-        className="panda-search-card__link"
+        className="panda-content-card__link"
         aria-label={`Open ${item.title}`}
         onClick={() => trackGAEvent('search_result_select', { content_type: item.type, title: item.title })}
       >
-        <span className="panda-search-card__poster">
-          {image ? <img src={image} alt="" loading={priority ? 'eager' : 'lazy'} fetchPriority={priority ? 'high' : 'auto'} decoding="async" referrerPolicy="no-referrer" /> : <Play aria-hidden="true" size={20} />}
-          <span className="panda-search-card__badge">{item.type === 'movie' ? 'Movie' : item.type === 'anime' ? 'Anime' : 'TV'}</span>
-        </span>
-        <strong><HighlightedTitle title={item.title} query={query} /></strong>
-        <span>{item.meta}</span>
+        <div className="panda-content-card__media">
+          {image ? (
+            <div className="panda-content-card__image-wrap">
+              <div className="panda-content-card__image-skeleton" aria-hidden="true" />
+              <img
+                src={image}
+                srcSet={image.includes('/w500/') ? `${image.replace('/w500/', '/w342/')} 342w, ${image} 500w` : undefined}
+                sizes="(max-width: 620px) 44vw, (max-width: 1050px) 24vw, 18vw"
+                alt=""
+                loading={priority ? 'eager' : 'lazy'}
+                fetchPriority={priority ? 'high' : 'auto'}
+                decoding="async"
+                referrerPolicy="no-referrer"
+                onLoad={event => event.currentTarget.previousElementSibling?.classList.add('is-hidden')}
+              />
+            </div>
+          ) : null}
+          <div className="panda-content-card__top">
+            <span className="panda-content-card__badge">{item.type === 'movie' ? 'Movie' : 'Series'}</span>
+          </div>
+          <span className="panda-content-card__play" aria-hidden="true"><Play size={17} fill="currentColor" /></span>
+        </div>
+        <div className="panda-content-card__copy">
+          <strong title={item.title}>{item.title}</strong>
+          <span>{item.meta}</span>
+        </div>
       </Link>
       <button
         type="button"
-        className={`panda-search-card__list ${inList ? 'is-added' : ''}`}
+        className={`panda-content-card__quick${inList ? ' is-added' : ''}`}
         onClick={toggleList}
-        aria-pressed={inList}
         aria-label={inList ? `Remove ${item.title} from My List` : `Add ${item.title} to My List`}
+        title={inList ? 'Remove from My List' : 'Add to My List'}
       >
         {inList ? <Check size={15} /> : <Plus size={15} />}
       </button>
@@ -129,7 +136,6 @@ function ResultCard({ item, query, priority }: { item: SearchItem; query: string
 
 export function Search() {
   const [location, setLocation] = useLocation();
-  const searchString = useSearch();
   const initialQuery = useMemo(() => new URLSearchParams(window.location.search).get('keyword')?.trim() || '', []);
   const [query, setQuery] = useState(initialQuery);
   const [submittedQuery, setSubmittedQuery] = useState(initialQuery);
@@ -139,99 +145,92 @@ export function Search() {
   const [error, setError] = useState<string | null>(null);
   const [retryNonce, setRetryNonce] = useState(0);
   const [voiceListening, setVoiceListening] = useState(false);
-  const [filter, setFilter] = useState<SearchFilter>(() => {
-    const requested = new URLSearchParams(window.location.search).get('type');
-    return requested === 'movie' || requested === 'series' || requested === 'anime' ? requested : 'all';
-  });
-  const inputRef = useRef<HTMLInputElement>(null);
   const recognitionRef = useRef<SpeechRecognitionLike | null>(null);
-  const speechWindow = window as Window & {
-    SpeechRecognition?: SpeechRecognitionConstructor;
-    webkitSpeechRecognition?: SpeechRecognitionConstructor;
-  };
-  const SpeechRecognitionApi = speechWindow.SpeechRecognition || speechWindow.webkitSpeechRecognition;
-  const voiceSearchSupported = Boolean(SpeechRecognitionApi);
-  const isSearching = submittedQuery.length > 0;
-
+  const [genreFilter, setGenreFilter] = useState('');
+  const [filter, setFilter] = useState<'all' | 'movie' | 'series'>(() => {
+    const requestedType = new URLSearchParams(window.location.search).get('type');
+    return requestedType === 'movie' || requestedType === 'series' ? requestedType : 'all';
+  });
+  // wouter's location excludes the query string; read type/keyword from useSearch so
+  // sidebar links like /search?type=series or ?keyword=sports apply while already on Search.
+  const searchString = useSearch();
   useEffect(() => {
     const params = new URLSearchParams(searchString);
     const requestedType = params.get('type');
-    setFilter(requestedType === 'movie' || requestedType === 'series' || requestedType === 'anime' ? requestedType : 'all');
+    setFilter(requestedType === 'movie' || requestedType === 'series' ? requestedType : 'all');
     const keyword = params.get('keyword')?.trim() || '';
+    setGenreFilter(params.get('genre')?.trim() || '');
     setSubmittedQuery(previous => (previous === keyword ? previous : keyword));
     if (keyword) setQuery(previous => (previous.trim() === keyword ? previous : keyword));
   }, [searchString]);
-
+  const inputRef = useRef<HTMLInputElement>(null);
+  const speechWindow = window as Window & { SpeechRecognition?: SpeechRecognitionConstructor; webkitSpeechRecognition?: SpeechRecognitionConstructor };
+  const SpeechRecognitionApi = speechWindow.SpeechRecognition || speechWindow.webkitSpeechRecognition;
+  const voiceSearchSupported = Boolean(SpeechRecognitionApi);
+  const resultsRef = useRef<HTMLElement>(null);
+  const isSearching = submittedQuery.length > 0;
   const visibleResults = useMemo(() => {
     const normalized = submittedQuery.toLocaleLowerCase();
     return results
       .filter(item => filter === 'all' || item.type === filter)
+      .filter(item => {
+        if (!genreFilter) return true;
+        const wanted = genreFilter.toLowerCase();
+        const genres = (item.genres || []).map(value => value.toLowerCase());
+        if (wanted === 'sci-fi & fantasy') return genres.some(value => /science fiction|sci-fi|fantasy/.test(value));
+        if (wanted === 'animation & family') return genres.some(value => /animation|family/.test(value));
+        if (wanted === 'action') return genres.some(value => /action|adventure/.test(value));
+        return genres.some(value => value.includes(wanted));
+      })
       .sort((a, b) => {
         if (!normalized) return b.rating - a.rating;
         const score = (item: SearchItem) => {
           const title = item.title.toLocaleLowerCase();
-          return (title === normalized ? 1000 : 0)
-            + (title.startsWith(normalized) ? 300 : 0)
-            + (title.includes(normalized) ? 100 : 0)
-            + item.rating;
+          return (title === normalized ? 1000 : 0) + (title.startsWith(normalized) ? 300 : 0) + (title.includes(normalized) ? 100 : 0) + item.rating;
         };
         return score(b) - score(a);
       });
-  }, [results, filter, submittedQuery]);
+  }, [results, filter, submittedQuery, genreFilter]);
 
   useEffect(() => {
     setRecentSearches(preferencesUtil.getRecentSearches());
-    updateSEO({
-      title: isSearching ? `Search “${submittedQuery}”` : 'Search',
-      description: 'Find movies, TV series and anime on Panda.fun.',
-      type: 'website'
-    });
+    updateSEO({ title: isSearching ? 'Search "' + submittedQuery + '"' : 'Search', description: 'Find movies, TV series and anime on Panda.fun.', type: 'website' });
   }, [isSearching, submittedQuery]);
-
-  useEffect(() => {
-    const timer = window.setTimeout(() => setSubmittedQuery(query.trim()), 250);
-    return () => window.clearTimeout(timer);
-  }, [query]);
 
   useEffect(() => {
     let active = true;
     const controller = new AbortController();
     setLoading(true);
     setError(null);
-    const request = isSearching ? api.search(submittedQuery, controller.signal) : api.getTrending();
+    const request = isSearching ? api.search(submittedQuery, controller.signal) : genreFilter ? getGenreSearchResults(genreFilter) : api.getTrending();
+    request.then(data => active && setResults(data.results.map(mapItem)))
+      .catch((err: unknown) => {
+        if (!active) return;
+        setResults([]);
+        setError(friendlyNetworkError(err instanceof MovieApiError ? err : null, 'Search is unavailable right now. Please try again in a moment.'));
+      })
+      .finally(() => active && setLoading(false));
+    return () => { active = false; controller.abort(); };
+  }, [isSearching, submittedQuery, genreFilter, retryNonce]);
 
-    request.then(data => {
-      if (active) setResults(data.results.map(mapItem));
-    }).catch((err: unknown) => {
-      if (!active) return;
-      setResults([]);
-      setError(friendlyNetworkError(err instanceof MovieApiError ? err : null, 'Search is unavailable right now. Please try again in a moment.'));
-    }).finally(() => {
-      if (active) setLoading(false);
+  useEffect(() => {
+    if (!submittedQuery) return;
+    const frame = window.requestAnimationFrame(() => {
+      resultsRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
     });
-
-    return () => {
-      active = false;
-      controller.abort();
-    };
-  }, [isSearching, submittedQuery, retryNonce]);
+    return () => window.cancelAnimationFrame(frame);
+  }, [submittedQuery]);
 
   useEffect(() => {
-    if (!isSearching) return;
-    setLocation(`/search?keyword=${encodeURIComponent(submittedQuery)}${filter !== 'all' ? `&type=${filter}` : ''}`, { replace: true });
-  }, [submittedQuery, filter, isSearching, setLocation]);
+    if (inputRef.current && submittedQuery) inputRef.current.focus();
+  }, [submittedQuery]);
 
   useEffect(() => {
-    const onPopState = () => {
-      if (query) {
-        setQuery('');
-        setSubmittedQuery('');
-        setFilter('all');
-      }
-    };
-    window.addEventListener('popstate', onPopState);
-    return () => window.removeEventListener('popstate', onPopState);
-  }, [query]);
+    if ((window as Window & { isKinomaAndroidTV?: boolean }).isKinomaAndroidTV) {
+      const frame = window.requestAnimationFrame(() => inputRef.current?.focus({ preventScroll: true }));
+      return () => window.cancelAnimationFrame(frame);
+    }
+  }, []);
 
   useEffect(() => () => {
     recognitionRef.current?.stop();
@@ -276,48 +275,18 @@ export function Search() {
 
   const submitSearch = (event?: FormEvent) => {
     event?.preventDefault();
-    inputRef.current?.blur();
     const clean = query.trim();
-    if (!clean) return;
+    if (!clean) { setSubmittedQuery(''); setLocation('/search'); return; }
     preferencesUtil.addRecentSearch(clean);
+    trackGAEvent('search', { content_type: 'catalog', has_query: true });
     setRecentSearches(preferencesUtil.getRecentSearches());
     setSubmittedQuery(clean);
-    trackGAEvent('search', { content_type: 'catalog', has_query: true });
+    setLocation('/search?keyword=' + encodeURIComponent(clean) + (filter !== 'all' ? '&type=' + filter : '') + (genreFilter ? '&genre=' + encodeURIComponent(genreFilter) : ''));
   };
-
-  const clearAll = () => {
-    setQuery('');
-    setSubmittedQuery('');
-    setError(null);
-    setFilter('all');
-    setLocation('/search', { replace: true });
-    inputRef.current?.focus();
-  };
-
-  const clearInput = () => {
-    setQuery('');
-    inputRef.current?.focus();
-  };
-
-  const removeRecent = (value: string) => {
-    preferencesUtil.removeRecentSearch(value);
-    setRecentSearches(preferencesUtil.getRecentSearches());
-  };
-
-  const clearRecent = () => {
-    preferencesUtil.clearRecentSearches();
-    setRecentSearches([]);
-  };
-
-  const runSearch = (value: string) => {
-    setQuery(value);
-    setSubmittedQuery(value);
-    setFilter('all');
-    preferencesUtil.addRecentSearch(value);
-    setRecentSearches(preferencesUtil.getRecentSearches());
-  };
-
-  const surprisePool = useMemo(() => results.filter(item => item.id && item.title), [results]);
+  const clearSearch = () => { setQuery(''); setSubmittedQuery(''); setError(null); setFilter('all'); setGenreFilter(''); inputRef.current?.focus(); setLocation('/search'); };
+  const clearQueryInput = () => { setQuery(''); inputRef.current?.focus(); };
+  const clearRecent = () => { preferencesUtil.clearRecentSearches(); setRecentSearches([]); };
+  const surprisePool = useMemo(() => visibleResults.filter(item => item.id && item.title), [visibleResults]);
   const surpriseMe = () => {
     if (!surprisePool.length) return;
     const pick = surprisePool[Math.floor(Math.random() * surprisePool.length)];
@@ -325,184 +294,41 @@ export function Search() {
     setLocation(pick.href);
   };
 
-  const filters: Array<{ id: SearchFilter; label: string }> = [
-    { id: 'all', label: 'All' },
-    { id: 'movie', label: 'Movies' },
-    { id: 'series', label: 'TV' },
-    { id: 'anime', label: 'Anime' }
-  ];
-  const activeFilterIndex = Math.max(0, filters.findIndex(item => item.id === filter));
-  const offline = typeof navigator !== 'undefined' && navigator.onLine === false;
+  const handleInputKeyDown = (event: React.KeyboardEvent<HTMLInputElement>) => {
+    if (event.key === 'Escape' && query) { setQuery(''); return; }
+    if (event.key === 'Escape' && !query) inputRef.current?.blur();
+  };
+  const chooseRecent = (value: string) => { setQuery(value); setSubmittedQuery(value); setFilter('all'); setGenreFilter(''); trackGAEvent('search', { content_type: 'catalog', has_query: true, source: 'recent_search' }); setLocation('/search?keyword=' + encodeURIComponent(value)); };
 
-  return (
-    <div className={`panda-search ${isSearching ? 'is-searching' : ''}`}>
-      <header className="panda-search__top">
-        <form className="panda-search__field" onSubmit={submitSearch} role="search" aria-label="Search the catalogue">
-          <SearchIcon size={18} aria-hidden="true" />
-          <input
-            ref={inputRef}
-            value={query}
-            onChange={event => setQuery(event.target.value)}
-            onKeyDown={event => {
-              if (event.key === 'Escape' && query) {
-                setQuery('');
-                return;
-              }
-              if (event.key === 'Enter') submitSearch();
-            }}
-            placeholder="Search movies, series or anime"
-            aria-label="Search movies, series or anime"
-            autoComplete="off"
-            enterKeyHint="search"
-          />
-          {query && (
-            <button type="button" onClick={clearInput} aria-label="Clear search">
-              <X size={17} />
-            </button>
-          )}
-          {voiceSearchSupported && (
-            <button
-              type="button"
-              className={voiceListening ? 'is-listening' : ''}
-              onClick={startVoiceSearch}
-              aria-pressed={voiceListening}
-              aria-label={voiceListening ? 'Stop voice search' : 'Search by voice'}
-            >
-              {voiceListening ? <MicOff size={17} /> : <Mic size={17} />}
-            </button>
-          )}
-          <button type="submit" className="panda-search__submit" aria-label="Search">
-            <ArrowRight size={15} aria-hidden="true" />
+  return <div className={"kinoma-search-page" + (isSearching ? " is-searching" : "")}>
+    <div className="kinoma-search-page__ambient" aria-hidden="true" />
+    <div className="kinoma-search-page__inner">
+      <header className="kinoma-search-head">
+        <div className="kinoma-search-head__copy">
+          <span className="kinoma-eyebrow">{isSearching ? 'Search results' : genreFilter ? 'Genre collection' : 'Discover'}</span>
+          <h1>{isSearching ? 'Results for “' + submittedQuery + '”' : genreFilter ? genreFilter : filter === 'movie' ? 'Movies for tonight' : filter === 'series' ? 'TV shows to get into' : 'Your next favourite starts here.'}</h1>
+          <p>{isSearching ? 'Movies, series and anime matching your search.' : genreFilter ? 'Explore movies and series selected from this genre.' : 'Discover films, series and anime worth staying up for.'}</p>
+        </div>
+        <form className="kinoma-search-control is-open" onSubmit={submitSearch} role="search" aria-label="Search the catalogue">
+          <SearchIcon size={18} /><input ref={inputRef} value={query} onChange={e => setQuery(e.target.value)} onKeyDown={handleInputKeyDown} placeholder="Search movies, series or anime" aria-label="Search movies, series or anime" autoComplete="off" />
+          {query && <button type="button" className="kinoma-search-control__clear" onClick={clearQueryInput} aria-label="Clear search"><X size={16} /></button>}
+          <button type="button" className={"kinoma-search-control__voice" + (voiceListening ? " is-listening" : "")} onClick={startVoiceSearch} disabled={!voiceSearchSupported} aria-label={voiceListening ? "Listening for search terms" : voiceSearchSupported ? "Search by voice" : "Voice search is not supported on this device"} title={voiceSearchSupported ? "Search by voice" : "Voice search unavailable on this device"}>
+            {voiceListening ? <MicOff size={18} /> : <Mic size={18} />}
           </button>
+          <button type="submit" className="kinoma-search-control__submit"><span className="kinoma-search-control__sheen" aria-hidden="true" /><span>Search</span><ArrowRight size={15} aria-hidden="true" /></button>
         </form>
+        {!isSearching && <button type="button" className="panda-search-surprise" onClick={surpriseMe} disabled={!surprisePool.length} aria-label="Pick a surprise title and open its details page"><Sparkles size={15} /> Surprise Me <span>Pick something for me</span></button>}
       </header>
-
-      <div className="panda-search__body">
-        {!isSearching && (
-          <section className="panda-search__idle" aria-label="Discovery">
-            {!!recentSearches.length && (
-              <section aria-label="Recent searches">
-                <div className="panda-search__section-head">
-                  <h2><Clock3 size={15} aria-hidden="true" /> Recent searches</h2>
-                  <button type="button" onClick={clearRecent}>Clear all</button>
-                </div>
-                <div className="panda-search__chips">
-                  {recentSearches.slice(0, 8).map(value => (
-                    <span key={value} className="panda-search__chip">
-                      <button type="button" onClick={() => runSearch(value)}>{value}</button>
-                      <button type="button" onClick={() => removeRecent(value)} aria-label={`Remove ${value} from recent searches`}>
-                        <X size={13} />
-                      </button>
-                    </span>
-                  ))}
-                </div>
-              </section>
-            )}
-
-            <section aria-label="Trending searches">
-              <div className="panda-search__section-head">
-                <h2><Sparkles size={15} aria-hidden="true" /> Trending searches</h2>
-                <Pressable className="panda-search__surprise" onClick={surpriseMe} disabled={!surprisePool.length} aria-label="Pick a surprise title and open its details page">
-                  <Sparkles size={14} aria-hidden="true" /> Surprise Me
-                </Pressable>
-              </div>
-              <div className="panda-search__chips">
-                {results.slice(0, 8).map(item => (
-                  <button key={item.id} type="button" className="panda-search__chip" onClick={() => runSearch(item.title)}>
-                    {item.title}
-                  </button>
-                ))}
-              </div>
-            </section>
-
-            <section aria-label="Browse by mood or genre">
-              <div className="panda-search__section-head">
-                <h2>Browse by mood</h2>
-              </div>
-              <div className="panda-search__tiles">
-                {GENRE_TILES.map(tile => (
-                  <Pressable
-                    key={tile.label}
-                    className={`panda-search__tile ${tile.className}`}
-                    onClick={() => runSearch(tile.query)}
-                  >
-                    {tile.label}
-                  </Pressable>
-                ))}
-              </div>
-            </section>
-          </section>
-        )}
-
-        <section aria-label={isSearching ? 'Search results' : 'Trending titles'}>
-          <div className="panda-search__section-head">
-            <h2>{isSearching ? `Results for “${submittedQuery}”` : 'Trending now'}</h2>
-            {isSearching && !loading && <span aria-live="polite">{visibleResults.length} {visibleResults.length === 1 ? 'result' : 'results'}</span>}
-          </div>
-
-          {(isSearching || results.length > 0) && (
-            <div className="panda-search__filters" role="group" aria-label="Filter search results">
-              <span
-                className="panda-search__filter-indicator"
-                style={{ transform: `translateX(${activeFilterIndex * 100}%)` }}
-                aria-hidden="true"
-              />
-              {filters.map(item => (
-                <button
-                  key={item.id}
-                  type="button"
-                  aria-pressed={filter === item.id}
-                  className={filter === item.id ? 'is-active' : ''}
-                  onClick={() => setFilter(item.id)}
-                >
-                  <Filter size={13} aria-hidden="true" /> {item.label}
-                </button>
-              ))}
-            </div>
-          )}
-
-          {offline ? (
-            <div className="panda-search__state" role="alert">
-              <WifiOff size={26} aria-hidden="true" />
-              <h3>You’re offline</h3>
-              <p>Check your connection and try again.</p>
-              <button type="button" onClick={() => setRetryNonce(value => value + 1)}>Retry</button>
-            </div>
-          ) : loading ? (
-            <div className="panda-search__loading" role="status" aria-live="polite">
-              <ThinkingOrb state="searching" size={64} theme="dark" aria-label="Searching the catalogue" />
-              <div className="panda-search__loading-copy">
-                <span>Searching the catalogue</span>
-                <p>Finding movies, series and anime</p>
-              </div>
-            </div>
-          ) : error ? (
-            <div className="panda-search__state" role="alert">
-              <SearchIcon size={26} aria-hidden="true" />
-              <h3>Search unavailable</h3>
-              <p>{error}</p>
-              <button type="button" onClick={() => setRetryNonce(value => value + 1)}>Try again</button>
-            </div>
-          ) : visibleResults.length ? (
-            <Stagger className="panda-search__grid">
-              {visibleResults.map((item, index) => (
-                <ResultCard key={item.id} item={item} query={submittedQuery} priority={index < 6} />
-              ))}
-            </Stagger>
-          ) : (
-            <div className="panda-search__state">
-              <SearchIcon size={26} aria-hidden="true" />
-              <h3>{results.length ? 'No results in this filter' : `No results for “${submittedQuery}”`}</h3>
-              <p>Try a different spelling, a broader title, or browse a mood below.</p>
-              <button type="button" onClick={results.length ? () => setFilter('all') : clearAll}>
-                {results.length ? 'Show all results' : 'Back to discovery'}
-              </button>
-            </div>
-          )}
-        </section>
-      </div>
-
+      {!isSearching && recentSearches.length > 0 && <section className="kinoma-search-recent" aria-label="Recent searches"><div className="kinoma-search-recent__label"><Clock3 size={14} /> Recent</div><div className="kinoma-search-recent__items">{recentSearches.slice(0, 5).map(item => <button key={item} type="button" onClick={() => chooseRecent(item)}>{item}</button>)}<button type="button" className="kinoma-search-recent__clear" onClick={clearRecent}>Clear</button></div></section>}
+      <section ref={resultsRef} className="kinoma-search-results" id="search-results">
+        <div className="kinoma-search-results__heading"><div><span className="kinoma-eyebrow">{isSearching ? 'Your search' : genreFilter ? 'Selected genre' : 'Live discovery'}</span><h2>{isSearching ? 'Matches' : genreFilter ? genreFilter : filter === 'movie' ? 'Movies' : filter === 'series' ? 'TV shows' : 'Trending now'}</h2></div>{!isSearching && <Sparkles size={18} />}</div>
+        {!loading && !error && results.length > 0 && <div className="kinoma-search-toolbar"><div className="kinoma-search-filters" role="group" aria-label="Filter search results"><button type="button" aria-pressed={filter === 'all'} className={filter === 'all' ? 'is-active' : ''} onClick={() => setFilter('all')}><Filter size={13} aria-hidden="true" /> All <span>{results.length}</span></button><button type="button" aria-pressed={filter === 'movie'} className={filter === 'movie' ? 'is-active' : ''} onClick={() => setFilter('movie')}>Movies <span>{results.filter(item => item.type === 'movie').length}</span></button><button type="button" aria-pressed={filter === 'series'} className={filter === 'series' ? 'is-active' : ''} onClick={() => setFilter('series')}>Series <span>{results.filter(item => item.type === 'series').length}</span></button></div><span className="kinoma-search-toolbar__count" aria-live="polite">{visibleResults.length} {visibleResults.length === 1 ? 'title' : 'titles'}</span></div>}
+        {loading ? <div className="kinoma-search-loading" role="status" aria-live="polite"><ThinkingOrb state="searching" size={64} theme="dark" aria-label="Searching the catalogue" /><div className="kinoma-search-loading__copy"><span>Searching the catalogue</span><p>Finding movies, series and anime</p></div></div>
+        : error ? <div className="kinoma-search-empty is-error" role="alert"><SearchIcon size={28} aria-hidden="true" /><h3>Search unavailable</h3><p>{error}</p><button type="button" onClick={() => setRetryNonce(value => value + 1)}>Try again</button></div>
+        : visibleResults.length ? <div className="kinoma-search-grid">{visibleResults.map((item, index) => <ContentCard key={item.id} item={item} priority={index < 5} />)}</div>
+        : <div className="kinoma-search-empty"><SearchIcon size={28} /><h3>{results.length ? 'No titles in this filter' : 'Nothing found yet'}</h3><p>{results.length ? 'Try another filter to see more matches.' : 'Try a different title, spelling, or a broader search.'}</p><button type="button" onClick={results.length ? () => setFilter('all') : clearSearch}>{results.length ? 'Show all results' : 'Back to trending'}</button></div>}
+      </section>
       <Footer />
     </div>
-  );
+  </div>;
 }

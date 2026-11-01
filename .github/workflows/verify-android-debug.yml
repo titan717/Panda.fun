@@ -50,6 +50,11 @@ jobs:
       - name: Install web dependencies
         run: npm install --no-audit --no-fund
 
+      - name: Generate Panda icon assets
+        run: |
+          python3 -m pip install --user CairoSVG Pillow
+          npm run icons
+
       - name: Verify web app
         run: |
           npm run lint

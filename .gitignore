@@ -7,3 +7,6 @@ coverage/
 .env*
 !.env.example
 dev-dist/
+
+# Generated Android WebView bundle; recreated from dist by the Android packaging workflows.
+android/app/src/main/assets/web/
