@@ -13,7 +13,7 @@
 .panda-settings-v3__avatar { display: grid; place-items: center; width: 54px; height: 54px; flex: 0 0 auto; overflow: hidden; border-radius: 17px; background: #050505; }
 .panda-settings-v3__profile h2 { margin: 3px 0 2px; font-size: 16px; font-weight: 750; }
 .panda-settings-v3__profile p { color: #aaa19b; font-size: 11px; }
-.panda-settings-v3__profile-link { display: grid; place-items: center; width: 42px; height: 42px; margin-left: auto; border: 1px solid rgba(246,242,238,.1); border-radius: 50%; color: #ded7d1; }
+.panda-settings-v3__profile-link { display: grid; place-items: center; width: 44px; height: 44px; margin-left: auto; border: 1px solid rgba(246,242,238,.1); border-radius: 50%; color: #ded7d1; }
 .panda-settings-v3__group { display: grid; gap: 11px; margin-top: 23px; }
 .panda-settings-v3__group-heading { display: flex; align-items: center; gap: 9px; color: #e8d0c0; }
 .panda-settings-v3__group-heading h2 { color: #f6f2ee; font-size: 15px; font-weight: 750; }
@@ -26,16 +26,16 @@
 .panda-settings-row__icon { display: grid; place-items: center; width: 34px; height: 34px; flex: 0 0 auto; border-radius: 11px; color: #e8d0c0; background: rgba(184,77,65,.12); }
 .panda-settings-row--button { width: 100%; border: 0; border-bottom: 1px solid rgba(246,242,238,.07); background: transparent; color: inherit; text-align: left; text-decoration: none; cursor: pointer; }
 .panda-settings-row__chevron { transform: rotate(180deg); color: #817873; }
-.panda-settings-switch { position: relative; width: 48px; height: 28px; flex: 0 0 auto; padding: 3px; border: 1px solid rgba(246,242,238,.14); border-radius: 999px; background: #262220; transition: background 150ms ease; }
+.panda-settings-switch { position: relative; width: 52px; height: 44px; flex: 0 0 auto; padding: 3px; border: 1px solid rgba(246,242,238,.14); border-radius: 999px; background: #262220; transition: background 150ms ease; }
 .panda-settings-switch span { display: block; width: 20px; height: 20px; border-radius: 50%; background: #aaa19b; transition: transform 150ms ease, background 150ms ease; }
 .panda-settings-switch.is-on { border-color: #b84d41; background: #b84d41; }
-.panda-settings-switch.is-on span { transform: translateX(20px); background: #fffaf6; }
+.panda-settings-switch.is-on span { transform: translateX(24px); background: #fffaf6; }
 .panda-settings-row--stack { align-items: flex-start; flex-direction: column; gap: 11px; }
 .panda-settings-segment { display: flex; width: 100%; padding: 3px; border-radius: 999px; background: #141211; }
-.panda-settings-segment button { min-height: 40px; flex: 1; border: 0; border-radius: 999px; background: transparent; color: #aaa19b; font-size: 12px; font-weight: 700; }
+.panda-settings-segment button { min-height: 44px; flex: 1; border: 0; border-radius: 999px; background: transparent; color: #aaa19b; font-size: 12px; font-weight: 700; }
 .panda-settings-segment button.is-active { background: #b84d41; color: #fffaf6; }
 .panda-settings-v3__active { display: inline-flex; align-items: center; gap: 5px; color: #c1935f; font-size: 10px; font-weight: 750; white-space: nowrap; }
-.panda-settings-v3__text-action { min-height: 42px; padding: 0 12px; border: 1px solid rgba(184,77,65,.3); border-radius: 999px; background: rgba(184,77,65,.1); color: #e8d0c0; font-size: 11px; font-weight: 700; }
+.panda-settings-v3__text-action { min-height: 44px; padding: 0 12px; border: 1px solid rgba(184,77,65,.3); border-radius: 999px; background: rgba(184,77,65,.1); color: #e8d0c0; font-size: 11px; font-weight: 700; }
 .panda-settings-v3__text-action:disabled { opacity: .4; }
 .panda-settings-v3__footnote { padding: 12px 15px 15px; color: #817873; font-size: 10px; line-height: 1.5; }
 .panda-settings-v3__wordmark { color: #f6f2ee; font-size: 10px; font-weight: 900; letter-spacing: .12em; }
