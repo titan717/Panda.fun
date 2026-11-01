@@ -29,6 +29,7 @@ describe('Android update bridge contract', () => {
   it('uses the branded download name and streams byte progress', () => {
     expect(checker).toContain('Panda.fun-update.apk');
     expect(checker).toContain('onProgress: (Int, Long, Long) -> Unit');
+    expect(checker).toContain('cancelledDownloadId == downloadId');
     expect(main).toContain('emitUpdateProgress(percent, downloadedBytes, totalBytes)');
   });
 
