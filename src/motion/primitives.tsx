@@ -19,9 +19,9 @@ type PressableProps = Omit<
   'onAnimationStart' | 'onAnimationEnd' | 'onDrag' | 'onDragStart' | 'onDragEnd'
 > & { haptic?: boolean };
 
-export function Pressable({
+export const Pressable = React.forwardRef<HTMLButtonElement, PressableProps>(function Pressable({
   children, className, onClick, haptic = false, disabled, type, ...props
-}: PressableProps) {
+}, ref) {
   const preference = useContext(MotionPreferenceContext);
   const reduce = useReducedMotion();
   const canMove = preference === 'full' && !reduce;
@@ -31,6 +31,7 @@ export function Pressable({
   };
   return (
     <m.button
+      ref={ref}
       {...props}
       type={type || 'button'}
       disabled={disabled}
@@ -42,7 +43,9 @@ export function Pressable({
       {children}
     </m.button>
   );
-}
+});
+
+Pressable.displayName = 'Pressable';
 
 export function Reveal({ children, className, delay = 0, once = true, style }: {
   children: React.ReactNode; className?: string; delay?: number; once?: boolean; style?: React.CSSProperties;
