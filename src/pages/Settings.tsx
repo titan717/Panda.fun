@@ -134,6 +134,15 @@ export function Settings() {
           <SettingSwitch label="Next episode" description="Continue to the next episode when available" checked={playerSettings.autoNext} onChange={() => updatePlayerSetting('autoNext', !playerSettings.autoNext)} />
           <SettingSwitch label="Skip intro" description="Skip detected opening sequences" checked={playerSettings.skipIntro} onChange={() => updatePlayerSetting('skipIntro', !playerSettings.skipIntro)} />
           <SettingSwitch label="Skip outro" description="Skip detected ending sequences" checked={playerSettings.skipOutro} onChange={() => updatePlayerSetting('skipOutro', !playerSettings.skipOutro)} />
+          <SettingSwitch label="Subtitles" description="Show subtitles when the selected stream provides them" checked={playerSettings.subtitleEnabled} onChange={() => updatePlayerSetting('subtitleEnabled', !playerSettings.subtitleEnabled)} />
+          <div className="panda-settings-row panda-settings-row--stack">
+            <div className="panda-settings-row__copy"><strong>Streaming quality</strong><small>Choose your preferred playback quality</small></div>
+            <div className="panda-settings-segment" role="group" aria-label="Streaming quality">
+              {(['auto', '1080p', '720p', '480p'] as const).map(quality => (
+                <button key={quality} type="button" className={playerSettings.quality === quality ? 'is-active' : ''} aria-pressed={playerSettings.quality === quality} onClick={() => updatePlayerSetting('quality', quality)}>{quality.toUpperCase()}</button>
+              ))}
+            </div>
+          </div>
           <div className="panda-settings-row panda-settings-row--stack">
             <div className="panda-settings-row__copy"><strong>Preferred audio</strong><small>Choose your default audio preference</small></div>
             <div className="panda-settings-segment" role="group" aria-label="Preferred audio">
