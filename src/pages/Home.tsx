@@ -18,21 +18,22 @@ import { MobileHome } from './MobileHome';
 import { friendlyNetworkError } from '../lib/networkMessage';
 
 function toHomeMedia(item: MovieApiMedia | AnimeItem): MovieApiMedia {
-  if ('poster' in item) return item;
+  const media = item as MovieApiMedia;
+  if (typeof media.poster === 'string') return media;
+  const anime = item as AnimeItem;
   return {
-    id: item.id,
-    type: item.type === 'movie' ? 'movie' : 'tv',
-    title: typeof item.title === 'string' ? item.title : item.title.english || item.title.romaji || 'Anime',
-    poster: item.image,
-    backdrop: item.cover || item.banner || item.image,
-    rating: typeof item.rating === 'number' ? item.rating : Number(item.rating) || null,
-    releaseDate: item.releaseDate || null,
-    overview: item.description || null,
-    genres: item.genres || [],
+    id: anime.id,
+    type: anime.type === 'movie' ? 'movie' : 'tv',
+    title: typeof anime.title === 'string' ? anime.title : anime.title.english || anime.title.romaji || 'Anime',
+    poster: anime.image,
+    backdrop: anime.cover || anime.banner || anime.image,
+    rating: typeof anime.rating === 'number' ? anime.rating : Number(anime.rating) || null,
+    releaseDate: anime.releaseDate || null,
+    overview: anime.description || null,
+    genres: anime.genres || [],
     language: 'ja',
   };
 }
-
 type RailKind = 'trending' | 'streamingNetflix' | 'streamingDisney' | 'popular' | 'tv' | 'movie' | 'airing' | 'upcoming' | 'recommendations' | 'anime' | 'genre';
 
 function KindIcon({ kind }: { kind: RailKind }) {
