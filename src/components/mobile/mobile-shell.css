@@ -1,5 +1,20 @@
 /* Mobile-only shell and route presentation. Desktop and Android TV layouts are intentionally untouched. */
 @media (max-width: 767px) {
+  :root {
+    --kinoma-bg: #000;
+    --kinoma-bg-elevated: #000;
+    --kinoma-surface: #000;
+    --kinoma-surface-hover: #080808;
+    --kinoma-card: #000;
+    --kinoma-card-hover: #080808;
+    --kinoma-accent: #b84d41;
+    --kinoma-accent-hover: #943c33;
+    --kinoma-accent-soft: #e8d0c0;
+    --kinoma-accent-deep: #54251f;
+    --kinoma-border: rgba(255,255,255,.1);
+    --kinoma-border-soft: rgba(255,255,255,.06);
+  }
+
   html, body, #root,
   .panda-app-shell,
   .panda-app-content,
@@ -19,59 +34,20 @@
     top: 0;
     right: 0;
     left: 0;
-    z-index: 30;
+    z-index: 60;
     display: flex;
     align-items: center;
     justify-content: space-between;
     width: 100%;
     box-sizing: border-box;
-    height: calc(56px + var(--safe-top, env(safe-area-inset-top, 0px)));
-    min-height: calc(56px + var(--safe-top, env(safe-area-inset-top, 0px)));
-    padding: var(--safe-top, env(safe-area-inset-top, 0px)) 16px 0;
+    height: calc(56px + var(--safe-top, var(--safe-top, env(safe-area-inset-top, 0px))));
+    min-height: calc(56px + var(--safe-top, var(--safe-top, env(safe-area-inset-top, 0px))));
+    padding: var(--safe-top, var(--safe-top, env(safe-area-inset-top, 0px))) 16px 0;
     margin: 0;
     background: transparent;
     border-bottom: 1px solid transparent;
     transition: background 180ms ease, border-color 180ms ease, backdrop-filter 180ms ease;
   }
-
-  .panda-mobile-header.is-scrolled {
-    background: rgba(0,0,0,.84);
-    border-bottom-color: rgba(246,242,238,.08);
-    backdrop-filter: blur(20px);
-    -webkit-backdrop-filter: blur(20px);
-  }
-
-  .panda-mobile-category-row {
-    position: fixed;
-    z-index: 40;
-    top: calc(56px + var(--safe-top, env(safe-area-inset-top, 0px)));
-    right: 0;
-    left: 0;
-    display: flex;
-    gap: 8px;
-    overflow-x: auto;
-    padding: 8px 16px 10px;
-    scrollbar-width: none;
-    background: linear-gradient(180deg, rgba(0,0,0,.62), rgba(0,0,0,0));
-  }
-  .panda-mobile-category-row::-webkit-scrollbar { display: none; }
-  .panda-mobile-category-row button {
-    min-height: 44px;
-    flex: 0 0 auto;
-    padding: 0 14px;
-    border: 1px solid rgba(246,242,238,.12);
-    border-radius: 999px;
-    background: rgba(8,8,8,.68);
-    color: #ded7d1;
-    font-size: 11px;
-    font-weight: 700;
-    backdrop-filter: blur(12px);
-  }
-  .panda-mobile-category-row button:active,
-  .panda-mobile-category-row button[aria-pressed=true] { background: rgba(184,77,65,.24); border-color: rgba(184,77,65,.55); color: #fffaf6; }
-  .panda-mobile-category-row button:focus-visible { outline: 2px solid #e8d0c0; outline-offset: 3px; }
-  .panda-mobile-category-row button.is-active { color: #fffaf6; border-color: rgba(184,77,65,.72); background: rgba(184,77,65,.24); box-shadow: inset 0 0 0 1px rgba(184,77,65,.12); }
-  .panda-mobile-category-row button:focus-visible { outline: 2px solid #e8d0c0; outline-offset: 2px; }
 
   .panda-mobile-header__brand {
     display: inline-flex;
@@ -94,7 +70,7 @@
     place-items: center;
     width: 44px;
     height: 44px;
-    color: #e6dfe1;
+    color: #e8d0c0;
     background: #080808;
     border: 1px solid rgba(255,255,255,.11);
     border-radius: 50%;
@@ -104,7 +80,7 @@
 
   .panda-mobile-header__action:active,
   .panda-mobile-header__action:focus-visible {
-    color: #e8d0c0;
+    color: #f4c5d0;
     border-color: #b84d41;
     outline: 2px solid rgba(184,77,65,.45);
     outline-offset: 2px;
@@ -114,7 +90,7 @@
     position: fixed !important;
     z-index: 50 !important;
     right: 12px !important;
-    bottom: calc(8px + var(--safe-bottom, env(safe-area-inset-bottom, 0px))) !important;
+    bottom: calc(8px + var(--safe-bottom, var(--safe-bottom, env(safe-area-inset-bottom, 0px)))) !important;
     left: 12px !important;
     display: grid !important;
     grid-template-columns: repeat(4, minmax(0, 1fr));
@@ -127,7 +103,7 @@
     border: 1px solid rgba(246,242,238,.12);
     border-radius: 22px;
     box-shadow: 0 12px 38px rgba(0,0,0,.5);
-    backdrop-filter: blur(22px);
+    backdrop-filter: blur(18px);
     -webkit-backdrop-filter: blur(18px);
   }
 
@@ -152,9 +128,6 @@
   .panda-mobile-bottom-nav__icon { display: grid; place-items: center; transition: transform 170ms ease; }
   .panda-mobile-bottom-nav__label { font-size: 10px; font-weight: 650; line-height: 1.1; letter-spacing: .015em; }
 
-  .panda-mobile-bottom-nav__item:active { transform: scale(.96); }
-  .panda-mobile-bottom-nav__item.is-active::after { content: ''; position: absolute; bottom: 3px; left: 50%; width: 12px; height: 3px; border-radius: 99px; background: #b84d41; transform: translateX(-50%); }
-
   .panda-mobile-bottom-nav__item.is-active {
     color: #e8d0c0 !important;
     background: linear-gradient(180deg, rgba(184,77,65,.2), rgba(184,77,65,.04)) !important;
@@ -173,7 +146,6 @@
   }
 
   .kinoma-sidebar { display: none !important; }
-  .panda-app-shell.keyboard-open .panda-mobile-bottom-nav { display: none !important; }
   .panda-app-content { width: 100% !important; min-width: 0 !important; margin: 0 !important; padding: 0 !important; }
   .kinoma-app-main { width: 100% !important; min-width: 0 !important; min-height: 0 !important; margin: 0 !important; padding-top: 0 !important; padding-right: 0 !important; padding-left: 0 !important; }
   .panda-mobile-home { min-height: 0 !important; margin: 0 !important; padding: 0 0 calc(86px + var(--safe-bottom, env(safe-area-inset-bottom, 0px))) !important; background: #000 !important; }
@@ -359,7 +331,7 @@
     right: 30%;
     height: 2px;
     border-radius: 2px;
-    background: linear-gradient(90deg, transparent, #e8d0c0, transparent);
+    background: linear-gradient(90deg, transparent, #c87883, transparent);
     opacity: .9;
   }
 
@@ -488,7 +460,7 @@
   }
   .panda-library .panda-library__filters {
     position: sticky;
-    top: calc(58px + var(--safe-top, 0px));
+    top: calc(58px + var(--safe-top, env(safe-area-inset-top, 0px)));
     z-index: 35;
     margin-inline: 0;
     overscroll-behavior-x: contain;
@@ -513,12 +485,60 @@
   .panda-library .panda-library__shelf-track { scroll-behavior: auto; }
 }
 
-
-/* If a device refuses immersive three-button navigation, leave its system bar visible
-   and suppress the in-app bar rather than stacking two navigation surfaces. */
 @media (max-width: 767px) {
-  .system-nav-visible .panda-mobile-bottom-nav {
-    visibility: hidden;
-    pointer-events: none;
+  .panda-mobile-header.is-scrolled {
+    background: rgba(5, 5, 5, .9);
+    border-bottom-color: rgba(246, 242, 238, .08);
+    backdrop-filter: blur(22px);
+    -webkit-backdrop-filter: blur(22px);
   }
+
+  .panda-mobile-category-row {
+    position: fixed;
+    top: calc(56px + var(--safe-top, env(safe-area-inset-top, 0px)));
+    right: 0;
+    left: 0;
+    z-index: 40;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    overflow-x: auto;
+    padding: 8px 16px 10px;
+    background: linear-gradient(180deg, rgba(0,0,0,.45), transparent);
+    scrollbar-width: none;
+    -webkit-overflow-scrolling: touch;
+    scroll-snap-type: x proximity;
+  }
+  .panda-mobile-category-row::-webkit-scrollbar { display: none; }
+  .panda-mobile-category-row button {
+    flex: 0 0 auto;
+    min-height: 40px;
+    padding: 0 15px;
+    border: 1px solid rgba(246,242,238,.13);
+    border-radius: 999px;
+    background: rgba(5,5,5,.68);
+    color: #c4bbb4;
+    font-size: 12px;
+    font-weight: 650;
+    scroll-snap-align: start;
+    transition: color 150ms ease, background 150ms ease, border-color 150ms ease;
+  }
+  .panda-mobile-category-row button[aria-pressed=true],
+  .panda-mobile-category-row button.is-active {
+    border-color: rgba(184,77,65,.65);
+    background: rgba(184,77,65,.22);
+    color: #fffaf6;
+  }
+  .panda-mobile-category-row button:focus-visible {
+    outline: 2px solid #e8d0c0;
+    outline-offset: 2px;
+  }
+  .panda-app-shell.keyboard-open .panda-mobile-bottom-nav { display: none; }
+  .panda-mobile-bottom-nav__item:active { transform: scale(.96); }
+}
+@media (prefers-reduced-motion: reduce) {
+  .panda-mobile-header,
+  .panda-mobile-header__action,
+  .panda-mobile-category-row button,
+  .panda-mobile-bottom-nav__item { transition: none; }
 }
