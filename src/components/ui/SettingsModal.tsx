@@ -60,7 +60,7 @@ export function SettingsModal() {
         {/* Modal Header */}
         <div className="flex items-center justify-between px-6 py-4 border-b border-[#1c1c28] bg-[#12131b]">
           <div className="flex items-center gap-2.5">
-            <div className="w-8 h-8 rounded-xl bg-gradient-to-tr from-[#7b1fa2] to-[#ab47bc] flex items-center justify-center text-white shadow-md">
+            <div className="w-8 h-8 rounded-xl bg-gradient-to-tr from-[#b84d41] to-[#ab47bc] flex items-center justify-center text-white shadow-md">
               <Sliders className="w-4 h-4" />
             </div>
             <div>
@@ -86,12 +86,12 @@ export function SettingsModal() {
               activeSettingsTab === 'appearance' ? 'text-white' : 'text-gray-400 hover:text-gray-200'
             }`}
           >
-            <LayoutTemplate className="w-3.5 h-3.5 text-[#c084fc]" />
+            <LayoutTemplate className="w-3.5 h-3.5 text-[#e8d0c0]" />
             <span>Appearance / UI Style</span>
             {activeSettingsTab === 'appearance' && (
               <motion.div 
                 layoutId="settingsTabIndicator" 
-                className="absolute bottom-0 inset-x-0 h-0.5 bg-[#c084fc] rounded-full" 
+                className="absolute bottom-0 inset-x-0 h-0.5 bg-[#e8d0c0] rounded-full" 
               />
             )}
           </button>
@@ -102,12 +102,12 @@ export function SettingsModal() {
               activeSettingsTab === 'player' ? 'text-white' : 'text-gray-400 hover:text-gray-200'
             }`}
           >
-            <Play className="w-3.5 h-3.5 text-[#c084fc]" />
+            <Play className="w-3.5 h-3.5 text-[#e8d0c0]" />
             <span>Player Preferences</span>
             {activeSettingsTab === 'player' && (
               <motion.div 
                 layoutId="settingsTabIndicator" 
-                className="absolute bottom-0 inset-x-0 h-0.5 bg-[#c084fc] rounded-full" 
+                className="absolute bottom-0 inset-x-0 h-0.5 bg-[#e8d0c0] rounded-full" 
               />
             )}
           </button>
@@ -118,12 +118,12 @@ export function SettingsModal() {
               activeSettingsTab === 'library' ? 'text-white' : 'text-gray-400 hover:text-gray-200'
             }`}
           >
-            <Database className="w-3.5 h-3.5 text-[#c084fc]" />
+            <Database className="w-3.5 h-3.5 text-[#e8d0c0]" />
             <span>Storage & Data</span>
             {activeSettingsTab === 'library' && (
               <motion.div 
                 layoutId="settingsTabIndicator" 
-                className="absolute bottom-0 inset-x-0 h-0.5 bg-[#c084fc] rounded-full" 
+                className="absolute bottom-0 inset-x-0 h-0.5 bg-[#e8d0c0] rounded-full" 
               />
             )}
           </button>
@@ -172,7 +172,7 @@ export function SettingsModal() {
                 {/* Auto Play */}
                 <div className="flex items-center justify-between p-3.5 bg-[#13141c] border border-[#222230] rounded-xl">
                   <div className="flex items-center gap-3">
-                    <Play className="w-4 h-4 text-[#c084fc]" />
+                    <Play className="w-4 h-4 text-[#e8d0c0]" />
                     <div>
                       <h4 className="text-xs font-bold text-white">Auto Play</h4>
                       <p className="text-[11px] text-gray-400">Start playing episode automatically upon loading</p>
@@ -181,7 +181,7 @@ export function SettingsModal() {
                   <button
                     onClick={() => updatePlayerSetting('autoPlay', !playerSettings.autoPlay)}
                     className={`w-11 h-6 rounded-full transition-colors relative ${
-                      playerSettings.autoPlay ? 'bg-[#7b1fa2]' : 'bg-[#222230]'
+                      playerSettings.autoPlay ? 'bg-[#b84d41]' : 'bg-[#222230]'
                     }`}
                   >
                     <div
@@ -195,7 +195,7 @@ export function SettingsModal() {
                 {/* Auto Next */}
                 <div className="flex items-center justify-between p-3.5 bg-[#13141c] border border-[#222230] rounded-xl">
                   <div className="flex items-center gap-3">
-                    <FastForward className="w-4 h-4 text-[#c084fc]" />
+                    <FastForward className="w-4 h-4 text-[#e8d0c0]" />
                     <div>
                       <h4 className="text-xs font-bold text-white">Auto Next Episode</h4>
                       <p className="text-[11px] text-gray-400">Advance to the next episode when the current one finishes</p>
@@ -204,7 +204,7 @@ export function SettingsModal() {
                   <button
                     onClick={() => updatePlayerSetting('autoNext', !playerSettings.autoNext)}
                     className={`w-11 h-6 rounded-full transition-colors relative ${
-                      playerSettings.autoNext ? 'bg-[#7b1fa2]' : 'bg-[#222230]'
+                      playerSettings.autoNext ? 'bg-[#b84d41]' : 'bg-[#222230]'
                     }`}
                   >
                     <div
@@ -218,7 +218,7 @@ export function SettingsModal() {
                 {/* Skip Intro */}
                 <div className="flex items-center justify-between p-3.5 bg-[#13141c] border border-[#222230] rounded-xl">
                   <div className="flex items-center gap-3">
-                    <SkipForward className="w-4 h-4 text-[#c084fc]" />
+                    <SkipForward className="w-4 h-4 text-[#e8d0c0]" />
                     <div>
                       <h4 className="text-xs font-bold text-white">Skip Intro</h4>
                       <p className="text-[11px] text-gray-400">Prompt / fast-skip 85-second opening theme sequences</p>
@@ -227,7 +227,7 @@ export function SettingsModal() {
                   <button
                     onClick={() => updatePlayerSetting('skipIntro', !playerSettings.skipIntro)}
                     className={`w-11 h-6 rounded-full transition-colors relative ${
-                      playerSettings.skipIntro ? 'bg-[#7b1fa2]' : 'bg-[#222230]'
+                      playerSettings.skipIntro ? 'bg-[#b84d41]' : 'bg-[#222230]'
                     }`}
                   >
                     <div
@@ -250,7 +250,7 @@ export function SettingsModal() {
                   <button
                     onClick={() => updatePlayerSetting('skipOutro', !playerSettings.skipOutro)}
                     className={`w-11 h-6 rounded-full transition-colors relative ${
-                      playerSettings.skipOutro ? 'bg-[#7b1fa2]' : 'bg-[#222230]'
+                      playerSettings.skipOutro ? 'bg-[#b84d41]' : 'bg-[#222230]'
                     }`}
                   >
                     <div
@@ -266,7 +266,7 @@ export function SettingsModal() {
                   <h4 className="text-xs font-bold uppercase tracking-wider text-gray-400 mb-2">Playback provider</h4>
                   <div className="p-3.5 bg-[#13141c] border border-[#222230] rounded-xl">
                     <div className="flex items-center gap-3">
-                      <Play className="w-4 h-4 text-[#c084fc]" />
+                      <Play className="w-4 h-4 text-[#e8d0c0]" />
                       <div>
                         <strong className="block text-xs text-white">Vidy.st</strong>
                         <small className="text-[11px] text-gray-400">Panda.fun now uses Vidy.st for all movie and TV playback.</small>
@@ -329,7 +329,7 @@ export function SettingsModal() {
           </div>
           <button
             onClick={closeSettingsModal}
-            className="px-5 py-2 bg-gradient-to-r from-[#7b1fa2] to-[#9c27b0] hover:from-[#6a1b9a] hover:to-[#ab47bc] text-white text-xs font-bold rounded-xl shadow-[0_2px_12px_rgba(123,31,162,0.3)] transition-all"
+            className="px-5 py-2 bg-gradient-to-r from-[#b84d41] to-[#9c27b0] hover:from-[#6a1b9a] hover:to-[#ab47bc] text-white text-xs font-bold rounded-xl shadow-[0_2px_12px_rgba(123,31,162,0.3)] transition-all"
           >
             Done
           </button>
