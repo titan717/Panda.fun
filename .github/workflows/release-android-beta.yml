@@ -1,0 +1,162 @@
+name: Build and publish MyPanda Android beta
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - ".github/workflows/release-android-beta.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: mypanda-android-beta-release
+  cancel-in-progress: false
+
+jobs:
+  build-and-release:
+    name: Verify and publish MyPanda beta APK
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out latest main
+        uses: actions/checkout@v4
+        with:
+          ref: main
+          fetch-depth: 0
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+          cache: npm
+
+      - name: Set up JDK 17
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: "17"
+
+      - name: Set up Android SDK
+        uses: android-actions/setup-android@v4
+        with:
+          packages: "platform-tools"
+
+      - name: Install Android SDK packages
+        run: sdkmanager "platform-tools" "platforms;android-34" "build-tools;34.0.0"
+
+      - name: Set up Gradle
+        uses: gradle/actions/setup-gradle@v4
+        with:
+          gradle-version: "8.5"
+
+      - name: Resolve next beta version
+        id: version
+        shell: bash
+        run: |
+          set -euo pipefail
+          CURRENT_CODE=$(python -c "import json; print(json.load(open('update/latest.json'))['latestVersionCode'])")
+          VERSION_CODE=$((CURRENT_CODE + 1))
+          VERSION_NAME="0.0.8-beta.${VERSION_CODE}"
+          RELEASE_TAG="v${VERSION_NAME}"
+          echo "version_code=${VERSION_CODE}" >> "$GITHUB_OUTPUT"
+          echo "version_name=${VERSION_NAME}" >> "$GITHUB_OUTPUT"
+          echo "release_tag=${RELEASE_TAG}" >> "$GITHUB_OUTPUT"
+          echo "Preparing MyPanda beta ${VERSION_NAME} (versionCode ${VERSION_CODE})"
+
+      - name: Install web dependencies
+        run: npm ci
+
+      - name: TypeScript and lint verification
+        run: npm run lint
+
+      - name: Run tests
+        run: npm test
+
+      - name: Build latest web application
+        run: npm run build
+
+      - name: Package web assets into Android
+        shell: bash
+        run: |
+          set -euo pipefail
+          rm -rf android/app/src/main/assets/web
+          mkdir -p android/app/src/main/assets/web
+          cp -R dist/. android/app/src/main/assets/web/
+
+      - name: Build MyPanda universal debug APK
+        working-directory: android
+        run: |
+          gradle clean :app:assembleDebug --no-daemon --stacktrace --warning-mode all \
+            -PKINOMA_VERSION_CODE="${{ steps.version.outputs.version_code }}" \
+            -PKINOMA_VERSION_NAME="${{ steps.version.outputs.version_name }}"
+
+      - name: Verify APK and calculate checksum
+        shell: bash
+        run: |
+          set -euo pipefail
+          APK="android/app/build/outputs/apk/debug/app-debug.apk"
+          test -s "$APK"
+          mkdir -p release
+          cp "$APK" "release/MyPanda-Android-${{ steps.version.outputs.version_name }}.apk"
+          sha256sum "release/MyPanda-Android-${{ steps.version.outputs.version_name }}.apk" \
+            | awk '{print $1}' > "release/MyPanda-Android-${{ steps.version.outputs.version_name }}.apk.sha256"
+          echo "APK size: $(du -h "release/MyPanda-Android-${{ steps.version.outputs.version_name }}.apk" | cut -f1)"
+          cat "release/MyPanda-Android-${{ steps.version.outputs.version_name }}.apk.sha256"
+
+      - name: Publish GitHub beta release
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: ${{ steps.version.outputs.release_tag }}
+          name: MyPanda Android ${{ steps.version.outputs.version_name }}
+          prerelease: true
+          make_latest: false
+          generate_release_notes: true
+          body: |
+            # MyPanda Android ${{ steps.version.outputs.version_name }}
+
+            **Beta release** built from the latest `main` branch.
+
+            - Version code: ${{ steps.version.outputs.version_code }}
+            - Application ID: `com.kinoma.tv`
+            - Universal Android APK for mobile, tablet and Android TV.
+            - This is a debug-signed beta build; it is installable for testing but is not a production-signed stable release.
+            - SHA-256 checksum is attached.
+          files: |
+            release/MyPanda-Android-${{ steps.version.outputs.version_name }}.apk
+            release/MyPanda-Android-${{ steps.version.outputs.version_name }}.apk.sha256
+
+      - name: Publish beta update manifest
+        shell: bash
+        env:
+          VERSION_CODE: ${{ steps.version.outputs.version_code }}
+          VERSION_NAME: ${{ steps.version.outputs.version_name }}
+          RELEASE_TAG: ${{ steps.version.outputs.release_tag }}
+        run: |
+          set -euo pipefail
+          APK_NAME="MyPanda-Android-${VERSION_NAME}.apk"
+          SHA256="$(cat "release/${APK_NAME}.sha256")"
+          APK_URL="https://github.com/titan717/Panda.fun/releases/download/${RELEASE_TAG}/${APK_NAME}"
+          export VERSION_CODE VERSION_NAME RELEASE_TAG SHA256 APK_URL
+          python - <<'PY'
+          import json, os
+          manifest = {
+              "latestVersionCode": int(os.environ["VERSION_CODE"]),
+              "latestVersionName": os.environ["VERSION_NAME"],
+              "releaseTag": os.environ["RELEASE_TAG"],
+              "releaseNotes": f"MyPanda Android Beta {os.environ['VERSION_NAME']}",
+              "apkUrl": os.environ["APK_URL"],
+              "sha256": os.environ["SHA256"],
+              "mandatory": False,
+              "channel": "beta",
+              "prerelease": True
+          }
+          with open("update/latest.json", "w", encoding="utf-8") as f:
+              json.dump(manifest, f, indent=2)
+              f.write("\\n")
+          PY
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add update/latest.json
+          git commit -m "chore(update): publish MyPanda beta ${VERSION_NAME} manifest [skip ci]"
+          git push origin HEAD:main
