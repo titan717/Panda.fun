@@ -4,7 +4,7 @@
   width: 100%;
   min-width: 0;
   min-height: 100dvh;
-  padding: 0 0 calc(86px + var(--safe-bottom, 0px));
+  padding: 0 0 calc(86px + var(--safe-bottom, env(safe-area-inset-bottom, 0px)));
   margin: 0;
   color: #f5f2f2;
   background: #000;
@@ -551,7 +551,7 @@
 @keyframes panda-billboard-progress { from { background: linear-gradient(90deg, #fff 0%, #fff 0%, rgba(255,255,255,.36) 0%); } to { background: linear-gradient(90deg, #fff 100%, #fff 100%, rgba(255,255,255,.36) 100%); } }
 @keyframes panda-billboard-kenburns { from { transform: scale(1.025) translate3d(0,0,0); } to { transform: scale(1.105) translate3d(-.5%, -.4%, 0); } }
 @media (max-width: 767px) {
-  .panda-mobile-home { padding-bottom: calc(112px + env(safe-area-inset-bottom, 0px)); }
+  .panda-mobile-home { padding-bottom: calc(112px + var(--safe-bottom, env(safe-area-inset-bottom, 0px))); }
 }
 @media (max-width: 420px) {
   .panda-billboard .panda-mobile-featured__spotlight { height: 74dvh; min-height: min(74dvh, 570px); }
