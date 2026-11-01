@@ -1,8 +1,8 @@
 #!/usr/bin/env node
 /**
  * Single-source Panda.fun icon export.
- * assets/panda-icon.svg and assets/panda-icon-maskable.svg are the artwork
- * sources; scripts/generate-icons.py rasterises them for web/PWA and Android.
+ * assets/panda-icon.svg is the single icon artwork source; the exporter derives
+ * maskable, density-specific, web/PWA and Android raster variants from it.
  */
 const { spawnSync } = require('node:child_process');
 const path = require('node:path');
