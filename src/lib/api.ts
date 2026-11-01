@@ -462,9 +462,20 @@ export const api = {
     return { results: data.results.slice(0, limit).map(toAnimeItem) };
   },
 
-  async getGenreAnime(genre = '', limit?: number) {
-    const data = await request<{ type: 'tv' | 'movie'; genreId: number; page: number; totalPages: number; totalResults: number; results: MovieApiMedia[] }>('/api/v1/genres/' + encodeURIComponent(genre), { type: 'tv', page: 1 });
-    return { results: data.results.slice(0, limit ?? data.results.length).map(toAnimeItem) };
+  async getGenreAnime(genre = 'animation', limit = 24) {
+    // MovieApi's verified /genres/:genre route supports both TMDB media types.
+    // Filter by original Japanese language before normalization so this rail is anime, not all animation.
+    const endpoint = '/api/v1/genres/' + encodeURIComponent(genre);
+    const [movies, shows] = await Promise.allSettled([
+      request<{ results: MovieApiMedia[] }>(endpoint, { type: 'movie', page: 1 }),
+      request<{ results: MovieApiMedia[] }>(endpoint, { type: 'tv', page: 1 }),
+    ]);
+    const combined = [
+      ...(movies.status === 'fulfilled' ? movies.value.results : []),
+      ...(shows.status === 'fulfilled' ? shows.value.results : []),
+    ];
+    const japaneseAnimation = combined.filter(item => item.language?.toLowerCase() === 'ja');
+    return { results: japaneseAnimation.slice(0, limit).map(toAnimeItem) };
   },
 
   async search(query: string, signal?: AbortSignal) {
