@@ -28,6 +28,7 @@
 
         <activity
             android:name=".ui.MainActivity"
+            android:theme="@style/Theme.KinomaTV.Splash"
             android:banner="@drawable/ic_tv_banner"
             android:configChanges="orientation|screenSize|keyboard|keyboardHidden|navigation"
             android:exported="true"
