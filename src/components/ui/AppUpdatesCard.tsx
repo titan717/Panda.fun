@@ -59,6 +59,7 @@ export function AppUpdatesCard() {
             <span>New version</span><strong>{state.availableVersion || 'Latest release'}</strong>
           </div>
           {state.sizeBytes ? <div className="panda-update-module__version-line"><span>Download size</span><strong>{formatBytes(state.sizeBytes)}</strong></div> : null}
+          {state.sizeBytes ? <div className="panda-update-module__version-line"><span>Download size</span><strong>{formatBytes(state.sizeBytes)}</strong></div> : null}
           {state.releaseNotes && <p className="panda-update-module__notes">{state.releaseNotes}</p>}
         </div>
       )}
