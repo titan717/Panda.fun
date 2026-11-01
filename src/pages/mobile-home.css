@@ -375,7 +375,7 @@
   margin: 0;
   padding: 0;
   overflow: hidden;
-  background: #000;
+  background: var(--color-background);
 }
 .panda-billboard .panda-mobile-featured__head { display: none; }
 .panda-billboard .panda-mobile-featured__spotlight {
@@ -386,12 +386,12 @@
   border: 0;
   border-radius: 0;
   box-shadow: none;
-  background: #000;
+  background: var(--color-background);
 }
 .panda-billboard .panda-mobile-featured__art { inset: -3% 0 0; overflow: hidden; }
 .panda-billboard .panda-mobile-featured__art::after {
   background:
-    linear-gradient(180deg, rgba(0,0,0,.48) 0%, rgba(0,0,0,.04) 24%, rgba(0,0,0,.1) 42%, rgba(0,0,0,.84) 72%, #000 100%),
+    linear-gradient(180deg, rgba(0,0,0,.48) 0%, rgba(0,0,0,.04) 24%, rgba(0,0,0,.1) 42%, rgba(0,0,0,.84) 72%, var(--color-background) 100%),
     linear-gradient(90deg, rgba(0,0,0,.2), transparent 72%);
 }
 .panda-billboard .panda-mobile-featured__art img {
@@ -412,7 +412,7 @@
 }
 .panda-billboard .panda-mobile-featured__meta span + span::before { content: none; }
 .panda-billboard .panda-mobile-featured__type {
-  color: #e8d0c0;
+  color: var(--color-accent-light);
   font-size: 9px;
   font-weight: 850;
   letter-spacing: .14em;
@@ -459,7 +459,7 @@
 .panda-billboard .panda-mobile-featured__genres span + span::before {
   content: "·";
   margin: 0 8px;
-  color: #c1935f;
+  color: var(--color-amber);
 }
 .panda-billboard .panda-mobile-featured__actions {
   display: flex;
@@ -474,7 +474,7 @@
   justify-content: center;
   border: 1px solid #fff;
   border-radius: 999px;
-  color: #090909;
+  color: var(--color-background);
   background: #fff;
   font-size: 14px;
   font-weight: 800;
@@ -496,15 +496,15 @@
   text-decoration: none;
 }
 .panda-billboard .panda-mobile-featured__list[aria-pressed="true"] {
-  border-color: #e8d0c0;
-  color: #e8d0c0;
+  border-color: var(--color-accent-light);
+  color: var(--color-accent-light);
   background: rgba(184,77,65,.28);
 }
 .panda-billboard .panda-mobile-featured__watch:focus-visible,
 .panda-billboard .panda-mobile-featured__list:focus-visible,
 .panda-billboard .panda-mobile-featured__info:focus-visible,
 .panda-billboard .panda-mobile-featured__segment:focus-visible {
-  outline: 2px solid #e8d0c0;
+  outline: 2px solid var(--color-accent-light);
   outline-offset: 3px;
 }
 .panda-billboard .panda-mobile-featured__controls {
@@ -537,21 +537,17 @@
   border-radius: 999px;
   background: rgba(255,255,255,.36);
 }
-.panda-billboard .panda-mobile-featured__segment.is-active span {
-  background: linear-gradient(90deg, #fff 0%, #fff 0%, rgba(255,255,255,.36) 0%);
-  animation: panda-billboard-progress 6s linear forwards;
-}
 .panda-billboard.is-paused .panda-mobile-featured__segment.is-active span { animation-play-state: paused; }
 .panda-billboard .panda-mobile-featured__loading {
   min-height: 74dvh;
-  background: radial-gradient(ellipse at 50% 42%, #171313 0%, #000 68%);
+  background: radial-gradient(ellipse at 50% 42%, #171313 0%, var(--color-background) 68%);
 }
 .panda-billboard .panda-mobile-featured__empty {
   min-height: 74dvh;
   align-content: center;
-  background: radial-gradient(ellipse at 50% 42%, #171313 0%, #000 68%);
+  background: radial-gradient(ellipse at 50% 42%, #171313 0%, var(--color-background) 68%);
 }
-.panda-billboard .panda-mobile-featured__empty a { min-height: 44px; background: #fff; color: #090909; }
+.panda-billboard .panda-mobile-featured__empty a { min-height: 44px; background: #fff; color: var(--color-background); }
 @keyframes panda-billboard-progress { from { background: linear-gradient(90deg, #fff 0%, #fff 0%, rgba(255,255,255,.36) 0%); } to { background: linear-gradient(90deg, #fff 100%, #fff 100%, rgba(255,255,255,.36) 100%); } }
 @keyframes panda-billboard-kenburns { from { transform: scale(1.025) translate3d(0,0,0); } to { transform: scale(1.105) translate3d(-.5%, -.4%, 0); } }
 @media (max-width: 767px) {
