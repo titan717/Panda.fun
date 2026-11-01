@@ -14,9 +14,14 @@ export function MotionPreferenceProvider({ children }: { children: React.ReactNo
   return <MotionPreferenceContext.Provider value={preference}>{children}</MotionPreferenceContext.Provider>;
 }
 
+type PressableProps = Omit<
+  React.ComponentPropsWithoutRef<'button'>,
+  'onAnimationStart' | 'onAnimationEnd' | 'onDrag' | 'onDragStart' | 'onDragEnd'
+> & { haptic?: boolean };
+
 export function Pressable({
-  children, className, onClick, haptic = false, disabled, ...props
-}: React.ButtonHTMLAttributes<HTMLButtonElement> & { haptic?: boolean }) {
+  children, className, onClick, haptic = false, disabled, type, ...props
+}: PressableProps) {
   const preference = useContext(MotionPreferenceContext);
   const reduce = useReducedMotion();
   const canMove = preference === 'full' && !reduce;
@@ -27,7 +32,7 @@ export function Pressable({
   return (
     <m.button
       {...props}
-      type={props.type || 'button'}
+      type={type || 'button'}
       disabled={disabled}
       onClick={handleClick}
       whileTap={canMove ? { scale: 0.96, transition: motionSprings.snappy } : undefined}
