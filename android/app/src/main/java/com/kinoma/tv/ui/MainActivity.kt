@@ -3,6 +3,8 @@ package com.kinoma.tv.ui
 import android.annotation.SuppressLint
 import android.app.UiModeManager
 import android.content.Context
+import android.net.ConnectivityManager
+import android.net.NetworkCapabilities
 import android.content.Intent
 import android.content.pm.PackageManager
 import android.content.res.Configuration
@@ -114,9 +116,7 @@ class MainActivity : ComponentActivity() {
             setBackgroundColor(Color.parseColor("#B84D41"))
             setTextColor(Color.WHITE)
             setOnClickListener {
-                diagnosticContainer.visibility = View.GONE
-                webView.visibility = View.VISIBLE
-                webView.loadUrl(WEB_ENTRY_URL)
+                loadHomeOrShowOffline()
             }
         }
 
@@ -134,7 +134,7 @@ class MainActivity : ComponentActivity() {
                 ViewGroup.LayoutParams.MATCH_PARENT,
                 ViewGroup.LayoutParams.MATCH_PARENT
             )
-            setBackgroundColor(Color.parseColor("#07080d"))
+            setBackgroundColor(Color.BLACK)
             isFocusable = true
             isFocusableInTouchMode = true
         }
@@ -310,7 +310,7 @@ class MainActivity : ComponentActivity() {
         val restoredWebView = savedInstanceState != null && webView.restoreState(savedInstanceState) != null
         if (!restoredWebView) {
             Log.i(TAG, "Loading bundled Panda.fun Home: $WEB_ENTRY_URL")
-            webView.loadUrl(WEB_ENTRY_URL)
+            loadHomeOrShowOffline()
         }
         webView.requestFocus()
 
@@ -427,6 +427,33 @@ class MainActivity : ComponentActivity() {
         val uiModeManager = getSystemService(Context.UI_MODE_SERVICE) as? UiModeManager
         return uiModeManager?.currentModeType == Configuration.UI_MODE_TYPE_TELEVISION ||
             packageManager.hasSystemFeature(PackageManager.FEATURE_LEANBACK)
+    }
+
+    private fun hasValidatedNetwork(): Boolean {
+        return try {
+            val manager = getSystemService(Context.CONNECTIVITY_SERVICE) as ConnectivityManager
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+                val network = manager.activeNetwork ?: return false
+                val capabilities = manager.getNetworkCapabilities(network) ?: return false
+                capabilities.hasCapability(NetworkCapabilities.NET_CAPABILITY_INTERNET) &&
+                    capabilities.hasCapability(NetworkCapabilities.NET_CAPABILITY_VALIDATED)
+            } else {
+                @Suppress("DEPRECATION")
+                manager.activeNetworkInfo?.isConnected == true
+            }
+        } catch (_: Exception) {
+            false
+        }
+    }
+
+    private fun loadHomeOrShowOffline() {
+        if (!hasValidatedNetwork()) {
+            showDiagnosticScreen("offline", WEB_ENTRY_URL, null, "No validated internet connection")
+            return
+        }
+        diagnosticContainer.visibility = View.GONE
+        webView.visibility = View.VISIBLE
+        webView.loadUrl(WEB_ENTRY_URL)
     }
 
     private fun isGestureNavigation(): Boolean {
