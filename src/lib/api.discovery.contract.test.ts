@@ -5,12 +5,13 @@ const api = readFileSync(new URL('./api.ts', import.meta.url), 'utf8');
 const mobileHome = readFileSync(new URL('../pages/MobileHome.tsx', import.meta.url), 'utf8');
 
 describe('homepage discovery API contracts', () => {
-  it('uses the documented upcoming movie and TV endpoints', () => {
+  it('targets the upcoming movie and TV endpoints', () => {
     expect(api).toContain("'/api/v1/upcoming/movies'");
     expect(api).toContain("'/api/v1/upcoming/tv'");
+    expect(api).toContain('Promise<{ results: MovieApiMedia[] }>');
   });
 
-  it('builds an Anime rail from both verified animation genre media types and Japanese original language', () => {
+  it('builds an Anime rail from movie and TV animation media filtered by Japanese original language', () => {
     expect(api).toContain("'/api/v1/genres/' + encodeURIComponent(genre)");
     expect(api).toContain("{ type: 'movie', page: 1 }");
     expect(api).toContain("{ type: 'tv', page: 1 }");
@@ -18,7 +19,7 @@ describe('homepage discovery API contracts', () => {
     expect(mobileHome).toContain("api.getGenreAnime('animation', 24)");
   });
 
-  it('uses the documented recommendation endpoint and preserves media type', () => {
+  it('uses the recommendation endpoint and preserves media type', () => {
     expect(api).toContain('`/api/v1/recommendations/${tmdbId}`');
     expect(api).toContain('{ type: media.type }');
   });
