@@ -105,6 +105,7 @@
   .panda-mobile-bottom-nav__active-pill { transition: none; }
 }
 [data-motion-preference='reduced'] .panda-motion-shimmer::after,
+[data-motion-preference='reduced'] .panda-motion-shimmer::after,
 [data-motion-preference='minimal'] .panda-motion-shimmer::after { animation: none; }
 
 .panda-motion-play-cta {
