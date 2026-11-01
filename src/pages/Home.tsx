@@ -258,9 +258,8 @@ export function Home() {
         api.getNewOnDisneyPlus(),
         api.getAiringToday(),
         api.getUpcomingMovies(),
-        api.getUpcomingTv(),
-        isMobileLayout ? Promise.resolve({ results: [] as any[] }) : api.getGenreAnime('animation', 24)
-      ]).then(([netflix, disney, today, upcomingMovies, upcomingTv, animeTitles]) => {
+        api.getUpcomingTv()
+      ]).then(([netflix, disney, today, upcomingMovies, upcomingTv]) => {
         if (!active) return;
         if (netflix.status === 'fulfilled') setNewOnNetflix((netflix.value.results || []) as unknown as MovieApiMedia[]);
         if (disney.status === 'fulfilled') setNewOnDisneyPlus((disney.value.results || []) as unknown as MovieApiMedia[]);
@@ -284,7 +283,7 @@ export function Home() {
         ['Animation & Family', 'Animation', 'Animation'],
         ['Documentary', 'Documentary', 'Documentary'],
       ];
-      if (!isMobileLayout) Promise.all(genreDefinitions.map(async ([label, movieGenre, tvGenre]) => {
+      Promise.all(genreDefinitions.map(async ([label, movieGenre, tvGenre]) => {
         const [movies, shows] = await Promise.allSettled([
           api.getGenreMedia(movieGenre, 'movie', 12),
           api.getGenreMedia(tvGenre, 'tv', 12),
