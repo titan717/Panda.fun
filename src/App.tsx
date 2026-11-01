@@ -1,7 +1,7 @@
 import React, { lazy, Suspense, useEffect, useRef, useState } from 'react';
 import { Route, Switch, useLocation } from 'wouter';
 import { AnimatePresence, m } from 'motion/react';
-import { getMotionOffset, useMotionPreference } from './motion';
+import { getMotionOffset, getRouteTransitionDirection, getRouteDepth, useMotionPreference } from './motion';
 import { SWRConfig } from 'swr';
 import { localCache } from './lib/localCache';
 import { Layout } from './components/Layout';
@@ -71,13 +71,12 @@ function AnimatedRoutes() {
   const previousLocation = useRef(location);
   const previousPath = previousLocation.current.split('?')[0];
   const currentPath = location.split('?')[0];
-  const routeDepth = (path: string) => /\\/watch\\//.test(path) ? 2 : /\\/details\\//.test(path) ? 1 : 0;
-  const isDetailTransition = routeDepth(currentPath) > 0 || routeDepth(previousPath) > 0;
-  const direction = Math.sign(routeDepth(currentPath) - routeDepth(previousPath));
+  const isDetailTransition = getRouteDepth(currentPath) > 0 || getRouteDepth(previousPath) > 0;
+  const direction = getRouteTransitionDirection(previousPath, currentPath);
+  const lastScrolledLocation = useRef(location);
   useEffect(() => { previousLocation.current = location; }, [location]);
 
   useEffect(() => {
-    window.scrollTo({ top: 0, behavior: 'instant' });
     trackPageView(location);
   }, [location]);
 
@@ -85,14 +84,21 @@ function AnimatedRoutes() {
 
   return (
     <Layout>
-      <AnimatePresence mode="sync" initial={false}>
+      <div className="panda-route-transition-shell">
+      <AnimatePresence mode="popLayout" initial={false}>
         <m.div
           key={location}
           initial={{ opacity: 0, x: getMotionOffset(preference, direction * 22) }}
           animate={{ opacity: 1, x: 0 }}
           exit={{ opacity: 0, x: getMotionOffset(preference, direction * -14) }}
           transition={{ duration: preference === 'full' ? (isDetailTransition ? 0.28 : 0.16) : 0.12, ease: [0.16, 1, 0.3, 1] }}
-          className="w-full flex-1 flex flex-col"
+          onAnimationComplete={() => {
+            if (lastScrolledLocation.current !== location) {
+              lastScrolledLocation.current = location;
+              window.scrollTo({ top: 0, behavior: 'instant' });
+            }
+          }}
+          className="panda-route-transition-page w-full flex-1 flex flex-col"
         >
           <Suspense fallback={<DelayedRouteFallback />}>
             <Switch location={location}>
@@ -122,6 +128,7 @@ function AnimatedRoutes() {
           </Suspense>
         </m.div>
       </AnimatePresence>
+      </div>
     </Layout>
   );
 }
