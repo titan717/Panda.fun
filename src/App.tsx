@@ -107,6 +107,17 @@ function AnimatedRoutes() {
   const isDetailTransition = getRouteDepth(currentPath) > 0 || getRouteDepth(previousPath) > 0;
   const direction = getRouteTransitionDirection(previousPath, currentPath);
   const lastScrolledLocation = useRef(location);
+  const transitionState = useRef({ location, outerDone: true, contentReady: true });
+  if (transitionState.current.location !== location) {
+    transitionState.current = { location, outerDone: false, contentReady: false };
+  }
+  const finishTransitionIfReady = () => {
+    const current = transitionState.current;
+    if (current.location === location && current.outerDone && current.contentReady && lastScrolledLocation.current !== location) {
+      lastScrolledLocation.current = location;
+      window.scrollTo({ top: 0, behavior: 'instant' });
+    }
+  };
 
   useEffect(() => { previousLocation.current = location; }, [location]);
   useEffect(() => { trackPageView(location); }, [location]);
@@ -123,6 +134,12 @@ function AnimatedRoutes() {
             animate={{ opacity: 1, x: 0 }}
             exit={{ opacity: 0, x: getMotionOffset(preference, direction * -14) }}
             transition={{ duration: preference === 'full' ? (isDetailTransition ? 0.28 : 0.16) : 0.12, ease: [0.16, 1, 0.3, 1] }}
+            onAnimationComplete={() => {
+              if (transitionState.current.location === location) {
+                transitionState.current.outerDone = true;
+                finishTransitionIfReady();
+              }
+            }}
             className="panda-route-transition-page w-full flex-1 flex flex-col"
           >
             <Suspense fallback={<DelayedRouteFallback previousLocation={previousLocation.current} />}>
@@ -132,9 +149,9 @@ function AnimatedRoutes() {
                 animate={{ opacity: 1 }}
                 transition={{ duration: preference === 'full' ? 0.16 : 0.12 }}
                 onAnimationComplete={() => {
-                  if (lastScrolledLocation.current !== location) {
-                    lastScrolledLocation.current = location;
-                    window.scrollTo({ top: 0, behavior: 'instant' });
+                  if (transitionState.current.location === location) {
+                    transitionState.current.contentReady = true;
+                    finishTransitionIfReady();
                   }
                 }}
               >
