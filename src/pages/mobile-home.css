@@ -565,3 +565,56 @@
   .panda-billboard .panda-mobile-featured__art img { animation: none; transform: none; }
   .panda-billboard .panda-mobile-featured__segment.is-active span { animation: none; background: #fff; }
 }
+
+/* Premium billboard motion: first-paint sweep and low-amplitude idle pulse. */
+.panda-mobile-featured__reveal {
+  width: 100%;
+  min-width: 0;
+}
+.panda-mobile-featured__watch {
+  position: relative;
+  overflow: hidden;
+  isolation: isolate;
+  animation: panda-mobile-play-pulse 8s ease-in-out 1.2s infinite;
+}
+.panda-mobile-featured__watch::after {
+  content: '';
+  position: absolute;
+  inset: -20% auto -20% -55%;
+  width: 42%;
+  pointer-events: none;
+  background: linear-gradient(105deg, transparent, rgba(255,255,255,.3), transparent);
+  transform: skewX(-18deg);
+  animation: panda-mobile-play-sweep 900ms cubic-bezier(.2,0,0,1) 650ms both;
+}
+.panda-mobile-featured__loading-shimmer {
+  position: absolute;
+  inset: 0;
+  opacity: .45;
+}
+.panda-mobile-featured__list {
+  transform-origin: center;
+}
+@keyframes panda-mobile-play-sweep {
+  from { transform: translateX(0) skewX(-18deg); opacity: 0; }
+  20% { opacity: 1; }
+  to { transform: translateX(390%) skewX(-18deg); opacity: 0; }
+}
+@keyframes panda-mobile-play-pulse {
+  0%, 90%, 100% { transform: scale(1); }
+  94% { transform: scale(1.025); }
+}
+.panda-billboard.is-paused .panda-mobile-featured__watch,
+.panda-billboard.is-paused .panda-mobile-featured__watch::after {
+  animation-play-state: paused;
+}
+@media (prefers-reduced-motion: reduce) {
+  .panda-mobile-featured__watch,
+  .panda-mobile-featured__watch::after { animation: none !important; }
+}
+[data-motion-preference='reduced'] .panda-mobile-featured__watch,
+[data-motion-preference='reduced'] .panda-mobile-featured__watch::after,
+[data-motion-preference='minimal'] .panda-mobile-featured__watch,
+[data-motion-preference='minimal'] .panda-mobile-featured__watch::after {
+  animation: none !important;
+}
