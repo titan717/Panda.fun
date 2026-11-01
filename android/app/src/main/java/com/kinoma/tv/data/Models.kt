@@ -54,5 +54,6 @@ data class UpdateInfo(
     @SerializedName("mandatory") val mandatory: Boolean,
     @SerializedName("sha256") val sha256: String,
     @SerializedName("channel") val channel: String? = null,
-    @SerializedName("prerelease") val prerelease: Boolean = false
+    @SerializedName("prerelease") val prerelease: Boolean = false,
+    @SerializedName("sizeBytes") val sizeBytes: Long = 0
 )
