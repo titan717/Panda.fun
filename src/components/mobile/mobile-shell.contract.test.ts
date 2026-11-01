@@ -54,8 +54,11 @@ describe('MYpanda.fun mobile shell contract', () => {
     expect(homeStyles).not.toContain('panda-mobile-featured__viewport');
     expect(homeStyles).toContain('background: #fff');
     expect(mobileHome).toContain('buildWatchHref(featured.id');
-    expect(mobileHome).toContain('aria-label="Previous featured title"');
-    expect(mobileHome).toContain('aria-label="Next featured title"');
+    expect(mobileHome).toContain('panda-mobile-featured__segment');
+    expect(mobileHome).toContain('aria-label="Featured title progress"');
+    expect(mobileHome).toContain('aria-current={index === activeIndex ? \'true\' : undefined}');
+    expect(mobileHome).not.toContain('Previous featured title');
+    expect(mobileHome).not.toContain('Next featured title');
     expect(homeStyles).toContain('panda-mobile-featured__art::after');
     expect(homeStyles).toContain('prefers-reduced-motion: reduce');
   });
