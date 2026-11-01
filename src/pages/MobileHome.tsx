@@ -85,25 +85,19 @@ function MobileRail({ title, items, topTen = false, wide = false, genre }: { tit
 }
 
 
-function LazyGenreRail({ title, genre, movieGenre, tvGenre, animeOnly = false, existingItems = [] }: {
+function LazyGenreRail({ title, genre, movieGenre, tvGenre, animeOnly = false }: {
   title: string;
   genre: string;
   movieGenre?: string;
   tvGenre?: string;
   animeOnly?: boolean;
-  existingItems?: MovieApiMedia[];
 }) {
   const sectionRef = useRef<HTMLElement | null>(null);
-  const [nearViewport, setNearViewport] = useState(existingItems.length > 0);
-  const [items, setItems] = useState<MovieApiMedia[]>(existingItems);
-  const [loading, setLoading] = useState(existingItems.length === 0);
+  const [nearViewport, setNearViewport] = useState(false);
+  const [items, setItems] = useState<MovieApiMedia[]>([]);
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    if (existingItems.length) {
-      setItems(existingItems);
-      setLoading(false);
-      return;
-    }
     const node = sectionRef.current;
     if (!node) return;
     if (typeof IntersectionObserver === 'undefined') { setNearViewport(true); return; }
@@ -115,10 +109,10 @@ function LazyGenreRail({ title, genre, movieGenre, tvGenre, animeOnly = false, e
     }, { rootMargin: '480px 0px' });
     observer.observe(node);
     return () => observer.disconnect();
-  }, [existingItems]);
+  }, []);
 
   useEffect(() => {
-    if (!nearViewport || items.length || existingItems.length) return;
+    if (!nearViewport) return;
     let active = true;
     const requests = animeOnly
       ? [api.getGenreAnime('animation', 24)]
@@ -133,7 +127,7 @@ function LazyGenreRail({ title, genre, movieGenre, tvGenre, animeOnly = false, e
       setLoading(false);
     });
     return () => { active = false; };
-  }, [nearViewport, items.length, existingItems.length, animeOnly, movieGenre, tvGenre, genre]);
+  }, [nearViewport, animeOnly, movieGenre, tvGenre, genre]);
 
   if (!items.length && !loading) return null;
   if (items.length) return <MobileRail title={title} items={items} genre={genre} />;
@@ -365,14 +359,14 @@ export function MobileHome({
       <MobileRail title="Airing Today" items={uniqueItems(filterCategory(airing))} />
       <MobileRail title="Coming Soon" items={uniqueItems(filterCategory(comingSoon))} wide />
       {lastWatchedTitle && <MobileRail title={"Because you watched " + lastWatchedTitle} items={uniqueItems(filterCategory(becauseWatched))} />}
-      <LazyGenreRail title="Anime" genre="anime" animeOnly existingItems={uniqueItems(filterCategory(anime))} />
-      <LazyGenreRail title="Action" genre="Action" movieGenre="Action" tvGenre="Action & Adventure" existingItems={genreItems("Action")} />
-      <LazyGenreRail title="Comedy" genre="Comedy" movieGenre="Comedy" tvGenre="Comedy" existingItems={genreItems("Comedy")} />
-      <LazyGenreRail title="Drama" genre="Drama" existingItems={genreItems("Drama")} />
-      <LazyGenreRail title="Sci-Fi & Fantasy" genre="Sci-Fi & Fantasy" movieGenre="Science Fiction" tvGenre="Sci-Fi & Fantasy" existingItems={genreItems("Sci-Fi & Fantasy")} />
-      <LazyGenreRail title="Horror" genre="Horror" existingItems={genreItems("Horror")} />
-      <LazyGenreRail title="Animation & Family" genre="Animation & Family" movieGenre="Animation" tvGenre="Animation" existingItems={genreItems("Animation & Family")} />
-      <LazyGenreRail title="Documentary" genre="Documentary" existingItems={genreItems("Documentary")} />
+      <LazyGenreRail title="Anime" genre="anime" animeOnly />
+      <LazyGenreRail title="Action" genre="Action" movieGenre="Action" tvGenre="Action & Adventure" />
+      <LazyGenreRail title="Comedy" genre="Comedy" movieGenre="Comedy" tvGenre="Comedy" />
+      <LazyGenreRail title="Drama" genre="Drama" />
+      <LazyGenreRail title="Sci-Fi & Fantasy" genre="Sci-Fi & Fantasy" movieGenre="Science Fiction" tvGenre="Sci-Fi & Fantasy" />
+      <LazyGenreRail title="Horror" genre="Horror" />
+      <LazyGenreRail title="Animation & Family" genre="Animation & Family" movieGenre="Animation" tvGenre="Animation" />
+      <LazyGenreRail title="Documentary" genre="Documentary" />
     </div>
   );
 }
