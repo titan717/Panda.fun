@@ -1,0 +1,15 @@
+.panda-space-hub{margin:0 auto 18px;max-width:1440px;padding:0 clamp(16px,3vw,48px);color:#f7f4f2}
+.panda-space-hub__welcome{display:flex;align-items:center;gap:12px;margin-bottom:14px}
+.panda-space-hub__avatar{display:grid;width:42px;height:42px;place-items:center;border:1px solid rgba(255,46,99,.35);border-radius:14px;background:rgba(255,46,99,.12);color:#ff8aa9}
+.panda-space-hub__welcome div{display:grid;gap:3px}.panda-space-hub__welcome div>span{color:#ff7c9e;font-size:9px;font-weight:900;letter-spacing:.16em}.panda-space-hub__welcome strong{font-size:16px;font-weight:850}
+.panda-space-hub__grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:10px}
+.panda-space-hub__tile{display:flex;min-height:168px;flex-direction:column;align-items:flex-start;border:1px solid rgba(255,255,255,.09);border-radius:14px;padding:15px;background:#111012}
+.panda-space-hub__tile-head{display:flex;width:100%;align-items:center;justify-content:space-between;color:#ff8aa9}.panda-space-hub__tile-head span{color:#92898a;font-size:9px}
+.panda-space-hub__tile h2{margin-top:14px;font-size:13px;font-weight:850}.panda-space-hub__tile p{margin-top:5px;color:#a79ea0;font-size:10px;line-height:1.55}
+.panda-space-hub__tile button,.panda-space-hub__tile>a{display:inline-flex;align-items:center;gap:6px;margin-top:auto;padding-top:12px;color:#f5dce4;font-size:10px;font-weight:800;text-decoration:none;background:none;border:0}
+.panda-space-hub__tile button[aria-pressed=true]{color:#8dbb84}
+.panda-space-hub__watched{display:grid;gap:4px;margin:7px 0 2px}.panda-space-hub__watched a{overflow:hidden;color:#c9c1c2;font-size:10px;text-overflow:ellipsis;white-space:nowrap;text-decoration:none}
+.panda-space-hub__history{display:inline-flex;align-items:center;gap:7px;margin-top:13px;color:#a89fa1;font-size:10px;text-decoration:none}.panda-space-hub__history span,.panda-space-hub__tile>a span{color:#ff2e63}
+.panda-space-hub :is(a,button):focus-visible{outline:2px solid #ff2e63;outline-offset:3px}
+@media(max-width:900px){.panda-space-hub__grid{grid-template-columns:repeat(2,minmax(0,1fr))}}
+@media(max-width:480px){.panda-space-hub{padding:0 14px}.panda-space-hub__grid{gap:8px}.panda-space-hub__tile{min-height:155px;padding:12px}}
