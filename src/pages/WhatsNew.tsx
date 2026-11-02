@@ -7,6 +7,8 @@ import { AnimeGridSkeleton } from '../components/ui/Skeletons';
 import { KinomaErrorState } from '../components/ui/KinomaErrorState';
 import { updateSEO } from '../lib/seo';
 import { Sparkles, Film, Radio, Calendar, Filter, Flame } from 'lucide-react';
+import { EditorialNewHot } from '../components/EditorialNewHot';
+import '../styles/editorial-new-hot.css';
 
 type FilterType = 'All' | 'Sub' | 'Dub' | 'Movies' | 'Episodes' | 'New Seasons';
 
@@ -96,6 +98,8 @@ export function WhatsNew() {
   ];
 
   return (
+    <>
+    <EditorialNewHot />
     <div className="w-full min-h-screen bg-[#07080c] py-8 text-white">
       <div className="w-full max-w-[1680px] mx-auto px-4 sm:px-6 md:px-8 lg:px-10 flex flex-col gap-8">
         
@@ -163,5 +167,6 @@ export function WhatsNew() {
 
       </div>
     </div>
+    </>
   );
 }
