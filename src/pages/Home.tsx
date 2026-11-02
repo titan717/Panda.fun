@@ -14,6 +14,7 @@ import { ModernContinueWatching } from '../components/ui/modern/ModernContinueWa
 import '../styles/panda-home.css';
 import { MobileHome } from './MobileHome';
 import { friendlyNetworkError } from '../lib/networkMessage';
+import { EditorialRail } from '../components/EditorialRail';
 
 type RailKind = 'trending' | 'streamingNetflix' | 'streamingDisney' | 'popular' | 'tv' | 'movie' | 'airing';
 
@@ -430,6 +431,11 @@ export function Home() {
             <PandaRail kind="movie" title="Popular movies" items={popularMovies} onHover={showHoverTrailer} onLeave={hideHoverTrailer} />
             <PandaRail kind="tv" title="Popular TV shows" items={popularTv} onHover={showHoverTrailer} onLeave={hideHoverTrailer} />
             <PandaRail kind="airing" title="Airing today" subtitle="What's moving through today's schedule." items={airing} onHover={showHoverTrailer} onLeave={hideHoverTrailer} />
+            <EditorialRail collectionId="trending" />
+            <EditorialRail collectionId="top-ten" />
+            <EditorialRail collectionId="originals" />
+            <EditorialRail collectionId="drama" />
+            <EditorialRail collectionId="new-releases" />
 
             <section className="panda-home-v2__section panda-home-v2__section--compact" aria-label="Browse">
               <div className="panda-home-v2__section-head">
