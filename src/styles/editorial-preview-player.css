@@ -1,0 +1,20 @@
+.panda-preview-player{position:fixed;inset:0;z-index:100;display:flex;align-items:center;justify-content:center;background:#000;color:#fff}
+.panda-preview-player__video{width:100%;height:100%;max-height:100dvh;object-fit:contain;background:#000}
+.panda-preview-player__chrome{position:absolute;inset:0;display:flex;flex-direction:column;justify-content:space-between;opacity:0;pointer-events:none;transition:opacity .18s ease;background:linear-gradient(180deg,rgba(0,0,0,.65),transparent 24%,transparent 58%,rgba(0,0,0,.78))}
+.panda-preview-player__chrome.is-visible{opacity:1;pointer-events:auto}
+.panda-preview-player__top,.panda-preview-player__bottom{padding:clamp(16px,3vw,32px)}
+.panda-preview-player__top{display:flex;align-items:flex-start;justify-content:space-between;gap:20px}
+.panda-preview-player__top div{display:grid;gap:4px}.panda-preview-player__top strong{font-size:16px}.panda-preview-player__top span{font-size:11px;color:#c4bdbd}
+.panda-preview-player__top button,.panda-preview-player__controls button{display:grid;place-items:center;min-width:40px;min-height:40px;border:1px solid rgba(255,255,255,.22);border-radius:50%;background:rgba(20,18,20,.68);color:white}
+.panda-preview-player__bottom{display:grid;gap:12px}
+.panda-preview-player__controls{display:flex;align-items:center;gap:10px}
+.panda-preview-player__controls button{font-size:11px;font-weight:800}
+.panda-preview-player__time{margin-left:6px;font-variant-numeric:tabular-nums;font-size:12px}.panda-preview-player__time i{padding:0 5px;color:#aaa;font-style:normal}
+.panda-preview-player__spacer{flex:1}
+.panda-preview-player__scrubber{width:100%;accent-color:#ff2e63;cursor:pointer}
+.panda-preview-player__shortcuts{color:rgba(255,255,255,.6);font-size:10px;text-align:right}
+.panda-preview-player__error{position:absolute;top:50%;left:50%;display:grid;gap:8px;width:min(90%,420px);transform:translate(-50%,-50%);padding:24px;border:1px solid rgba(255,255,255,.15);border-radius:14px;background:rgba(10,9,11,.9);text-align:center}
+.panda-preview-player__error span{color:#bdb4b4;font-size:12px;line-height:1.6}
+.panda-preview-player :is(button,input):focus-visible{outline:2px solid #ff2e63;outline-offset:3px}
+@media(max-width:600px){.panda-preview-player__controls{gap:6px}.panda-preview-player__controls button{min-width:34px;min-height:34px}.panda-preview-player__shortcuts{font-size:9px}}
+@media(prefers-reduced-motion:reduce){.panda-preview-player__chrome{transition:none}}
