@@ -244,8 +244,8 @@ export function MobileHome({
       <MobileRail title="Top 10" items={topTen} topTen />
       <ModernContinueWatching />
       <MobileRail title="Trending Now" items={trending} />
-      <MobileRail title="New on Netflix" items={uniqueItems(newOnNetflix)} />
-      <MobileRail title="New on Disney+" items={uniqueItems(newOnDisneyPlus)} />
+      <MobileRail title="Recently Added" items={uniqueItems(newOnNetflix)} />
+      <MobileRail title="Fresh Picks" items={uniqueItems(newOnDisneyPlus)} />
       <MobileRail title="Popular Movies" items={uniqueItems(popularMovies)} />
       <MobileRail title="Popular TV Shows" items={uniqueItems(popularTv)} />
       <MobileRail title="Airing Today" items={uniqueItems(airing)} />
