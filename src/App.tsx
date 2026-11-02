@@ -13,6 +13,7 @@ import { Privacy } from './pages/Privacy';
 import { Contact } from './pages/Contact';
 import { Docs } from './pages/Docs';
 import { Home } from './pages/Home';
+import { DetailsRoute } from './pages/DetailsRoute';
 import { NotFound } from './pages/NotFound';
 function retryLazyImport<T>(importer: () => Promise<T>, chunkName: string) {
   return importer().catch(error => {
@@ -74,7 +75,7 @@ function RouteContent({ location }: { location: string }) {
       <Route path="/search" component={Search} />
       <Route path="/explore" component={Search} />
       <Route path="/whats-new" component={WhatsNew} />
-      <Route path="/details/:id" component={Details} />
+      <Route path="/details/:id" component={DetailsRoute} />
       <Route path="/watch/:id" component={Watch} />
       <Route path="/library" component={Library} />
       <Route path="/history" component={Library} />
