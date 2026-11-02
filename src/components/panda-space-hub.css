@@ -7,7 +7,7 @@
 .panda-space-hub__tile-head{display:flex;width:100%;align-items:center;justify-content:space-between;color:#ff8aa9}.panda-space-hub__tile-head span{color:#92898a;font-size:9px}
 .panda-space-hub__tile h2{margin-top:14px;font-size:13px;font-weight:850}.panda-space-hub__tile p{margin-top:5px;color:#a79ea0;font-size:10px;line-height:1.55}
 .panda-space-hub__tile button,.panda-space-hub__tile>a{display:inline-flex;align-items:center;gap:6px;margin-top:auto;padding-top:12px;color:#f5dce4;font-size:10px;font-weight:800;text-decoration:none;background:none;border:0}
-.panda-space-hub__tile button[aria-pressed=true]{color:#8dbb84}
+.panda-space-hub__tile button[aria-pressed=true]{color:#8dbb84}.panda-space-hub__coming{margin-top:auto;padding-top:12px;color:#d6b477;font-size:10px;font-weight:800}
 .panda-space-hub__watched{display:grid;gap:4px;margin:7px 0 2px}.panda-space-hub__watched a{overflow:hidden;color:#c9c1c2;font-size:10px;text-overflow:ellipsis;white-space:nowrap;text-decoration:none}
 .panda-space-hub__history{display:inline-flex;align-items:center;gap:7px;margin-top:13px;color:#a89fa1;font-size:10px;text-decoration:none}.panda-space-hub__history span,.panda-space-hub__tile>a span{color:#ff2e63}
 .panda-space-hub :is(a,button):focus-visible{outline:2px solid #ff2e63;outline-offset:3px}
