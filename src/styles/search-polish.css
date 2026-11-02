@@ -1,0 +1,6 @@
+/* Search polish: reduce ambient noise, let the input and results breathe. */
+.panda-search__ambient { display: none; }
+.panda-search__section-head h2 { font-size: 1.1rem; letter-spacing: -0.02em; }
+.panda-search__surprise { display: none; }
+.panda-search__grid { gap: var(--space-4, 16px); }
+.panda-search__field:focus-within { box-shadow: 0 0 0 3px rgba(232,208,192,.35); }

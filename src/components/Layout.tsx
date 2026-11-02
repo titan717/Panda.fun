@@ -1,10 +1,11 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { Link, useLocation } from 'wouter';
 import { House, Search, Library, Settings, Info, UserRound, FileText, Shield, Tv, Clapperboard, Trophy, Grid2X2 } from 'lucide-react';
-import { KinomaLogo } from './ui/KinomaLogo';
+import { PandaLogo } from './ui/PandaLogo';
 import { ConnectionBanner } from './ui/ConnectionBanner';
 import './mobile/mobile-shell.css';
 import '../styles/android-tv.css';
+import '../design/tokens.css';
 import { getCurrentDeviceMode } from '../lib/deviceCapabilities';
 import { m } from 'motion/react';
 import { useMotionPreference } from '../motion';
@@ -25,14 +26,16 @@ export const ITEMS = [
 ];
 
 const TV_ITEMS = [
-  { href: '/search', label: 'Search', Icon: Search },
   { href: '/home', label: 'Home', Icon: House },
-  { href: '/search?type=series', label: 'TV', Icon: Tv },
   { href: '/search?type=movie', label: 'Movies', Icon: Clapperboard },
-  { href: '/search?keyword=sports', label: 'Sports', Icon: Trophy },
-  { href: '/search', label: 'Categories', Icon: Grid2X2 },
-  { href: '/profile', label: 'My Space', Icon: UserRound },
+  { href: '/search?type=series', label: 'TV Shows', Icon: Tv },
+  { href: '/search?type=anime', label: 'Anime', Icon: Sparkles },
+  { href: '/search', label: 'Search', Icon: Search },
+  { href: '/library', label: 'My List', Icon: Library },
 ];
+
+// Sparkles is imported lazily to keep the icon set lean
+import { Sparkles } from 'lucide-react';
 
 export function Layout({ children }: { children: React.ReactNode }) {
   const [location] = useLocation();
@@ -59,8 +62,6 @@ export function Layout({ children }: { children: React.ReactNode }) {
   }, []);
 
   useEffect(() => {
-    // TV screens manage their own initial focus so the remote lands on the
-    // primary action/search field instead of an invisible main landmark.
     if (!tvMode) mainRef.current?.focus({ preventScroll: true });
   }, [location, tvMode]);
   useEffect(() => () => { if (collapseTimer.current !== null) window.clearTimeout(collapseTimer.current); }, []);
@@ -79,7 +80,7 @@ export function Layout({ children }: { children: React.ReactNode }) {
       <a className="panda-skip-link" href="#panda-main-content">Skip to main content</a>
       {!isPlayerRoute && (
         <header className="panda-mobile-header">
-          <Link href="/home" className="panda-mobile-header__brand" aria-label="Panda.fun home"><KinomaLogo size="md" variant="full" /></Link>
+          <Link href="/home" className="panda-mobile-header__brand" aria-label="Panda.fun home"><PandaLogo size="md" variant="full" /></Link>
           <nav className="panda-mobile-header__actions" aria-label="Quick actions"><Link href="/settings" className={`panda-mobile-header__action${location.split("?")[0] === "/settings" ? " is-active" : ""}`} aria-label="Settings" aria-current={location.split("?")[0] === "/settings" ? "page" : undefined} title="Settings"><Settings size={20} strokeWidth={1.8} /></Link></nav>
         </header>
       )}
@@ -93,7 +94,7 @@ export function Layout({ children }: { children: React.ReactNode }) {
               (href === '/library' && (pathname === '/library' || pathname === '/history'));
             return <Link key={href} href={href} className={`panda-mobile-bottom-nav__item ${active ? 'is-active' : ''}`} aria-label={mobileLabel} aria-current={active ? 'page' : undefined}>
               {active && motionPreference === 'full' && <m.span layoutId="panda-bottom-nav-active" className="panda-mobile-bottom-nav__active-pill" transition={{ type: 'spring', stiffness: 420, damping: 34 }} aria-hidden="true" />}
-              <m.span className="panda-mobile-bottom-nav__icon" animate={active && motionPreference === 'full' ? { scale: [1, 1.12, 1], y: [0, -2, 0] } : { scale: 1, y: 0 }} transition={{ duration: 0.28 }}><Icon size={21} strokeWidth={1.9} fill={active && (href === '/home' || href === '/library') ? 'currentColor' : 'none'} /></m.span>
+              <m.span className="panda-mobile-bottom-nav__icon" animate={active && motionPreference === 'full' ? { scale: [1, 1.12, 1], y: [0, -2, 0] } : { scale: 1, y: 0 }} transition={{ duration: 0.28 }}><Icon size={20} strokeWidth={1.8} fill={active && (href === '/home' || href === '/library') ? 'currentColor' : 'none'} /></m.span>
               <span className="panda-mobile-bottom-nav__label">{mobileLabel}</span>
             </Link>;
           })}
@@ -101,20 +102,18 @@ export function Layout({ children }: { children: React.ReactNode }) {
       )}
       {!isPlayerRoute && (
         <aside className={`kinoma-sidebar kinoma-sidebar--icons ${expanded ? 'is-expanded' : 'is-collapsed'}`} aria-label="Panda.fun navigation" onPointerEnter={expand} onPointerLeave={collapse} onFocusCapture={expand} onBlurCapture={(event) => { if (!event.currentTarget.contains(event.relatedTarget as Node | null)) collapse(); }}>
-          <div className="kinoma-sidebar__top"><Link href="/home" className="kinoma-sidebar__brand" aria-label="Panda.fun home"><KinomaLogo size={expanded ? 'md' : 'sm'} variant={expanded ? 'full' : 'mark'} className="kinoma-sidebar__logo" /></Link></div>
+          <div className="kinoma-sidebar__top"><Link href="/home" className="kinoma-sidebar__brand" aria-label="Panda.fun home"><PandaLogo size={expanded ? 'md' : 'sm'} variant={expanded ? 'full' : 'mark'} className="kinoma-sidebar__logo" /></Link></div>
           <nav className="kinoma-sidebar__nav" aria-label="Main navigation">
             {navItems.map(({ href, label, Icon }) => {
               const pathname = location.split('?')[0];
               const query = new URLSearchParams(location.split('?')[1] || '');
               const active = (href === '/home' && (pathname === '/home' || pathname === '/browse')) ||
-                (href === '/profile' && pathname === '/profile') ||
                 (href === '/library' && (pathname === '/library' || pathname === '/history')) ||
-                (href === '/settings' && pathname === '/settings') ||
                 (href === '/search' && pathname === '/search' && !query.get('keyword')) ||
                 (href === '/search?type=series' && pathname === '/search' && query.get('type') === 'series') ||
                 (href === '/search?type=movie' && pathname === '/search' && query.get('type') === 'movie') ||
-                (href === '/search?keyword=sports' && pathname === '/search' && query.get('keyword') === 'sports');
-              return <Link key={label} href={href} className={`kinoma-sidebar__item ${active ? 'is-active' : ''}`} aria-label={label} aria-current={active ? 'page' : undefined} data-tooltip={label}><Icon size={tvMode ? 23 : 20} strokeWidth={1.8} /><span>{label}</span></Link>;
+                (href === '/search?type=anime' && pathname === '/search' && query.get('type') === 'anime');
+              return <Link key={label} href={href} className={`kinoma-sidebar__item ${active ? 'is-active' : ''}`} aria-label={label} aria-current={active ? 'page' : undefined} data-tooltip={label}><Icon size={tvMode ? 22 : 20} strokeWidth={1.8} /><span>{label}</span></Link>;
             })}
             {!tvMode && (
               <>
