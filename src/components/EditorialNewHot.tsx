@@ -8,11 +8,17 @@ type Tab = 'coming' | 'watching';
 
 export function EditorialNewHot() {
   const [tab, setTab] = useState<Tab>('coming');
-  const [reminders, setReminders] = useState<string[]>([]);
+  const [reminders, setReminders] = useState<string[]>(() => {
+    try { return JSON.parse(sessionStorage.getItem('panda.editorial.reminders') || '[]') as string[]; } catch { return []; }
+  });
   const [saved, setSaved] = useState<string[]>([]);
   const upcoming = useMemo(() => editorialTitles.filter(item => item.releaseDate), []);
   const watching = useMemo(() => editorialTitles.filter(item => !item.releaseDate).slice(0, 10), []);
-  const toggleReminder = (id: string) => setReminders(current => current.includes(id) ? current.filter(value => value !== id) : [...current, id]);
+  const toggleReminder = (id: string) => setReminders(current => {
+    const next = current.includes(id) ? current.filter(value => value !== id) : [...current, id];
+    try { sessionStorage.setItem('panda.editorial.reminders', JSON.stringify(next)); } catch {}
+    return next;
+  });
   const toggleList = (item: (typeof editorialTitles)[number]) => {
     const next = libraryManager.toggleWatchlist({ id: item.id, title: item.title, image: item.poster });
     setSaved(current => next ? [...current, item.id] : current.filter(value => value !== item.id));
