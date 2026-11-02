@@ -2,7 +2,6 @@ import React, { useState } from 'react';
 import { Bell, BellOff, Download, History, Library, PlayCircle, UserRound } from 'lucide-react';
 import { Link } from 'wouter';
 import { getEditorialTitle } from '../data/fixtures';
-import './panda-space-hub.css';
 
 function readSessionList(key: string): string[] {
   try {
@@ -35,15 +34,31 @@ export function PandaSpaceHub() {
   };
 
   return (
-    <section className="panda-space-hub" aria-label="My Panda shortcuts">
-      <div className="panda-space-hub__welcome"><span className="panda-space-hub__avatar"><UserRound size={19} /></span><div><span>YOUR PANDA SPACE</span><strong>{profileName}</strong></div></div>
-      <div className="panda-space-hub__grid">
-        <article className="panda-space-hub__tile"><div className="panda-space-hub__tile-head"><Bell size={17} /><span>{reminders.length} reminders</span></div><h2>Notifications</h2><p>{notifications ? 'In-app reminders are on.' : 'Get in-app premiere reminders.'}</p><button type="button" onClick={toggleNotifications} aria-pressed={notifications}>{notifications ? <BellOff size={14} /> : <Bell size={14} />}{notifications ? 'Turn off' : 'Enable reminders'}</button></article>
-        <article className="panda-space-hub__tile"><div className="panda-space-hub__tile-head"><Download size={17} /><span>Offline</span></div><h2>Downloads</h2><p>Offline downloads are not available yet.</p><span className="panda-space-hub__coming">Offline downloads · Coming soon</span></article>
-        <article className="panda-space-hub__tile"><div className="panda-space-hub__tile-head"><Library size={17} /><span>Saved titles</span></div><h2>My List</h2><p>Your saved stories, ready when you are.</p><Link href="/library">Open My List <span>→</span></Link></article>
-        <article className="panda-space-hub__tile"><div className="panda-space-hub__tile-head"><PlayCircle size={17} /><span>{watched.length} previews</span></div><h2>Trailers You’ve Watched</h2>{watched.length ? <div className="panda-space-hub__watched">{watched.slice(0, 3).map(item => item && <Link key={item.id} href={`/details/${item.id}?type=${item.kind}&editorial=1`}>{item.title}</Link>)}</div> : <p>Played previews appear here.</p>}<Link href="/whats-new">Explore previews <span>→</span></Link></article>
+    <section className="panda-profile-v2__panel" style={{ marginBottom: 15 }}>
+      <div className="panda-profile-v2__panel-head"><h2><UserRound size={16} /> My Panda</h2><span>{profileName}</span></div>
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit,minmax(190px,1fr))', gap: 9 }}>
+        <article className="panda-profile-v2__panel" style={{ padding: 14 }}>
+          <div className="panda-profile-v2__panel-head"><h2><Bell size={15} /> Notifications</h2><span>{reminders.length} reminders</span></div>
+          <p className="panda-profile-v2__hint">{notifications ? 'In-app reminders are on.' : 'Get in-app premiere reminders.'}</p>
+          <button type="button" className="panda-profile-v2__button" onClick={toggleNotifications} aria-pressed={notifications}>{notifications ? <BellOff size={14} /> : <Bell size={14} />}{notifications ? 'Turn off' : 'Enable reminders'}</button>
+        </article>
+        <article className="panda-profile-v2__panel" style={{ padding: 14 }}>
+          <div className="panda-profile-v2__panel-head"><h2><Download size={15} /> Downloads</h2><span>Offline</span></div>
+          <p className="panda-profile-v2__hint">Offline downloads are not available yet.</p>
+          <span style={{ display: 'block', marginTop: 10, color: '#d6b477', fontSize: 10, fontWeight: 800 }}>Coming soon</span>
+        </article>
+        <article className="panda-profile-v2__panel" style={{ padding: 14 }}>
+          <div className="panda-profile-v2__panel-head"><h2><Library size={15} /> My List</h2><span>Saved</span></div>
+          <p className="panda-profile-v2__hint">Your saved stories, ready when you are.</p>
+          <Link href="/library" className="panda-profile-v2__button">Open My List <span>→</span></Link>
+        </article>
+        <article className="panda-profile-v2__panel" style={{ padding: 14 }}>
+          <div className="panda-profile-v2__panel-head"><h2><PlayCircle size={15} /> Trailers You’ve Watched</h2><span>{watched.length}</span></div>
+          {watched.length ? <div className="panda-profile-v2__links">{watched.slice(0, 3).map(item => item && <Link key={item.id} href={`/details/${item.id}?type=${item.kind}&editorial=1`} className="panda-profile-v2__link">{item.title}<span>→</span></Link>)}</div> : <p className="panda-profile-v2__hint">Played previews appear here.</p>}
+          <Link href="/whats-new" className="panda-profile-v2__button">Explore previews <span>→</span></Link>
+        </article>
       </div>
-      <Link href="/history" className="panda-space-hub__history"><History size={14} /> View full watch history <span>→</span></Link>
+      <Link href="/history" className="panda-profile-v2__link" style={{ marginTop: 10 }}><span><History size={14} /> View full watch history</span><span>→</span></Link>
     </section>
   );
 }
