@@ -15,6 +15,7 @@ import { ThinkingOrb } from 'thinking-orbs';
 import { friendlyNetworkError } from '../lib/networkMessage';
 import { Pressable, Reveal, Stagger } from '../motion';
 import './search-ott.css';
+import { editorialTitles } from '../data/fixtures';
 
 type SearchKind = 'movie' | 'series' | 'anime';
 type SearchFilter = 'all' | SearchKind;
@@ -164,7 +165,23 @@ export function Search() {
 
   const visibleResults = useMemo(() => {
     const normalized = submittedQuery.toLocaleLowerCase();
-    return results
+    const editorialResults: SearchItem[] = submittedQuery
+      ? editorialTitles
+        .filter(item => item.title.toLocaleLowerCase().includes(normalized) || item.genres.some(genre => genre.toLocaleLowerCase().includes(normalized)))
+        .map(item => ({
+          id: item.id,
+          title: item.title,
+          type: item.kind,
+          meta: [String(item.year), ...item.genres.slice(0, 2), 'panda.fun Original'].join(' · '),
+          image: item.poster,
+          rating: Number(item.rating) || 0,
+          year: item.year,
+          href: `/details/${item.id}?type=${item.kind}&editorial=1`,
+        }))
+      : [];
+    const unique = new Map<string, SearchItem>();
+    [...results, ...editorialResults].forEach(item => unique.set(item.id, item));
+    return [...unique.values()]
       .filter(item => filter === 'all' || item.type === filter)
       .sort((a, b) => {
         if (!normalized) return b.rating - a.rating;
