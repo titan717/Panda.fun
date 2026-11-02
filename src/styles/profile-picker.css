@@ -1,0 +1,20 @@
+.panda-profile-picker{position:fixed;inset:0;z-index:120;display:grid;place-items:center;padding:24px;background:rgba(3,3,5,.94);backdrop-filter:blur(18px)}
+.panda-profile-picker__panel{width:min(100%,760px);text-align:center}
+.panda-profile-picker__top{display:flex;align-items:center;justify-content:space-between;margin-bottom:clamp(42px,8vh,76px)}
+.panda-profile-picker__brand{font-size:18px;font-weight:950;letter-spacing:-.06em}.panda-profile-picker__brand span{color:#ff2e63}
+.panda-profile-picker__edit{display:inline-flex;align-items:center;gap:7px;border:1px solid rgba(255,255,255,.24);border-radius:999px;padding:8px 14px;color:#eee;background:rgba(255,255,255,.06);font-size:12px;font-weight:700}
+.panda-profile-picker__eyebrow{color:#ff6c91;font-size:10px;font-weight:800;letter-spacing:.18em;text-transform:uppercase}
+.panda-profile-picker h1{margin-top:10px;font-size:clamp(30px,5vw,48px);font-weight:900;letter-spacing:-.055em}
+.panda-profile-picker__hint{margin-top:9px;color:#a8a0a0;font-size:13px}
+.panda-profile-picker__grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:clamp(12px,3vw,28px);margin:34px auto 28px}
+.panda-profile-picker__item{display:flex;min-width:0;flex-direction:column;align-items:center;gap:12px}
+.panda-profile-picker__select{display:flex;width:100%;flex-direction:column;align-items:center;gap:12px;color:#eee;background:none;border:0;cursor:pointer}
+.panda-profile-picker__avatar{display:grid;width:clamp(68px,12vw,112px);aspect-ratio:1;place-items:center;border:3px solid transparent;border-radius:22px;font-size:clamp(34px,6vw,58px);box-shadow:0 12px 40px rgba(0,0,0,.28);transition:transform .2s ease,border-color .2s ease}
+.panda-profile-picker__select:hover .panda-profile-picker__avatar,.panda-profile-picker__select:focus-visible .panda-profile-picker__avatar{transform:translateY(-5px) scale(1.04);border-color:#ff2e63}
+.panda-profile-picker__select strong{font-size:13px;font-weight:700}
+.panda-profile-picker__name-edit{display:flex;align-items:center;gap:7px;color:#f6f2ee;background:none;border:0;font-size:13px}
+.panda-profile-picker__edit-row{display:flex;gap:4px;width:100%}.panda-profile-picker__edit-row input{min-width:0;width:100%;border:1px solid rgba(255,255,255,.2);border-radius:7px;padding:7px;background:#171518;color:white}.panda-profile-picker__edit-row button{border:1px solid rgba(255,255,255,.15);border-radius:7px;padding:7px;color:white}
+.panda-profile-picker__footer{color:#777174;font-size:10px}
+.panda-profile-picker :is(button,input):focus-visible{outline:2px solid #ff2e63;outline-offset:4px}
+@media(max-width:480px){.panda-profile-picker__grid{grid-template-columns:repeat(2,minmax(0,1fr));max-width:300px;row-gap:26px}.panda-profile-picker__top{margin-bottom:40px}}
+@media(prefers-reduced-motion:reduce){.panda-profile-picker__avatar{transition:none}}
