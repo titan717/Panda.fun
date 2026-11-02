@@ -1,0 +1,8 @@
+:root{--kinoma-bg:#050507;--kinoma-bg-elevated:#0b0a0d;--kinoma-surface:#121114;--kinoma-surface-hover:#1c1a1e;--kinoma-card:#191817;--kinoma-card-hover:#232124;--kinoma-accent:#ff2e63;--kinoma-accent-hover:#ff527e;--kinoma-accent-soft:#ff9ab4;--kinoma-accent-deep:#5b1830;--kinoma-amber:#d6b477;--kinoma-rose:#ff6e8f;--kinoma-blue:#7c9365;--kinoma-border:rgba(255,255,255,.11);--kinoma-border-soft:rgba(255,255,255,.07)}
+.panda-brand{display:inline-flex;align-items:center;gap:9px;min-width:0;color:#f7f4f2;text-decoration:none}
+.panda-brand__mark{display:block;width:36px;height:32px;flex:none;overflow:visible}
+.panda-brand__word{font-size:20px;font-weight:900;letter-spacing:-.065em;line-height:1;color:#f7f4f2}
+.panda-brand__word span{color:#ff2e63}
+.panda-brand--compact .panda-brand__mark{width:30px;height:27px}
+@media(min-width:768px){.kinoma-sidebar__brand .panda-brand__mark{width:38px;height:34px}.kinoma-sidebar__brand .panda-brand__word{font-size:19px}}
+@media(prefers-reduced-motion:reduce){.panda-brand *{transition:none!important}}
