@@ -3,6 +3,7 @@ import { Link } from 'wouter';
 import { Check, Plus, Play } from 'lucide-react';
 import { editorialCollections, EditorialTitle } from '../data/fixtures';
 import { libraryManager } from '../lib/library';
+import './editorial-rail.css';
 
 function EditorialCard({ item, rank }: { item: EditorialTitle; rank?: number }) {
   const [inList, setInList] = useState(() => libraryManager.isInWatchlist(item.id));
