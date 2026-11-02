@@ -7,6 +7,7 @@ import { historyUtil, HistoryItem } from '../lib/history';
 import { preferencesUtil } from '../lib/preferences';
 import { buildWatchHref } from '../lib/mediaRoute';
 import '../styles/panda-profile.css';
+import { PandaSpaceHub } from '../components/PandaSpaceHub';
 
 export function Profile() {
   const { user, loading, openAuthModal, signOut } = useAuth();
@@ -50,6 +51,7 @@ export function Profile() {
     return (
       <div className="panda-profile-v2">
         <div className="panda-profile-v2__inner">
+          <PandaSpaceHub />
           <section className="panda-profile-v2__hero panda-profile-v2__signed-out">
             <div className="panda-profile-v2__mark"><UserRound size={30} /></div>
             <span className="panda-profile-v2__eyebrow"><Sparkles size={13} /> Panda profile</span>
@@ -83,6 +85,7 @@ export function Profile() {
   return (
     <div className="panda-profile-v2">
       <div className="panda-profile-v2__inner">
+        <PandaSpaceHub />
         <section className="panda-profile-v2__hero">
           <div className="panda-profile-v2__identity">
             <div className="panda-profile-v2__avatar">

@@ -14,6 +14,8 @@ import { ModernContinueWatching } from '../components/ui/modern/ModernContinueWa
 import '../styles/panda-home.css';
 import { MobileHome } from './MobileHome';
 import { friendlyNetworkError } from '../lib/networkMessage';
+import { EditorialRail } from '../components/EditorialRail';
+import { EditorialSpotlight } from '../components/EditorialSpotlight';
 
 type RailKind = 'trending' | 'streamingNetflix' | 'streamingDisney' | 'popular' | 'tv' | 'movie' | 'airing';
 
@@ -344,6 +346,7 @@ export function Home() {
         <span className="kinoma-home__ambient-orb kinoma-home__ambient-orb--two" />
       </div>
       <div className="kinoma-home__inner">
+        <EditorialSpotlight />
         {/* PRESERVED HERO/TRAILER — intentionally unchanged */}
         <section className="kinoma-home-hero kinoma-home-hero--trailer" aria-labelledby="kinoma-home-title">
           <div className="kinoma-home-hero__trailer-bg">
@@ -425,11 +428,16 @@ export function Home() {
             )}
 
             <PandaRail priority kind="trending" title="Trending now" subtitle="The titles getting attention today." items={trending} onHover={showHoverTrailer} onLeave={hideHoverTrailer} />
-            <PandaRail kind="streamingNetflix" title="New on Netflix" subtitle="Freshly released movies now showing on the service." items={newOnNetflix} onHover={showHoverTrailer} onLeave={hideHoverTrailer} badge="NETFLIX" />
-            <PandaRail kind="streamingDisney" title="New on Disney+" subtitle="Recently added titles surfaced from TMDB." items={newOnDisneyPlus} onHover={showHoverTrailer} onLeave={hideHoverTrailer} badge="DISNEY+" />
+            <PandaRail kind="streamingNetflix" title="Recently Added" subtitle="Freshly released movies now showing on the service." items={newOnNetflix} onHover={showHoverTrailer} onLeave={hideHoverTrailer} badge="NEW" />
+            <PandaRail kind="streamingDisney" title="Fresh Picks" subtitle="Recently added titles surfaced from TMDB." items={newOnDisneyPlus} onHover={showHoverTrailer} onLeave={hideHoverTrailer} badge="PANDA PICKS" />
             <PandaRail kind="movie" title="Popular movies" items={popularMovies} onHover={showHoverTrailer} onLeave={hideHoverTrailer} />
             <PandaRail kind="tv" title="Popular TV shows" items={popularTv} onHover={showHoverTrailer} onLeave={hideHoverTrailer} />
             <PandaRail kind="airing" title="Airing today" subtitle="What's moving through today's schedule." items={airing} onHover={showHoverTrailer} onLeave={hideHoverTrailer} />
+            <EditorialRail collectionId="trending" />
+            <EditorialRail collectionId="top-ten" />
+            <EditorialRail collectionId="originals" />
+            <EditorialRail collectionId="drama" />
+            <EditorialRail collectionId="new-releases" />
 
             <section className="panda-home-v2__section panda-home-v2__section--compact" aria-label="Browse">
               <div className="panda-home-v2__section-head">

@@ -10,6 +10,8 @@ import { libraryManager } from '../lib/library';
 import { optimizeImageUrl } from '../lib/mediaImages';
 import './mobile-home.css';
 import './mobile-featured-controls.css';
+import { EditorialRail } from '../components/EditorialRail';
+import { EditorialSpotlight } from '../components/EditorialSpotlight';
 
 type MobileHomeProps = {
   items: MovieApiMedia[];
@@ -172,6 +174,7 @@ export function MobileHome({
 
   return (
     <div className="panda-mobile-home">
+      <EditorialSpotlight />
       <section className={`panda-mobile-featured panda-billboard${touchPaused || documentHidden || !motionAllowed ? " is-paused" : ""}`} aria-label="Featured titles">
         {featuredItems.length > 0 && featured ? (
           <>
@@ -243,11 +246,16 @@ export function MobileHome({
       <MobileRail title="Top 10" items={topTen} topTen />
       <ModernContinueWatching />
       <MobileRail title="Trending Now" items={trending} />
-      <MobileRail title="New on Netflix" items={uniqueItems(newOnNetflix)} />
-      <MobileRail title="New on Disney+" items={uniqueItems(newOnDisneyPlus)} />
+      <MobileRail title="Recently Added" items={uniqueItems(newOnNetflix)} />
+      <MobileRail title="Fresh Picks" items={uniqueItems(newOnDisneyPlus)} />
       <MobileRail title="Popular Movies" items={uniqueItems(popularMovies)} />
       <MobileRail title="Popular TV Shows" items={uniqueItems(popularTv)} />
       <MobileRail title="Airing Today" items={uniqueItems(airing)} />
+      <EditorialRail collectionId="trending" compact />
+      <EditorialRail collectionId="top-ten" compact />
+      <EditorialRail collectionId="originals" compact />
+      <EditorialRail collectionId="drama" compact />
+      <EditorialRail collectionId="new-releases" compact />
     </div>
   );
 }

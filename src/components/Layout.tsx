@@ -1,7 +1,9 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { Link, useLocation } from 'wouter';
-import { House, Search, Library, Settings, Info, UserRound, FileText, Shield, Tv, Clapperboard, Trophy, Grid2X2 } from 'lucide-react';
-import { KinomaLogo } from './ui/KinomaLogo';
+import { House, Search, Library, Settings, Info, UserRound, FileText, Shield, Tv, Clapperboard, Trophy, Grid2X2, Flame } from 'lucide-react';
+import { PandaBrand } from './PandaBrand';
+import { ProfilePicker, PandaProfile } from './ProfilePicker';
+import '../styles/profile-picker.css';
 import { ConnectionBanner } from './ui/ConnectionBanner';
 import './mobile/mobile-shell.css';
 import '../styles/android-tv.css';
@@ -15,6 +17,12 @@ export const ABOUT_ITEMS = [
   { href: '/terms', label: 'Terms' },
   { href: '/privacy', label: 'Privacy' },
   { href: '/contact', label: 'Contact' },
+];
+
+const MOBILE_ITEMS = [
+  { href: '/home', label: 'Home', Icon: House },
+  { href: '/whats-new', label: 'New & Hot', Icon: Flame },
+  { href: '/profile', label: 'My Panda', Icon: UserRound },
 ];
 
 export const ITEMS = [
@@ -38,6 +46,9 @@ export function Layout({ children }: { children: React.ReactNode }) {
   const [location] = useLocation();
   const motionPreference = useMotionPreference();
   const [expanded, setExpanded] = useState(false);
+  const [activeProfile, setActiveProfile] = useState(() => {
+    try { return sessionStorage.getItem('panda.profile.active') || ''; } catch { return ''; }
+  });
   const [deviceMode, setDeviceMode] = useState(() => getCurrentDeviceMode());
   const tvMode = deviceMode === 'tv';
   const collapseTimer = useRef<number | null>(null);
@@ -79,29 +90,28 @@ export function Layout({ children }: { children: React.ReactNode }) {
       <a className="panda-skip-link" href="#panda-main-content">Skip to main content</a>
       {!isPlayerRoute && (
         <header className="panda-mobile-header">
-          <Link href="/home" className="panda-mobile-header__brand" aria-label="Panda.fun home"><KinomaLogo size="md" variant="full" /></Link>
-          <nav className="panda-mobile-header__actions" aria-label="Quick actions"><Link href="/settings" className={`panda-mobile-header__action${location.split("?")[0] === "/settings" ? " is-active" : ""}`} aria-label="Settings" aria-current={location.split("?")[0] === "/settings" ? "page" : undefined} title="Settings"><Settings size={20} strokeWidth={1.8} /></Link></nav>
+          <Link href="/home" className="panda-mobile-header__brand" aria-label="Panda.fun home"><PandaBrand /></Link>
+          <nav className="panda-mobile-header__actions" aria-label="Quick actions"><Link href="/search" className={`panda-mobile-header__action${location.split("?")[0] === "/search" ? " is-active" : ""}`} aria-label="Search" title="Search"><Search size={20} strokeWidth={1.8} /></Link><Link href="/settings" className={`panda-mobile-header__action${location.split("?")[0] === "/settings" ? " is-active" : ""}`} aria-label="Settings" aria-current={location.split("?")[0] === "/settings" ? "page" : undefined} title="Settings"><Settings size={20} strokeWidth={1.8} /></Link></nav>
         </header>
       )}
       {!isPlayerRoute && (
         <nav className="panda-mobile-bottom-nav" aria-label="Panda.fun mobile navigation">
-          {ITEMS.filter(({ href }) => href !== '/settings').map(({ href, label, Icon }) => {
-            const mobileLabel = href === '/library' ? 'Library' : label;
+          {MOBILE_ITEMS.map(({ href, label, Icon }) => {
             const pathname = location.split('?')[0];
             const active = (href === '/home' && (pathname === '/home' || pathname === '/browse')) ||
-              (href === '/search' && (pathname === '/search' || pathname === '/explore' || pathname === '/whats-new')) ||
-              (href === '/library' && (pathname === '/library' || pathname === '/history'));
-            return <Link key={href} href={href} className={`panda-mobile-bottom-nav__item ${active ? 'is-active' : ''}`} aria-label={mobileLabel} aria-current={active ? 'page' : undefined}>
+              (href === '/whats-new' && pathname === '/whats-new') ||
+              (href === '/profile' && pathname === '/profile');
+            return <Link key={href} href={href} className={`panda-mobile-bottom-nav__item ${active ? 'is-active' : ''}`} aria-label={label} aria-current={active ? 'page' : undefined}>
               {active && motionPreference === 'full' && <m.span layoutId="panda-bottom-nav-active" className="panda-mobile-bottom-nav__active-pill" transition={{ type: 'spring', stiffness: 420, damping: 34 }} aria-hidden="true" />}
-              <m.span className="panda-mobile-bottom-nav__icon" animate={active && motionPreference === 'full' ? { scale: [1, 1.12, 1], y: [0, -2, 0] } : { scale: 1, y: 0 }} transition={{ duration: 0.28 }}><Icon size={21} strokeWidth={1.9} fill={active && (href === '/home' || href === '/library') ? 'currentColor' : 'none'} /></m.span>
-              <span className="panda-mobile-bottom-nav__label">{mobileLabel}</span>
+              <m.span className="panda-mobile-bottom-nav__icon" animate={active && motionPreference === 'full' ? { scale: [1, 1.12, 1], y: [0, -2, 0] } : { scale: 1, y: 0 }} transition={{ duration: 0.28 }}><Icon size={21} strokeWidth={1.9} fill={active && href === '/home' ? 'currentColor' : 'none'} /></m.span>
+              <span className="panda-mobile-bottom-nav__label">{label}</span>
             </Link>;
           })}
         </nav>
       )}
       {!isPlayerRoute && (
         <aside className={`kinoma-sidebar kinoma-sidebar--icons ${expanded ? 'is-expanded' : 'is-collapsed'}`} aria-label="Panda.fun navigation" onPointerEnter={expand} onPointerLeave={collapse} onFocusCapture={expand} onBlurCapture={(event) => { if (!event.currentTarget.contains(event.relatedTarget as Node | null)) collapse(); }}>
-          <div className="kinoma-sidebar__top"><Link href="/home" className="kinoma-sidebar__brand" aria-label="Panda.fun home"><KinomaLogo size={expanded ? 'md' : 'sm'} variant={expanded ? 'full' : 'mark'} className="kinoma-sidebar__logo" /></Link></div>
+          <div className="kinoma-sidebar__top"><Link href="/home" className="kinoma-sidebar__brand" aria-label="Panda.fun home"><PandaBrand compact={!expanded} /></Link></div>
           <nav className="kinoma-sidebar__nav" aria-label="Main navigation">
             {navItems.map(({ href, label, Icon }) => {
               const pathname = location.split('?')[0];
@@ -129,6 +139,12 @@ export function Layout({ children }: { children: React.ReactNode }) {
         </aside>
       )}
       <div className="panda-app-content"><ConnectionBanner /><main id="panda-main-content" ref={mainRef} className="kinoma-app-main" tabIndex={-1} aria-label="Main content">{children}</main></div>
+      {!isPlayerRoute && !activeProfile && ['/home', '/browse'].includes(location.split('?')[0]) && (
+        <ProfilePicker onSelect={(profile: PandaProfile) => {
+          setActiveProfile(profile.id);
+          try { sessionStorage.setItem('panda.profile.active', profile.id); } catch {}
+        }} />
+      )}
     </div>
   );
 }

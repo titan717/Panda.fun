@@ -15,13 +15,17 @@ describe('MYpanda.fun mobile shell contract', () => {
     expect(layout).toContain('href="/settings"');
     const mobileHeader = layout.slice(layout.indexOf('<header className="panda-mobile-header">'), layout.indexOf('</header>'));
     expect(mobileHeader).toContain('aria-label="Settings"');
+    expect(mobileHeader).toContain('aria-label="Search"');
     expect(mobileHeader).not.toContain('Profile');
     expect(layout).not.toContain('aria-label="Search movies and shows"');
     expect(layout).toContain('panda-mobile-bottom-nav');
     expect(layout).toContain("location.startsWith('/watch/')");
-    expect(layout).toContain("href === '/library' ? 'Library' : label");
+    expect(layout).toContain("const MOBILE_ITEMS = [");
+    expect(layout).toContain("href: '/whats-new', label: 'New & Hot'");
+    expect(layout).toContain("href: '/profile', label: 'My Panda'");
     expect(layout).toContain("const pathname = location.split('?')[0]");
-    expect(layout).toContain("pathname === '/search'");
+    expect(layout).toContain("pathname === '/whats-new'");
+    expect(layout).toContain("pathname === '/profile'");
   });
 
   it('keeps the mobile page surfaces black and makes Watch a viewport-filling shell-free player', () => {
@@ -38,7 +42,7 @@ describe('MYpanda.fun mobile shell contract', () => {
   });
 
   it('includes Top 10 and the planned catalogue rows without replacing the existing API', () => {
-    for (const section of ['Top 10', 'Trending Now', 'New on Netflix', 'New on Disney+', 'Popular Movies', 'Popular TV Shows', 'Airing Today']) {
+    for (const section of ['Top 10', 'Trending Now', 'Recently Added', 'Fresh Picks', 'Popular Movies', 'Popular TV Shows', 'Airing Today']) {
       expect(mobileHome).toContain(section);
     }
     expect(mobileHome).toContain('<ModernContinueWatching />');
