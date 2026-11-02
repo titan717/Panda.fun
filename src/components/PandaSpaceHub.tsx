@@ -16,7 +16,8 @@ export function PandaSpaceHub() {
     try {
       const id = sessionStorage.getItem('panda.profile.active');
       const names = JSON.parse(sessionStorage.getItem('panda.profile.names') || '{}') as Record<string, string>;
-      return (id && names[id]) || id || 'Panda';
+      const defaults: Record<string, string> = { ansh: 'Ansh', maya: 'Maya', leo: 'Leo', kids: 'Kids' };
+      return (id && (names[id] || defaults[id])) || 'Panda';
     } catch { return 'Panda'; }
   });
   const [notifications, setNotifications] = useState(() => {
