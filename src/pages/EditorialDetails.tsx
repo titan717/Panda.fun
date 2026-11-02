@@ -4,7 +4,7 @@ import { ArrowLeft, Check, Copy, Pause, Play, Plus, Volume2, VolumeX, X } from '
 import { getEditorialTitle, editorialTitles } from '../data/fixtures';
 import { libraryManager } from '../lib/library';
 
-const PREVIEW_IDS = ['101416', '4308', '52427', '35540', '41576', '39912'];
+const PREVIEW_IDS = ['4308', '52427', '35540', '41576', '39912'];
 
 export function EditorialDetails() {
   const [, params] = useRoute<{ id: string }>('/details/:id');
