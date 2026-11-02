@@ -26,8 +26,6 @@ export type EditorialTitle = {
   creators: string[];
   poster: string;
   backdrop: string;
-  badge?: string;
-  rank?: number;
   releaseDate?: string;
   seasons: EditorialSeason[];
 };
@@ -73,7 +71,6 @@ function title(
   backdrop: string,
   genres: string[],
   synopsis: string,
-  rank?: number,
 ): EditorialTitle {
   const series = kind === 'series';
   return {
@@ -81,8 +78,7 @@ function title(
     genres, synopsis,
     cast: ['Ari Vale', 'Mina Sol', 'Theo Park'],
     creators: ['Rhea Morgan', 'Jonas Reed'],
-    poster, backdrop, rank, releaseDate: upcomingDates[id],
-    badge: rank ? `#${rank} in ${series ? 'TV Shows' : 'Movies'} Today` : undefined,
+    poster, backdrop, releaseDate: upcomingDates[id],
     seasons: series ? [{ number: 1, episodes: id === 'night-shift' ? nightShiftEpisodes : [
       episode(id, 1, 'First Light', 'An unexpected discovery changes the shape of the story.', '44 min', poster),
       episode(id, 2, 'Crossing Lines', 'A new ally arrives with a dangerous condition.', '47 min', backdrop),
@@ -91,9 +87,9 @@ function title(
 }
 
 export const editorialTitles: EditorialTitle[] = [
-  title('night-shift', 'Night Shift', 'series', art.night, art.city, ['Gritty', 'Heist', 'Thriller'], 'At 2:17 a.m., a night auditor discovers that the city’s most secure vault has been opened from the inside. One quiet decision pulls her into a heist that has been running for twelve years.', 2),
-  title('blue-hour', 'Blue Hour', 'series', art.sea, art.night, ['Mystery', 'Drama'], 'On a remote island, the tide returns objects that disappeared decades ago — and one family knows why.', 1),
-  title('the-last-signal', 'The Last Signal', 'movie', art.mountain, art.stars, ['Sci-Fi', 'Adventure'], 'A radio astronomer receives a message that appears to have been sent from Earth fifty years in the future.', 3),
+  title('night-shift', 'Night Shift', 'series', art.night, art.city, ['Gritty', 'Heist', 'Thriller'], 'At 2:17 a.m., a night auditor discovers that the city’s most secure vault has been opened from the inside. One quiet decision pulls her into a heist that has been running for twelve years.'),
+  title('blue-hour', 'Blue Hour', 'series', art.sea, art.night, ['Mystery', 'Drama'], 'On a remote island, the tide returns objects that disappeared decades ago — and one family knows why.'),
+  title('the-last-signal', 'The Last Signal', 'movie', art.mountain, art.stars, ['Sci-Fi', 'Adventure'], 'A radio astronomer receives a message that appears to have been sent from Earth fifty years in the future.'),
   title('paper-kingdom', 'Paper Kingdom', 'series', art.forest, art.road, ['Fantasy', 'Drama'], 'A cartographer maps a kingdom that changes shape whenever its ruler falls asleep.'),
   title('redline', 'Redline', 'movie', art.city, art.road, ['Action', 'Crime'], 'A getaway driver has one night to return a stolen car before its hidden passenger wakes up.'),
   title('quiet-earth', 'Quiet Earth', 'series', art.desert, art.mountain, ['Post-apocalyptic', 'Drama'], 'After the world goes silent, a small-town mechanic follows a trail of lights across the empty plains.'),
