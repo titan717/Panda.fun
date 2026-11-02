@@ -108,7 +108,7 @@ export function EditorialPreviewPlayer({ item, src, onClose }: { item: Editorial
           sessionStorage.setItem('panda.editorial.trailers', JSON.stringify([item.id, ...previous.filter(id => id !== item.id)].slice(0, 12)));
         } catch {}
       }} onPause={() => { setPlaying(false); setControlsVisible(true); }} onError={() => setVideoError(true)} />
-      {videoError && <div className="panda-preview-player__error"><strong>Preview unavailable</strong><span>This preview could not be loaded. Close the player to explore the title.</span></div>}
+      {videoError && <div className="panda-preview-player__error"><strong>Preview unavailable</strong><span>Preview unavailable. Close the player to explore this title.</span></div>}
       <div className={`panda-preview-player__chrome${controlsVisible ? ' is-visible' : ''}`}>
         <header className="panda-preview-player__top"><div><strong>{item.title}</strong><span>{item.kind === 'series' && firstEpisode ? `S1:E${firstEpisode.number} ${firstEpisode.title}` : 'Preview'}</span></div><button type="button" onClick={onClose} aria-label="Close preview"><X size={22} /></button></header>
         <div className="panda-preview-player__bottom">
@@ -122,7 +122,7 @@ export function EditorialPreviewPlayer({ item, src, onClose }: { item: Editorial
             <button type="button" onClick={() => void toggleFullscreen()} aria-label={fullscreen ? 'Exit fullscreen' : 'Enter fullscreen'}>{fullscreen ? <Minimize size={19} /> : <Maximize size={19} />}</button>
           </div>
           <input aria-label="Preview progress" className="panda-preview-player__scrubber" type="range" min="0" max={Math.max(1, duration)} step="0.1" value={Math.min(current, Math.max(1, duration))} onChange={event => { const next = Number(event.target.value); if (videoRef.current) videoRef.current.currentTime = next; setCurrent(next); revealControls(); }} />
-          <div className="panda-preview-player__shortcuts">Space Play/Pause · ←/→ 10s · M Mute · F Fullscreen · Esc Close</div>
+          <div className="panda-preview-player__shortcuts">Space · ←/→ 10s · M · F · Esc</div>
         </div>
       </div>
     </div>
