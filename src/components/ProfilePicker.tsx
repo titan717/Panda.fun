@@ -42,7 +42,7 @@ export function ProfilePicker({ onSelect }: { onSelect: (profile: PandaProfile) 
         <div className="panda-profile-picker__top"><span className="panda-profile-picker__brand">panda<span>.fun</span></span><button type="button" onClick={() => setEditing(value => !value)} className="panda-profile-picker__edit">{editing ? <Check size={15} /> : <Pencil size={15} />}{editing ? 'Done' : 'Edit'}</button></div>
         <span className="panda-profile-picker__eyebrow">One screen. Your stories.</span>
         <h1 id="panda-profile-picker-title">Who’s watching?</h1>
-        <p className="panda-profile-picker__hint">{editing ? 'Give each profile its own name.' : 'Choose a profile to make this space yours.'}</p>
+        <p className="panda-profile-picker__hint">{editing ? 'Give each profile its own name.' : 'Choose your profile.'}</p>
         <div className="panda-profile-picker__grid">
           {profiles.map((profile, index) => (
             <div className="panda-profile-picker__item" key={profile.id}>
@@ -53,7 +53,7 @@ export function ProfilePicker({ onSelect }: { onSelect: (profile: PandaProfile) 
             </div>
           ))}
         </div>
-        <span className="panda-profile-picker__footer">Profiles stay on this device for this session</span>
+        <span className="panda-profile-picker__footer">Saved for this session.</span>
       </div>
     </div>
   );
