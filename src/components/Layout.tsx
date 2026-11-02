@@ -3,7 +3,7 @@ import { Link, useLocation } from 'wouter';
 import { House, Search, Library, Settings, Info, UserRound, FileText, Shield, Tv, Clapperboard, Trophy, Grid2X2, Flame } from 'lucide-react';
 import { PandaBrand } from './PandaBrand';
 import { ProfilePicker, PandaProfile } from './ProfilePicker';
-import './profile-picker.css';
+import '../styles/profile-picker.css';
 import { ConnectionBanner } from './ui/ConnectionBanner';
 import './mobile/mobile-shell.css';
 import '../styles/android-tv.css';
