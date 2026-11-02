@@ -11,6 +11,7 @@ import { optimizeImageUrl } from '../lib/mediaImages';
 import './mobile-home.css';
 import './mobile-featured-controls.css';
 import { EditorialRail } from '../components/EditorialRail';
+import { EditorialSpotlight } from '../components/EditorialSpotlight';
 
 type MobileHomeProps = {
   items: MovieApiMedia[];
@@ -173,6 +174,7 @@ export function MobileHome({
 
   return (
     <div className="panda-mobile-home">
+      <EditorialSpotlight />
       <section className={`panda-mobile-featured panda-billboard${touchPaused || documentHidden || !motionAllowed ? " is-paused" : ""}`} aria-label="Featured titles">
         {featuredItems.length > 0 && featured ? (
           <>
