@@ -97,15 +97,14 @@ export function Layout({ children }: { children: React.ReactNode }) {
       {!isPlayerRoute && (
         <nav className="panda-mobile-bottom-nav" aria-label="Panda.fun mobile navigation">
           {MOBILE_ITEMS.map(({ href, label, Icon }) => {
-            const mobileLabel = label;
             const pathname = location.split('?')[0];
             const active = (href === '/home' && (pathname === '/home' || pathname === '/browse')) ||
               (href === '/whats-new' && pathname === '/whats-new') ||
               (href === '/profile' && pathname === '/profile');
-            return <Link key={href} href={href} className={`panda-mobile-bottom-nav__item ${active ? 'is-active' : ''}`} aria-label={mobileLabel} aria-current={active ? 'page' : undefined}>
+            return <Link key={href} href={href} className={`panda-mobile-bottom-nav__item ${active ? 'is-active' : ''}`} aria-label={label} aria-current={active ? 'page' : undefined}>
               {active && motionPreference === 'full' && <m.span layoutId="panda-bottom-nav-active" className="panda-mobile-bottom-nav__active-pill" transition={{ type: 'spring', stiffness: 420, damping: 34 }} aria-hidden="true" />}
-              <m.span className="panda-mobile-bottom-nav__icon" animate={active && motionPreference === 'full' ? { scale: [1, 1.12, 1], y: [0, -2, 0] } : { scale: 1, y: 0 }} transition={{ duration: 0.28 }}><Icon size={21} strokeWidth={1.9} fill={active && (href === '/home' || href === '/library') ? 'currentColor' : 'none'} /></m.span>
-              <span className="panda-mobile-bottom-nav__label">{mobileLabel}</span>
+              <m.span className="panda-mobile-bottom-nav__icon" animate={active && motionPreference === 'full' ? { scale: [1, 1.12, 1], y: [0, -2, 0] } : { scale: 1, y: 0 }} transition={{ duration: 0.28 }}><Icon size={21} strokeWidth={1.9} fill={active && href === '/home' ? 'currentColor' : 'none'} /></m.span>
+              <span className="panda-mobile-bottom-nav__label">{label}</span>
             </Link>;
           })}
         </nav>
