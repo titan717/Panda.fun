@@ -1,0 +1,17 @@
+.panda-logo-mark,
+.panda-logo-full,
+.panda-wordmark {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  user-select: none;
+  cursor: pointer;
+}
+.panda-logo-mark svg { width: 100%; height: 100%; display: block; }
+.panda-wordmark {
+  font-weight: 800;
+  letter-spacing: -0.03em;
+  color: var(--panda-text);
+  font-size: 1.05rem;
+}
+.panda-wordmark span { color: var(--panda-accent-light); }
