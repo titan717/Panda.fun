@@ -68,6 +68,20 @@ export function EditorialPreviewPlayer({ item, src, onClose }: { item: Editorial
   }, []);
 
   useEffect(() => {
+    if (videoRef.current) videoRef.current.muted = muted;
+  }, [muted]);
+
+  useEffect(() => {
+    if (!playing) {
+      if (hideTimer.current !== null) window.clearTimeout(hideTimer.current);
+      setControlsVisible(true);
+      return;
+    }
+    revealControls();
+    return () => { if (hideTimer.current !== null) window.clearTimeout(hideTimer.current); };
+  }, [playing, revealControls]);
+
+  useEffect(() => {
     const onKey = (event: KeyboardEvent) => {
       if (event.key === 'Escape') { if (!document.fullscreenElement) onClose(); return; }
       if (event.key === ' ' || event.key === 'Spacebar') { event.preventDefault(); togglePlay(); }
