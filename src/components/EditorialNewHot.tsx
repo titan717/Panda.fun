@@ -26,7 +26,7 @@ export function EditorialNewHot() {
 
   return (
     <section className="panda-new-hot">
-      <div className="panda-new-hot__hero"><span><Flame size={14} /> THE PANDA RADAR</span><h1>New &amp; Hot</h1><p>First looks, fresh arrivals and the stories everyone’s talking about.</p></div>
+      <div className="panda-new-hot__hero"><span><Flame size={14} /> THE PANDA RADAR</span><h1>New &amp; Hot</h1><p>Fresh arrivals and the stories everyone’s talking about.</p></div>
       <div className="panda-new-hot__tabs" role="tablist" aria-label="New and Hot collections">
         <button type="button" role="tab" aria-selected={tab === 'coming'} className={tab === 'coming' ? 'is-active' : ''} onClick={() => setTab('coming')}>Coming Soon</button>
         <button type="button" role="tab" aria-selected={tab === 'watching'} className={tab === 'watching' ? 'is-active' : ''} onClick={() => setTab('watching')}>Everyone’s Watching</button>
