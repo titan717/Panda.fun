@@ -2,6 +2,8 @@ import React, { useEffect, useRef, useState } from 'react';
 import { Link, useLocation } from 'wouter';
 import { House, Search, Library, Settings, Info, UserRound, FileText, Shield, Tv, Clapperboard, Trophy, Grid2X2 } from 'lucide-react';
 import { PandaBrand } from './PandaBrand';
+import { ProfilePicker, PandaProfile } from './ProfilePicker';
+import './profile-picker.css';
 import { ConnectionBanner } from './ui/ConnectionBanner';
 import './mobile/mobile-shell.css';
 import '../styles/android-tv.css';
@@ -38,6 +40,9 @@ export function Layout({ children }: { children: React.ReactNode }) {
   const [location] = useLocation();
   const motionPreference = useMotionPreference();
   const [expanded, setExpanded] = useState(false);
+  const [activeProfile, setActiveProfile] = useState(() => {
+    try { return sessionStorage.getItem('panda.profile.active') || ''; } catch { return ''; }
+  });
   const [deviceMode, setDeviceMode] = useState(() => getCurrentDeviceMode());
   const tvMode = deviceMode === 'tv';
   const collapseTimer = useRef<number | null>(null);
@@ -129,6 +134,12 @@ export function Layout({ children }: { children: React.ReactNode }) {
         </aside>
       )}
       <div className="panda-app-content"><ConnectionBanner /><main id="panda-main-content" ref={mainRef} className="kinoma-app-main" tabIndex={-1} aria-label="Main content">{children}</main></div>
+      {!isPlayerRoute && !activeProfile && ['/home', '/browse'].includes(location.split('?')[0]) && (
+        <ProfilePicker onSelect={(profile: PandaProfile) => {
+          setActiveProfile(profile.id);
+          try { sessionStorage.setItem('panda.profile.active', profile.id); } catch {}
+        }} />
+      )}
     </div>
   );
 }
