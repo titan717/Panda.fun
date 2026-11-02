@@ -60,6 +60,11 @@ const nightShiftEpisodes = [
   episode('night-shift', 3, 'The Long Way Down', 'Mara follows a clue beneath the financial district while trust inside the crew begins to fracture.', '46 min', episodeArt[2]),
 ];
 
+const upcomingDates: Record<string, string> = {
+  'open-water': 'Nov 14, 2026', 'red-weather': 'Nov 21, 2026', 'hollow-crown': 'Nov 28, 2026',
+  'far-country': 'Dec 05, 2026', 'soft-focus': 'Dec 12, 2026', 'daybreak-club': 'Dec 19, 2026',
+};
+
 function title(
   id: string,
   name: string,
@@ -76,7 +81,7 @@ function title(
     genres, synopsis,
     cast: ['Ari Vale', 'Mina Sol', 'Theo Park'],
     creators: ['Rhea Morgan', 'Jonas Reed'],
-    poster, backdrop, rank,
+    poster, backdrop, rank, releaseDate: upcomingDates[id],
     badge: rank ? `#${rank} in ${series ? 'TV Shows' : 'Movies'} Today` : undefined,
     seasons: series ? [{ number: 1, episodes: id === 'night-shift' ? nightShiftEpisodes : [
       episode(id, 1, 'First Light', 'An unexpected discovery changes the shape of the story.', '44 min', poster),
