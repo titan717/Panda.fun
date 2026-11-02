@@ -18,7 +18,6 @@ https://images.unsplash.com/photo-1448375240586-882707db888b?w=800&q=80
 https://images.unsplash.com/photo-1464822759023-fed622ff2c3b?w=800&q=80
 https://images.unsplash.com/photo-1534796636912-3b95b3ab5986?w=800&q=80
 https://images.unsplash.com/photo-1500530855697-b586d89ba3ee?w=800&q=80
-https://assets.mixkit.co/videos/101416/101416-720.mp4
 https://assets.mixkit.co/videos/4308/4308-720.mp4
 https://assets.mixkit.co/videos/52427/52427-720.mp4
 https://assets.mixkit.co/videos/35540/35540-720.mp4
