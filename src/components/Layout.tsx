@@ -1,7 +1,7 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { Link, useLocation } from 'wouter';
 import { House, Search, Library, Settings, Info, UserRound, FileText, Shield, Tv, Clapperboard, Trophy, Grid2X2 } from 'lucide-react';
-import { KinomaLogo } from './ui/KinomaLogo';
+import { PandaBrand } from './PandaBrand';
 import { ConnectionBanner } from './ui/ConnectionBanner';
 import './mobile/mobile-shell.css';
 import '../styles/android-tv.css';
@@ -79,7 +79,7 @@ export function Layout({ children }: { children: React.ReactNode }) {
       <a className="panda-skip-link" href="#panda-main-content">Skip to main content</a>
       {!isPlayerRoute && (
         <header className="panda-mobile-header">
-          <Link href="/home" className="panda-mobile-header__brand" aria-label="Panda.fun home"><KinomaLogo size="md" variant="full" /></Link>
+          <Link href="/home" className="panda-mobile-header__brand" aria-label="Panda.fun home"><PandaBrand /></Link>
           <nav className="panda-mobile-header__actions" aria-label="Quick actions"><Link href="/settings" className={`panda-mobile-header__action${location.split("?")[0] === "/settings" ? " is-active" : ""}`} aria-label="Settings" aria-current={location.split("?")[0] === "/settings" ? "page" : undefined} title="Settings"><Settings size={20} strokeWidth={1.8} /></Link></nav>
         </header>
       )}
@@ -101,7 +101,7 @@ export function Layout({ children }: { children: React.ReactNode }) {
       )}
       {!isPlayerRoute && (
         <aside className={`kinoma-sidebar kinoma-sidebar--icons ${expanded ? 'is-expanded' : 'is-collapsed'}`} aria-label="Panda.fun navigation" onPointerEnter={expand} onPointerLeave={collapse} onFocusCapture={expand} onBlurCapture={(event) => { if (!event.currentTarget.contains(event.relatedTarget as Node | null)) collapse(); }}>
-          <div className="kinoma-sidebar__top"><Link href="/home" className="kinoma-sidebar__brand" aria-label="Panda.fun home"><KinomaLogo size={expanded ? 'md' : 'sm'} variant={expanded ? 'full' : 'mark'} className="kinoma-sidebar__logo" /></Link></div>
+          <div className="kinoma-sidebar__top"><Link href="/home" className="kinoma-sidebar__brand" aria-label="Panda.fun home"><PandaBrand compact={!expanded} /></Link></div>
           <nav className="kinoma-sidebar__nav" aria-label="Main navigation">
             {navItems.map(({ href, label, Icon }) => {
               const pathname = location.split('?')[0];
