@@ -15,6 +15,7 @@ import '../styles/panda-home.css';
 import { MobileHome } from './MobileHome';
 import { friendlyNetworkError } from '../lib/networkMessage';
 import { EditorialRail } from '../components/EditorialRail';
+import { EditorialSpotlight } from '../components/EditorialSpotlight';
 
 type RailKind = 'trending' | 'streamingNetflix' | 'streamingDisney' | 'popular' | 'tv' | 'movie' | 'airing';
 
@@ -345,6 +346,7 @@ export function Home() {
         <span className="kinoma-home__ambient-orb kinoma-home__ambient-orb--two" />
       </div>
       <div className="kinoma-home__inner">
+        <EditorialSpotlight />
         {/* PRESERVED HERO/TRAILER — intentionally unchanged */}
         <section className="kinoma-home-hero kinoma-home-hero--trailer" aria-labelledby="kinoma-home-title">
           <div className="kinoma-home-hero__trailer-bg">
