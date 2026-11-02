@@ -1,8 +1,10 @@
-import React, { useEffect, useRef, useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { Link, useLocation, useRoute } from 'wouter';
-import { ArrowLeft, Check, Copy, Pause, Play, Plus, Volume2, VolumeX, X } from 'lucide-react';
+import { ArrowLeft, Check, Copy, Play, Plus } from 'lucide-react';
 import { getEditorialTitle, editorialTitles } from '../data/fixtures';
 import { libraryManager } from '../lib/library';
+import { EditorialPreviewPlayer } from '../components/EditorialPreviewPlayer';
+import '../styles/editorial-preview-player.css';
 
 const PREVIEW_IDS = ['4308', '52427', '35540', '41576', '39912'];
 
@@ -10,30 +12,14 @@ export function EditorialDetails() {
   const [, params] = useRoute<{ id: string }>('/details/:id');
   const [, setLocation] = useLocation();
   const item = getEditorialTitle(params?.id || '');
-  const videoRef = useRef<HTMLVideoElement | null>(null);
   const [playing, setPlaying] = useState(false);
-  const [videoError, setVideoError] = useState(false);
-  const [muted, setMuted] = useState(true);
   const [inList, setInList] = useState(() => item ? libraryManager.isInWatchlist(item.id) : false);
   const [shareFeedback, setShareFeedback] = useState('');
 
   useEffect(() => {
     setInList(item ? libraryManager.isInWatchlist(item.id) : false);
     setPlaying(false);
-    setVideoError(false);
   }, [item?.id]);
-
-  useEffect(() => {
-    if (!playing) return;
-    const onKey = (event: KeyboardEvent) => {
-      if (event.key === 'Escape') {
-        setPlaying(false);
-        videoRef.current?.pause();
-      }
-    };
-    window.addEventListener('keydown', onKey);
-    return () => window.removeEventListener('keydown', onKey);
-  }, [playing]);
 
   if (!item) return <main className="min-h-[70vh] bg-[#050507] px-6 py-20 text-center text-white"><h1 className="text-2xl font-bold">This Panda story could not be found.</h1><Link href="/home" className="mt-5 inline-block text-[#ff2e63]">Back to Home</Link></main>;
 
@@ -44,15 +30,7 @@ export function EditorialDetails() {
     setInList(libraryManager.toggleWatchlist({ id: item.id, title: item.title, image: item.poster }));
   };
 
-  const openPreview = () => {
-    setPlaying(true);
-    window.setTimeout(() => {
-      const video = videoRef.current;
-      if (!video) return;
-      video.muted = muted;
-      void video.play().catch(() => setVideoError(true));
-    }, 50);
-  };
+  const openPreview = () => setPlaying(true);
 
   const share = async () => {
     const url = window.location.href;
@@ -108,7 +86,7 @@ export function EditorialDetails() {
         <aside className="space-y-5 text-sm"><div><h2 className="font-bold">Cast</h2><p className="mt-2 leading-6 text-[#a9a19c]">{item.cast.join(', ')}</p></div><div><h2 className="font-bold">Created by</h2><p className="mt-2 leading-6 text-[#a9a19c]">{item.creators.join(', ')}</p></div><div><h2 className="font-bold">Genres</h2><p className="mt-2 leading-6 text-[#a9a19c]">{item.genres.join(', ')}</p></div></aside>
       </div>
 
-      {playing && <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/95 p-3 sm:p-8" role="dialog" aria-modal="true" aria-label={`${item.title} preview player`}><button type="button" onClick={() => { setPlaying(false); videoRef.current?.pause(); }} aria-label="Close preview" className="absolute right-5 top-5 z-10 rounded-full border border-white/20 bg-black/60 p-3"><X size={20} /></button><div className="w-full max-w-6xl"><div className="mb-3 flex items-center justify-between gap-4"><h2 className="font-bold">{item.title} <span className="text-xs font-normal text-white/50">Preview</span></h2><button type="button" onClick={() => { const next = !muted; setMuted(next); if (videoRef.current) videoRef.current.muted = next; }} className="rounded-full border border-white/20 p-2" aria-label={muted ? 'Unmute preview' : 'Mute preview'}>{muted ? <VolumeX size={18} /> : <Volume2 size={18} />}</button></div><video ref={videoRef} src={previewUrl} poster={item.backdrop} controls playsInline muted={muted} preload="none" className="aspect-video w-full rounded-xl bg-black" onError={() => setVideoError(true)} onPlay={() => setVideoError(false)} />{videoError && <p role="status" className="mt-3 text-center text-sm text-white/65">This preview is unavailable right now. You can still explore the title and its episodes.</p>}</div></div>}
+      {playing && <EditorialPreviewPlayer item={item} src={previewUrl} onClose={() => setPlaying(false)} />}
     </main>
   );
 }
