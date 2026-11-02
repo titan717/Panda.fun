@@ -100,7 +100,14 @@ export function EditorialPreviewPlayer({ item, src, onClose }: { item: Editorial
 
   return (
     <div ref={shellRef} className="panda-preview-player" role="dialog" aria-modal="true" aria-label={`${item.title} preview player`} onMouseMove={revealControls} onTouchStart={revealControls}>
-      <video ref={videoRef} src={src} poster={item.backdrop} autoPlay muted playsInline preload="none" className="panda-preview-player__video" onTimeUpdate={event => setCurrent(event.currentTarget.currentTime)} onLoadedMetadata={event => setDuration(event.currentTarget.duration || 0)} onDurationChange={event => setDuration(event.currentTarget.duration || 0)} onPlay={() => { setPlaying(true); revealControls(); }} onPause={() => { setPlaying(false); setControlsVisible(true); }} onError={() => setVideoError(true)} />
+      <video ref={videoRef} src={src} poster={item.backdrop} autoPlay muted playsInline preload="none" className="panda-preview-player__video" onTimeUpdate={event => setCurrent(event.currentTarget.currentTime)} onLoadedMetadata={event => setDuration(event.currentTarget.duration || 0)} onDurationChange={event => setDuration(event.currentTarget.duration || 0)} onPlay={() => {
+        setPlaying(true);
+        revealControls();
+        try {
+          const previous = JSON.parse(sessionStorage.getItem('panda.editorial.trailers') || '[]') as string[];
+          sessionStorage.setItem('panda.editorial.trailers', JSON.stringify([item.id, ...previous.filter(id => id !== item.id)].slice(0, 12)));
+        } catch {}
+      }} onPause={() => { setPlaying(false); setControlsVisible(true); }} onError={() => setVideoError(true)} />
       {videoError && <div className="panda-preview-player__error"><strong>Preview unavailable</strong><span>This preview could not be loaded. Close the player to explore the title.</span></div>}
       <div className={`panda-preview-player__chrome${controlsVisible ? ' is-visible' : ''}`}>
         <header className="panda-preview-player__top"><div><strong>{item.title}</strong><span>{item.kind === 'series' && firstEpisode ? `S1:E${firstEpisode.number} ${firstEpisode.title}` : 'Preview'}</span></div><button type="button" onClick={onClose} aria-label="Close preview"><X size={22} /></button></header>
