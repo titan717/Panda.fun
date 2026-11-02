@@ -5,6 +5,7 @@ import { createRoot } from 'react-dom/client';
 import { LazyMotion, domAnimation } from 'motion/react';
 import App from './App';
 import './index.css';
+import './styles/panda-brand.css';
 import './styles/accessibility.css';
 import './styles/readability.css';
 import './styles/ux-polish.css';
