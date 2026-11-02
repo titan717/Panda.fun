@@ -38,7 +38,7 @@ describe('MYpanda.fun mobile shell contract', () => {
   });
 
   it('includes Top 10 and the planned catalogue rows without replacing the existing API', () => {
-    for (const section of ['Top 10', 'Trending Now', 'New on Netflix', 'New on Disney+', 'Popular Movies', 'Popular TV Shows', 'Airing Today']) {
+    for (const section of ['Top 10', 'Trending Now', 'Recently Added', 'Fresh Picks', 'Popular Movies', 'Popular TV Shows', 'Airing Today']) {
       expect(mobileHome).toContain(section);
     }
     expect(mobileHome).toContain('<ModernContinueWatching />');
