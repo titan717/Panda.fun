@@ -15,13 +15,17 @@ describe('MYpanda.fun mobile shell contract', () => {
     expect(layout).toContain('href="/settings"');
     const mobileHeader = layout.slice(layout.indexOf('<header className="panda-mobile-header">'), layout.indexOf('</header>'));
     expect(mobileHeader).toContain('aria-label="Settings"');
+    expect(mobileHeader).toContain('aria-label="Search"');
     expect(mobileHeader).not.toContain('Profile');
     expect(layout).not.toContain('aria-label="Search movies and shows"');
     expect(layout).toContain('panda-mobile-bottom-nav');
     expect(layout).toContain("location.startsWith('/watch/')");
-    expect(layout).toContain("href === '/library' ? 'Library' : label");
+    expect(layout).toContain("const MOBILE_ITEMS = [");
+    expect(layout).toContain("href: '/whats-new', label: 'New & Hot'");
+    expect(layout).toContain("href: '/profile', label: 'My Panda'");
     expect(layout).toContain("const pathname = location.split('?')[0]");
-    expect(layout).toContain("pathname === '/search'");
+    expect(layout).toContain("pathname === '/whats-new'");
+    expect(layout).toContain("pathname === '/profile'");
   });
 
   it('keeps the mobile page surfaces black and makes Watch a viewport-filling shell-free player', () => {
