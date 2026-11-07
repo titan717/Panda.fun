@@ -1,0 +1,199 @@
+/*
+ * Panda.fun design tokens. Every value traces to docs/BLUEPRINT_SPEC.md (section numbers in comments).
+ * Components must use these variables only; no raw colours or sizes in component styles.
+ *
+ * TV sizes are expressed in "tv units": 1tu = 1px on a 1920x1080 canvas. `--tu` is set on <html data-mode="tv">
+ * so the UI scales to 1280x720, 1920x1080 and 3840x2160 identically.
+ */
+:root {
+  /* 1.1 type */
+  --font-sans: "Inter Variable", "Inter", system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  --fw-regular: 400;
+  --fw-medium: 500;
+  --fw-semibold: 600;
+  --fw-bold: 700;
+  --fw-heavy: 800;
+
+  /* 1.2 / 1.4 mobile surfaces and text */
+  --m-bg: #0f1014;
+  --m-surface: #16181f;
+  --m-raised: #1f2129;
+  --m-raised-2: #2a2d36;
+  --m-hairline: rgba(255, 255, 255, 0.08);
+  --text-1: #ffffff;
+  --text-2: #a7b0c6;
+  --text-3: #7d8598;
+  --m-meta: #c8ceda;
+  --m-body: #8f98ab;
+  --m-link: #4da3ff;
+  --m-progress: #1f80e0;
+  --m-gold: #e2b455;
+
+  /* 1.3 / 1.5 TV surfaces, ice accent and focus */
+  --tv-bg: #07111f;
+  --tv-bg-deep: #050c17;
+  --tv-bg-gradient: radial-gradient(120% 90% at 70% 0%, #0e2a4a 0%, #081628 55%, #050c17 100%);
+  --tv-ice: #bfe6ff;
+  --tv-ice-strong: rgba(214, 238, 255, 0.92);
+  --tv-ice-soft: rgba(120, 175, 215, 0.35);
+  --tv-meta: #e6ecf5;
+  --tv-body: #c8d1e0;
+  --tv-body-2: #d5dce8;
+  --tv-label: #c9d3e6;
+  --tv-glass: rgba(12, 24, 42, 0.78);
+  --tv-glass-badge: rgba(20, 30, 48, 0.72);
+  --tv-translucent: rgba(255, 255, 255, 0.14);
+  --tv-search-fill: rgba(70, 140, 200, 0.45);
+  --tv-chip-fill: rgba(90, 160, 210, 0.35);
+  --tv-divider: rgba(190, 225, 255, 0.25);
+  --focus-border: 2px solid var(--tv-ice-strong);
+  --focus-glow: 0 0 0 1px rgba(150, 205, 255, 0.35), 0 0 22px rgba(110, 180, 255, 0.45);
+
+  /* 1.6 / 1.7 / 1.8 buttons */
+  --brand-gradient: linear-gradient(90deg, #1b5fd6 0%, #2f6fe0 45%, #7a3fd0 78%, #d2337e 100%);
+  --m-cta-bg: #f4f9ff;
+  --m-cta-fg: #0f1014;
+  --m-glass: rgba(255, 255, 255, 0.1);
+  --m-glass-border: rgba(255, 255, 255, 0.1);
+  --update-gradient: linear-gradient(90deg, #2f80ed, #56ccf2);
+  --badge-gradient: linear-gradient(90deg, #c2187a, #7b2ff7);
+  --top10-tag: linear-gradient(180deg, #ff3d8b, #c2187a);
+  --hot-pill: linear-gradient(90deg, #ff1f3d 0%, #ff5a1f 60%, #ffb21f 100%);
+  --brand-pill-bg: #0b1640;
+  --brand-pill-border: #3b6cff;
+  --arc-gradient: linear-gradient(90deg, transparent 0%, #2b6bff 30%, #8c4bff 60%, #ff3d8b 85%, transparent 100%);
+  --kids-gradient: linear-gradient(135deg, #ff5fa2 0%, #b04bff 55%, #5b7cff 100%);
+  --avatar-gradient: radial-gradient(circle at 35% 30%, #7cc4ff 0%, #2e7bff 55%, #1747c9 100%);
+  --splash-gradient: linear-gradient(160deg, #0b2a6b 0%, #13306e 48%, #3a1d5a 72%, #7a1430 100%);
+
+  /* 1.9 radii */
+  --r-poster-m: 6px;
+  --r-hero-m: 18px;
+  --r-btn-m: 8px;
+  --r-glass-m: 10px;
+  --r-pill-m: 12px;
+  --r-pill: 999px;
+
+  /* 1.10 motion */
+  --ease-out: cubic-bezier(0.2, 0.8, 0.2, 1);
+  --dur-focus: 180ms;
+  --dur-expand: 260ms;
+  --dur-page: 200ms;
+  --dur-crossfade: 600ms;
+  --focus-scale: 1.06;
+
+  /* mobile metrics (11-15) */
+  --m-gutter: 12px;
+  --m-row-gap: 6px;
+  --m-nav-h: 64px;
+  --m-pill-h: 44px;
+  --m-btn-h: 44px;
+  --m-float-h: 40px;
+  --m-title: 17px;
+  --m-small: 12px;
+  --m-tiny: 11px;
+  --m-body-size: 13px;
+
+  /* extra surfaces sampled in 14.7, 15.2, 7.10, 11.6, 4.3, 3.4 */
+  --m-pill-dark: #22252e;
+  --m-card: #1a1d27;
+  --m-float-bg: rgba(28, 32, 58, 0.92);
+  --m-float-border: rgba(120, 140, 255, 0.35);
+  --m-nav-arc: radial-gradient(60% 6px at 50% 0, #2d7bff, transparent);
+  --m-search-btn: linear-gradient(135deg, #2f80ed, #1b5fd6);
+  --tv-ep-body: #c5cedd;
+  --tv-rail-icon: rgba(212, 220, 236, 0.7);
+  --tv-rail-scrim: linear-gradient(90deg, rgba(4, 10, 20, 0.96) 0%, rgba(4, 10, 20, 0.85) 60%, transparent 100%);
+  --tv-hero-border: rgba(170, 215, 255, 0.55);
+  --tv-hero-scrim: linear-gradient(0deg, rgba(5, 10, 20, 0.92) 0%, rgba(5, 10, 20, 0.55) 35%, transparent 65%);
+  --tv-hero-scrim-left: linear-gradient(90deg, rgba(5, 10, 20, 0.7) 0%, transparent 55%);
+  --tv-det-scrim: linear-gradient(90deg, #050c17 0%, rgba(5, 12, 23, 0.92) 30%, rgba(5, 12, 23, 0.4) 55%, transparent 75%);
+  --tv-det-scrim-bottom: linear-gradient(0deg, #050c17 0%, rgba(5, 12, 23, 0.6) 22%, transparent 45%);
+  --tv-mic-fill: rgba(180, 210, 240, 0.25);
+  --tv-add-fill: rgba(120, 140, 190, 0.35);
+  --tv-dot: rgba(255, 255, 255, 0.35);
+  --tv-focus-pill: rgba(255, 255, 255, 0.1);
+  --tv-badge-border: rgba(255, 255, 255, 0.18);
+  --scrim-black: rgba(0, 0, 0, 0.6);
+  --scrim-top: linear-gradient(180deg, rgba(0, 0, 0, 0.78) 0%, transparent 100%);
+  --scrim-bottom: linear-gradient(0deg, rgba(0, 0, 0, 0.78) 0%, transparent 100%);
+  --skeleton-base: rgba(255, 255, 255, 0.06);
+  --skeleton-shine: rgba(255, 255, 255, 0.12);
+  --danger: #ff5a6a;
+  --success: #3ccf8e;
+  --splash-word: #cfe3f2;
+  --black: #000000;
+  --tint-0: linear-gradient(135deg, rgba(47, 111, 224, 0.55), rgba(5, 12, 23, 0.2));
+  --tint-1: linear-gradient(135deg, rgba(122, 63, 208, 0.55), rgba(5, 12, 23, 0.2));
+  --tint-2: linear-gradient(135deg, rgba(210, 51, 126, 0.5), rgba(5, 12, 23, 0.2));
+  --tint-3: linear-gradient(135deg, rgba(23, 160, 140, 0.5), rgba(5, 12, 23, 0.2));
+  --tint-4: linear-gradient(135deg, rgba(240, 120, 40, 0.5), rgba(5, 12, 23, 0.2));
+  --tint-5: linear-gradient(135deg, rgba(60, 150, 230, 0.5), rgba(5, 12, 23, 0.2));
+
+  /* shared-component unit: 1 mobile px; TV maps it to 1.5 tv units */
+  --u: 1px;
+
+  /* z layers */
+  --z-sticky: 20;
+  --z-nav: 40;
+  --z-rail: 50;
+  --z-overlay: 80;
+  --z-modal: 100;
+  --z-toast: 120;
+  --z-splash: 200;
+}
+
+html[data-mode="tv"] {
+  /* 1 tv unit relative to a 1920x1080 canvas, letterboxed for non-16:9 screens. */
+  --tu: min(calc(100vw / 1920), calc(100vh / 1080));
+  --u: calc(1.5 * var(--tu));
+
+  /* 4 rail */
+  --rail-w: calc(112 * var(--tu));
+  --rail-w-open: calc(360 * var(--tu));
+  /* 5 hero */
+  --hero-x: calc(150 * var(--tu));
+  --hero-y: calc(56 * var(--tu));
+  --hero-w: calc(1400 * var(--tu));
+  --hero-h: calc(760 * var(--tu));
+  --r-hero: calc(22 * var(--tu));
+  /* 6 rows */
+  --poster-w: calc(300 * var(--tu));
+  --poster-h: calc(400 * var(--tu));
+  --poster-gap: calc(12 * var(--tu));
+  --expand-w: calc(820 * var(--tu));
+  --land-w: calc(400 * var(--tu));
+  --land-h: calc(225 * var(--tu));
+  --r-poster: calc(10 * var(--tu));
+  --r-card: calc(14 * var(--tu));
+  --r-btn: calc(8 * var(--tu));
+  --content-x: calc(160 * var(--tu));
+  /* overscan-safe margins: 5% vertical / 7.8% horizontal of the 1080p canvas */
+  --safe-x: calc(120 * var(--tu));
+  --safe-y: calc(54 * var(--tu));
+  /* type */
+  --t-hero-title: calc(64 * var(--tu));
+  --t-page-title: calc(64 * var(--tu));
+  --t-row: calc(32 * var(--tu));
+  --t-tab: calc(30 * var(--tu));
+  --t-meta: calc(24 * var(--tu));
+  --t-body: calc(25 * var(--tu));
+  --t-small: calc(21 * var(--tu));
+  --t-badge: calc(19 * var(--tu));
+  --t-label: calc(26 * var(--tu));
+  --cta-h: calc(76 * var(--tu));
+  --cta-w: calc(620 * var(--tu));
+  --square: calc(74 * var(--tu));
+  --ep-w: calc(380 * var(--tu));
+  --ep-h: calc(214 * var(--tu));
+}
+
+@media (prefers-reduced-motion: reduce) {
+  :root {
+    --dur-focus: 0ms;
+    --dur-expand: 0ms;
+    --dur-page: 0ms;
+    --dur-crossfade: 0ms;
+    --focus-scale: 1;
+  }
+}

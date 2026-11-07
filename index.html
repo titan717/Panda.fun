@@ -3,90 +3,31 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
-    <title>Panda.fun — Anime, Movies & Series</title>
-    <meta name="description" content="Watch anime, movies and TV series on Panda.fun. Discover trending titles, new releases, popular shows and stories worth watching." />
-    <meta name="keywords" content="Panda.fun, anime streaming, movies, TV series, watch anime, watch movies, watch TV shows, trending movies, popular series" />
-    <meta name="author" content="Panda.fun" />
+    <title>Panda.fun — Movies & TV Shows</title>
+    <meta name="description" content="Panda.fun is a fast, ad-free way to discover and watch movies and TV shows on your TV, phone or computer." />
     <meta name="application-name" content="Panda.fun" />
     <meta name="referrer" content="strict-origin-when-cross-origin" />
-    <meta name="robots" content="index, follow, max-image-preview:large, max-snippet:-1, max-video-preview:-1" />
     <meta name="google-site-verification" content="nQRj_ggV0-290-hOU9VYKcegvfIZWP5EVxphvxdCUCA" />
-    <meta name="admaven-placement" content="BpdU6qTr5" />
-    <link rel="canonical" href="/" />
-    <meta name="theme-color" content="#0b0c10" />
-    <meta property="og:title" content="Panda.fun — Anime, Movies & Series" />
-    <meta property="og:description" content="Discover anime, movies and series on Panda.fun. Find something worth watching and keep your viewing experience simple." />
+    <meta name="theme-color" content="#0F1014" />
+    <meta name="color-scheme" content="dark" />
+    <meta property="og:title" content="Panda.fun — Movies & TV Shows" />
+    <meta property="og:description" content="Discover and watch movies and TV shows on Panda.fun." />
     <meta property="og:type" content="website" />
-    <meta property="og:url" content="/" />
-    <meta property="og:locale" content="en_US" />
-    <meta property="og:image:alt" content="Panda.fun — anime, movies and TV series" />
+    <meta property="og:image" content="/pwa-512x512.png" />
     <meta property="og:site_name" content="Panda.fun" />
-    <meta property="og:image" content="/icon.svg" />
-    <meta name="twitter:card" content="summary_large_image" />
-    <meta name="twitter:title" content="Panda.fun — Anime, Movies & Series" />
-    <meta name="twitter:description" content="Discover anime, movies and series on Panda.fun. Find something worth watching and keep your viewing experience simple." />
-    <meta name="twitter:image" content="/icon.svg" />
-    <meta name="twitter:image:alt" content="Panda.fun — anime, movies and TV series" />
-    <meta name="twitter:site" content="@panda_fun" />
-
     <meta name="mobile-web-app-capable" content="yes" />
     <meta name="apple-mobile-web-app-capable" content="yes" />
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
     <meta name="apple-mobile-web-app-title" content="Panda.fun" />
-
-    <link rel="icon" type="image/svg+xml" href="/icon.svg" />
-    <link rel="apple-touch-icon" href="/icon.svg" />
-    <link rel="manifest" href="/manifest.webmanifest" />
-
-    <link rel="preconnect" href="https://fonts.googleapis.com" />
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-    <link href="https://fonts.gstatic.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
-    <link href="https://fonts.googleapis.com/css2?family=Google+Sans:wght@400;500;700;900&display=swap" rel="stylesheet" />
-    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&display=swap" rel="stylesheet" />
-
-    <script type="application/ld+json">
-      {
-        "@context": "https://schema.org",
-        "@graph": [
-          {
-            "@type": "WebSite",
-            "@id": "/#website",
-            "name": "Panda.fun",
-            "url": "/",
-            "description": "Watch anime, movies and TV series on Panda.fun.",
-            "publisher": { "@id": "/#organization" },
-            "potentialAction": {
-              "@type": "SearchAction",
-              "target": { "@type": "EntryPoint", "urlTemplate": "/search?keyword={search_term_string}" },
-              "query-input": "required name=search_term_string"
-            }
-          },
-          {
-            "@type": "Organization",
-            "@id": "/#organization",
-            "name": "Panda.fun",
-            "url": "/",
-            "logo": { "@type": "ImageObject", "url": "/icon.svg" }
-          }
-        ]
-      }
-    </script>
-    <!-- Google tag (gtag.js) -->
-    <script async src="https://www.googletagmanager.com/gtag/js?id=G-9CEEHSHNHJ"></script>
-    <script>
-      window.dataLayer = window.dataLayer || [];
-      function gtag(){dataLayer.push(arguments);}
-      gtag('js', new Date());
-
-      gtag('config', 'G-9CEEHSHNHJ');
-    </script>
-
-    <!-- Google AdSense -->
-    <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-8387535841344470"
-      crossorigin="anonymous"></script>
+    <link rel="icon" type="image/svg+xml" href="./icon.svg" />
+    <link rel="apple-touch-icon" href="./apple-touch-icon.png" />
+    <link rel="manifest" href="./manifest.webmanifest" />
+    <link rel="preconnect" href="https://image.tmdb.org" crossorigin />
+    <link rel="preconnect" href="https://movieapi-3d0v.onrender.com" crossorigin />
   </head>
   <body>
     <div id="root"></div>
+    <noscript>Panda.fun needs JavaScript to run.</noscript>
     <script type="module" src="/src/main.tsx"></script>
   </body>
 </html>

@@ -1,6 +1,0 @@
-{
-  "name": "Kinoma",
-  "description": "Unified anime discovery and streaming platform with modern layout, Netflix-style cinematic intro, and Android TV / PWA big-screen app support.",
-  "requestFramePermissions": [],
-  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
-}

@@ -1,246 +1,206 @@
-import React, { lazy, Suspense, useEffect, useRef, useState } from 'react';
-import { Route, Switch, useLocation } from 'wouter';
-import { AnimatePresence, MotionConfig, m } from 'motion/react';
-import { getMotionOffset, getRouteTransitionDirection, getRouteDepth, useMotionPreference } from './motion';
-import { SWRConfig } from 'swr';
-import { localCache } from './lib/localCache';
-import { Layout } from './components/Layout';
-import { Landing } from './pages/Landing';
-import { Terms } from './pages/Terms';
-import { About } from './pages/About';
-import { Profile } from './pages/Profile';
-import { Privacy } from './pages/Privacy';
-import { Contact } from './pages/Contact';
-import { Docs } from './pages/Docs';
-import { Home } from './pages/Home';
-import { DetailsRoute } from './pages/DetailsRoute';
-import { NotFound } from './pages/NotFound';
-function retryLazyImport<T>(importer: () => Promise<T>, chunkName: string) {
-  return importer().catch(error => {
-    if (!isRecoverableChunkLoadError(error)) throw error;
-    if (typeof navigator !== 'undefined' && navigator.onLine === false) {
-      return new Promise<T>(() => {
-        window.addEventListener('online', () => window.location.reload(), { once: true });
-      });
-    }
-    try {
-      const retryKey = 'panda-lazy-retry:' + chunkName + ':' + window.location.pathname;
-      if (!sessionStorage.getItem(retryKey)) {
-        sessionStorage.setItem(retryKey, '1');
-        window.location.reload();
-        return new Promise<T>(() => {});
-      }
-    } catch {}
-    throw error;
-  });
-}
+import { useEffect, useState, type ReactNode } from "react";
+import { SWRConfig } from "swr";
+import { Route, Router, Switch, useLocation, useParams } from "wouter";
+import { useHashLocation } from "wouter/use-hash-location";
+import { fetcher } from "./lib/api";
+import { persistentCache } from "./lib/cache";
+import { detectLayout, type LayoutMode } from "./lib/device";
+import { LayoutContext, useLayout } from "./lib/layout";
+import { installKeyHandling, setRootBackHandler, setTvNavigation } from "./lib/focus";
+import { BUILD_TARGET } from "./lib/nav";
+import { actions, getState, usePrefs, useProfile } from "./lib/store";
+import { exitApp, isAndroidApp } from "./lib/native";
+import { useOnline, useReducedMotion } from "./lib/hooks";
+import { compareVersions, fetchLatestRelease, installedVersion } from "./lib/updates";
+import { ErrorBoundary, OfflineBanner, Toasts } from "./components/ui";
+import { PandaMark, Wordmark } from "./components/Icon";
+import { TvShell } from "./tv/TvShell";
+import { TvHome } from "./tv/TvHome";
+import { TvDetails } from "./tv/TvDetails";
+import { TvSearch } from "./tv/TvSearch";
+import { TvCategories } from "./tv/TvCategories";
+import { TvMySpace } from "./tv/TvMySpace";
+import { MobileShell } from "./mobile/MobileShell";
+import { MHome } from "./mobile/MHome";
+import { MAllEpisodes, MDetails } from "./mobile/MDetails";
+import { MSearch } from "./mobile/MSearch";
+import { MMySpace } from "./mobile/MMySpace";
+import { MCategories } from "./mobile/MCategories";
+import { BrowsePage, ContinueWatchingPage, MyListPage, NotFoundPage } from "./pages/Lists";
+import { ProfileEdit, ProfileManage, ProfileSelect } from "./pages/Profiles";
+import { SettingsPage } from "./pages/Settings";
+import { UpdatesPage } from "./pages/Updates";
+import { AboutPage, PrivacyPage, TermsPage } from "./pages/Info";
+import { PlayerPage } from "./pages/Player";
+import type { MediaType, PageKind } from "./lib/types";
 
-const Search = lazy(() => retryLazyImport(() => import('./pages/Search').then(m => ({ default: m.Search })), 'search'));
-const Details = lazy(() => retryLazyImport(() => import('./pages/Details').then(m => ({ default: m.Details })), 'details'));
-const Watch = lazy(() => retryLazyImport(() => import('./pages/Watch').then(m => ({ default: m.Watch })), 'watch'));
-const Library = lazy(() => retryLazyImport(() => import('./pages/Library').then(m => ({ default: m.Library })), 'library'));
-const WhatsNew = lazy(() => retryLazyImport(() => import('./pages/WhatsNew').then(m => ({ default: m.WhatsNew })), 'whats-new'));
-const Admin = lazy(() => retryLazyImport(() => import('./pages/Admin').then(m => ({ default: m.Admin })), 'admin'));
-const SettingsPage = lazy(() => retryLazyImport(() => import('./pages/Settings').then(m => ({ default: m.Settings })), 'settings'));
-import { AuthProvider } from './lib/AuthContext';
-import { AuthModal } from './components/ui/AuthModal';
-import { AppearanceProvider } from './lib/AppearanceContext';
-import { SettingsModal } from './components/ui/SettingsModal';
-import { PWAInstallPrompt } from './components/ui/PWAInstallPrompt';
-import { PWAUpdatePrompt } from './components/ui/PWAUpdatePrompt';
-import { trackPageView } from './lib/analytics';
-import { usePWAUpdate } from './lib/usePWAUpdate';
-import { PandaIntro, shouldShowPandaIntro } from './components/intro/PandaIntro';
-import { isRecoverableChunkLoadError } from './lib/appReliability';
-import { ThinkingOrb } from 'thinking-orbs';
-import './components/intro/panda-intro.css';
-import { handleTVRemoteKey } from './lib/tvRemoteNavigation';
-import { getCurrentDeviceMode } from './lib/deviceCapabilities';
+const PUBLIC_PATHS = ["/about", "/privacy", "/terms"];
 
-function RouteContent({ location }: { location: string }) {
-  return (
-    <Switch location={location}>
-      <Route path="/" component={Landing} />
-      <Route path="/browse" component={Home} />
-      <Route path="/home" component={Home} />
-      <Route path="/terms" component={Terms} />
-      <Route path="/privacy-policy" component={Privacy} />
-      <Route path="/privacy" component={Privacy} />
-      <Route path="/contact" component={Contact} />
-      <Route path="/docs" component={Docs} />
-      <Route path="/profile" component={Profile} />
-      <Route path="/about" component={About} />
-      <Route path="/admin" component={Admin} />
-      <Route path="/settings" component={SettingsPage} />
-      <Route path="/search" component={Search} />
-      <Route path="/explore" component={Search} />
-      <Route path="/whats-new" component={WhatsNew} />
-      <Route path="/details/:id" component={DetailsRoute} />
-      <Route path="/watch/:id" component={Watch} />
-      <Route path="/library" component={Library} />
-      <Route path="/history" component={Library} />
-      <Route><NotFound /></Route>
-    </Switch>
-  );
-}
-
-function DelayedRouteFallback({ previousLocation }: { previousLocation: string }) {
-  const [show, setShow] = useState(false);
+function useLayoutMode(): LayoutMode {
+  const { layout } = usePrefs();
+  const [mode, setMode] = useState<LayoutMode>(() => detectLayout(layout));
   useEffect(() => {
-    const timer = window.setTimeout(() => setShow(true), 400);
-    return () => window.clearTimeout(timer);
-  }, []);
+    const update = () => setMode(detectLayout(layout));
+    update();
+    window.addEventListener("resize", update);
+    const mq = window.matchMedia("(pointer: coarse)");
+    mq.addEventListener("change", update);
+    return () => { window.removeEventListener("resize", update); mq.removeEventListener("change", update); };
+  }, [layout]);
+  useEffect(() => {
+    document.documentElement.dataset.mode = mode;
+    installKeyHandling(mode === "tv");
+    setTvNavigation(mode === "tv");
+  }, [mode]);
+  return mode;
+}
+
+function Splash({ leaving }: { leaving: boolean }) {
   return (
-    <div className="panda-route-loading-keepalive">
-      <RouteContent location={previousLocation} />
-      {show && (
-        <div className="panda-route-loading-overlay" role="status" aria-live="polite">
-          <ThinkingOrb state="searching" size={64} theme="dark" aria-label="Loading Panda.fun" />
-          <div className="panda-route-loading__copy"><span>Loading Panda.fun</span><p>Preparing your next discovery</p></div>
-        </div>
-      )}
+    <div className={`splash ${leaving ? "is-leaving" : ""}`} role="status" aria-label="Loading Panda.fun">
+      <PandaMark size={96} className="splash-mark" />
+      <Wordmark className="splash-word" />
     </div>
   );
 }
 
-function AnimatedRoutes() {
-  const [location] = useLocation();
-  const preference = useMotionPreference();
-  const previousLocation = useRef(location);
-  const previousPath = previousLocation.current.split('?')[0];
-  const currentPath = location.split('?')[0];
-  const isDetailTransition = getRouteDepth(currentPath) > 0 || getRouteDepth(previousPath) > 0;
-  const direction = getRouteTransitionDirection(previousPath, currentPath);
-  const lastScrolledLocation = useRef(location);
-  const transitionState = useRef({ location, outerDone: true, contentReady: true });
-  if (transitionState.current.location !== location) {
-    transitionState.current = { location, outerDone: false, contentReady: false };
+function useSplash() {
+  const reduce = useReducedMotion();
+  const [phase, setPhase] = useState<"show" | "leave" | "done">(() => (sessionStorage.getItem("panda:splash") ? "done" : "show"));
+  useEffect(() => {
+    if (phase === "done") return;
+    const a = setTimeout(() => setPhase("leave"), reduce ? 300 : 1400);
+    const b = setTimeout(() => { setPhase("done"); sessionStorage.setItem("panda:splash", "1"); }, reduce ? 400 : 1800);
+    return () => { clearTimeout(a); clearTimeout(b); };
+  }, [phase, reduce]);
+  return phase;
+}
+
+/** Background check for new releases when the user opted into notifications. */
+function useReleaseNotifications() {
+  const prefs = usePrefs();
+  useEffect(() => {
+    if (!prefs.notifications || !("Notification" in window) || Notification.permission !== "granted") return;
+    const ctrl = new AbortController();
+    fetchLatestRelease(ctrl.signal).then((r) => {
+      if (compareVersions(r.version, installedVersion()) > 0 && getState().prefs.notifiedTag !== r.tag) {
+        new Notification("Panda.fun update available", { body: `Version ${r.version} is ready to install.`, icon: "./pwa-192x192.png" });
+        actions.setPrefs({ notifiedTag: r.tag });
+      }
+    }).catch(() => { /* offline or rate-limited: try again next launch */ });
+    return () => ctrl.abort();
+  }, [prefs.notifications]);
+}
+
+function Home({ kind }: { kind: PageKind }) {
+  const mode = useLayout();
+  return mode === "tv" ? <TvHome kind={kind} /> : <MHome kind={kind} />;
+}
+
+function Details() {
+  const { type, id } = useParams<{ type: string; id: string }>();
+  const mode = useLayout();
+  const t: MediaType | null = type === "movie" || type === "tv" ? type : null;
+  const n = Number(id);
+  if (!t || !Number.isInteger(n) || n <= 0) return <NotFoundPage />;
+  return mode === "tv" ? <TvDetails key={`${t}-${n}`} type={t} id={n} /> : <MDetails key={`${t}-${n}`} type={t} id={n} />;
+}
+
+function AllEpisodes() {
+  const { id } = useParams<{ id: string }>();
+  const mode = useLayout();
+  const n = Number(id);
+  if (!Number.isInteger(n) || n <= 0) return <NotFoundPage />;
+  return mode === "tv" ? <TvDetails type="tv" id={n} initialTab="episodes" /> : <MAllEpisodes id={n} />;
+}
+
+function Shell({ mode, children }: { mode: LayoutMode; children: ReactNode }) {
+  return mode === "tv" ? <TvShell>{children}</TvShell> : <MobileShell>{children}</MobileShell>;
+}
+
+function Routes({ mode }: { mode: LayoutMode }) {
+  const [location, navigate] = useLocation();
+  const profile = useProfile();
+  const online = useOnline();
+  const tv = mode === "tv";
+
+  useEffect(() => {
+    setRootBackHandler(() => {
+      const path = window.location.hash ? window.location.hash.slice(1).split("?")[0] || "/" : window.location.pathname;
+      if (path === "/" || path === "") { if (isAndroidApp) exitApp(); return; }
+      if (window.history.length > 1) window.history.back(); else navigate("/", { replace: true });
+    });
+    return () => setRootBackHandler(null);
+  }, [navigate]);
+
+  useEffect(() => {
+    const t = location === "/" ? "Panda.fun — Movies & TV Shows" : null;
+    if (t) document.title = t;
+  }, [location]);
+
+  const needsProfile = !profile && !PUBLIC_PATHS.includes(location) && !location.startsWith("/profiles");
+  if (needsProfile) return <ProfileSelect />;
+
+  if (location.startsWith("/watch/")) {
+    return (
+      <ErrorBoundary resetKey={location}>
+        <Route path="/watch/:type/:id"><PlayerPage /></Route>
+      </ErrorBoundary>
+    );
   }
-  const finishTransitionIfReady = () => {
-    const current = transitionState.current;
-    if (current.location === location && current.outerDone && current.contentReady && lastScrolledLocation.current !== location) {
-      lastScrolledLocation.current = location;
-      window.scrollTo({ top: 0, behavior: 'instant' });
-    }
-  };
-
-  useEffect(() => { previousLocation.current = location; }, [location]);
-  useEffect(() => { trackPageView(location); }, [location]);
-
-  if (location === '/') return <Landing />;
+  if (location === "/profiles") return <ProfileSelect />;
 
   return (
-    <Layout>
-      <MotionConfig reducedMotion="user">
-      <div className="panda-route-transition-shell">
-        <AnimatePresence mode="popLayout" initial={false}>
-          <m.div
-            key={location}
-            initial={{ opacity: 0, x: getMotionOffset(preference, direction * 22) }}
-            animate={{ opacity: 1, x: 0 }}
-            exit={{ opacity: 0, x: getMotionOffset(preference, direction * -14) }}
-            transition={{ duration: preference === 'full' ? (isDetailTransition ? 0.28 : 0.16) : 0.12, ease: [0.16, 1, 0.3, 1] }}
-            onAnimationComplete={() => {
-              if (transitionState.current.location === location) {
-                transitionState.current.outerDone = true;
-                finishTransitionIfReady();
-              }
-            }}
-            className="panda-route-transition-page w-full flex-1 flex flex-col"
-          >
-            <Suspense fallback={<DelayedRouteFallback previousLocation={previousLocation.current} />}>
-              <m.div
-                key={`route-content-${location}`}
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                transition={{ duration: preference === 'full' ? 0.16 : 0.12 }}
-                onAnimationComplete={() => {
-                  if (transitionState.current.location === location) {
-                    transitionState.current.contentReady = true;
-                    finishTransitionIfReady();
-                  }
-                }}
-              >
-                <RouteContent location={location} />
-              </m.div>
-            </Suspense>
-          </m.div>
-        </AnimatePresence>
-      </div>
-      </MotionConfig>
-    </Layout>
+    <>
+      {!online && <OfflineBanner />}
+      <Shell mode={mode}>
+        <ErrorBoundary resetKey={location}>
+          <Switch>
+            <Route path="/"><Home kind="home" /></Route>
+            <Route path="/movies"><Home kind="movies" /></Route>
+            <Route path="/tv"><Home kind="tv" /></Route>
+            <Route path="/new"><Home kind="new" /></Route>
+            <Route path="/categories">{tv ? <TvCategories /> : <MCategories />}</Route>
+            <Route path="/browse/:kind"><BrowsePage /></Route>
+            <Route path="/search">{tv ? <TvSearch /> : <MSearch />}</Route>
+            <Route path="/title/tv/:id/episodes"><AllEpisodes /></Route>
+            <Route path="/title/:type/:id"><Details /></Route>
+            <Route path="/my-space">{tv ? <TvMySpace /> : <MMySpace />}</Route>
+            <Route path="/my-list"><MyListPage /></Route>
+            <Route path="/continue-watching"><ContinueWatchingPage /></Route>
+            <Route path="/profiles/manage"><ProfileManage /></Route>
+            <Route path="/profiles/new"><ProfileEdit isNew /></Route>
+            <Route path="/profiles/edit/:id"><ProfileEdit /></Route>
+            <Route path="/settings/updates"><UpdatesPage /></Route>
+            <Route path="/settings/:section"><SettingsPage /></Route>
+            <Route path="/settings"><SettingsPage /></Route>
+            <Route path="/about"><AboutPage /></Route>
+            <Route path="/privacy"><PrivacyPage /></Route>
+            <Route path="/terms"><TermsPage /></Route>
+            <Route><NotFoundPage /></Route>
+          </Switch>
+        </ErrorBoundary>
+      </Shell>
+    </>
   );
 }
 
-class AppErrorBoundary extends React.Component<{ children: React.ReactNode; resetKey?: string }, { hasError: boolean }> {
-  declare readonly props: { children: React.ReactNode; resetKey?: string };
-  declare state: { hasError: boolean };
-  private readonly appChildren: React.ReactNode;
-  constructor(props: { children: React.ReactNode; resetKey?: string }) {
-    super(props);
-    this.appChildren = props.children;
-    this.state = { hasError: false };
-  }
-  componentDidUpdate(previousProps: { resetKey?: string }) {
-    if (previousProps.resetKey !== this.props.resetKey && this.state.hasError) this.setState({ hasError: false });
-  }
-  static getDerivedStateFromError() { return { hasError: true }; }
-  componentDidCatch(error: unknown) { console.error('[Panda.fun] App render error:', error); }
-  render() {
-    if (!this.state.hasError) return this.appChildren;
-    return (
-      <main className="min-h-screen flex items-center justify-center bg-[var(--kinoma-bg)] px-6 text-center">
-        <div className="max-w-md">
-          <h1 className="text-2xl font-semibold text-white">Panda took a tiny nap.</h1>
-          <p className="mt-2 text-sm text-white/60">Something went wrong while loading this screen.</p>
-          <button type="button" className="mt-6 rounded-full border border-white/10 bg-white/10 px-5 py-2.5 text-sm font-medium text-white hover:bg-white/15" onClick={() => window.location.reload()}>Try again</button>
-        </div>
-      </main>
-    );
-  }
-}
-
-function PWAUpdateBridge() { usePWAUpdate(); return null; }
-function MainAppShell() {
-  const [location] = useLocation();
-  const [showIntro, setShowIntro] = useState(() => location === '/' && shouldShowPandaIntro());
-
-  useEffect(() => {
-    if (location !== '/') setShowIntro(false);
-  }, [location]);
-
-  if (showIntro) {
-    return <PandaIntro onComplete={() => setShowIntro(false)} />;
-  }
-
-  return <AppErrorBoundary resetKey={location}><AnimatedRoutes /></AppErrorBoundary>;
-}
-
-export default function App() {
-  useEffect(() => {
-    // One document-level owner for directional focus in the Android TV WebView.
-    // Text inputs and embedded media retain ownership of their own key events.
-    const onRemoteKeyDown = (event: KeyboardEvent) => {
-      if (getCurrentDeviceMode() !== 'tv') return;
-      (window as Window & { isKinomaAndroidTV?: boolean }).isKinomaAndroidTV = true;
-      handleTVRemoteKey(event);
-    };
-    document.addEventListener('keydown', onRemoteKeyDown, true);
-    return () => document.removeEventListener('keydown', onRemoteKeyDown, true);
-  }, []);
-
+export function App() {
+  const mode = useLayoutMode();
+  const splash = useSplash();
+  useReleaseNotifications();
+  const routerProps = BUILD_TARGET === "android" ? { hook: useHashLocation } : {};
   return (
-    <SWRConfig value={{ provider: localCache.getSwrStorageProvider(), revalidateOnFocus: false, revalidateIfStale: false, dedupingInterval: 30000 }}>
-      <AuthProvider>
-        <AppearanceProvider>
-          <PWAUpdateBridge />
-          <MainAppShell />
-          <PWAInstallPrompt />
-          <PWAUpdatePrompt />
-          <AuthModal />
-          <SettingsModal />
-        </AppearanceProvider>
-      </AuthProvider>
+    <SWRConfig value={{ fetcher, provider: persistentCache, revalidateOnFocus: false, errorRetryCount: 2, shouldRetryOnError: true }}>
+      <LayoutContext.Provider value={mode}>
+        <div id="app" className={`app app--${mode}`}>
+          <Router {...routerProps}>
+            <Routes mode={mode} />
+          </Router>
+          <Toasts />
+          {splash !== "done" && <Splash leaving={splash === "leave"} />}
+        </div>
+      </LayoutContext.Provider>
     </SWRConfig>
   );
 }
