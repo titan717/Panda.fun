@@ -17,7 +17,7 @@ for (const r of routes) {
   await page.goto(`${base}${path}${mode === "tv" ? `${sep}layout=tv` : ""}`, { waitUntil: "networkidle", timeout: 60000 }).catch((e) => errs.push(`[goto] ${e.message}`));
   await page.waitForTimeout(2500);
   for (const k of (keys ?? "").split(",").filter(Boolean)) { await page.keyboard.press(k); await page.waitForTimeout(450); }
-  await page.waitForTimeout(800);
+  await page.waitForTimeout(+(process.env.SETTLE ?? 800));
   const name = `${mode}-${w}x${h}-${path.replace(/[^a-z0-9]+/gi, "_")}${keys ? "-" + keys.replace(/[^a-z0-9]+/gi, "") : ""}`.slice(0, 120);
   await page.screenshot({ path: `/tmp/qa/${name}.png` });
   console.log("shot", name);

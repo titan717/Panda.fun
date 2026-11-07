@@ -176,3 +176,20 @@ Image references use `tv1#12` = `tv1.pdf` image 12 (0-based), `m#5` = `mobile.pd
 18.3 Error state: icon, "Something went wrong", detail line, Retry button (focusable).
 18.4 Empty states: My List "Your watchlist is empty" + "Browse Movies" button; Continue Watching "Start watching to see it here"; Search no results.
 18.5 Broken images fall back to a gradient tile with the title text.
+
+## 19. Calibrated TV geometry (supersedes sizes above)
+
+The first pass of sections 5–9 was estimated from contact sheets. Measuring the full-resolution photos (tv2#1, tv2#9, tv1#2, tv1#6) against the 1920 × 1080 canvas gave these values, which are what `src/styles/tokens.css` and `tv.css` implement. All values are TV units (`tu`, 1 tu = 1 px at 1920 × 1080; scaled with `--tu` for 1280 × 720 and 3840 × 2160).
+
+| Element | Value |
+|---|---|
+| Content left edge (after rail) | 160 |
+| Overscan-safe margin | 48 top/bottom, 64 right (5 % rule) |
+| Hero card | 1400 × 760 at y 56, radius 22 |
+| Poster card | 300 × 400, radius 10, gap 12 |
+| Focused poster expansion | 820 wide (info card), same height |
+| Landscape card | 400 × 225 |
+| Row title | 32, weight 700 |
+| Primary CTA ("Watch Now") | 620 × 76, square secondary buttons 74 × 74 |
+| Episode still | 380 × 214 |
+| Search grid | 6 columns |

@@ -1,0 +1,26 @@
+# Decisions
+
+Where the blueprint was ambiguous, impossible to reproduce literally, or referred to features outside this product's scope, the option closest to the blueprint was chosen and recorded here.
+
+| # | Decision | Why |
+|---|---|---|
+| D-1 | The blueprint is JioHotstar; every brand mark is replaced with Panda (logo, name, colours kept as in the photos). | Own brand; layout and styling remain the blueprint's. |
+| D-2 | TV rail "UPGRADE" pill → "UPDATE" (opens Check for Updates); mobile "UPGRADE" chip → "WHAT'S NEW". | No subscriptions; the slot keeps its position and style with a real function. |
+| D-3 | "TADKA" tab → "NEW & HOT". | Required page; same tab slot and gradient pill. |
+| D-4 | Sports, Connect Phone, Downloads, Cast, subscription/plan screens omitted; the subscription card in My Space becomes an app version/update card. | No such backend capabilities; showing them would be dead UI. |
+| D-5 | Quality badges (4K/Dolby) omitted; ratings show TMDB score instead of IMDb. | Data not available from movieapi; no fake values. |
+| D-6 | Typeface: Inter (self-hosted), closest open match to the blueprint's geometric sans. | Licensing. |
+| D-7 | Layout by input and size: TV layout for TV devices (TV user agent or Android TV) and for desktops (fine pointer, window ≥ 900 × 480; mouse hover moves focus); touch-only devices — phones and tablets — use the mobile layout. `?layout=tv` forces TV. | Blueprint covers TV and phone only. |
+| D-8 | TV rail shows 7 icons including New & Hot. | Required page needs a rail entry. |
+| D-9 | Android bundle uses hash routing and relative asset base. | WebViewAssetLoader serves files, not an SPA server. |
+| D-10 | Provider auto-next disabled; our own 10 s countdown handles next episode on all sources. | Consistent behaviour; works on the mirror too. |
+| D-11 | Volume control only on CineSrc; VidSrc gets mute/unmute; mirror has no progress sync. | Provider protocol limits (PLAYER_COMPARISON.md). |
+| D-12 | Trailers open in an in-app overlay (YouTube privacy-enhanced). CineSrc's internal episode navigation does not change our URL; we follow it via `nextepisode` events. | Keep Back behaviour predictable. |
+| D-13 | Recent searches render as a text list (blueprint shows chips on mobile, list on TV — kept per platform). | Matches photos per platform. |
+| D-14 | Notifications = "new release available" on launch only (opt-in). | No push backend; no tracking. |
+| D-15 | 60+ stale remote branches were not merged: the "My Panda hub" work was already in `main`, the rest target the previous UI that was replaced by the rebuild. They remain for history but contain nothing valid to merge. | Mission rule "merge valid earlier work". |
+| D-16 | Geometry recalibrated from full-resolution photos (tv2#1, tv2#9, tv1#2, tv1#6) — BLUEPRINT_SPEC §19. | Contact-sheet estimates were off by up to 30 %. |
+| D-17 | Update checks read GitHub Releases directly (`/releases/latest`) on web and Android, cached 15 min; `update/latest.json` removed. | One source of truth; stays within GitHub's anonymous rate limit. |
+| D-18 | Vercel production deploys through the existing Git integration (project `mypanda`, team `titan717s-projects`) on every push to `main`. The CLI token in the build sandbox is not authorised for that team scope, so CLI deploys are not used. | Same result (production from `main`), no extra credentials. |
+| D-19 | One APK serves phones, tablets and Android TV (`leanback` optional, touchscreen not required). | Single release asset for the updater. |
+| D-20 | Release versioning: stable `MAJOR.MINOR.PATCH`, `versionCode = 1236 + run number` so it is always above the old beta builds. | Lets existing beta installs upgrade in place. |

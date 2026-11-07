@@ -169,9 +169,8 @@ jobs:
           test -s "$APK"
           mkdir -p release
           cp "$APK" release/Panda.fun-Android-TV.apk
-          if command -v apksigner >/dev/null 2>&1; then
-            apksigner verify --verbose release/Panda.fun-Android-TV.apk
-          fi
+          APKSIGNER="${ANDROID_HOME:-$ANDROID_SDK_ROOT}/build-tools/34.0.0/apksigner"
+          "$APKSIGNER" verify --verbose --print-certs release/Panda.fun-Android-TV.apk
           sha256sum release/Panda.fun-Android-TV.apk | tee release/Panda.fun-Android-TV.apk.sha256
 
       - name: Publish GitHub stable release
