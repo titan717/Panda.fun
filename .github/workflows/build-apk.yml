@@ -127,6 +127,9 @@ jobs:
       - name: Install web dependencies
         run: npm ci --no-audit --no-fund
 
+      - name: Stamp web bundle version
+        run: npm pkg set version="${KINOMA_VERSION_NAME}"
+
       - name: Type-check web application
         run: npm run typecheck
 

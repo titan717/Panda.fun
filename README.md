@@ -97,7 +97,7 @@ Copy `.env.example` to `.env.local` if you need to override the defaults. Nothin
 The signed release APK is built only in GitHub Actions — the keystore never touches the repository.
 
 1. Repository secrets: `KINOMA_KEYSTORE_BASE64`, `KINOMA_KEYSTORE_PASSWORD`, `KINOMA_KEY_ALIAS`, `KINOMA_KEY_PASSWORD`.
-2. Run **Actions → Build and Publish Panda.fun Android TV Stable Release** (optionally enter `version_name`, e.g. `1.0.1`; otherwise the patch version is bumped).
+2. Bump `version` in `package.json` on `main` (the web build reports this version), then run **Actions → Build and Publish Panda.fun Android TV Stable Release** (optionally enter `version_name`, e.g. `1.0.1`; otherwise the patch version is bumped).
 3. The workflow type-checks, lints, tests, runs `npm run build:android`, copies `dist/` into `android/app/src/main/assets/web/`, builds `assembleRelease`, verifies the signature with `apksigner`, and publishes a GitHub Release `v<version>` with `Panda.fun-Android-TV.apk` and its `.sha256`.
 
 One APK installs on phones, tablets and Android TV (leanback launcher entry and TV banner included).
