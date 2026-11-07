@@ -1,17 +1,20 @@
 import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { Link } from 'wouter';
-import { ArrowRight, Info, Play, Plus } from 'lucide-react';
-import { AnimatedCheck, Pressable, Reveal, Shimmer, useMotionPreference } from '../motion';
-import { ThinkingOrb } from 'thinking-orbs';
-import { ModernContinueWatching } from '../components/ui/modern/ModernContinueWatching';
+import { Play, Plus, Check, Info, ArrowRight } from 'lucide-react';
 import { MovieApiMedia } from '../lib/api';
 import { buildDetailsHref, buildWatchHref } from '../lib/mediaRoute';
 import { libraryManager } from '../lib/library';
 import { optimizeImageUrl } from '../lib/mediaImages';
+import { ModernContinueWatching } from '../components/ui/modern/ModernContinueWatching';
+import { HeroBanner, MediaCard, Rail, Chip } from '../components/blueprint';
 import './mobile-home.css';
-import './mobile-featured-controls.css';
-import { EditorialRail } from '../components/EditorialRail';
-import { EditorialSpotlight } from '../components/EditorialSpotlight';
+
+/**
+ * Blueprint mobile Home.
+ *
+ * Data contract is intentionally unchanged: Home.tsx supplies real MovieApi
+ * results, while this component owns only the blueprint presentation layer.
+ */
 
 type MobileHomeProps = {
   items: MovieApiMedia[];
@@ -25,44 +28,72 @@ type MobileHomeProps = {
   error?: string | null;
 };
 
-function imageFor(item: MovieApiMedia) {
+function imageFor(item: MovieApiMedia, width: 'w342' | 'w500' | 'w1280' = 'w500') {
   const source = item.poster || item.backdrop;
-  return source ? optimizeImageUrl(source, 'w500') || source : '';
+  return source ? optimizeImageUrl(source, width) || source : '';
 }
 
 function uniqueItems(items: MovieApiMedia[]) {
   return items.filter((item, index, all) => Boolean(item?.id) && all.findIndex(other => other?.id === item.id) === index);
 }
 
-function MobileRail({ title, items, topTen = false }: { title: string; items: MovieApiMedia[]; topTen?: boolean }) {
-  if (!items.length) return null;
-  const visible = items.slice(0, topTen ? 10 : 12);
+function categoryFor(item: MovieApiMedia) {
+  return item.type === 'movie' ? 'movie' : 'series';
+}
+
+function RailCards({ items, limit = 12 }: { items: MovieApiMedia[]; limit?: number }) {
+  const visible = uniqueItems(items).slice(0, limit);
+  if (!visible.length) return null;
 
   return (
-    <section className={`panda-mobile-home__collection${topTen ? ' panda-mobile-home__collection--top10' : ''}`} aria-label={title}>
-      <div className="panda-mobile-home__section-head">
-        <h2>{title}</h2>
-        <Link href="/search" aria-label={`Explore ${title}`}><ArrowRight size={17} /></Link>
-      </div>
-      <div className={topTen ? 'panda-mobile-home__top10' : 'panda-mobile-home__trending'}>
-        {visible.map((item, index) => {
-          const image = imageFor(item);
-          const href = buildDetailsHref(item, item.type === 'movie' ? 'movie' : 'series');
-          return topTen ? (
-            <div className="panda-mobile-home__top10-item" key={item.id}>
-              <span className="panda-mobile-home__rank" aria-label={`Rank ${index + 1}`}>{index + 1}</span>
-              <Link href={href} className="panda-mobile-home__top10-card" aria-label={`Open ${item.title}, Top 10 rank ${index + 1}`}>
-                {image ? <img src={image} alt="" loading={index < 3 ? 'eager' : 'lazy'} decoding="async" referrerPolicy="no-referrer" /> : <span className="panda-mobile-featured__no-art" />}
-              </Link>
+    <>
+      {visible.map(item => (
+        <MediaCard
+          key={item.id}
+          title={item.title}
+          image={imageFor(item)}
+          subtitle={[item.year, item.rating ? `★ ${Number(item.rating).toFixed(1)}` : null].filter(Boolean).join(' · ') || undefined}
+          onClick={() => {
+            window.location.assign(buildDetailsHref(item, categoryFor(item)));
+          }}
+        />
+      ))}
+    </>
+  );
+}
+
+function TopTenRail({ items }: { items: MovieApiMedia[] }) {
+  const visible = uniqueItems(items).slice(0, 10);
+  if (!visible.length) return null;
+
+  return (
+    <Rail title="Top 10 in India Today">
+      <div className="flex gap-3 overflow-x-auto pb-2 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+        {visible.map((item, index) => (
+          <Link
+            key={item.id}
+            href={buildDetailsHref(item, categoryFor(item))}
+            className="bp-focusable group relative flex w-[190px] shrink-0 items-end"
+            aria-label={`Open ${item.title}, rank ${index + 1}`}
+          >
+            <span
+              className="absolute -left-1 bottom-0 z-10 text-[64px] font-black leading-none text-transparent"
+              style={{ WebkitTextStroke: '2px rgba(255,255,255,0.45)' }}
+              aria-hidden="true"
+            >
+              {index + 1}
+            </span>
+            <div className="bp-card ml-8 w-full">
+              <div className="aspect-[2/3] w-full bg-[var(--bp-surface-hover)]">
+                {imageFor(item) ? (
+                  <img src={imageFor(item)} alt="" loading="lazy" decoding="async" className="h-full w-full object-cover" />
+                ) : null}
+              </div>
             </div>
-          ) : (
-            <Link key={item.id} href={href} className="panda-mobile-home__trending-card" aria-label={`Open ${item.title}`}>
-              {image ? <img src={image} alt="" loading="lazy" decoding="async" referrerPolicy="no-referrer" /> : <span className="panda-mobile-featured__no-art" />}
-            </Link>
-          );
-        })}
+          </Link>
+        ))}
       </div>
-    </section>
+    </Rail>
   );
 }
 
@@ -79,183 +110,141 @@ export function MobileHome({
 }: MobileHomeProps) {
   const [activeIndex, setActiveIndex] = useState(0);
   const [isInList, setIsInList] = useState(false);
-  const [swipeDirection, setSwipeDirection] = useState<'next' | 'previous'>('next');
-  const [touchPaused, setTouchPaused] = useState(false);
-  const [documentHidden, setDocumentHidden] = useState(() => typeof document !== 'undefined' && document.hidden);
-  const motionPreference = useMotionPreference();
-  const motionAllowed = motionPreference === 'full';
   const touchStartX = useRef<number | null>(null);
-  const suppressSwipeClick = useRef(false);
-  const touchResumeTimer = useRef<number | null>(null);
-  const featuredItems = useMemo(() => uniqueItems(items).filter(item => item.poster || item.backdrop).slice(0, 5), [items]);
-  const catalogue = useMemo(() => uniqueItems([
-    ...(trendingItems || []),
-    ...popularMovies,
-    ...popularTv,
-    ...items,
-  ]), [trendingItems, popularMovies, popularTv, items]);
-  const topTen = catalogue.slice(0, 10);
+
+  const featuredItems = useMemo(
+    () => uniqueItems(items).filter(item => item.poster || item.backdrop).slice(0, 5),
+    [items]
+  );
   const trending = uniqueItems(trendingItems?.length ? trendingItems : items);
+  const topTen = uniqueItems([...trending, ...popularMovies, ...popularTv]).slice(0, 10);
+  const featured = featuredItems[activeIndex] || featuredItems[0];
 
   useEffect(() => {
     setActiveIndex(current => Math.min(current, Math.max(0, featuredItems.length - 1)));
   }, [featuredItems.length]);
 
   useEffect(() => {
-    const updateVisibility = () => setDocumentHidden(document.hidden);
-    document.addEventListener('visibilitychange', updateVisibility);
-    return () => document.removeEventListener('visibilitychange', updateVisibility);
-  }, []);
-
-  useEffect(() => () => {
-    if (touchResumeTimer.current) window.clearTimeout(touchResumeTimer.current);
-  }, []);
-
-  const featured = featuredItems[activeIndex] || featuredItems[0];
-
-  useEffect(() => {
     setIsInList(featured ? libraryManager.isInWatchlist(featured.id) : false);
   }, [featured?.id]);
 
   useEffect(() => {
-    if (!motionAllowed || documentHidden || touchPaused || featuredItems.length < 2) return;
+    if (featuredItems.length < 2) return;
     const timer = window.setTimeout(() => {
-      setSwipeDirection('next');
       setActiveIndex(index => (index + 1) % featuredItems.length);
     }, 6000);
     return () => window.clearTimeout(timer);
-  }, [activeIndex, documentHidden, featuredItems.length, motionAllowed, touchPaused]);
+  }, [activeIndex, featuredItems.length]);
 
   const toggleFeaturedList = () => {
     if (!featured) return;
-    setIsInList(libraryManager.toggleWatchlist({
-      id: featured.id,
-      title: featured.title,
-      image: featured.poster || featured.backdrop || '',
-    }));
+    setIsInList(
+      libraryManager.toggleWatchlist({
+        id: featured.id,
+        title: featured.title,
+        image: featured.poster || featured.backdrop || '',
+      })
+    );
   };
 
-  const selectFeatured = (index: number, direction?: 'next' | 'previous') => {
-    if (!featuredItems.length) return;
-    const nextIndex = (index + featuredItems.length) % featuredItems.length;
-    if (nextIndex === activeIndex) return;
-    setSwipeDirection(direction || (nextIndex > activeIndex || (activeIndex === featuredItems.length - 1 && nextIndex === 0) ? 'next' : 'previous'));
-    setActiveIndex(nextIndex);
-  };
-
-  const handleFeaturedTouchStart = (event: React.TouchEvent<HTMLElement>) => {
+  const handleTouchStart = (event: React.TouchEvent<HTMLElement>) => {
     touchStartX.current = event.changedTouches[0]?.clientX ?? null;
-    setTouchPaused(true);
-    if (touchResumeTimer.current) window.clearTimeout(touchResumeTimer.current);
   };
 
-  const resumeAfterTouch = () => {
-    if (touchResumeTimer.current) window.clearTimeout(touchResumeTimer.current);
-    touchResumeTimer.current = window.setTimeout(() => setTouchPaused(false), 1800);
-  };
-
-  const handleFeaturedTouchEnd = (event: React.TouchEvent<HTMLElement>) => {
-    const startX = touchStartX.current;
+  const handleTouchEnd = (event: React.TouchEvent<HTMLElement>) => {
+    const start = touchStartX.current;
+    const end = event.changedTouches[0]?.clientX;
     touchStartX.current = null;
-    const endX = event.changedTouches[0]?.clientX;
-    if (startX == null || endX == null) {
-      resumeAfterTouch();
-      return;
-    }
-    const distance = endX - startX;
-    if (Math.abs(distance) >= 48) {
-      event.preventDefault();
-      suppressSwipeClick.current = true;
-      window.setTimeout(() => { suppressSwipeClick.current = false; }, 450);
-      selectFeatured(activeIndex + (distance < 0 ? 1 : -1), distance < 0 ? 'next' : 'previous');
-    }
-    resumeAfterTouch();
+    if (start == null || end == null || featuredItems.length < 2) return;
+    const distance = end - start;
+    if (Math.abs(distance) < 48) return;
+    setActiveIndex(index => (index + (distance < 0 ? 1 : -1) + featuredItems.length) % featuredItems.length);
   };
 
   return (
-    <div className="panda-mobile-home">
-      <EditorialSpotlight />
-      <section className={`panda-mobile-featured panda-billboard${touchPaused || documentHidden || !motionAllowed ? " is-paused" : ""}`} aria-label="Featured titles">
-        {featuredItems.length > 0 && featured ? (
-          <>
-            <article key={featured.id} className={`panda-mobile-featured__spotlight panda-mobile-featured__spotlight-track is-${swipeDirection}`} aria-label={`Featured: ${featured.title}`} onTouchStart={handleFeaturedTouchStart} onTouchEnd={handleFeaturedTouchEnd} onTouchCancel={() => { touchStartX.current = null; resumeAfterTouch(); }} onClickCapture={event => { if (suppressSwipeClick.current) { event.preventDefault(); event.stopPropagation(); suppressSwipeClick.current = false; } }}>
-              <div className="panda-mobile-featured__art" aria-hidden="true">
-                {(() => {
-                  const source = featured.backdrop || featured.poster || '';
-                  const image = source ? optimizeImageUrl(source, 'w1280') || source : '';
-                  return image ? <img src={image} alt="" fetchPriority="high" decoding="async" referrerPolicy="no-referrer" /> : <span className="panda-mobile-featured__no-art" />;
-                })()}
-              </div>
-              <div className="panda-mobile-featured__copy" aria-live="polite">
-                <Reveal className="panda-mobile-featured__reveal" delay={0}>
-                  <div className="panda-mobile-featured__meta">
-                    <span className="panda-mobile-featured__type">{featured.type === 'movie' ? 'MOVIE' : 'SERIES'}</span>
-                    {featured.year && <span className="panda-mobile-featured__chip">{featured.year}</span>}
-                    {featured.rating != null && <span className="panda-mobile-featured__chip">★ {Number(featured.rating).toFixed(1)}</span>}
-                  </div>
-                </Reveal>
-                <Reveal className="panda-mobile-featured__reveal" delay={0.06}><h1>{featured.title}</h1></Reveal>
-                {featured.overview && <Reveal className="panda-mobile-featured__reveal" delay={0.12}><p>{featured.overview}</p></Reveal>}
-                {!!featured.genres?.length && (
-                  <Reveal className="panda-mobile-featured__reveal" delay={0.18}>
-                    <div className="panda-mobile-featured__genres" aria-label="Genres">
-                      {featured.genres.slice(0, 3).map(genre => <span key={genre}>{genre}</span>)}
-                    </div>
-                  </Reveal>
-                )}
-                <Reveal className="panda-mobile-featured__reveal" delay={0.24}>
-                  <div className="panda-mobile-featured__actions">
-                    <Link href={buildWatchHref(featured.id, featured.type === 'movie' ? 'movie' : 'series')} className="panda-mobile-featured__watch panda-motion-play-cta" aria-label={`Play ${featured.title}`}>
-                      <Play size={17} fill="currentColor" aria-hidden="true" /> Play
-                    </Link>
-                    <Pressable haptic className="panda-mobile-featured__list" onClick={toggleFeaturedList} aria-pressed={isInList} aria-label={isInList ? `Remove ${featured.title} from My List` : `Add ${featured.title} to My List`}>
-                      {isInList ? <AnimatedCheck checked size={19} /> : <Plus size={19} aria-hidden="true" />}
-                    </Pressable>
-                    <Link href={buildDetailsHref(featured, featured.type === 'movie' ? 'movie' : 'series')} className="panda-mobile-featured__info" aria-label={`More information about ${featured.title}`}>
-                      <Info size={19} aria-hidden="true" />
-                    </Link>
-                  </div>
-                </Reveal>
-              </div>
-            </article>
-            {featuredItems.length > 1 && (
-              <div className="panda-mobile-featured__controls" role="group" aria-label="Featured title progress">
-                {featuredItems.map((item, index) => (
-                  <button key={item.id} type="button" className={`panda-mobile-featured__segment${index === activeIndex ? ' is-active' : ''}`} aria-label={`Show featured title ${index + 1} of ${featuredItems.length}: ${item.title}`} aria-current={index === activeIndex ? 'true' : undefined} onClick={() => selectFeatured(index)}>
-                    <span aria-hidden="true" />
-                  </button>
-                ))}
-              </div>
-            )}
-          </>
-        ) : loading ? (
-          <div className="panda-mobile-featured__loading" role="status" aria-live="polite">
-            <Shimmer className="panda-mobile-featured__loading-shimmer" />
-            <ThinkingOrb state="searching" size={64} theme="dark" aria-label="Loading featured titles" />
-            <span className="panda-mobile-featured__loading-copy">Finding your next watch</span>
+    <div className="bp-screen">
+      <div className="bp-page pt-3">
+        <div className="mb-4 flex items-center justify-between">
+          <div className="flex items-center gap-2 overflow-x-auto [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+            <Chip selected>Home</Chip>
+            <Chip onClick={() => window.location.assign('/search?type=series')}>TV</Chip>
+            <Chip onClick={() => window.location.assign('/search?type=movie')}>Movies</Chip>
+            <Chip>Sports</Chip>
           </div>
+          <Link
+            href="/settings"
+            className="bp-focusable rounded-full border border-[var(--bp-border-strong)] bg-white/10 px-3 py-1.5 text-xs font-bold uppercase tracking-wide text-white"
+          >
+            Upgrade
+          </Link>
+        </div>
+
+        {featured ? (
+          <HeroBanner
+            title={featured.title}
+            image={featured.backdrop || featured.poster || undefined}
+            metadata={[
+              featured.year,
+              featured.rating ? `★ ${Number(featured.rating).toFixed(1)}` : null,
+              featured.type === 'movie' ? 'Movie' : 'Series',
+            ].filter(Boolean).join(' · ')}
+            synopsis={featured.overview || undefined}
+            onWatch={() => window.location.assign(buildWatchHref(featured.id, categoryFor(featured)))}
+            onAdd={toggleFeaturedList}
+          />
         ) : (
-          <div className="panda-mobile-featured__empty" role="status">
-            <strong>{error ? 'We couldn’t load your picks.' : 'Your next watch is waiting.'}</strong>
-            <span>{error ? 'The catalogue may be taking a break. Try Search while we recover.' : 'Explore the catalogue to find something worth watching.'}</span>
-            <Link href="/search">Explore titles <ArrowRight size={15} /></Link>
+          <div className="rounded-[var(--bp-radius-lg)] bg-[var(--bp-surface)] p-6 text-center">
+            <p className="text-lg font-semibold">{error ? 'We couldn’t load your picks.' : loading ? 'Finding your next watch…' : 'Your next watch is waiting.'}</p>
+            <p className="mt-2 text-sm text-[var(--bp-text-secondary)]">
+              {error || 'Explore movies and series from the catalogue.'}
+            </p>
+            <Link href="/search" className="mt-4 inline-flex items-center gap-2 text-sm font-semibold text-[var(--bp-accent)]">
+              Explore titles <ArrowRight size={16} />
+            </Link>
           </div>
         )}
-      </section>
 
-      <MobileRail title="Top 10" items={topTen} topTen />
-      <ModernContinueWatching />
-      <MobileRail title="Trending Now" items={trending} />
-      <MobileRail title="Recently Added" items={uniqueItems(newOnNetflix)} />
-      <MobileRail title="Fresh Picks" items={uniqueItems(newOnDisneyPlus)} />
-      <MobileRail title="Popular Movies" items={uniqueItems(popularMovies)} />
-      <MobileRail title="Popular TV Shows" items={uniqueItems(popularTv)} />
-      <MobileRail title="Airing Today" items={uniqueItems(airing)} />
-      <EditorialRail collectionId="trending" compact />
-      <EditorialRail collectionId="top-ten" compact />
-      <EditorialRail collectionId="originals" compact />
-      <EditorialRail collectionId="drama" compact />
-      <EditorialRail collectionId="new-releases" compact />
+        {featuredItems.length > 1 ? (
+          <div className="mt-3 flex justify-center gap-1.5">
+            {featuredItems.map((item, index) => (
+              <button
+                key={item.id}
+                type="button"
+                aria-label={`Show ${item.title}`}
+                aria-current={index === activeIndex}
+                onClick={() => setActiveIndex(index)}
+                className={`h-1.5 rounded-full transition-all ${index === activeIndex ? 'w-6 bg-[var(--bp-accent)]' : 'w-1.5 bg-white/30'}`}
+              />
+            ))
+            }
+          </div>
+        ) : null}
+      </div>
+
+      <div className="bp-page">
+        <ModernContinueWatching />
+        <TopTenRail items={topTen} />
+        <Rail title="Trending Now">
+          <RailCards items={trending} />
+        </Rail>
+        <Rail title="New on Panda">
+          <RailCards items={newOnNetflix} />
+        </Rail>
+        <Rail title="Explore Panda">
+          <RailCards items={newOnDisneyPlus} />
+        </Rail>
+        <Rail title="Latest TV Episodes">
+          <RailCards items={airing} />
+        </Rail>
+        <Rail title="Popular Movies">
+          <RailCards items={popularMovies} />
+        </Rail>
+        <Rail title="Popular TV Shows">
+          <RailCards items={popularTv} />
+        </Rail>
+      </div>
     </div>
   );
 }
+
+export default MobileHome;
