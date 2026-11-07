@@ -42,7 +42,7 @@ export function UpdatesPage() {
     if (!navigator.onLine) { setState({ s: "offline" }); return; }
     setState({ s: "checking" });
     try {
-      const release = await fetchLatestRelease();
+      const release = await fetchLatestRelease(undefined, true);
       setState(compareVersions(release.version, current) > 0 ? { s: "available", release } : { s: "uptodate", release });
     } catch (e) {
       setState(navigator.onLine ? { s: "error", message: (e as Error).message } : { s: "offline" });

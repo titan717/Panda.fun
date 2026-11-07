@@ -14,35 +14,74 @@ import kotlinx.coroutines.withContext
 import okhttp3.OkHttpClient
 import okhttp3.Request
 import com.google.gson.Gson
+import com.google.gson.annotations.SerializedName
 import java.io.File
 
 object UpdateChecker {
-    // Public beta/stable manifest maintained in the Panda.fun repository
-    private const val UPDATE_JSON_URL = "https://raw.githubusercontent.com/titan717/Panda.fun/main/update/latest.json"
+    /** Stable releases are published by .github/workflows/build-apk.yml as GitHub Releases. */
+    private const val LATEST_RELEASE_URL = "https://api.github.com/repos/titan717/Panda.fun/releases/latest"
+    private val client by lazy { OkHttpClient() }
 
     /** Silent background check: returns null when up to date or when anything goes wrong. */
-    suspend fun checkForUpdate(context: Context? = null, force: Boolean = false): UpdateInfo? {
+    suspend fun checkForUpdate(): UpdateInfo? {
         return try {
             checkForUpdateOrThrow()
         } catch (e: Exception) {
-            e.printStackTrace()
             null
         }
     }
 
     /** Same check, but failures are thrown so the Settings screen can tell "up to date" from "offline". */
     suspend fun checkForUpdateOrThrow(): UpdateInfo? = withContext(Dispatchers.IO) {
-        val client = OkHttpClient()
-        val request = Request.Builder().url(UPDATE_JSON_URL).build()
-        client.newCall(request).execute().use { response ->
-            if (!response.isSuccessful) throw java.io.IOException("Update server returned ${response.code}.")
+        val request = Request.Builder()
+            .url(LATEST_RELEASE_URL)
+            .header("Accept", "application/vnd.github+json")
+            .header("User-Agent", "Panda.fun-Android/${BuildConfig.VERSION_NAME}")
+            .build()
+        val release = client.newCall(request).execute().use { response ->
+            if (response.code == 404) return@withContext null
+            if (!response.isSuccessful) throw java.io.IOException("GitHub returned ${response.code}.")
             val body = response.body?.string()?.trim()
-            if (body.isNullOrEmpty()) throw java.io.IOException("Update manifest was empty.")
-            if (!body.startsWith("{")) throw java.io.IOException("Update manifest was not valid.")
-            val updateInfo = Gson().fromJson(body, UpdateInfo::class.java)
-                ?: throw java.io.IOException("Update manifest could not be read.")
-            if (updateInfo.latestVersionCode > BuildConfig.VERSION_CODE) updateInfo else null
+            if (body.isNullOrEmpty()) throw java.io.IOException("Release information was empty.")
+            Gson().fromJson(body, GitHubRelease::class.java) ?: throw java.io.IOException("Release information could not be read.")
         }
+        val version = release.tagName.removePrefix("v").removePrefix("V")
+        if (compareVersions(version, BuildConfig.VERSION_NAME) <= 0) return@withContext null
+        val apk = release.assets.firstOrNull { it.name.endsWith(".apk", ignoreCase = true) }
+            ?: throw java.io.IOException("The latest release has no APK attached.")
+        val shaAsset = release.assets.firstOrNull { it.name.equals("${apk.name}.sha256", ignoreCase = true) }
+            ?: release.assets.firstOrNull { it.name.endsWith(".sha256", ignoreCase = true) }
+            ?: throw java.io.IOException("The latest release has no checksum attached.")
+        val sha = client.newCall(Request.Builder().url(shaAsset.downloadUrl).build()).execute().use { r ->
+            if (!r.isSuccessful) throw java.io.IOException("Checksum download failed (${r.code}).")
+            r.body?.string()?.trim()?.split(Regex("\\s+"))?.firstOrNull().orEmpty()
+        }
+        UpdateInfo(
+            latestVersionCode = 0,
+            latestVersionName = version,
+            apkUrl = apk.downloadUrl,
+            releaseNotes = release.body?.trim().orEmpty().ifEmpty { release.name ?: "Panda.fun $version" },
+            mandatory = false,
+            sha256 = sha,
+            apkSize = apk.size
+        )
+    }
+
+    /** Semantic version compare; stable releases rank above pre-releases of the same core version. */
+    fun compareVersions(a: String, b: String): Int {
+        fun parse(v: String): Pair<List<Int>, String?> {
+            val parts = v.trim().removePrefix("v").split("-", limit = 2)
+            val nums = parts[0].split(".").map { it.toIntOrNull() ?: 0 }.toMutableList()
+            while (nums.size < 3) nums.add(0)
+            return nums to parts.getOrNull(1)
+        }
+        val (x, xp) = parse(a)
+        val (y, yp) = parse(b)
+        for (i in 0 until 3) if (x[i] != y[i]) return x[i].compareTo(y[i])
+        if (xp == yp) return 0
+        if (xp == null) return 1
+        if (yp == null) return -1
+        return xp.compareTo(yp)
     }
 
     fun downloadAndInstall(
@@ -66,13 +105,13 @@ object UpdateChecker {
 
             val destination = File(
                 context.getExternalFilesDir(Environment.DIRECTORY_DOWNLOADS),
-                "MyPanda-update.apk"
+                "Panda.fun-update.apk"
             )
             if (destination.exists()) destination.delete()
 
             val request = DownloadManager.Request(Uri.parse(apkUrl))
-                .setTitle("MyPanda Update")
-                .setDescription("Downloading the latest MyPanda release...")
+                .setTitle("Panda.fun update")
+                .setDescription("Downloading the latest Panda.fun release…")
                 .setMimeType("application/vnd.android.package-archive")
                 .setDestinationInExternalFilesDir(
                     context,
@@ -183,3 +222,16 @@ object UpdateChecker {
         }
     }
 }
+
+data class GitHubRelease(
+    @SerializedName("tag_name") val tagName: String,
+    @SerializedName("name") val name: String?,
+    @SerializedName("body") val body: String?,
+    @SerializedName("assets") val assets: List<GitHubAsset>
+)
+
+data class GitHubAsset(
+    @SerializedName("name") val name: String,
+    @SerializedName("browser_download_url") val downloadUrl: String,
+    @SerializedName("size") val size: Long
+)

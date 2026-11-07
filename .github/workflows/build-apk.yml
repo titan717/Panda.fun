@@ -125,16 +125,19 @@ jobs:
           } >> "$GITHUB_ENV"
 
       - name: Install web dependencies
-        run: npm install --no-audit --no-fund
+        run: npm ci --no-audit --no-fund
 
       - name: Type-check web application
+        run: npm run typecheck
+
+      - name: Lint web application
         run: npm run lint
 
       - name: Run web tests
         run: npm test
 
-      - name: Build web application
-        run: npm run build
+      - name: Build web application (Android bundle)
+        run: npm run build:android
 
       - name: Package web assets into Android app
         shell: bash
@@ -182,51 +185,13 @@ jobs:
           body: |
             # Panda.fun Android TV v${{ steps.version.outputs.version_name }}
 
-            **Stable production release.**
+            Signed release build for Android phones, tablets and Android TV.
 
             - Version code: ${{ steps.version.outputs.version_code }}
-            - APK: Panda.fun-Android-TV.apk
-            - SHA-256 is attached alongside the APK.
+            - APK: Panda.fun-Android-TV.apk (one APK for phone and TV)
+            - SHA-256 checksum attached; the in-app updater verifies it before installing.
+            - Installed apps pick this release up from Settings > Check for Updates.
           files: |
             release/Panda.fun-Android-TV.apk
             release/Panda.fun-Android-TV.apk.sha256
           generate_release_notes: true
-
-      - name: Publish stable update manifest to main
-        shell: bash
-        env:
-          VERSION_CODE: ${{ steps.version.outputs.version_code }}
-          VERSION_NAME: ${{ steps.version.outputs.version_name }}
-          RELEASE_TAG: v${{ steps.version.outputs.version_name }}
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        run: |
-          set -euo pipefail
-          SHA256="$(sha256sum release/Panda.fun-Android-TV.apk | awk '{print $1}')"
-          APK_URL="https://github.com/titan717/Panda.fun/releases/download/${RELEASE_TAG}/Panda.fun-Android-TV.apk"
-          export SHA256 APK_URL
-
-          python - <<'PY'
-          import json, os
-          data = {
-              "latestVersionCode": int(os.environ["VERSION_CODE"]),
-              "latestVersionName": os.environ["VERSION_NAME"],
-              "releaseTag": os.environ["RELEASE_TAG"],
-              "releaseNotes": f"Panda.fun Android TV {os.environ['VERSION_NAME']}",
-              "apkUrl": os.environ["APK_URL"],
-              "sha256": os.environ["SHA256"],
-              "mandatory": False,
-              "channel": "stable",
-              "prerelease": False
-          }
-          with open("update/latest.json", "w", encoding="utf-8") as f:
-              json.dump(data, f, indent=2)
-              f.write("\n")
-          PY
-
-          git config user.name "github-actions[bot]"
-          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git fetch origin main
-          git checkout main
-          git add update/latest.json
-          git commit -m "chore(update): publish Panda.fun stable ${VERSION_NAME} manifest [skip ci]" || echo "latest.json already up to date"
-          git push origin HEAD:main

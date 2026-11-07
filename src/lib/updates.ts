@@ -35,13 +35,32 @@ export function installedVersion(): string {
   return nativeVersion() ?? WEB_VERSION;
 }
 
-export async function fetchLatestRelease(signal?: AbortSignal): Promise<ReleaseInfo> {
+const RELEASE_CACHE_KEY = "panda:release-cache";
+const RELEASE_CACHE_MS = 15 * 60_000;
+
+function readReleaseCache(): { at: number; release: ReleaseInfo } | null {
+  try {
+    const raw = localStorage.getItem(RELEASE_CACHE_KEY);
+    return raw ? (JSON.parse(raw) as { at: number; release: ReleaseInfo }) : null;
+  } catch { return null; }
+}
+
+/**
+ * Latest stable GitHub Release. Results are cached for 15 minutes so background checks
+ * stay well inside GitHub's unauthenticated rate limit; `force` skips the cache (manual check)
+ * but still falls back to the cached copy when GitHub rate-limits the request.
+ */
+export async function fetchLatestRelease(signal?: AbortSignal, force = false): Promise<ReleaseInfo> {
+  const cached = readReleaseCache();
+  if (!force && cached && Date.now() - cached.at < RELEASE_CACHE_MS) return cached.release;
   const res = await fetch(`https://api.github.com/repos/${RELEASES_REPO}/releases/latest`, { signal, headers: { Accept: "application/vnd.github+json" } });
   if (res.status === 404) throw new Error("No published release yet.");
+  if ((res.status === 403 || res.status === 429) && cached) return cached.release;
+  if (res.status === 403 || res.status === 429) throw new Error("GitHub is limiting update checks right now. Try again in a few minutes.");
   if (!res.ok) throw new Error(`GitHub returned ${res.status}.`);
   const r = (await res.json()) as { tag_name: string; name: string | null; body: string | null; published_at: string; html_url: string; assets: { name: string; browser_download_url: string; size: number }[] };
   const apk = r.assets.find((a) => a.name.toLowerCase().endsWith(".apk")) ?? null;
-  return {
+  const release: ReleaseInfo = {
     tag: r.tag_name,
     version: r.tag_name.replace(/^v/i, ""),
     name: r.name ?? r.tag_name,
@@ -51,6 +70,8 @@ export async function fetchLatestRelease(signal?: AbortSignal): Promise<ReleaseI
     apkUrl: apk?.browser_download_url ?? null,
     apkSize: apk?.size ?? null
   };
+  try { localStorage.setItem(RELEASE_CACHE_KEY, JSON.stringify({ at: Date.now(), release })); } catch { /* storage full or disabled */ }
+  return release;
 }
 
 export type NativeUpdateStatus =

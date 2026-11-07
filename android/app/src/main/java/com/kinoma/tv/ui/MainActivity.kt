@@ -59,7 +59,7 @@ class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
-        Log.i(TAG, "Starting Kinoma TV MainActivity")
+        Log.i(TAG, "Starting Panda.fun MainActivity")
 
         // TV viewing stays immersive; phones and tablets retain their system bars.
         if (isTelevisionDevice()) {
@@ -107,7 +107,7 @@ class MainActivity : ComponentActivity() {
         }
 
         val retryButton = Button(this).apply {
-            text = "Reload MyPanda"
+            text = "Reload Panda.fun"
             setBackgroundColor(Color.parseColor("#7b1fa2"))
             setTextColor(Color.WHITE)
             setOnClickListener {
@@ -274,7 +274,7 @@ class MainActivity : ComponentActivity() {
         rootLayout.addView(diagnosticContainer)
         setContentView(rootLayout)
 
-        // Load the bundled production Kinoma TV application
+        // Load the bundled production Panda.fun web application
         Log.i(TAG, "Loading entry URL: $WEB_ENTRY_URL")
         webView.loadUrl(WEB_ENTRY_URL)
         webView.requestFocus()
@@ -468,23 +468,11 @@ class MainActivity : ComponentActivity() {
                     return true
                 }
 
-                // Check if web page can handle back (e.g. details overlay, search, player)
+                // The web app owns navigation: deliver Back as an Escape keydown that bubbles to window.
                 webView.evaluateJavascript(
-                    """
-                    (function() {
-                        var isWatch = window.location.pathname.indexOf('/watch') !== -1;
-                        var escEvent = new KeyboardEvent('keydown', { key: 'Escape', code: 'Escape', keyCode: 27, which: 27, bubbles: true });
-                        window.dispatchEvent(escEvent);
-                        return isWatch;
-                    })();
-                    """.trimIndent()
-                ) { isWatchResult ->
-                    if (isWatchResult == "true") {
-                        if (webView.canGoBack()) {
-                            webView.goBack()
-                        }
-                    }
-                }
+                    "(function(){var t=document.activeElement||document.body;t.dispatchEvent(new KeyboardEvent('keydown',{key:'Escape',code:'Escape',keyCode:27,which:27,bubbles:true,cancelable:true}));})();",
+                    null
+                )
                 return true
             }
             return true
@@ -497,9 +485,10 @@ class MainActivity : ComponentActivity() {
     private var availableUpdate: UpdateInfo? = null
 
     /** Sends update progress to the web Settings page (listens for "panda_native_update_status"). */
-    private fun emitUpdateStatus(status: String, update: UpdateInfo? = null, message: String? = null) {
+    private fun emitUpdateStatus(status: String, update: UpdateInfo? = null, message: String? = null, progress: Int? = null) {
         val payload = HashMap<String, Any>()
         payload["status"] = status
+        if (progress != null) payload["progress"] = progress
         if (update != null) {
             payload["versionName"] = update.latestVersionName
             payload["releaseNotes"] = update.releaseNotes
@@ -537,14 +526,13 @@ class MainActivity : ComponentActivity() {
             checkUpdatesFromSettings()
             return
         }
-        emitUpdateStatus("downloading", update)
         startDownloadAndInstall(update)
     }
 
     private fun checkUpdatesInBackground() {
         lifecycleScope.launch {
             try {
-                val update = UpdateChecker.checkForUpdate(this@MainActivity)
+                val update = UpdateChecker.checkForUpdate()
                 if (update != null && !isFinishing) {
                     showUpdatePrompt(update)
                 }
@@ -576,6 +564,7 @@ class MainActivity : ComponentActivity() {
     }
 
     private fun startDownloadAndInstall(update: UpdateInfo) {
+        emitUpdateStatus("downloading", progress = 0)
         val progressDialog = AlertDialog.Builder(this, android.R.style.Theme_DeviceDefault_Dialog_Alert)
             .setTitle("Downloading Update")
             .setView(ProgressBar(this).apply { isIndeterminate = false; max = 100 })
@@ -590,12 +579,14 @@ class MainActivity : ComponentActivity() {
             apkUrl = update.apkUrl,
             expectedSha256 = update.sha256,
             onProgress = { percent ->
+                emitUpdateStatus("downloading", progress = percent)
                 runOnUiThread {
                     progressDialog.setMessage("Downloading: $percent%")
                 }
             },
             onComplete = { apkUri ->
-                emitUpdateStatus("available", availableUpdate)
+                pendingVerifiedUpdateUri = apkUri
+                emitUpdateStatus("ready")
                 runOnUiThread {
                     progressDialog.dismiss()
                     if (canInstallPackages()) {
@@ -652,6 +643,7 @@ class MainActivity : ComponentActivity() {
                 addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
                 addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
             }
+            emitUpdateStatus("installing")
             startActivity(installIntent)
         } catch (e: Exception) {
             pendingVerifiedUpdateUri = apkUri
@@ -671,6 +663,26 @@ class MainActivity : ComponentActivity() {
                 pInfo.versionName ?: "1.0.0"
             } catch (e: Exception) {
                 "1.0.0"
+            }
+        }
+
+        @JavascriptInterface
+        fun getVersionCode(): Int = BuildConfig.VERSION_CODE
+
+        @JavascriptInterface
+        fun exitApp() {
+            runOnUiThread { finishAffinity() }
+        }
+
+        @JavascriptInterface
+        fun installDownloadedUpdate() {
+            runOnUiThread {
+                val uri = pendingVerifiedUpdateUri
+                when {
+                    uri == null -> downloadAvailableUpdate()
+                    canInstallPackages() -> installVerifiedApk(uri)
+                    else -> openInstallPermissionSettings()
+                }
             }
         }
 
