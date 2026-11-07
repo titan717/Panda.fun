@@ -1,6 +1,7 @@
 package com.kinoma.tv.ui
 
 import android.annotation.SuppressLint
+import com.kinoma.tv.BuildConfig
 import android.app.AlertDialog
 import android.app.UiModeManager
 import android.content.Context
