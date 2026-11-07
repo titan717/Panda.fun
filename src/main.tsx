@@ -9,15 +9,17 @@ import './styles/panda-brand.css';
 import './styles/accessibility.css';
 import './styles/readability.css';
 import './styles/ux-polish.css';
+import './styles/blueprint.css';
+import './styles/blueprint-overrides.css';
 import './motion/motion.css';
 import { MotionPreferenceProvider } from './motion';
 
 function initializeGoogleAnalytics() {
   if (typeof window === 'undefined') return;
   const measurementId = 'G-9CEEHSHNHJ';
-  const dataLayer = (window as Window & { dataLayer?: unknown[] }).dataLayer ||= [];
+  const dataLayer = (window as unknown as { dataLayer?: unknown[] }).dataLayer ||= [];
   const gtag = (...args: unknown[]) => dataLayer.push(args);
-  (window as Window & { gtag?: (...args: unknown[]) => void }).gtag = gtag;
+  window.gtag = gtag;
   gtag('js', new Date());
   gtag('config', measurementId, { send_page_view: false });
 

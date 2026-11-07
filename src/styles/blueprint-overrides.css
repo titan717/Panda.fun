@@ -1,0 +1,166 @@
+/*
+ * Blueprint visual overrides.
+ * Applied after legacy styles so every existing mobile screen adopts the
+ * blueprint visual language without changing routing or data behavior.
+ */
+
+:root {
+  --kinoma-bg: var(--bp-bg);
+  --panda-bg: var(--bp-bg);
+  --surface: var(--bp-surface);
+  --accent: var(--bp-accent);
+}
+
+body,
+#root {
+  background: var(--bp-bg);
+  color: var(--bp-text);
+  font-family: var(--bp-font);
+}
+
+/* Global links and buttons */
+a,
+button {
+  -webkit-tap-highlight-color: transparent;
+}
+
+a:focus-visible,
+button:focus-visible,
+[tabindex]:focus-visible {
+  outline: none;
+  box-shadow: var(--bp-shadow-focus);
+  border-radius: var(--bp-radius-sm);
+}
+
+/* Existing mobile Home */
+.panda-mobile-home {
+  background: var(--bp-bg);
+  color: var(--bp-text);
+  padding-bottom: calc(var(--bp-bottom-nav-height) + 12px);
+}
+
+.panda-mobile-home__section-head h2 {
+  color: var(--bp-text);
+  font-size: 1.0625rem;
+  font-weight: 700;
+  letter-spacing: -0.01em;
+}
+
+.panda-mobile-home__section-head a {
+  color: var(--bp-accent);
+}
+
+.panda-mobile-home__trending,
+.panda-mobile-home__top10 {
+  gap: var(--bp-rail-gap);
+}
+
+.panda-mobile-home__trending-card,
+.panda-mobile-home__top10-card {
+  border-radius: var(--bp-radius-md);
+  overflow: hidden;
+  background: var(--bp-surface);
+  box-shadow: var(--bp-shadow-card);
+  transition: transform var(--bp-motion-fast) var(--bp-ease), box-shadow var(--bp-motion-fast) var(--bp-ease);
+}
+
+.panda-mobile-home__trending-card:focus-visible,
+.panda-mobile-home__top10-card:focus-visible {
+  outline: none;
+  box-shadow: var(--bp-shadow-focus);
+  transform: scale(1.03);
+}
+
+.panda-mobile-home__rank {
+  color: var(--bp-text);
+  font-weight: 900;
+}
+
+/* Existing details screen */
+.panda-details {
+  background: var(--bp-bg);
+  color: var(--bp-text);
+}
+
+.panda-details__title {
+  color: var(--bp-text);
+  font-family: var(--bp-font);
+  font-weight: 800;
+  letter-spacing: -0.02em;
+}
+
+.panda-details__chip {
+  background: rgba(255, 255, 255, 0.08);
+  border: 1px solid var(--bp-border);
+  color: var(--bp-text-secondary);
+  border-radius: var(--bp-radius-pill);
+}
+
+.panda-details__play {
+  background: var(--bp-accent);
+  color: var(--bp-accent-contrast);
+  border-radius: var(--bp-radius-pill);
+}
+
+.panda-details__play:hover {
+  background: var(--bp-accent-hover);
+}
+
+.panda-details__icon-action {
+  background: rgba(255, 255, 255, 0.10);
+  border: 1px solid var(--bp-border);
+  color: var(--bp-text);
+  border-radius: var(--bp-radius-pill);
+}
+
+.panda-details__icon-action.is-active {
+  background: var(--bp-accent);
+  border-color: var(--bp-accent);
+  color: var(--bp-accent-contrast);
+}
+
+.panda-details__tab {
+  color: var(--bp-text-muted);
+}
+
+.panda-details__tab.is-active {
+  color: var(--bp-text);
+}
+
+.panda-details__episode {
+  background: var(--bp-surface);
+  border: 1px solid var(--bp-border);
+  border-radius: var(--bp-radius-md);
+}
+
+.panda-details__episode:hover,
+.panda-details__episode:focus-visible {
+  background: var(--bp-surface-hover);
+  border-color: var(--bp-border-strong);
+}
+
+.panda-details__rail-card {
+  background: var(--bp-surface);
+  border: 1px solid var(--bp-border);
+  border-radius: var(--bp-radius-md);
+}
+
+/* Existing editorial surfaces */
+.editorial-rail,
+.editorial-spotlight,
+.panda-discovery-panel {
+  background: var(--bp-surface);
+  border: 1px solid var(--bp-border);
+  border-radius: var(--bp-radius-lg);
+}
+
+/* Existing modals and sheets */
+.panda-modal,
+.panda-sheet,
+.auth-modal,
+.settings-modal {
+  background: var(--bp-bg-elevated);
+  border: 1px solid var(--bp-border);
+  border-radius: var(--bp-radius-lg);
+  color: var(--bp-text);
+}
