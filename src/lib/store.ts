@@ -102,6 +102,13 @@ export interface Prefs {
   density: "standard" | "compact";
   /** Play trailers behind rows as well as on the hero and Details. */
   rowTrailers: boolean;
+  /** Subtitles (v1.2.1), saved per profile: when captions turn on by themselves, languages and look. */
+  subtitleMode: "off" | "foreign" | "always";
+  subtitleLang: string;
+  subtitleLang2: string | null;
+  subtitleSdh: boolean;
+  subtitleSize: "small" | "medium" | "large" | "xlarge";
+  subtitleStyle: "shadow" | "box" | "yellow" | "outline";
 }
 
 /** Preferences shared by every profile on the device; everything else is saved per profile. */
@@ -174,7 +181,13 @@ const defaultPrefs: Prefs = {
   homeOrder: [],
   homeHidden: [],
   density: "standard",
-  rowTrailers: true
+  rowTrailers: true,
+  subtitleMode: "foreign",
+  subtitleLang: "en",
+  subtitleLang2: null,
+  subtitleSdh: false,
+  subtitleSize: "medium",
+  subtitleStyle: "shadow"
 };
 
 const emptyData = (): ProfileData => ({ watchlist: [], lists: [], history: {}, ratings: {}, recentSearches: [], recentTitles: [], reminders: [], alertsSeenAt: 0, alerted: [] });

@@ -2,6 +2,14 @@
 
 Measured on every release. Never regress.
 
+## v1.2.1 (subtitles)
+
+| Metric | Value |
+|---|---|
+| Entry chunk (gzip) | 25.6 KB, down from 25.9 KB: release-notes lookup moved to a lazy `releaseNotes` module (D-123). |
+| Entry CSS (gzip) | 19.2 KB, down from 21.6 KB: the TV PLAYER chrome styles now load with the player chrome chunk (3.3 KB CSS gzip, D-123). |
+| Subtitles | Caption code ships with the player chunk. Track list `/panda/subtitles/:imdb` is cached 6 h on the backend and at the edge (30 min when nothing is found); each WebVTT file is cached a week (HTTP `immutable`) and parsed once per session. The caption layer redraws at most 10 times a second and only when the visible cues change. |
+
 ## v1.2.0 (sources, ranking, anime)
 
 | Metric | Value |

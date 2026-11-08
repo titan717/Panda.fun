@@ -2,6 +2,17 @@
 
 Every stable release of Panda.fun. The same notes ship in each GitHub Release and in Settings › What's New.
 
+## 1.2.1
+
+- **Panda's own subtitles**: CineSrc and Vidy titles can now show subtitles drawn by Panda on top of the video, in 31 languages. Panda finds the tracks for the exact movie or episode (from the OpenSubtitles catalogue), removes advertising lines from the files and keeps them in step with the video.
+- **Subtitles in Audio & Subtitles**: the TV player's Audio & Subtitles panel, and the same panel on phones, now lists every track for the title with its release name, an Off option and "Earlier" / "Later" buttons that move the subtitles by half a second when they are out of sync. "Choose in source player" is still there for the provider's own menu.
+- **Settings › Subtitles**: a new section with a live preview. Choose when subtitles turn on (when the audio is in another language, always, or off), your subtitle language and a second language, subtitles for the deaf and hard of hearing (SDH), and four sizes and four styles (drop shadow, dark box, yellow, outline).
+- **Per-profile languages**: every profile keeps its own subtitle settings, so a Hindi-speaking profile can get Hindi subtitles on a Korean drama while another profile watches without them. With the default setting, subtitles turn on by themselves only when the audio is not in your language.
+- **Better player panels on phones**: Audio & Subtitles, Quality and the other player panels now have their deep-blue background on phones too (they were see-through before), open as a bottom sheet in portrait and use readable sizes in landscape.
+- **Captions stay clear of the controls**: subtitles move up when the player controls, the next-episode card or the opening language pill are on screen, so nothing covers them.
+
+Subtitles drawn inside a provider's own video (for example burned-in subtitles) cannot be changed from outside its player. Vidy Anime keeps its own built-in subtitles.
+
 ## 1.2.0
 
 - **New Anime page**: Categories › Anime (and "See all" on the TV Shows page's Anime row on phones) opens a page built from AniList: what is trending, the current season, all-time favourites, anime films and what's coming next. Cards show when the next episode airs ("Ep 6 in 2d") or the AniList score and studio, and every card opens the normal Panda title page.

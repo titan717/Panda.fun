@@ -1,4 +1,4 @@
-import type { CalendarEntry, CalendarEpisode, CalendarPayload, CalendarRef, AnimeCard, AnimePayload, PersonCredit, PersonDetails, PlaybackSource, SourceHealthPayload, SourceRankingPayload } from "./types";
+import type { CalendarEntry, CalendarEpisode, CalendarPayload, CalendarRef, AnimeCard, AnimePayload, PersonCredit, PersonDetails, PlaybackSource, SourceHealthPayload, SourceRankingPayload, SubtitleTrack, SubtitlesPayload } from "./types";
 import { arr, isObj, item, need, num, SOURCE_IDS, str, ValidationError } from "./validate";
 
 /**
@@ -88,7 +88,18 @@ export function lazyValidatorFor(path: string): ((path: string, v: unknown) => u
   if (path.startsWith("/panda/sources/health")) return sourceHealth;
   if (path.startsWith("/panda/sources/ranking")) return sourceRanking;
   if (path === "/panda/anime") return anime;
+  if (path.startsWith("/panda/subtitles/tt")) return subtitles;
   if (path.startsWith("/panda/calendar")) return calendar;
   if (path.startsWith("/panda/person/")) return person;
   return null;
+}
+
+export function subtitles(path: string, v: unknown): SubtitlesPayload {
+  const o = need(path, v);
+  const tracks = arr(o.tracks).filter(isObj).map((t): SubtitleTrack | null => {
+    const id = str(t.id), language = str(t.language), label = str(t.label), file = str(t.file);
+    if (!id || !language || !label || !file || !file.startsWith("/api/v1/panda/subtitles/file?")) return null;
+    return { id, language, label, file, hearingImpaired: t.hearingImpaired === true, downloads: num(t.downloads) ?? 0, release: str(t.release) ?? "" };
+  }).filter((t): t is SubtitleTrack => t !== null);
+  return { imdbId: str(o.imdbId) ?? "", season: num(o.season), episode: num(o.episode), tracks };
 }

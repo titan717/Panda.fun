@@ -29,3 +29,11 @@
 html[data-mode="tv"] .src-rank-n { width: calc(36 * var(--tu)); height: calc(36 * var(--tu)); font-size: calc(18 * var(--tu)); }
 html[data-mode="tv"] .src-rank-bar { max-width: calc(260 * var(--tu)); height: calc(8 * var(--tu)); flex-basis: calc(140 * var(--tu)); }
 html[data-mode="tv"] .src-rank-row .src-health-name { flex-basis: calc(170 * var(--tu)); }
+/* Settings › Subtitles (v1.2.1): language chips and the caption preview */
+.set-chips { display: flex; flex-wrap: wrap; gap: calc(8 * var(--u)); padding: calc(4 * var(--u)) calc(14 * var(--u)) calc(8 * var(--u)); }
+.set-chip { min-height: calc(36 * var(--u)); padding: 0 calc(14 * var(--u)); border-radius: 999px; border: 1px solid rgba(255, 255, 255, 0.18); background: rgba(255, 255, 255, 0.05); color: var(--text-1); font-size: calc(13 * var(--u)); font-weight: var(--fw-semibold); transition: background var(--dur-focus), border-color var(--dur-focus), color var(--dur-focus); }
+.set-chip.is-selected { background: #fff; color: #000; border-color: #fff; }
+.set-chip:hover { border-color: rgba(255, 255, 255, 0.45); }
+html[data-mode="tv"] .set-chip:focus { outline: var(--focus-border); outline-offset: 0; box-shadow: var(--focus-glow); }
+html[data-mode="tv"] .set-chip:focus:not(.is-selected) { background: var(--tv-translucent); }
+.set-panel > .captions--preview { margin: calc(4 * var(--u)) calc(14 * var(--u)) calc(4 * var(--u)); }

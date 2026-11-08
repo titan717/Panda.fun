@@ -110,6 +110,7 @@ export const keys = {
   sourceRanking: () => `/panda/sources/ranking`,
   anime: () => `/panda/anime`,
   segments: (imdbId: string, s?: number, e?: number) => `/panda/segments/${imdbId}${qs({ s, e })}`,
+  subtitles: (imdbId: string, langs: string[], s?: number, e?: number) => `/panda/subtitles/${imdbId}${qs({ s, e, langs: langs.join(",") })}`,
   wall: () => `/panda/wall`,
   /** ids are sorted so the same followed set always shares one cache entry. */
   calendar: (ids: string[]) => `/panda/calendar${qs({ ids: [...ids].sort().join(",") })}`,

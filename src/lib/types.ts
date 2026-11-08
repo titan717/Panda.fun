@@ -262,3 +262,7 @@ export interface CalendarEpisode { season: number; episode: number; name: string
 export interface CalendarRef { season: number; episode: number; name: string | null; airDate: string | null }
 export interface CalendarEntry { item: PandaItem; status: string | null; lastEpisode: CalendarRef | null; nextEpisode: CalendarRef | null; episodes: CalendarEpisode[] }
 export interface CalendarPayload { entries: CalendarEntry[] }
+
+/** External subtitles (v1.2.1): GET /panda/subtitles/:imdb. `file` is an API path returning WebVTT. */
+export interface SubtitleTrack { id: string; language: string; label: string; hearingImpaired: boolean; downloads: number; release: string; file: string }
+export interface SubtitlesPayload { imdbId: string; season: number | null; episode: number | null; tracks: SubtitleTrack[] }

@@ -301,3 +301,15 @@ Drive folder re-checked for this release (2026-11-09): no blueprint changed afte
 | Settings › Sources (TV 1920, phone 390) | Automatic first, then CineSrc and Vidy; Community ranking rows with rank badge, fixed name column, bar and label; Status list unchanged | Screenshots in `docs/screenshots/v1.2.0/` |
 | Anime page (TV 1280/1920, phone 360/390, landscape 844×390, tablet 820) | Hero text lines up with the rows' left edge; Down from the hero buttons goes to the first row; captions never wrap | Fixed during review: hero/row misalignment on TV, Down jumping to the sidebar |
 | Categories | TV Browse row gains Anime; phone gains an Explore section (Anime, Trending) after genres | Tiles use real artwork from the anime and Home payloads |
+
+## 27. v1.2.1 subtitles
+
+Drive folder re-checked for this release (2026-11-09): newest file is still tvnewblueprint.pdf, modified 2026-11-08 12:05 UTC; no blueprint changed.
+
+| Area | Check | Result |
+|---|---|---|
+| TV player Audio & Subtitles (1920, 1280) | Audio column unchanged; Subtitles column lists Off, each track (label + release name in the secondary style), Earlier / Later with the offset, then "Choose in source player" | Blueprint panel geometry kept; `e2e/subtitles.spec.ts` |
+| Caption layer (TV 1920/1280, phone 390/430, landscape 932×430) | Centred, never wider than 88 %, lifts above the controls and the opening language pill | Fixed during review: captions overlapped the language pill (D-122) |
+| Phone player panels (390×844, 844×390) | Panels had no background on phones (tokens were TV-only); now deep blue, portrait bottom sheet with stacked columns, focus pill border no longer clipped | Fixed (D-124) |
+| Settings › Subtitles (TV 1920/1280, phone 390) | Preview card, three radio rows, language chips wrap without overflow, SDH toggle, size and style choices | Screenshots in `docs/screenshots/v1.2.1/` |
+

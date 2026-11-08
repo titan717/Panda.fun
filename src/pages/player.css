@@ -109,3 +109,11 @@ html[data-mode="tv"] .report-row small { font-size: calc(18 * var(--tu)); }
 html[data-mode="tv"] .report-row:focus { background: #fff; color: #000; outline: none; }
 html[data-mode="tv"] .report-row:focus small { color: rgba(0, 0, 0, 0.7); }
 html[data-mode="tv"] .report-lead { font-size: calc(20 * var(--tu)); margin-bottom: calc(18 * var(--tu)); }
+/* Subtitles sheet (v1.2.1) */
+.sheet--subs .report-row small { max-width: 45%; overflow: hidden; text-overflow: ellipsis; }
+.sheet--subs .report-row.is-selected { background: rgba(77, 163, 255, 0.16); }
+.sheet--subs .report-row.is-selected .icon { color: var(--accent, #4DA3FF); }
+.subs-sync { display: flex; align-items: center; justify-content: space-between; gap: calc(10 * var(--u)); margin-top: calc(14 * var(--u)); }
+.subs-sync .btn { flex: 1; min-width: 0; white-space: nowrap; }
+.subs-offset { flex: none; min-width: calc(96 * var(--u)); text-align: center; color: var(--text-2); font-size: calc(13 * var(--u)); }
+html[data-mode="tv"] .subs-offset { font-size: calc(18 * var(--tu)); min-width: calc(160 * var(--tu)); }

@@ -6,7 +6,8 @@ import { PageHeader } from "../components/PageHeader";
 import { ReleaseNotes } from "../components/ReleaseNotes";
 import { Sheet } from "../components/Sheet";
 import { Spinner } from "../components/ui";
-import { fetchReleaseNotes, installedVersion } from "../lib/updates";
+import { installedVersion } from "../lib/updates";
+import { fetchReleaseNotes } from "../lib/releaseNotes";
 import { useIsTv } from "../lib/layout";
 
 type Notes = { s: "loading" } | { s: "ok"; text: string } | { s: "error"; message: string };

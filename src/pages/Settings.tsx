@@ -8,6 +8,8 @@ import { clearPersistentCache } from "../lib/cache";
 import { Icon, PandaMark, type IconName } from "../components/Icon";
 import { PageHeader } from "../components/PageHeader";
 import { toast } from "../components/ui";
+import { CaptionPreview } from "../components/CaptionLayer";
+import { SUB_LANGS, SUB_MODES, SUB_SIZES, SUB_STYLES, subLangName } from "../lib/captions";
 import { Sheet } from "../components/Sheet";
 import { actions, usePrefs, useProfile, useReminders, type Prefs } from "../lib/store";
 import { useGenres, usePage, useSourceHealth, useSourceRanking } from "../lib/hooks";
@@ -22,12 +24,13 @@ import { notifyPermission, requestNotify } from "../lib/notify";
 import type { PreferredSource, SourceId } from "../lib/types";
 import { clearShield, COMPAT, nativeShield, SANDBOX, shieldStats, syncNative } from "../lib/shield";
 
-type SectionId = "profiles" | "home" | "playback" | "trailers" | "sources" | "languages" | "parental" | "display" | "storage" | "notifications" | "whatsnew" | "updates" | "help";
+type SectionId = "profiles" | "home" | "playback" | "trailers" | "subtitles" | "sources" | "languages" | "parental" | "display" | "storage" | "notifications" | "whatsnew" | "updates" | "help";
 const SECTIONS: { id: SectionId; icon: IconName; title: string; sub: string }[] = [
   { id: "profiles", icon: "user", title: "Profiles & Account", sub: "Add, edit or switch profiles" },
   { id: "home", icon: "home", title: "Personalize Home", sub: "Reorder or hide rows on Home" },
   { id: "playback", icon: "play", title: "Playback", sub: "Quality and autoplay" },
   { id: "trailers", icon: "volume", title: "Trailers", sub: "Autoplay, sound, volume and delay" },
+  { id: "subtitles", icon: "captions", title: "Subtitles", sub: "Languages, size and style for this profile" },
   { id: "sources", icon: "globe", title: "Sources", sub: "Preferred source and live status" },
   { id: "languages", icon: "globe", title: "App Language & Content Languages", sub: "Top 10 language and content preferences" },
   { id: "parental", icon: "lock", title: "Parental Controls", sub: "PIN for leaving Kids profiles" },
@@ -77,6 +80,20 @@ function Toggle({ id, title, sub, value, onChange }: { id: string; title: string
       <span className="set-row-text"><span className="set-row-title">{title}</span>{sub && <span className="set-row-sub">{sub}</span>}</span>
       <span className={`toggle ${value ? "is-on" : ""}`} aria-hidden="true" />
     </button>
+  );
+}
+
+/** Many short options (languages) as a wrapping grid of chips (v1.2.1). */
+function ChipChoice({ id, title, value, options, onChange }: { id: string; title: string; value: string; options: { id: string; label: string }[]; onChange: (v: string) => void }) {
+  return (
+    <div className="set-choice" role="radiogroup" aria-label={title}>
+      <p className="set-group-title">{title}</p>
+      <div className="lrud-container set-chips">
+        {options.map((o) => (
+          <button key={o.id} id={`${id}-${o.id}`} role="radio" aria-checked={value === o.id} className={`set-chip ${value === o.id ? "is-selected" : ""}`} onClick={() => onChange(o.id)} data-hover-focus>{o.label}</button>
+        ))}
+      </div>
+    </div>
   );
 }
 
@@ -339,6 +356,20 @@ function Panel({ id }: { id: SectionId }) {
             options={TRAILER_VOLUMES} onChange={(v) => { set({ trailerVolume: Number(v) / 100 }); toast(`Trailer volume ${v}%`); }} />
           <Choice id="tdelay" title="Start trailers after" value={String(prefs.trailerDelay)}
             options={TRAILER_DELAYS} onChange={(v) => set({ trailerDelay: Number(v) })} />
+        </div>
+      );
+    case "subtitles":
+      return (
+        <div className="set-panel">
+          <CaptionPreview size={prefs.subtitleSize} look={prefs.subtitleStyle} text={`Subtitles in ${subLangName(prefs.subtitleLang)} will look like this`} />
+          <p className="set-note">Panda shows its own subtitles on CineSrc and Vidy. Settings are saved for this profile only. You can always switch subtitles in the player under Audio &amp; Subtitles.</p>
+          <Choice id="submode" title="Turn on subtitles" value={prefs.subtitleMode} options={SUB_MODES} onChange={(v) => { set({ subtitleMode: v }); toast(v === "off" ? "Subtitles stay off until you turn them on" : v === "always" ? "Subtitles on for every title" : "Subtitles on for other languages"); }} />
+          <ChipChoice id="sublang" title="Subtitle language" value={prefs.subtitleLang} options={SUB_LANGS} onChange={(v) => { set({ subtitleLang: v, subtitleLang2: prefs.subtitleLang2 === v ? null : prefs.subtitleLang2 }); toast(`Subtitle language: ${subLangName(v)}`); }} />
+          <ChipChoice id="sublang2" title="Second language" value={prefs.subtitleLang2 ?? "none"} options={[{ id: "none", label: "None" }, ...SUB_LANGS.filter((l) => l.id !== prefs.subtitleLang)]}
+            onChange={(v) => { set({ subtitleLang2: v === "none" ? null : v }); toast(v === "none" ? "No second subtitle language" : `Second language: ${subLangName(v)}`); }} />
+          <Toggle id="sp-sdh" title="Subtitles for the deaf and hard of hearing" sub="Prefer SDH tracks with sound descriptions such as [door slams]" value={prefs.subtitleSdh} onChange={(v) => set({ subtitleSdh: v })} />
+          <Choice id="subsize" title="Size" value={prefs.subtitleSize} options={SUB_SIZES} onChange={(v) => set({ subtitleSize: v })} />
+          <Choice id="substyle" title="Style" value={prefs.subtitleStyle} options={SUB_STYLES} onChange={(v) => set({ subtitleStyle: v })} />
         </div>
       );
     case "sources":

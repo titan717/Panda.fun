@@ -1,5 +1,6 @@
 import { beforeEach, describe, expect, it } from "vitest";
-import { takeUpdateNotice, whatsNewSection } from "../lib/updates";
+import { takeUpdateNotice } from "../lib/updates";
+import { whatsNewSection } from "../lib/releaseNotes";
 
 const body = `Signed release.
 

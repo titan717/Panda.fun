@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { collectionFacts, nextPart } from "../pages/Collection";
-import { whatsNewSection } from "../lib/updates";
+import { whatsNewSection } from "../lib/releaseNotes";
 import { collectionPage } from "../lib/validate";
 import type { PandaItem } from "../lib/types";
 

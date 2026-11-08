@@ -1,3 +1,4 @@
+import "./tvplayer.css";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { Icon } from "../components/Icon";
 import { Img } from "../components/ui";
@@ -9,7 +10,23 @@ import { capabilityLabels, sourceName } from "../lib/player";
 import { ISSUES, rankOf, reliabilityLabel, reliabilityTone } from "../lib/sources";
 import type { Prefs } from "../lib/store";
 import { SLEEP_OPTIONS, SPEEDS, speedLabel, type SleepMode } from "../lib/player2";
-import type { Episode, PandaItem, PlaybackSource, SourceId, SourceRankingPayload, TitleDetails } from "../lib/types";
+import type { Episode, PandaItem, PlaybackSource, SourceId, SourceRankingPayload, SubtitleTrack, TitleDetails } from "../lib/types";
+import { offsetLabel, subLangName } from "../lib/captions";
+
+/** Panda subtitles in the Audio & Subtitles panel (v1.2.1). */
+export interface CaptionControls {
+  /** The source reports its position, so Panda can draw subtitles. */
+  available: boolean;
+  tracks: SubtitleTrack[];
+  trackId: string | null;
+  loading: boolean;
+  failed: boolean;
+  error: string | null;
+  offset: number;
+  langs: string[];
+  onTrack: (t: SubtitleTrack | "off") => void;
+  onNudge: (by: number) => void;
+}
 
 /** Quality choices of the TV PLAYER blueprint (§20.9). `cap` is the CineSrc `quality` hint. */
 export const QUALITIES: { id: Prefs["quality"]; label: string; note?: string }[] = [
@@ -90,6 +107,7 @@ export interface TvChromeProps {
   onExit: () => void;
   /** Phones and tablets: tap layer, back button and centre transport (v1.1.7 ad shield, D-91). */
   touch?: boolean;
+  captions?: CaptionControls;
 }
 
 type Panel = null | "quality" | "audio" | "next" | "report" | "sleep";
@@ -309,10 +327,7 @@ export function TvPlayerChrome(p: TvChromeProps) {
             <div className="tvp-col">
               <p className="tvp-col-title">Subtitles</p>
               <div className="tvp-list lrud-container" role="radiogroup" aria-label="Subtitles">
-                <button id="tvp-sub-off" role="radio" aria-checked={!p.nativeControls} className={`tvp-row ${!p.nativeControls ? "is-selected" : ""}`} onClick={() => { p.onNativeControls(false); setPanel(null); }} data-hover-focus>
-                  <span className="tvp-check" aria-hidden="true">{!p.nativeControls && <Icon name="check" />}</span>
-                  <strong>Off</strong>
-                </button>
+                <SubtitleRows c={p.captions} native={p.nativeControls} onOff={() => { if (p.nativeControls) p.onNativeControls(false); p.captions?.onTrack("off"); }} onPicked={() => { if (p.nativeControls) p.onNativeControls(false); }} />
                 <button id="tvp-sub-src" role="radio" aria-checked={p.nativeControls} className={`tvp-row ${p.nativeControls ? "is-selected" : ""}`} onClick={() => { p.onNativeControls(true); setPanel(null); }} data-hover-focus>
                   <span className="tvp-check" aria-hidden="true">{p.nativeControls && <Icon name="check" />}</span>
                   <span className="tvp-row-text"><strong>Choose in source player</strong><small>Opens {p.sourceId ? sourceName(p.sourceId) : "the source"}'s subtitle and audio menu</small></span>
@@ -457,5 +472,40 @@ function TouchLayer({ p }: { p: TvChromeProps }) {
     }}>
       {flash && <span key={flash.n} className={`tvp-seekflash is-${flash.side}`} aria-hidden="true"><Icon name={flash.side === "r" ? "forward10" : "replay10"} /> 10s</span>}
     </div>
+  );
+}
+
+/** Off, Panda's subtitle tracks, a timing nudge and the status line (v1.2.1). */
+function SubtitleRows({ c, native, onOff, onPicked }: { c?: CaptionControls; native: boolean; onOff: () => void; onPicked: () => void }) {
+  const offSelected = !native && !c?.trackId;
+  const langs = (c?.langs ?? []).map(subLangName).join(" or ");
+  return (
+    <>
+      <button id="tvp-sub-off" role="radio" aria-checked={offSelected} className={`tvp-row ${offSelected ? "is-selected" : ""}`} onClick={onOff} data-hover-focus>
+        <span className="tvp-check" aria-hidden="true">{offSelected && <Icon name="check" />}</span>
+        <strong>Off</strong>
+      </button>
+      {c?.available && c.tracks.map((t) => {
+        const on = !native && c.trackId === t.id;
+        return (
+          <button key={t.id} id={`tvp-sub-${t.id}`} role="radio" aria-checked={on} className={`tvp-row ${on ? "is-selected" : ""}`} data-autofocus={on ? true : undefined} onClick={() => { onPicked(); c.onTrack(t); }} data-hover-focus>
+            <span className="tvp-check" aria-hidden="true">{on && <Icon name="check" />}</span>
+            <span className="tvp-row-text"><strong>{t.label}</strong>{t.release && <small className="tvp-sub-release">{t.release}</small>}</span>
+          </button>
+        );
+      })}
+      {c?.available && c.trackId && !native && (
+        <div className="tvp-sub-sync lrud-container" role="group" aria-label="Subtitle timing">
+          <button id="tvp-sub-earlier" className="tvp-row tvp-row--half" onClick={() => c.onNudge(-0.5)} data-hover-focus><strong>Earlier</strong><small>−0.5 s</small></button>
+          <button id="tvp-sub-later" className="tvp-row tvp-row--half" onClick={() => c.onNudge(0.5)} data-hover-focus><strong>Later</strong><small>+0.5 s</small></button>
+          <p className="tvp-sub-offset" aria-live="polite">{offsetLabel(c.offset)}</p>
+        </div>
+      )}
+      {c?.available && (c.loading || c.failed || c.error || !c.tracks.length) && (
+        <p className="tvp-panel-note tvp-sub-status" aria-live="polite">
+          {c.error ? c.error : c.failed ? "Subtitles are unavailable right now. Try again in a moment" : c.loading ? `Looking for ${langs} subtitles…` : `No ${langs} subtitles found. Pick other languages in Settings › Subtitles`}
+        </p>
+      )}
+    </>
   );
 }

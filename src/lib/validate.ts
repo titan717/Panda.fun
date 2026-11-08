@@ -182,7 +182,7 @@ export function wall(path: string, v: unknown): WallPayload {
 }
 
 /** Payloads read only by lazy pages (person, anime, calendar, source health and ranking) validate in `validateLazy.ts`. */
-export const LAZY_VALIDATED = /^\/panda\/(person\/|anime$|calendar|sources\/(health|ranking))/;
+export const LAZY_VALIDATED = /^\/panda\/(person\/|anime$|calendar|subtitles\/tt|sources\/(health|ranking))/;
 
 /** Validator chosen from the API path, so the generic SWR fetcher validates too. */
 export function validatorFor(path: string): ((path: string, v: unknown) => unknown) | null {

@@ -20,12 +20,14 @@ export interface SourceAdapter {
   autonext: boolean;
   /** Anime catalogue (AniList ids, Japanese audio with subtitles). */
   anime: boolean;
+  /** Reports its position often enough for Panda's caption layer (v1.2.1). */
+  captions: boolean;
 }
 
 export const ADAPTERS: Record<SourceId, SourceAdapter> = {
-  cinesrc: { id: "cinesrc", short: "CineSrc", commands: true, hideControls: true, quality: true, hosts: ["cinesrc.st"], start: true, autonext: true, anime: false },
-  vidy: { id: "vidy", short: "Vidy", commands: false, hideControls: false, quality: false, hosts: ["vidy.st", "www.vidy.st"], start: true, autonext: true, anime: false },
-  vidyanime: { id: "vidyanime", short: "Vidy Anime", commands: false, hideControls: false, quality: false, hosts: ["vidy.st", "www.vidy.st"], start: true, autonext: true, anime: true }
+  cinesrc: { id: "cinesrc", short: "CineSrc", commands: true, hideControls: true, quality: true, hosts: ["cinesrc.st"], start: true, autonext: true, anime: false, captions: true },
+  vidy: { id: "vidy", short: "Vidy", commands: false, hideControls: false, quality: false, hosts: ["vidy.st", "www.vidy.st"], start: true, autonext: true, anime: false, captions: true },
+  vidyanime: { id: "vidyanime", short: "Vidy Anime", commands: false, hideControls: false, quality: false, hosts: ["vidy.st", "www.vidy.st"], start: true, autonext: true, anime: true, captions: false }
 };
 
 export const SOURCE_ORDER: SourceId[] = ["cinesrc", "vidy", "vidyanime"];
@@ -38,7 +40,8 @@ export function capabilityLabels(id: SourceId): string[] {
     a.anime ? "Anime catalogue" : null,
     a.commands ? "Panda controls" : "Own controls",
     a.quality ? "Quality" : null,
-    a.start ? "Resume" : null
+    a.start ? "Resume" : null,
+    a.captions ? "Panda subtitles" : null
   ].filter((x): x is string => Boolean(x));
 }
 export const READY_TIMEOUT_MS = 15_000;

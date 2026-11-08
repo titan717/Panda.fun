@@ -24,7 +24,7 @@ Profiles and Who's watching, My List and list pages, Continue Watching, Kids, Co
 |---|---|
 | v1.1.9 | ✅ Personalization settings (row order and visibility, density, trailer options) + R8 shrinking (A2-6) + visual refinement sweep 1 (transitions, micro-interactions) — merged after Addendum 2 |
 | v1.2.0 | ✅ Source adapters with capabilities, Report broken source with backend ranking (Wilson + decay), AniList anime via Vidy (embed sandbox shipped in v1.1.7) |
-| v1.2.1 | External subtitles, caption layer, subtitle settings, per-profile languages (A2-8) |
+| v1.2.1 | ✅ External subtitles, caption layer, subtitle settings, per-profile languages (A2-8) |
 | v1.2.2 | Still watching? after N episodes, gestures, picture-in-picture, spoiler protection |
 | v1.2.3 | Sync code with encrypted backup (A2-9) |
 | v1.2.4 | Phone as remote (QR), shareable links |

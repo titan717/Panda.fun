@@ -6,6 +6,9 @@ import useSWR from "swr";
 import { Icon } from "../components/Icon";
 import { ErrorState, Img, Spinner, toast } from "../components/ui";
 import { Sheet } from "../components/Sheet";
+import { CaptionLayer } from "../components/CaptionLayer";
+import { useCaptions } from "../lib/useCaptions";
+import { clockAt, offsetLabel, subLangName } from "../lib/captions";
 import { KidsGate } from "../components/KidsGate";
 import { keys } from "../lib/api";
 import { useSeason, useSourceRanking, useTitle } from "../lib/hooks";
@@ -107,6 +110,10 @@ function Player({ type, id, season, episode, start }: { type: MediaType; id: num
   // The TV PLAYER blueprint chrome is drawn over every source that can hide its own controls, on TV
   // and touch alike: the iframe then never receives a click or tap (§6, §20, ad shield layer 1).
   const customChrome = Boolean(source && ADAPTERS[source.id]?.hideControls) && !nativeControls;
+  // v1.2.1: Panda's own subtitles over sources that report their position (not with the provider's controls on)
+  const captionsOk = Boolean(source && ADAPTERS[source.id]?.captions) && !nativeControls;
+  const caps = useCaptions({ imdbId: details?.imdbId, season: isTv ? ep.s : undefined, episode: isTv ? ep.e : undefined, enabled: captionsOk, prefs, original: details?.language ?? null });
+  const [subsSheet, setSubsSheet] = useState(false);
   const [ready, setReady] = useState(false);
   const [paused, setPaused] = useState(false);
   const [overlay, setOverlay] = useState(true);
@@ -256,11 +263,12 @@ function Player({ type, id, season, episode, start }: { type: MediaType; id: num
           break;
         case "skipintro": setIntroSkipped(true); lastTime.current = ev.to; toast("Intro skipped", 1600); break;
         case "rate": break;
-        case "play": setReady(true); setPaused(false); reportOk(); break;
-        case "pause": setPaused(true); break;
+        case "play": setReady(true); setPaused(false); reportOk(); caps.clock.current = { ...caps.clock.current, at: performance.now(), playing: true }; break;
+        case "pause": setPaused(true); caps.clock.current = { ...caps.clock.current, position: clockAt(caps.clock.current, performance.now()), at: performance.now(), playing: false }; break;
         case "volume": setMuted(ev.muted); break;
         case "time":
           setReady(true); setPaused(false);
+          caps.clock.current = { position: ev.position, at: performance.now(), playing: true, rate: getPrefs().playbackSpeed };
           if (ev.position > 1) reportOk();
           if (ev.duration > 0) {
             if (isTv && lastTime.current !== null) noteJump(lastTime.current, ev.position);
@@ -388,6 +396,7 @@ function Player({ type, id, season, episode, start }: { type: MediaType; id: num
   const togglePlay = () => {
     if (!source) return;
     sendCommand(frame.current, source, { c: paused ? "play" : "pause" });
+    caps.clock.current = { ...caps.clock.current, position: clockAt(caps.clock.current, performance.now()), at: performance.now(), playing: paused };
     setPaused((p) => !p);
   };
   const seekTo = (to: number) => {
@@ -396,6 +405,7 @@ function Player({ type, id, season, episode, start }: { type: MediaType; id: num
     if (isTv && lastTime.current !== null && t > lastTime.current) noteJump(lastTime.current, t);
     lastTime.current = t;
     sendCommand(frame.current, source, { c: "seek", to: t });
+    caps.clock.current = { ...caps.clock.current, position: t, at: performance.now() };
     pos.current = { ...pos.current, position: t, dirty: true };
     setTime((x) => ({ ...x, p: t }));
   };
@@ -446,9 +456,20 @@ function Player({ type, id, season, episode, start }: { type: MediaType; id: num
     void api.report({ type, tmdbId: id, season: isTv ? ep.s : undefined, episode: isTv ? ep.e : undefined, source: source?.id ?? null, issue: issue.id, position: Math.round(pos.current.position) }).catch(() => undefined);
     const other = sources.find((x) => x.id !== source?.id && !tried.current.has(x.id)) ?? sources.find((x) => x.id !== source?.id);
     if (issue.switchSource && other) { switchSource(other.id); toast(`Thanks for the report. Trying ${SHORT[other.id]}`); }
+    else if (issue.id === "subs" && captionsOk && details?.imdbId && !customChrome) { setSubsSheet(true); toast("Thanks for the report. Pick another subtitle track"); }
+    else if (issue.id === "subs" && captionsOk && details?.imdbId) toast("Thanks for the report. Pick another track in Audio & Subtitles");
     else if (issue.id === "subs" && customChrome) { reloadEmbed(); setNativeControls(true); toast("Thanks for the report. Pick subtitles in the source player"); }
     else if (issue.id === "subs") toast("Thanks for the report. Pick subtitles in the source player");
     else toast("Thanks for the report");
+  }
+
+  function chooseSubtitle(t: Parameters<typeof caps.choose>[0]) {
+    caps.choose(t);
+    toast(t === "off" ? "Subtitles off" : `Subtitles: ${t.label}`, 1600);
+  }
+  function nudgeSubtitle(by: number) {
+    caps.nudge(by);
+    toast(offsetLabel(Math.max(-30, Math.min(30, Math.round((caps.offset + by) * 10) / 10))), 1200);
   }
 
   function chromeProps(): TvChromeProps {
@@ -473,7 +494,12 @@ function Player({ type, id, season, episode, start }: { type: MediaType; id: num
       upNext, countdown: upNext && prefs.autoplayNext ? countdown : null, onCancelUpNext: () => setUpNext(null),
       onPlayEpisode: playEpisode,
       onPlayTitle: (item) => { save(); go(watchPath(item.type, item.tmdbId), { replace: true }); },
-      onExit: exit
+      onExit: exit,
+      captions: {
+        available: captionsOk && Boolean(details?.imdbId), tracks: caps.tracks, trackId: caps.track?.id ?? null, loading: caps.loading, failed: caps.failed, error: caps.error,
+        offset: caps.offset, langs: [prefs.subtitleLang, prefs.subtitleLang2].filter((x): x is string => Boolean(x)),
+        onTrack: chooseSubtitle, onNudge: nudgeSubtitle
+      }
     };
   }
 
@@ -490,6 +516,9 @@ function Player({ type, id, season, episode, start }: { type: MediaType; id: num
           {...(SANDBOX[source.id]?.attr ? { sandbox: SANDBOX[source.id]!.attr! } : {})} data-sandbox={SANDBOX[source.id]?.id ?? "none"}
           allow="autoplay; fullscreen; encrypted-media; picture-in-picture" allowFullScreen referrerPolicy="origin" tabIndex={isolated || (tv && !nativeControls) ? -1 : 0}
           onLoad={() => { if (source.events !== "cinesrc") setReady(true); if (isolated) reclaimFocus(); }} />
+      )}
+      {ready && caps.track && caps.cues && (
+        <CaptionLayer cues={caps.cues} clock={caps.clock} offset={caps.offset} raised={overlay || Boolean(upNext)} size={prefs.subtitleSize} look={prefs.subtitleStyle} />
       )}
       {!ready && !play.error && (
         <div className="player-loading" aria-live="polite">
@@ -521,6 +550,7 @@ function Player({ type, id, season, episode, start }: { type: MediaType; id: num
         )}
         {isTv && <button id="pl-eps" className="pl-chip" onClick={() => setDrawer(true)} data-hover-focus><Icon name="episodes" /> Episodes</button>}
         {isTv && next && <button id="pl-next" className="pl-chip" onClick={() => playEpisode(next.season, next.episode)} data-hover-focus><Icon name="next" /> Next Episode</button>}
+        {captionsOk && details?.imdbId && <button id="pl-subs" className={`pl-chip ${caps.track ? "is-active" : ""}`} onClick={() => setSubsSheet(true)} data-hover-focus><Icon name="captions" /> {caps.track ? subLangName(caps.track.language) : "Subtitles"}</button>}
         <button id="pl-report" className="pl-chip" onClick={() => setReportSheet(true)} data-hover-focus><Icon name="warning" /> Report</button>
         <button id="pl-options" className={`pl-chip pl-chip--icon ${sleep.mode !== "off" ? "is-active" : ""}`} onClick={() => setOptionsSheet("menu")} aria-label="Speed and sleep timer" data-hover-focus>
           <Icon name="settings" />{sleep.mode !== "off" ? <span>{sleep.mode === "end" ? "End" : `${sleepLeft(sleep)}m`}</span> : prefs.playbackSpeed !== 1 && controllable ? <span>{prefs.playbackSpeed}×</span> : null}
@@ -565,6 +595,31 @@ function Player({ type, id, season, episode, start }: { type: MediaType; id: num
               </button>
             ))}
           </div>
+        </Sheet>
+      )}
+      {subsSheet && (
+        <Sheet title="Subtitles" onClose={() => setSubsSheet(false)} className="sheet--report sheet--subs">
+          <div className="report-list lrud-container" role="radiogroup" aria-label="Subtitles">
+            <button id="pl-sub-off" role="radio" aria-checked={!caps.track} className={`report-row ${!caps.track ? "is-selected" : ""}`} data-autofocus={!caps.track ? true : undefined} data-hover-focus onClick={() => { chooseSubtitle("off"); setSubsSheet(false); }}>
+              <Icon name={!caps.track ? "check" : "captions"} /><span>Off</span>
+            </button>
+            {caps.tracks.map((t) => (
+              <button key={t.id} id={`pl-sub-${t.id}`} role="radio" aria-checked={caps.track?.id === t.id} className={`report-row ${caps.track?.id === t.id ? "is-selected" : ""}`} data-autofocus={caps.track?.id === t.id ? true : undefined} data-hover-focus
+                onClick={() => { chooseSubtitle(t); setSubsSheet(false); }}>
+                <Icon name={caps.track?.id === t.id ? "check" : "captions"} /><span>{t.label}</span>{t.release && <small>{t.release}</small>}
+              </button>
+            ))}
+          </div>
+          {caps.track && (
+            <div className="subs-sync lrud-container" role="group" aria-label="Subtitle timing">
+              <button id="pl-sub-earlier" className="btn btn--secondary" onClick={() => nudgeSubtitle(-0.5)} data-hover-focus>Earlier −0.5 s</button>
+              <span className="subs-offset" aria-live="polite">{offsetLabel(caps.offset)}</span>
+              <button id="pl-sub-later" className="btn btn--secondary" onClick={() => nudgeSubtitle(0.5)} data-hover-focus>Later +0.5 s</button>
+            </div>
+          )}
+          {(caps.loading || caps.failed || caps.error || !caps.tracks.length) && (
+            <p className="report-lead" aria-live="polite">{caps.error ? caps.error : caps.failed ? "Subtitles are unavailable right now. Try again in a moment" : caps.loading ? "Looking for subtitles…" : `No ${[prefs.subtitleLang, prefs.subtitleLang2].filter((x): x is string => Boolean(x)).map(subLangName).join(" or ")} subtitles found. Pick other languages in Settings › Subtitles`}</p>
+          )}
         </Sheet>
       )}
       {drawer && details && <EpisodesDrawer d={details} current={ep} onClose={() => setDrawer(false)} onPick={(sn, en) => { setDrawer(false); playEpisode(sn, en); }} />}
