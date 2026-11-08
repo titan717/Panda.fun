@@ -19,10 +19,12 @@ fi
 adb shell input keyevent KEYCODE_BACK; sleep 0.5
 adb shell input keyevent KEYCODE_BACK; sleep 0.5
 adb shell input keyevent KEYCODE_HOME; sleep 2
-adb shell monkey -p "$PKG" -c android.intent.category.LEANBACK_LAUNCHER 1 >/dev/null 2>&1 || adb shell monkey -p "$PKG" 1 >/dev/null 2>&1
+# Launch the activity directly: `monkey -p PKG 1` also injects one random input event, which can be Back/Home and close the app.
+adb logcat -c || true
+adb shell am start -W -n "$PKG/.ui.MainActivity" -a android.intent.action.MAIN | tee -a shots/package.txt
 sleep 0.8; shot splash-0.8s
 sleep 1.5; shot splash-2.3s
 sleep 8; shot first-screen
 adb shell input keyevent KEYCODE_DPAD_CENTER; sleep 4; shot after-ok
-adb shell pidof "$PKG" >/dev/null && echo "app running" | tee -a shots/package.txt || { echo "app not running"; adb logcat -d | tail -200 > shots/logcat.txt; exit 1; }
+adb shell pidof "$PKG" >/dev/null && echo "app running" | tee -a shots/package.txt || { echo "app not running"; { adb logcat -d -b crash; echo ----; adb logcat -d | grep -iE "kinoma|AndroidRuntime|chromium|ActivityTaskManager|am_" | tail -400; } > shots/logcat.txt; exit 1; }
 adb logcat -d | grep -iE "kinoma|panda|chromium|AndroidRuntime" | tail -300 > shots/logcat.txt || true
