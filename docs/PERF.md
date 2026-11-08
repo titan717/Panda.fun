@@ -2,6 +2,14 @@
 
 Measured on every release. Never regress.
 
+## v1.1.1
+
+| Metric | Value |
+|---|---|
+| Search requests | Still one request per settled query (350 ms debounce). Phrase parsing and typo correction run on the server inside that request; genre chips and sorting are computed on the device from the results, so changing a filter makes no request. |
+| Server | A corrected or interpreted query costs at most one extra TMDB call, cached with the search response (10 min). |
+| First load (gzip JS) | Search chunk +0.6 KB. |
+
 ## v1.1.0
 
 | Metric | Value |

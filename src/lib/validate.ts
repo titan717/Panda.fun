@@ -107,7 +107,12 @@ export function season(path: string, v: unknown): SeasonDetails {
 
 export function search(path: string, v: unknown): SearchPayload {
   const o = need(path, v);
-  return { query: str(o.query) ?? "", page: num(o.page) ?? 1, totalPages: num(o.totalPages) ?? 1, results: items(o.results) };
+  const interpreted = str(o.interpreted), corrected = str(o.corrected);
+  const people = arr(o.people).map(str).filter((x): x is string => !!x).slice(0, 3);
+  return {
+    query: str(o.query) ?? "", page: num(o.page) ?? 1, totalPages: num(o.totalPages) ?? 1, results: items(o.results),
+    ...(interpreted ? { interpreted } : {}), ...(corrected ? { corrected } : {}), ...(people.length ? { people } : {})
+  };
 }
 
 export function list(path: string, v: unknown): ListPayload {

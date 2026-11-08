@@ -24,7 +24,17 @@ adb logcat -c || true
 adb shell am start -W -n "$PKG/.ui.MainActivity" -a android.intent.action.MAIN | tee -a shots/package.txt
 sleep 0.8; shot splash-0.8s
 sleep 1.5; shot splash-2.3s
-sleep 8; shot first-screen
+sleep 8
+# A cold emulator sometimes restarts Google Play services, and Android then kills every app that holds its font
+# provider ("depends on provider ... in dying proc"). That is the emulator, not Panda: relaunch once and say so.
+if ! adb shell pidof "$PKG" >/dev/null && adb logcat -d | grep -q "depends on provider.*dying proc"; then
+  echo "system killed the app (Play services restart); relaunching once" | tee -a shots/package.txt
+  adb logcat -d | grep -iE "kinoma|ActivityManager: Killing" | tail -50 > shots/system-kill.txt || true
+  adb logcat -c || true
+  adb shell am start -W -n "$PKG/.ui.MainActivity" -a android.intent.action.MAIN | tee -a shots/package.txt
+  sleep 10
+fi
+shot first-screen
 adb shell input keyevent KEYCODE_DPAD_CENTER; sleep 4; shot after-ok
 sleep 8; shot after-ok-12s
 adb shell pidof "$PKG" >/dev/null && echo "app running" | tee -a shots/package.txt || { echo "app not running"; { adb logcat -d -b crash; echo ----; adb logcat -d | grep -iE "kinoma|AndroidRuntime|chromium|ActivityTaskManager|am_" | tail -400; } > shots/logcat.txt; exit 1; }

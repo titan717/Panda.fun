@@ -2,7 +2,9 @@ import { useEffect, useRef } from "react";
 import { Link, useSearch as useQueryString } from "wouter";
 import { Icon } from "../components/Icon";
 import { EmptyState, ErrorState, Img, Skeleton } from "../components/ui";
-import { useSearchState, type SearchFilter } from "../lib/useSearchState";
+import { SEARCH_SORTS, useSearchState, type SearchFilter } from "../lib/useSearchState";
+import { useGenres } from "../lib/hooks";
+import { useProfile } from "../lib/store";
 import { itemMeta, titlePath } from "../lib/format";
 import { MPoster } from "./MCards";
 
@@ -22,6 +24,12 @@ export function MSearch() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
   const [top, ...rest] = s.results;
+  const genres = useGenres();
+  const kids = Boolean(useProfile()?.kids);
+  const browse = (genres.data?.movie ?? []).filter((g) => !kids || g.name === "Animation" || g.name === "Family");
+  const sortLabel = SEARCH_SORTS.find((x) => x.id === s.sort)?.label ?? "Best match";
+  const nextSort = () => { const i = SEARCH_SORTS.findIndex((x) => x.id === s.sort); s.setSort(SEARCH_SORTS[(i + 1) % SEARCH_SORTS.length]!.id); };
+  const note = s.active && !s.stale ? (s.interpreted ? `Showing ${s.interpreted}` : s.corrected ? `Showing results for “${s.corrected}”` : s.people.length ? `Including titles with ${s.people.join(", ")}` : null) : null;
 
   return (
     <div className="m-page m-search">
@@ -48,6 +56,14 @@ export function MSearch() {
               {s.popular.slice(0, 8).map((it) => <button key={it.id} className="m-chip" onClick={() => { s.setQuery(it.title); s.commit(it.title); }}><Icon name="trend" /> {it.title}</button>)}
             </div>
           </section>
+          {browse.length > 0 && (
+            <section className="m-section">
+              <h2 className="m-row-title">Browse by Genre</h2>
+              <div className="m-chips m-chips--wrap">
+                {browse.map((g) => <Link key={g.id} href={`/browse/movie?genre=${g.id}`} className="m-chip">{g.name}</Link>)}
+              </div>
+            </section>
+          )}
           <section className="m-section">
             <h2 className="m-row-title">Trending Today</h2>
             <div className="m-mosaic" aria-busy={s.popularLoading}>
@@ -62,7 +78,14 @@ export function MSearch() {
         <>
           <div className="m-chips" role="radiogroup" aria-label="Filter results">
             {FILTERS.map((f) => <button key={f.id} role="radio" aria-checked={s.filter === f.id} className={`m-chip ${s.filter === f.id ? "is-selected" : ""}`} onClick={() => s.setFilter(f.id)}>{f.label}</button>)}
+            <button className="m-chip m-chip--sort" onClick={nextSort} aria-label={`Sort: ${sortLabel}. Tap to change.`}><Icon name="sort" /> {sortLabel}</button>
           </div>
+          {s.genres.length > 1 && (
+            <div className="m-chips" aria-label="Filter by genre">
+              {s.genres.map((g) => <button key={g} aria-pressed={s.genre === g} className={`m-chip ${s.genre === g ? "is-selected" : ""}`} onClick={() => s.setGenre(s.genre === g ? null : g)}>{g}</button>)}
+            </div>
+          )}
+          {note && <p className="m-search-note" role="status">{note}</p>}
           {s.error && !s.results.length && <ErrorState compact message={s.error.message} onRetry={s.retry} />}
           {s.loading && <div className="m-grid">{Array.from({ length: 9 }, (_, i) => <Skeleton key={i} className="m-poster sk-poster-m" />)}</div>}
           {!s.loading && !s.error && !s.stale && s.results.length === 0 && (

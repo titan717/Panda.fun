@@ -115,6 +115,12 @@ export interface SearchPayload {
   page: number;
   totalPages: number;
   results: PandaItem[];
+  /** Plain-language query understood as a browse request, e.g. "Hindi Movies". */
+  interpreted?: string;
+  /** Title the backend matched when the typed query had no results (typo correction). */
+  corrected?: string;
+  /** People whose best-known titles are included in the results. */
+  people?: string[];
 }
 
 export interface ListPayload {

@@ -68,3 +68,8 @@ Reviewed each release. Ideas are only adopted when they fit the blueprints.
 - Netflix and Disney+ show "Coming Soon" on the main Home screen, not only in a separate tab. Panda's Home now has a Coming Soon row.
 - Netflix's thumbs down removes a title from your rows. Panda's dislike now does the same everywhere on Home.
 
+## v1.1.1 round (2026-11-08)
+
+- Netflix and Prime Video both forgive typos and match actor names in search. Panda now corrects misspellings and puts an actor's best-known titles first.
+- Google TV understands phrases like "90s action movies". Panda's search now turns language, decade, genre and type words into a filtered list.
+- Disney+ and Netflix show genre shortcuts on the empty search screen. Panda shows Browse by Genre chips there, and they respect Kids profiles.

@@ -5,8 +5,11 @@ import { actions, useProfile, useRecentSearches } from "./store";
 import { isKidsSafe } from "./rows";
 import { listen, voiceSupported } from "./voice";
 import { toast } from "../components/ui";
+import type { PandaItem } from "./types";
 
 export type SearchFilter = "all" | "movie" | "tv";
+export type SearchSort = "relevance" | "newest" | "rating";
+export const SEARCH_SORTS: { id: SearchSort; label: string }[] = [{ id: "relevance", label: "Best match" }, { id: "newest", label: "Newest" }, { id: "rating", label: "Top rated" }];
 
 /** Shared search state for TV and mobile (spec 8, 13): debounced live results, filters, recents, voice. */
 export function useSearchState() {
@@ -14,6 +17,8 @@ export function useSearchState() {
   const initial = new URLSearchParams(qs).get("q") ?? "";
   const [query, setQuery] = useState(initial);
   const [filter, setFilter] = useState<SearchFilter>("all");
+  const [genre, setGenre] = useState<string | null>(null);
+  const [sort, setSort] = useState<SearchSort>("relevance");
   const debounced = useDebounced(query, 350);
   const search = useSearch(debounced);
   const trending = useTrending("all", "day");
@@ -31,10 +36,17 @@ export function useSearchState() {
 
   useEffect(() => () => stop.current(), []);
 
-  const results = useMemo(() => {
-    const list = search.data?.results ?? [];
-    return list.filter((i) => (filter === "all" || i.type === filter) && (!profile?.kids || isKidsSafe(i)));
-  }, [search.data, filter, profile?.kids]);
+  // a new query starts with every filter cleared
+  useEffect(() => { setGenre(null); setSort("relevance"); }, [debounced]);
+
+  const base = useMemo(() => (search.data?.results ?? []).filter((i) => (filter === "all" || i.type === filter) && (!profile?.kids || isKidsSafe(i))), [search.data, filter, profile?.kids]);
+  /** Genres present in the results, most common first (at most six). */
+  const genres = useMemo(() => {
+    const n = new Map<string, number>();
+    for (const i of base) for (const g of i.genres) n.set(g, (n.get(g) ?? 0) + 1);
+    return [...n.entries()].filter(([, c]) => c >= 2).sort((a, b) => b[1] - a[1]).slice(0, 6).map(([g]) => g);
+  }, [base]);
+  const results = useMemo(() => sortResults(genre ? base.filter((i) => i.genres.includes(genre)) : base, sort), [base, genre, sort]);
 
   const popular = useMemo(() => (trending.data?.results ?? []).filter((i) => !profile?.kids || isKidsSafe(i)), [trending.data, profile?.kids]);
 
@@ -47,10 +59,23 @@ export function useSearchState() {
 
   return {
     query, setQuery, filter, setFilter, debounced, active,
+    genre, setGenre, genres, sort, setSort,
+    interpreted: search.data?.query === debounced.trim() ? search.data?.interpreted ?? null : null,
+    corrected: search.data?.query === debounced.trim() ? search.data?.corrected ?? null : null,
+    people: search.data?.query === debounced.trim() ? search.data?.people ?? [] : [],
     results, loading: active && !search.data && !search.error, error: search.error, retry: () => search.mutate(),
     stale: active && search.data?.query !== debounced.trim(),
     popular, popularLoading: !trending.data && !trending.error,
     recents, commit, clearRecents: actions.clearRecentSearches,
     voiceSupported, listening, startVoice
   };
+}
+
+/** Client-side sort of search results; "Best match" keeps the backend order. */
+export function sortResults(list: PandaItem[], sort: SearchSort) {
+  if (sort === "relevance") return list;
+  const out = [...list];
+  if (sort === "newest") out.sort((a, b) => (b.releaseDate ?? "").localeCompare(a.releaseDate ?? ""));
+  else out.sort((a, b) => (b.rating ?? 0) - (a.rating ?? 0));
+  return out;
 }

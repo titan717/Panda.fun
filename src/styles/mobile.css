@@ -107,6 +107,8 @@ html[data-mode="mobile"] body { background: var(--m-bg); }
 .m-section .m-chips, .sheet .m-chips { padding: 0; }
 .m-chips--wrap { flex-wrap: wrap; overflow: visible; }
 .m-chip { flex: none; display: inline-flex; align-items: center; gap: 6px; height: 32px; padding: 0 14px; border-radius: 8px; background: var(--m-raised); border: 1px solid transparent; font-size: 13px; font-weight: var(--fw-medium); white-space: nowrap; }
+.m-chip--sort { margin-left: auto; }
+.m-search-note { padding: 0 var(--m-gutter); margin: -2px 0 12px; font-size: 13px; color: var(--text-2); }
 .m-chip .icon { width: 14px; height: 14px; color: var(--text-2); }
 .m-chip.is-selected { border-color: var(--text-1); background: rgba(255, 255, 255, 0.1); font-weight: var(--fw-semibold); }
 
