@@ -11,3 +11,4 @@ Things the app needs that no blueprint shows, and how each is filled. Each choic
 | G-5 | Error, offline and empty states | Black screen, centred 64 px icon, one line of text and a "Try again" pill. |
 | G-6 | Update progress and What's New | Right sheet with the Quality-panel gradient (§20.9), progress bar styled like the player track (§20.4). Implemented in v1.0.5 (`src/pages/WhatsNew.tsx`). |
 | G-7 | Source health UI | Rows in Settings › Sources with a coloured dot (green / amber / red) and last-check time. |
+| G-8 | IMDb rating badge | The blueprint shows a yellow "IMDb 7.8" pill. The API has only the TMDB vote average, so the glass badge shows a star with the TMDB score (D-43). |

@@ -7,6 +7,8 @@ import { useHomeRows, type HomeRow } from "../lib/rows";
 import { actions, usePrefs } from "../lib/store";
 import { detailsMeta, isNew, titlePath } from "../lib/format";
 import { focusFirst } from "../lib/focus";
+import { whenIdle } from "../lib/lazy";
+import { preloadImages } from "../lib/preload";
 import { useNav } from "../lib/nav";
 import type { PageKind, PandaItem } from "../lib/types";
 import { TvContinue, TvLandscape, TvPoster } from "./TvCards";
@@ -34,6 +36,10 @@ function TvHero({ items, kind, onFocusHero }: { items: PandaItem[]; kind: PageKi
     const t = setTimeout(() => setIndex((i) => (i + 1) % items.length), 8000);
     return () => clearTimeout(t);
   }, [index, items.length, stage]);
+
+  // warm the next hero backdrop so auto-advance crossfades onto a decoded image
+  const next = items.length > 1 ? items[(index + 1) % items.length] : null;
+  useEffect(() => { if (next) preloadImages([next.backdropLarge ?? next.backdrop, next.logo], 2); }, [next]);
 
   if (!item) return null;
   const peeks = [1, 2].map((o) => items[(index + o) % items.length]).filter((p): p is PandaItem => Boolean(p) && p !== item);
@@ -96,7 +102,7 @@ function TvHero({ items, kind, onFocusHero }: { items: PandaItem[]; kind: PageKi
 
 function TvHeroSkeleton() {
   return (
-    <section className="tv-hero" data-row aria-busy="true">
+    <section className="tv-hero" data-row aria-busy="true" aria-label="Loading featured titles">
       <div className="tv-hero-card tv-hero-card--loading">
         <Skeleton className="sk-fill" />
         <span className="tv-hero-info"><Skeleton className="sk-logo" /><Skeleton className="sk-line" /><Skeleton className="sk-line sk-line--short" /></span>
@@ -105,18 +111,33 @@ function TvHeroSkeleton() {
   );
 }
 
+/** Loading layout mirrors the real page: a poster row, a landscape row and another poster row (spec 18.1). */
+function TvRowsSkeleton() {
+  const shapes = ["sk-poster", "sk-land", "sk-poster"] as const;
+  return (
+    <>
+      {shapes.map((shape, r) => (
+        <section key={r} className="tv-row tv-row--skeleton" aria-hidden="true">
+          <Skeleton className="sk-row-title" />
+          <div className="tv-row-track">{Array.from({ length: shape === "sk-land" ? 5 : 8 }, (_, i) => <Skeleton key={i} className={shape} />)}</div>
+        </section>
+      ))}
+    </>
+  );
+}
+
 /* ---------------- Rows (spec 6) ---------------- */
 function TvRow({ row, index, active, onFocusRow }: { row: HomeRow; index: number; active: number; onFocusRow: (index: number, item: PandaItem) => void }) {
   const focus = useCallback((item: PandaItem) => onFocusRow(index, item), [index, onFocusRow]);
   const state = active < 0 ? "" : index < active ? "is-above" : index === active ? "is-active" : "is-below";
   return (
-    <section className={`tv-row tv-row--${row.kind} ${state}`} data-row aria-label={row.title} id={`row-${row.id}`}>
-      <h2 className="tv-row-title">{row.title}</h2>
+    <section className={`tv-row tv-row--${row.kind} ${state}`} data-row aria-labelledby={`row-${row.id}-title`} id={`row-${row.id}`}>
+      <h2 className="tv-row-title" id={`row-${row.id}-title`}>{row.title}</h2>
       <div className="tv-row-track" data-scroll-x>
         {row.kind === "continue" && row.entries.map((h, i) => <TvContinue key={h.item.id} entry={h} id={`${row.id}-${i}`} onFocusItem={focus} />)}
-        {row.kind === "landscape" && row.items.map((it, i) => <TvLandscape key={it.id} item={it} id={`${row.id}-${i}`} onFocusItem={focus} />)}
-        {row.kind === "poster" && row.items.map((it, i) => <TvPoster key={it.id} item={it} id={`${row.id}-${i}`} onFocusItem={focus} />)}
-        {row.kind === "top10" && row.items.map((it, i) => <TvPoster key={it.id} item={it} id={`${row.id}-${i}`} rank={i + 1} onFocusItem={focus} />)}
+        {row.kind === "landscape" && row.items.map((it, i) => <TvLandscape key={it.id} item={it} id={`${row.id}-${i}`} pos={[i + 1, row.items.length]} onFocusItem={focus} />)}
+        {row.kind === "poster" && row.items.map((it, i) => <TvPoster key={it.id} item={it} id={`${row.id}-${i}`} pos={[i + 1, row.items.length]} onFocusItem={focus} />)}
+        {row.kind === "top10" && row.items.map((it, i) => <TvPoster key={it.id} item={it} id={`${row.id}-${i}`} rank={i + 1} pos={[i + 1, row.items.length]} onFocusItem={focus} />)}
       </div>
     </section>
   );
@@ -144,6 +165,26 @@ export function TvHome({ kind }: { kind: PageKind }) {
   useEffect(() => { setRowTrailerOn(false); }, [backdrop?.id, rowStage]);
   const onFocusHero = useCallback(() => setActive(-1), []);
 
+  // warm the posters/stills of the rows just below focus (and the first rows on load)
+  useEffect(() => {
+    if (!rows.length) return;
+    const from = Math.max(0, active);
+    const urls = rows.slice(from, from + 3).flatMap((r) => (r.kind === "continue" ? r.entries.map((e) => e.item.backdrop) : r.items.slice(0, 10).map((it) => (r.kind === "landscape" ? it.backdrop : it.poster))));
+    whenIdle(() => preloadImages(urls, 30), 800);
+  }, [rows, active]);
+
+  // warm the large backdrops either side of the focused card, so the page backdrop swaps without a gap
+  useEffect(() => {
+    if (active < 0 || !backdrop) return;
+    const r = rows[active];
+    const list = !r ? [] : r.kind === "continue" ? r.entries.map((e) => e.item) : r.items;
+    const at = list.findIndex((it) => it.id === backdrop.id);
+    if (at < 0) return;
+    const near = [list[at + 1], list[at - 1], list[at + 2]].filter(Boolean) as PandaItem[];
+    const t = setTimeout(() => preloadImages(near.map((it) => it.backdropLarge ?? it.backdrop), 3), 200);
+    return () => clearTimeout(t);
+  }, [active, backdrop, rows]);
+
   // initial focus: hero, once content exists
   const ready = Boolean(page.data);
   useEffect(() => {
@@ -167,7 +208,7 @@ export function TvHome({ kind }: { kind: PageKind }) {
       <div className="tv-rows">
         {page.data
           ? rows.map((r, i) => <TvRow key={r.id} row={r} index={i} active={active} onFocusRow={onFocusRow} />)
-          : <section className="tv-row"><Skeleton className="sk-row-title" /><div className="tv-row-track">{Array.from({ length: 8 }, (_, i) => <Skeleton key={i} className="sk-poster" />)}</div></section>}
+          : <TvRowsSkeleton />}
       </div>
     </div>
   );

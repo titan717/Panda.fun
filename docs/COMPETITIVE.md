@@ -33,3 +33,10 @@ Reviewed each release. Ideas are only adopted when they fit the blueprints.
 - Netflix, Prime Video and YouTube on Android TV all show a branded full-bleed splash from the very first frame (window background), then hand over to the app with no colour jump. Panda now does the same: native window, boot HTML and React splash share one gradient.
 - Netflix and Disney+ show a one-time "What's new" card after an update and never on a fresh install. Panda copies this (D-39).
 - Lightweight TV apps such as Jellyfin's Android TV client and Kodi web remotes keep first-load bundles small to stay fast on cheap Amlogic boxes. Panda's first load is now ~54 KB gzip of JS.
+
+## v1.0.6 round (2026-11-08)
+
+- Netflix on Android TV expands the focused row tile into a wide card showing the title's backdrop, logo, metadata and synopsis. The Panda blueprint shows the same, and Panda now renders the real backdrop instead of a dimmed poster.
+- Netflix, Prime Video and Google TV prefetch the artwork next to the focused tile, so a fast scroll never shows blank tiles. Panda now warms the next rows' posters and the neighbouring backdrops.
+- Google TV and Netflix announce tiles to TalkBack with title, type and position. Panda cards now read "Title, year, Movie/Series, rating, n of m", and each row is labelled by its heading.
+- Shimmering placeholders shaped like the real layout, not a spinner, are standard (YouTube, Netflix). Panda's TV home skeleton now mirrors the hero, poster and landscape rows, and each card shimmers until its art is decoded.

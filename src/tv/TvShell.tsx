@@ -4,6 +4,7 @@ import { Icon, PandaMark, type IconName } from "../components/Icon";
 import { Avatar } from "../components/ui";
 import { useProfile } from "../lib/store";
 import { focusEl } from "../lib/focus";
+import { useUpdateAvailable } from "../lib/updates";
 
 const ITEMS: { id: string; href: string; label: string; icon: IconName | "avatar"; match: (p: string) => boolean }[] = [
   { id: "rail-search", href: "/search", label: "Search", icon: "search", match: (p) => p.startsWith("/search") },
@@ -42,13 +43,14 @@ export function TvShell({ children }: { children: ReactNode }) {
     }
   };
 
+  const updateReady = useUpdateAvailable();
   return (
     <div className="tv-shell">
       <nav ref={nav} className="rail" aria-label="Main" data-focus={current} data-block-exit="up down left" onKeyDown={onKeyDown}
         onBlur={(e) => { if (!nav.current?.contains(e.relatedTarget as Node)) nav.current?.setAttribute("data-focus", current); }}>
         <div className="rail-top">
           <PandaMark size="100%" className="rail-mark" />
-          <Link href="/settings/updates" id="rail-update" className="rail-update" data-hover-focus>UPDATE</Link>
+          <Link href="/settings/updates" id="rail-update" className={`rail-update ${updateReady ? "has-update" : ""}`} data-hover-focus aria-label={updateReady ? "Update available. Check for Updates" : "Check for Updates"}>UPDATE</Link>
         </div>
         <ul className="rail-list">
           {ITEMS.map((i) => (

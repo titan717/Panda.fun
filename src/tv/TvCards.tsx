@@ -7,10 +7,16 @@ import { itemBadge, itemMeta, runtime, timeLeft, titlePath, watchPath } from "..
 import type { HistoryEntry } from "../lib/store";
 import type { PandaItem } from "../lib/types";
 
-export interface CardFocus { onFocusItem?: (item: PandaItem) => void }
+export interface CardFocus { onFocusItem?: (item: PandaItem) => void; pos?: [number, number] }
+
+/** Spoken label for a card: title, year, kind, rating and position in its row. */
+export function cardLabel(item: PandaItem, pos?: [number, number], extra?: string | null) {
+  const parts = [item.title, item.year ? String(item.year) : null, item.type === "tv" ? "Series" : "Movie", item.rating ? `Rated ${item.rating.toFixed(1)}` : null, extra ?? null, pos ? `${pos[0]} of ${pos[1]}` : null];
+  return parts.filter(Boolean).join(", ");
+}
 
 /** Poster card that expands into the wide info card when focused (spec 6.3). */
-export const TvPoster = memo(function TvPoster({ item, id, rank, expand = true, onFocusItem }: { item: PandaItem; id: string; rank?: number; expand?: boolean } & CardFocus) {
+export const TvPoster = memo(function TvPoster({ item, id, rank, expand = true, onFocusItem, pos }: { item: PandaItem; id: string; rank?: number; expand?: boolean } & CardFocus) {
   const [focused, setFocused] = useState(false);
   const settled = useDwell(focused && expand, 350);
   const details = useTitle(settled ? item.type : null, settled ? item.tmdbId : null).data;
@@ -19,10 +25,11 @@ export const TvPoster = memo(function TvPoster({ item, id, rank, expand = true, 
   return (
     <div className={`tv-card-wrap ${rank ? "has-rank" : ""}`}>
       {rank !== undefined && <span className="top10-num" aria-hidden="true">{rank}</span>}
-      <Link href={titlePath(item)} id={id} className={`tv-card tv-poster ${focused && expand ? "is-expanded" : ""}`} data-hover-focus aria-label={item.title}
+      <Link href={titlePath(item)} id={id} className={`tv-card tv-poster ${focused && expand ? "is-expanded" : ""}`} data-hover-focus aria-label={cardLabel(item, pos, rank ? `Number ${rank}` : null)}
         onFocus={() => { setFocused(true); onFocusItem?.(item); }} onBlur={() => setFocused(false)}>
         <Img src={item.poster} alt="" title={item.title} className="tv-poster-img" />
         {badge && <span className="poster-badge">{badge}</span>}
+        {focused && expand && settled && item.backdrop && <Img src={item.backdrop} alt="" title={item.title} className="expand-bg" eager />}
         {focused && expand && (
           <span className="expand-info">
             <span className="expand-badges">
@@ -40,9 +47,9 @@ export const TvPoster = memo(function TvPoster({ item, id, rank, expand = true, 
 });
 
 /** Landscape card for Latest Episodes style rows (spec 6.5). */
-export const TvLandscape = memo(function TvLandscape({ item, id, sub, onFocusItem }: { item: PandaItem; id: string; sub?: string | null } & CardFocus) {
+export const TvLandscape = memo(function TvLandscape({ item, id, sub, onFocusItem, pos }: { item: PandaItem; id: string; sub?: string | null } & CardFocus) {
   return (
-    <Link href={titlePath(item)} id={id} className="tv-card tv-land" data-hover-focus onFocus={() => onFocusItem?.(item)}>
+    <Link href={titlePath(item)} id={id} className="tv-card tv-land" data-hover-focus onFocus={() => onFocusItem?.(item)} aria-label={cardLabel(item, pos, sub)}>
       <span className="tv-land-media"><Img src={item.backdrop} alt="" title={item.title} /></span>
       <span className="tv-land-title">{item.title}</span>
       <span className="tv-land-sub">{sub ?? itemMeta(item, 1)}</span>
@@ -66,7 +73,7 @@ export function continueSub(h: HistoryEntry) {
 export const TvContinue = memo(function TvContinue({ entry, id, onFocusItem }: { entry: HistoryEntry; id: string } & CardFocus) {
   const pct = entry.duration ? Math.min(100, (entry.position / entry.duration) * 100) : 0;
   return (
-    <Link href={continueHref(entry)} id={id} className="tv-card tv-land" data-hover-focus onFocus={() => onFocusItem?.(entry.item)} aria-label={`Resume ${entry.item.title}`}>
+    <Link href={continueHref(entry)} id={id} className="tv-card tv-land" data-hover-focus onFocus={() => onFocusItem?.(entry.item)} aria-label={`Resume ${entry.item.title}${continueSub(entry) ? `, ${continueSub(entry)}` : ""}`}>
       <span className="tv-land-media">
         <Img src={entry.item.backdrop} alt="" title={entry.item.title} />
         <span className="progress"><span style={{ width: `${pct}%` }} /></span>

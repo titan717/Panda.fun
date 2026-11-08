@@ -1,3 +1,4 @@
+import { useEffect, useState } from "react";
 import { isAndroidApp, native, nativeVersion } from "./native";
 
 export const RELEASES_REPO = (import.meta.env.VITE_RELEASES_REPO as string | undefined) ?? "titan717/Panda.fun";
@@ -131,4 +132,17 @@ export function takeUpdateNotice(current = installedVersion()): string | null {
     localStorage.setItem(SEEN_KEY, current);
     return seen && compareVersions(current, seen) > 0 ? current : null;
   } catch { return null; }
+}
+
+/** True when a newer stable release than the installed version exists. Checked once on idle; uses the 15-minute cache. */
+export function useUpdateAvailable(): boolean {
+  const [available, setAvailable] = useState(false);
+  useEffect(() => {
+    const ctl = new AbortController();
+    const t = setTimeout(() => {
+      fetchLatestRelease(ctl.signal).then((r) => setAvailable(compareVersions(r.version, installedVersion()) > 0)).catch(() => {});
+    }, 4000);
+    return () => { clearTimeout(t); ctl.abort(); };
+  }, []);
+  return available;
 }

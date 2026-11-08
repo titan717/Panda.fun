@@ -2,6 +2,15 @@
 
 Measured on every release. Never regress.
 
+## v1.0.6
+
+| Metric | Value |
+|---|---|
+| First load (gzip JS) | 54.6 KB on TV (index 26.6 + vendor 10.3 + runtime 9.7 + TV layout 8.0). The +0.7 KB covers image warm-up and the update-dot check; still −58 % against v1.0.4. |
+| Page backdrop swap | The new backdrop is decoded about 100 ms after a D-pad move (measured on four moves, local preview, 1920×1080). Neighbouring backdrops (±1, +2) are warmed 200 ms after focus rests. |
+| Rows | Posters of the focused row and the two rows below (up to 30 images) are fetched when the main thread is idle, so cards are ready before focus reaches them. |
+| Cached images | Fixed a bug where an image served from cache fired `load` before the reset effect ran and stayed at opacity 0. Images now track their state per URL. |
+
 ## v1.0.5
 
 | Metric | Value |

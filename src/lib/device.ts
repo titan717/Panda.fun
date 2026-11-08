@@ -1,4 +1,4 @@
-import { nativeIsTV } from "./native";
+import { isAndroidApp, nativeIsTV } from "./native";
 
 export type LayoutMode = "tv" | "mobile";
 
@@ -14,12 +14,16 @@ export function detectLayout(override: "auto" | LayoutMode = "auto"): LayoutMode
   if (typeof window === "undefined") return "mobile";
   const forced = new URLSearchParams(window.location.search).get("layout");
   if (forced === "tv" || forced === "mobile") return forced;
-  if (nativeIsTV() || TV_UA.test(navigator.userAgent)) return "tv";
+  // Inside the Android app the native bridge is authoritative (phones must never get the TV layout).
+  if (isAndroidApp) return nativeIsTV() ? "tv" : "mobile";
+  if (TV_UA.test(navigator.userAgent)) return "tv";
   const coarse = window.matchMedia("(pointer: coarse)").matches && !window.matchMedia("(any-pointer: fine)").matches;
   if (coarse) return "mobile";
   return window.innerWidth >= 900 && window.innerHeight >= 480 ? "tv" : "mobile";
 }
 
 export function isTvDevice() {
-  return typeof window !== "undefined" && (nativeIsTV() || TV_UA.test(navigator.userAgent));
+  if (typeof window === "undefined") return false;
+  if (isAndroidApp) return nativeIsTV();
+  return TV_UA.test(navigator.userAgent);
 }

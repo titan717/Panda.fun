@@ -390,9 +390,13 @@ class MainActivity : ComponentActivity() {
             setSupportMultipleWindows(false)
             javaScriptCanOpenWindowsAutomatically = false
 
-            // Identify as Android TV Leanback environment for automatic TV layout
+            // Advertise the real device class: only TVs get the Leanback/SmartTV tokens that select the TV layout.
             val defaultUa = userAgentString
-            userAgentString = "$defaultUa KinomaTV/${BuildConfig.VERSION_NAME} (Android TV; Leanback; SmartTV)"
+            userAgentString = if (isTelevisionDevice()) {
+                "$defaultUa PandaFun/${BuildConfig.VERSION_NAME} (Android TV; Leanback; SmartTV)"
+            } else {
+                "$defaultUa PandaFun/${BuildConfig.VERSION_NAME} (Android)"
+            }
             mixedContentMode = WebSettings.MIXED_CONTENT_NEVER_ALLOW
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
                 safeBrowsingEnabled = true

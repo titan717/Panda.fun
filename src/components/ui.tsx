@@ -1,13 +1,19 @@
-import { Component, useEffect, useState, useSyncExternalStore, type CSSProperties, type ReactNode } from "react";
+import { Component, useEffect, useRef, useState, useSyncExternalStore, type CSSProperties, type ReactNode } from "react";
 import { Icon, PandaMark } from "./Icon";
 import type { AvatarKind } from "../lib/store";
 
 /* ---------- Image with graceful fallback (spec 18.5) ---------- */
 export function Img({ src, alt, className, title, eager, sizes, style }: { src: string | null | undefined; alt: string; className?: string; title?: string; eager?: boolean; sizes?: string; style?: CSSProperties }) {
-  const [failed, setFailed] = useState(false);
-  const [loaded, setLoaded] = useState(false);
-  useEffect(() => { setFailed(false); setLoaded(false); }, [src]);
-  if (!src || failed) {
+  // State is keyed by URL rather than reset in an effect: a cached image can fire `load` before effects run,
+  // and an effect-based reset would then hide an image that is already on screen.
+  const [failedSrc, setFailedSrc] = useState<string | null>(null);
+  const [loadedSrc, setLoadedSrc] = useState<string | null>(null);
+  const ref = useRef<HTMLImageElement>(null);
+  useEffect(() => {
+    const el = ref.current;
+    if (el && src && el.complete && el.naturalWidth > 0) setLoadedSrc(src);
+  }, [src]);
+  if (!src || failedSrc === src) {
     return (
       <div className={`img-fallback ${className ?? ""}`} role="img" aria-label={alt}>
         <span>{title ?? alt}</span>
@@ -15,8 +21,8 @@ export function Img({ src, alt, className, title, eager, sizes, style }: { src: 
     );
   }
   return (
-    <img src={src} alt={alt} className={`img ${loaded ? "is-loaded" : ""} ${className ?? ""}`} loading={eager ? "eager" : "lazy"} decoding="async" sizes={sizes} style={style}
-      draggable={false} onLoad={() => setLoaded(true)} onError={() => setFailed(true)} />
+    <img ref={ref} src={src} alt={alt} className={`img ${loadedSrc === src ? "is-loaded" : ""} ${className ?? ""}`} loading={eager ? "eager" : "lazy"} decoding="async" sizes={sizes} style={style}
+      draggable={false} onLoad={() => setLoadedSrc(src)} onError={() => setFailedSrc(src)} />
   );
 }
 

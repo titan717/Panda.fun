@@ -1,0 +1,15 @@
+import { chromium } from "playwright";
+const base = "http://127.0.0.1:4173";
+const state = { profiles: [{ id: "p1", name: "You", avatar: "smile", kids: false, createdAt: 1 }], activeProfileId: "p1", prefs: {}, data: {} };
+const browser = await chromium.launch();
+const ctx = await browser.newContext({ viewport: { width: 1920, height: 1080 } });
+await ctx.addInitScript((s) => { localStorage.setItem("panda:v1:state", s); sessionStorage.setItem("panda:splash", "1"); }, JSON.stringify(state));
+const page = await ctx.newPage();
+await page.goto(`${base}/?layout=tv`, { waitUntil: "networkidle" }); await page.waitForTimeout(2500);
+await page.keyboard.press("ArrowDown"); await page.waitForTimeout(1500);
+const dump = () => page.evaluate(() => [...document.querySelectorAll(".tv-row")].slice(0, 1).map((r) => [...r.querySelectorAll("a,button")].slice(0, 4).map((c) => ({ cls: c.className, html: c.innerHTML.slice(0, 300) }))));
+console.log(JSON.stringify(await dump(), null, 1));
+await page.keyboard.press("ArrowRight"); await page.waitForTimeout(2500);
+await page.screenshot({ path: "/tmp/qa/dbg-right.png" });
+console.log(JSON.stringify(await page.evaluate(() => [...document.querySelector(".tv-row").querySelectorAll(".tv-card")].slice(0, 4).map((c) => { const i = c.querySelector("img"); const cs = getComputedStyle(i); const r = i.getBoundingClientRect(); return { o: cs.opacity, vis: cs.visibility, w: r.width, h: r.height, x: r.x, nat: i.naturalWidth, complete: i.complete, cardO: getComputedStyle(c).opacity, filter: cs.filter }; }))));
+await browser.close();
