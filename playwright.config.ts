@@ -10,6 +10,7 @@ export default defineConfig({
   projects: [
     { name: "tv-1920", use: { viewport: { width: 1920, height: 1080 } }, metadata: { tv: true } },
     { name: "tv-1280", use: { viewport: { width: 1280, height: 720 } }, metadata: { tv: true } },
+    { name: "tv-3840", testMatch: /tv-sidebar\.spec\.ts/, use: { viewport: { width: 3840, height: 2160 } }, metadata: { tv: true } },
     { name: "mobile-390", use: { viewport: { width: 390, height: 844 }, isMobile: true, hasTouch: true } },
     { name: "mobile-360", use: { viewport: { width: 360, height: 640 }, isMobile: true, hasTouch: true } },
     { name: "tablet-820", use: { viewport: { width: 820, height: 1180 }, isMobile: true, hasTouch: true } },

@@ -146,11 +146,40 @@ export function groupByDay(list: Alert[], now = Date.now()) {
 const selectFollowed = (s: Parameters<typeof selectData>[0]) => selectData(s);
 
 /** Calendar for the active profile, cached by SWR (and IndexedDB) like every other API path. */
-export function useCalendar() {
+export function useCalendar(enabled = true) {
   const data = useStore(selectFollowed);
   const ids = useMemo(() => followedIds(data), [data.watchlist, data.reminders, data.history]); // eslint-disable-line react-hooks/exhaustive-deps
-  const key = ids.length ? keys.calendar(ids) : null;
+  const key = enabled && ids.length ? keys.calendar(ids) : null;
   const res = useSWR<CalendarPayload>(key, { revalidateOnFocus: false, dedupingInterval: 600_000, keepPreviousData: true });
   const view = useMemo(() => buildCalendar(res.data?.entries ?? [], data), [res.data, data]);
   return { ...view, following: ids.length, loading: Boolean(key) && !res.data && !res.error, error: res.error as Error | undefined, retry: () => void res.mutate() };
 }
+
+/* ---------- card badges driven by the calendar (v1.1.7) ---------- */
+
+type BadgeMap = ReadonlyMap<string, string>;
+let badgeMap: BadgeMap = new Map();
+const badgeSubs = new Set<() => void>();
+
+/** Card badge per title id: "NEW EPISODE" / "2 NEW EPISODES" for shows with fresh episodes, "OUT NOW" for reminded films that just came out. */
+export function calendarBadges(fresh: Alert[]): Map<string, string> {
+  const counts = new Map<string, { n: number; kind: Alert["kind"] }>();
+  for (const a of fresh) {
+    const c = counts.get(a.item.id) ?? { n: 0, kind: a.kind };
+    c.n++;
+    counts.set(a.item.id, c);
+  }
+  const out = new Map<string, string>();
+  for (const [id, c] of counts) out.set(id, c.kind === "release" ? "OUT NOW" : c.n > 1 ? `${c.n} NEW EPISODES` : "NEW EPISODE");
+  return out;
+}
+
+export function setCalendarBadges(next: Map<string, string>) {
+  const same = next.size === badgeMap.size && [...next].every(([k, v]) => badgeMap.get(k) === v);
+  if (same) return;
+  badgeMap = next;
+  for (const f of badgeSubs) f();
+}
+
+export function subscribeCalendarBadges(f: () => void) { badgeSubs.add(f); return () => { badgeSubs.delete(f); }; }
+export function getCalendarBadge(id: string) { return badgeMap.get(id) ?? null; }

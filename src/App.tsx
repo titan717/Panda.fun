@@ -1,3 +1,4 @@
+import { CalendarBadgeSync } from "./components/CalendarBadges";
 import { Suspense, useEffect, useRef, useState, type ReactNode } from "react";
 import { KidsGate } from "./components/KidsGate";
 import { SWRConfig, useSWRConfig } from "swr";
@@ -268,6 +269,7 @@ function Routes({ mode }: { mode: LayoutMode }) {
     <>
       {!online && <OfflineBanner />}
       <Suspense fallback={<div className="route-loading" />}>
+      <CalendarBadgeSync />
       <Shell mode={mode}>
         <ErrorBoundary resetKey={location}>
           <Suspense fallback={<div className="route-loading route-loading--inner" />}>

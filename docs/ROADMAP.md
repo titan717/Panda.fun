@@ -5,23 +5,25 @@ Current release: **v1.1.6** (2026-11-08). One patch step per release (§10), eac
 ## Shipped
 v1.0.0–v1.0.9 rebuild, player, Android shell, updater, perf 1–2 · v1.1.0 personalised Home · v1.1.1 smart search · v1.1.2 cast, crew, collections · v1.1.3 Watchlist 2.0 · v1.1.4 Continue Watching 2.0 · v1.1.5 Player 2.0 (speed, sleep timer, Still watching?, skip intro, next-episode card) · v1.1.6 perf 3.
 
-## v1.1.7 — Release calendar and reminders (in progress)
+## v1.1.7 — Addendum 2, release 1: refine Release-1 pages, blueprint TV sidebar, ad shield (+ calendar)
+Addendum 2 takes the next two versions; the roadmap items they displace (old v1.1.8 personalization + R8 and old v1.1.9 refinement sweep 1) are merged into v1.1.9, so the final release is still v1.5.1 (D-99).
+
 | Task | Test |
 |---|---|
-| Remind Me replaces Watch Now on unreleased titles (A2-1) | unit: `detailsCtas` returns `remind` for future dates |
-| Coming Up page `/calendar`: Out Now + day groups, TV and mobile | e2e: page renders, D-pad reaches every card |
-| New-episode alerts from `/panda/calendar` for Watchlist, reminders and recent shows (A2-2, A2-4) | unit: `followedIds`, `buildCalendar`, `unseen` |
-| Blueprint 15.4 card: Allow / N new episodes / You're all caught up | e2e mobile My Space |
-| Native Android notifications + notification icon + monochrome launcher layer (A2-3, A2-6) | CI Android build, emulator check |
-| TV My Space Coming Up entry with count (A2-5); Settings › Notifications | e2e TV My Space |
-| Upgraded Coming Soon on New & Hot: reminder state on cards, new-episode badges driven by the calendar | e2e New & Hot |
+| Ad shield layers 1–8: sandbox per source, click isolation, Android window/navigation/download/permission blocks, network blocklist, CSP parity, source ranking, Settings counter (A2-7, docs/AD_SHIELD.md) | `e2e/shield.spec.ts` (release-blocking), `src/test/v117.test.ts`, emulator playback check |
+| TV sidebar exactly like the blueprint (BLUEPRINT_SPEC 4.6–4.16) | `e2e/tv-sidebar.spec.ts` at 1280, 1920, 3840 |
+| Refine Home, hero, rows, Details, Search, Settings, player screens against the blueprints at every §9 viewport, 3 polish passes | blueprint-compare screenshots, smoke e2e |
+| Remind Me, Coming Up `/calendar`, new-episode alerts, native notifications, notification + monochrome icons (A2-1…A2-6) | unit calendar tests, CI Android build, emulator check |
+| Coming Soon in New & Hot with reminder state; new-episode badges on cards | e2e New & Hot |
+
+## v1.1.8 — Addendum 2, release 2: refine every other page
+Profiles and Who's watching, My List and list pages, Continue Watching, Kids, Coming Soon and calendar, cast and crew, collections, browse and genre pages, update and What's New screens, every empty, loading and error state — blueprint comparison at every viewport, 3 polish passes, results in BLUEPRINT_SPEC.
 
 ## Plan (§11)
 | Version | Theme |
 |---|---|
-| v1.1.8 | Personalization settings (row order and visibility, density, trailer options) on top of the existing UI scale / contrast / text / motion; R8 shrinking (A2-6) |
-| v1.1.9 | Visual refinement sweep 1: transitions, micro-interactions, icons, empty-state art |
-| v1.2.0 | Source adapters with capabilities, Report broken source with backend ranking (Wilson + decay), AniList anime via Vidy, embed sandbox (A2-7) |
+| v1.1.9 | Personalization settings (row order and visibility, density, trailer options) + R8 shrinking (A2-6) + visual refinement sweep 1 (transitions, micro-interactions, icons) — merged after Addendum 2 |
+| v1.2.0 | Source adapters with capabilities, Report broken source with backend ranking (Wilson + decay), AniList anime via Vidy (embed sandbox shipped in v1.1.7) |
 | v1.2.1 | External subtitles, caption layer, subtitle settings, per-profile languages (A2-8) |
 | v1.2.2 | Still watching? after N episodes, gestures, picture-in-picture, spoiler protection |
 | v1.2.3 | Sync code with encrypted backup (A2-9) |

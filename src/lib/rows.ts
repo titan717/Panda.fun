@@ -3,6 +3,7 @@ import { usePage, useTitle, useTop10 } from "./hooks";
 import { buildPersonalRows, pickSeeds, type Seed } from "./personal";
 import { continueWatching, useHistoryMap, usePrefs, useProfile, useRatings, useWatchlist, watchedTitles, type HistoryEntry } from "./store";
 import { languageName } from "./format";
+import { useCalendar } from "./calendar";
 import type { PageKind, PandaItem, TitleDetails } from "./types";
 
 export type HomeRow =
@@ -29,6 +30,7 @@ export function useHomeRows(kind: PageKind) {
   const history = useHistoryMap();
   const watchlist = useWatchlist();
   const ratings = useRatings();
+  const calendar = useCalendarRows(kind === "new");
 
   // Personal rows only on Home for grown-up profiles; seed details load after the page so they never delay it.
   const personal = kind === "home" && !kids;
@@ -58,6 +60,13 @@ export function useHomeRows(kind: PageKind) {
       const watched = watchedTitles(history).filter((i) => i.type === "tv");
       if (watched.length >= 2) out.push({ id: "watched", kind: "poster", title: "Shows You Watched", items: watched.slice(0, 20), link: null });
     }
+    if (kind === "new") {
+      // the profile's own calendar first (Watchlist, reminders, shows in progress), then the editorial rails
+      const fresh = calendar.fresh.filter(typeFilter);
+      const upcoming = calendar.upcoming.filter(typeFilter);
+      if (fresh.length) out.push({ id: "cal-fresh", kind: "poster", title: "New Episodes for You", items: fresh, link: "/calendar" });
+      if (upcoming.length) out.push({ id: "cal-upcoming", kind: "poster", title: "Coming Up for You", items: upcoming, link: "/calendar" });
+    }
     let rail = 0;
     for (const r of page.data?.rails ?? []) {
       const items = (kids ? r.items.filter(isKidsSafe) : r.items).filter(notDisliked);
@@ -67,7 +76,7 @@ export function useHomeRows(kind: PageKind) {
     }
     if (rail < 3 && because[1]) out.push(because[1]);
     return out;
-  }, [history, kind, kids, page.data, profile?.name, prefs.top10Lang, top10.data, ratings, mine]);
+  }, [history, kind, kids, page.data, profile?.name, prefs.top10Lang, top10.data, ratings, mine, calendar]);
 
   const hero = useMemo(() => (page.data?.hero ?? []).filter((i) => (!kids || isKidsSafe(i) || effective === "kids") && ratings[i.id] !== "dislike"), [page.data, kids, effective, ratings]);
   return { rows, hero, page };
@@ -76,4 +85,14 @@ export function useHomeRows(kind: PageKind) {
 /** Details of one seed title (its "More Like This" list), fetched once the page itself has loaded. */
 function useSeedTitle(seed: Seed | undefined, ready: boolean) {
   return useTitle(ready && seed ? seed.item.type : null, ready && seed ? seed.item.tmdbId : null).data;
+}
+
+/** One card per title from the calendar (newest episode / soonest date first), for New & Hot. */
+function useCalendarRows(on: boolean) {
+  const cal = useCalendar(on);
+  return useMemo(() => {
+    if (!on) return { fresh: [] as PandaItem[], upcoming: [] as PandaItem[] };
+    const uniq = (list: { item: PandaItem }[]) => { const seen = new Set<string>(); return list.filter((a) => !seen.has(a.item.id) && seen.add(a.item.id)).map((a) => a.item); };
+    return { fresh: uniq(cal.fresh).slice(0, 20), upcoming: uniq(cal.upcoming).slice(0, 20) };
+  }, [on, cal.fresh, cal.upcoming]);
 }

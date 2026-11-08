@@ -5,13 +5,16 @@ import { Img } from "../components/ui";
 import { QuickActions, type ActionContext } from "../components/QuickActions";
 import { prefetchItem } from "../lib/prefetch";
 import { isUpcoming, itemBadge, landMeta, titlePath } from "../lib/format";
-import type { HistoryEntry } from "../lib/store";
+import { useHasReminder, type HistoryEntry } from "../lib/store";
+import { useCalendarBadge } from "../components/CalendarBadges";
 import { continueHref, continueSub } from "../tv/TvCards";
 import type { PandaItem } from "../lib/types";
 
 /** Mobile poster (spec 12.3–12.5). */
 export const MPoster = memo(function MPoster({ item, rank, top10, className, context }: { item: PandaItem; rank?: number; top10?: boolean; className?: string; context?: ActionContext }) {
-  const badge = itemBadge(item);
+  const calBadge = useCalendarBadge(item.id);
+  const reminded = useHasReminder(item.id);
+  const badge = calBadge ?? itemBadge(item);
   const [menu, setMenu] = useState(false);
   return (
     <>
@@ -22,7 +25,7 @@ export const MPoster = memo(function MPoster({ item, rank, top10, className, con
       <span className="m-poster-media">
         <Img src={item.poster} alt="" title={item.title} />
         {top10 && <span className="m-top10-tag">TOP<br />10</span>}
-        {badge && <span className="m-poster-badge">{badge}</span>}
+        {badge && <span className={`m-poster-badge ${calBadge ? "is-fresh" : ""}`}>{reminded && !calBadge && <Icon name="bell" className="m-poster-badge-icon" />}{badge}</span>}
       </span>
     </Link>
     {menu && <QuickActions item={item} context={context} onClose={() => setMenu(false)} />}

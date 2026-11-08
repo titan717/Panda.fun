@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { buildCalendar, dayLabel, followedIds, groupByDay, localDay, unseen } from "../lib/calendar";
+import { buildCalendar, calendarBadges, getCalendarBadge, setCalendarBadges, dayLabel, followedIds, groupByDay, localDay, unseen } from "../lib/calendar";
 import { actions, getState, selectData } from "../lib/store";
 import { detailsCtas } from "../lib/watch";
 import { validatorFor } from "../lib/validate";
@@ -71,5 +71,39 @@ describe("ad shield parity", () => {
     expect(out).toContain("roadster24.com");
     expect(out).not.toContain("cinesrc.st");
     expect(out).not.toContain("x.vidy.st");
+  });
+});
+
+describe("v1.1.7 calendar badges", () => {
+  it("labels shows with fresh episodes and reminded films that came out", () => {
+    const v = buildCalendar(entries, { ...empty, watchlist: [show], reminders: [film] }, NOW);
+    const two = [...v.fresh, { ...v.fresh[0]!, key: "tv:1399:2:9" }];
+    expect(calendarBadges(v.fresh).get("tv:1399")).toBe("NEW EPISODE");
+    expect(calendarBadges(two).get("tv:1399")).toBe("2 NEW EPISODES");
+    expect(calendarBadges([{ ...v.fresh[0]!, kind: "release", item: film }]).get("movie:9")).toBe("OUT NOW");
+    expect(calendarBadges(v.fresh).has("movie:9")).toBe(false);
+  });
+  it("publishes badges to cards", () => {
+    setCalendarBadges(new Map([["tv:1399", "NEW EPISODE"]]));
+    expect(getCalendarBadge("tv:1399")).toBe("NEW EPISODE");
+    expect(getCalendarBadge("movie:9")).toBeNull();
+    setCalendarBadges(new Map());
+  });
+});
+
+describe("v1.1.7 TV sidebar", () => {
+  it("keeps the blueprint order, labels and geometry tokens", async () => {
+    const fs = await import("node:fs");
+    const shell = fs.readFileSync("src/tv/TvShell.tsx", "utf8");
+    const ids = [...shell.matchAll(/id: "(rail-[a-z]+)"/g)].map((m) => m[1]);
+    expect(ids).toEqual(["rail-search", "rail-home", "rail-tv", "rail-movies", "rail-new", "rail-categories", "rail-myspace"]);
+    expect(shell).toContain('label: "My Space"');
+    const tokens = fs.readFileSync("src/styles/tokens.css", "utf8");
+    expect(tokens).toContain("--rail-w-open: calc(400 * var(--tu))");
+    expect(tokens).toContain("--rail-row: calc(94 * var(--tu))");
+    const css = fs.readFileSync("src/styles/tv.css", "utf8");
+    const rail = css.slice(css.indexOf("/* ---------- sidebar (4"), css.indexOf("/* ---------- home (5, 6)"));
+    for (const m of rail.matchAll(/transition: ([^;]+);/g)) for (const part of m[1]!.split(",")) expect(["transform", "opacity", "color", "box-shadow"]).toContain(part.trim().split(" ")[0]);
+    expect(rail).not.toMatch(/transition:[^;]*\b(width|left|margin|padding)\b/);
   });
 });

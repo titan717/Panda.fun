@@ -4,7 +4,8 @@ import { Icon } from "../components/Icon";
 import { Img, TitleArt } from "../components/ui";
 import { useDwell, useTitle } from "../lib/hooks";
 import { itemBadge, landMeta, runtime, timeLeft, titlePath, watchPath } from "../lib/format";
-import type { HistoryEntry } from "../lib/store";
+import { useHasReminder, type HistoryEntry } from "../lib/store";
+import { useCalendarBadge } from "../components/CalendarBadges";
 import type { PandaItem } from "../lib/types";
 
 export interface CardFocus { onFocusItem?: (item: PandaItem) => void; pos?: [number, number]; onRemove?: () => void; onOptions?: () => void }
@@ -15,12 +16,17 @@ export function cardLabel(item: PandaItem, pos?: [number, number], extra?: strin
   return parts.filter(Boolean).join(", ");
 }
 
+/** "NEW EPISODES" → "New Episodes", "IN CINEMAS 14 NOV" → "In Cinemas 14 Nov". */
+const badgeCase = (b: string) => b.toLowerCase().replace(/(^|\s)\S/g, (m) => m.toUpperCase());
+
 /** Poster card that expands into the wide info card when focused (spec 6.3). */
 export const TvPoster = memo(function TvPoster({ item, id, rank, expand = true, onFocusItem, pos, onRemove, onOptions }: { item: PandaItem; id: string; rank?: number; expand?: boolean } & CardFocus) {
   const [focused, setFocused] = useState(false);
   const settled = useDwell(focused && expand, 350);
   const details = useTitle(settled ? item.type : null, settled ? item.tmdbId : null).data;
-  const badge = itemBadge(item);
+  const calBadge = useCalendarBadge(item.id);
+  const reminded = useHasReminder(item.id);
+  const badge = calBadge ?? itemBadge(item);
   const meta = [item.year, details?.certification, item.type === "movie" ? runtime(details?.runtime) : details?.numberOfSeasons ? `${details.numberOfSeasons} Season${details.numberOfSeasons > 1 ? "s" : ""}` : null, ...item.genres.slice(0, 2)].filter(Boolean);
   return (
     <div className={`tv-card-wrap ${rank ? "has-rank" : ""}`}>
@@ -30,7 +36,7 @@ export const TvPoster = memo(function TvPoster({ item, id, rank, expand = true, 
         onClick={onRemove ? (e) => { e.preventDefault(); onRemove(); } : onOptions ? (e) => { e.preventDefault(); onOptions(); } : undefined}
         onFocus={() => { setFocused(true); onFocusItem?.(item); }} onBlur={() => setFocused(false)}>
         <Img src={item.poster} alt="" title={item.title} className="tv-poster-img" />
-        {badge && !onRemove && !onOptions && <span className="poster-badge">{badge}</span>}
+        {badge && !onRemove && !onOptions && <span className={`poster-badge ${calBadge ? "is-fresh" : ""}`}>{reminded && !calBadge && <Icon name="bell" className="poster-badge-icon" />}{badge}</span>}
         {onRemove && <span className="remove-mark" aria-hidden="true"><Icon name="trash" /></span>}
         {onOptions && <span className="remove-mark is-options" aria-hidden="true"><Icon name="more" /></span>}
         {focused && expand && settled && item.backdrop && <Img src={item.backdrop} alt="" title={item.title} className="expand-bg" eager />}
@@ -38,7 +44,7 @@ export const TvPoster = memo(function TvPoster({ item, id, rank, expand = true, 
           <span className="expand-info">
             <span className="expand-badges">
               {item.rating ? <span className="glass-badge"><Icon name="star" /> {item.rating.toFixed(1)}</span> : null}
-              {badge && <span className="glass-badge">{badge === "NEWLY ADDED" ? "Newly Added" : badge === "NEW EPISODES" ? "New Episodes" : badge}</span>}
+              {badge && <span className="glass-badge">{reminded && !calBadge && <Icon name="bell" />}{badgeCase(badge)}</span>}
             </span>
             <TitleArt logo={details?.logo ?? item.logo} title={item.title} className="expand-logo" />
             <span className="expand-meta">{meta.join(" • ")}</span>

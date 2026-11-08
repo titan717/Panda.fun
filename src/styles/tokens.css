@@ -103,7 +103,9 @@
   --m-search-btn: linear-gradient(135deg, #2f80ed, #1b5fd6);
   --tv-ep-body: #c5cedd;
   --tv-rail-icon: rgba(212, 220, 236, 0.7);
-  --tv-rail-scrim: linear-gradient(90deg, rgba(4, 10, 20, 0.96) 0%, rgba(4, 10, 20, 0.85) 60%, transparent 100%);
+  --tv-rail-panel: linear-gradient(180deg, #0d111c 0%, #06080e 100%);
+  --tv-rail-edge: rgba(190, 215, 255, 0.16);
+  --tv-rail-glow: rgba(64, 120, 255, 0.45);
   --tv-hero-border: rgba(170, 215, 255, 0.55);
   --tv-hero-scrim: linear-gradient(0deg, rgba(5, 10, 20, 0.92) 0%, rgba(5, 10, 20, 0.55) 35%, transparent 65%);
   --tv-hero-scrim-left: linear-gradient(90deg, rgba(5, 10, 20, 0.7) 0%, transparent 55%);
@@ -149,8 +151,13 @@ html[data-mode="tv"] {
   --u: calc(1.5 * var(--tu));
 
   /* 4 rail */
-  --rail-w: calc(112 * var(--tu));
-  --rail-w-open: calc(360 * var(--tu));
+  --rail-w: calc(140 * var(--tu));
+  --rail-w-open: calc(400 * var(--tu));
+  --rail-row: calc(94 * var(--tu));
+  --rail-icon: calc(30 * var(--tu));
+  --t-rail: calc(28 * var(--tu));
+  --dur-rail: 240ms;
+  --ease-rail: cubic-bezier(0.2, 0.8, 0.2, 1);
   /* 5 hero */
   --hero-x: calc(150 * var(--tu));
   --hero-y: calc(56 * var(--tu));
@@ -192,6 +199,7 @@ html[data-mode="tv"] {
   :root {
     --dur-focus: 0ms;
     --dur-expand: 0ms;
+    --dur-rail: 0ms;
     --dur-page: 0ms;
     --dur-crossfade: 0ms;
     --focus-scale: 1;
@@ -202,6 +210,7 @@ html[data-mode="tv"] {
 html[data-motion="reduce"] {
   --dur-focus: 0ms;
   --dur-expand: 0ms;
+  --dur-rail: 0ms;
   --dur-page: 0ms;
   --dur-crossfade: 0ms;
   --focus-scale: 1;

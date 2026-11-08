@@ -52,6 +52,28 @@ Image references use `tv1#12` = `tv1.pdf` image 12 (0-based), `m#5` = `mobile.pd
 4.4 Labels in expanded state: Search, Home, TV, Movies, New & Hot, Categories, My Space. Focused item: white text + soft pill highlight `rgba(255,255,255,0.10)` radius 10; current page item keeps a white icon.
 4.5 Left from leftmost content focuses the current page's rail item; Right from the rail returns focus to the last focused content element.
 
+### 4.6–4.16 Sidebar re-measured for v1.1.7 (supersede 4.1–4.4)
+
+Measured from tv1#15 (collapsed), tv1#22 and tv2#11/#12 (expanded on Home and Categories) and blueprinttvpanda#21. TV units (`--tu`, 1 tu = 1 px at 1920 × 1080).
+
+| # | Property | Blueprint | Panda.fun |
+|---|---|---|---|
+| 4.6 | Collapsed state | No panel, transparent over true black; logo top, pill under the logo, top-level icons only, avatar at the bottom | Same. Sub-items (TV, Movies, New & Hot) are hidden, out of the focus order and `aria-hidden` when collapsed |
+| 4.7 | Collapsed width / icon column | Icons centred ≈ 71–83 tu from the left; content starts ≈ 160–178 tu | `--rail-w` 140 tu; icon centre 79 tu; content keeps its `--content-x` |
+| 4.8 | Expanded width | ≈ 21 % of the screen ≈ 400 tu (4.3's 360 was low) | `--rail-w-open` 400 tu (tested at 1280, 1920 and 3840 wide) |
+| 4.9 | Expanded panel | Near-opaque dark navy, slightly lighter than black, thin light line on its right edge, overlays the content (content does not move) | `#0d111c → #06080e` vertical gradient, 1 tu `rgba(190,215,255,.16)` edge, soft drop shadow; overlay — the e2e test checks `#main` does not move |
+| 4.10 | Order | Connect Phone, Search, Home, ‹TV, Movies, Sports›, Categories … My Space | Search, Home, ‹TV, Movies, New & Hot›, Categories … My Space (D-95, D-96) |
+| 4.11 | Logo and pill | Collapsed: pill under the logo; expanded: pill beside the logo on the same line | Logo 60 tu at (52, 28); UPDATE pill 32 tu tall at (28, 106) moves to beside the logo with a transform |
+| 4.12 | Rows | Pitch ≈ 93–94 tu; list vertically centred; labels ≈ 28 tu weight 600; icons ≈ 28–30 tu; sub-items indented ≈ 70 tu | `--rail-row` 94 tu, centred on the screen; labels 28 tu / 600; icons 30 tu; sub-items +70 tu |
+| 4.13 | Current item | White bold label, filled white icon, soft blue bloom | White bold label, filled icon (Home, Categories, New & Hot have filled shapes), blue drop-shadow on the icon; when collapsed on TV/Movies/New & Hot the Home icon is lit |
+| 4.14 | Focus | Bold white label over a soft blue glow band, no box outline | Radial blue glow band (`--tv-rail-glow`), bold white label; no dividers |
+| 4.15 | Animation | Not visible in stills | 240 ms `cubic-bezier(.2,.8,.2,1)`; only transform and opacity animate (panel slides in from −100 %, items move between the collapsed and expanded positions with translateY, labels fade and slide 12 tu); 0 ms with reduced motion (D-97) |
+| 4.16 | Bottom item | Avatar dot and "My Space" | Active profile's avatar and "My Space"; switching profile re-renders the avatar and applies that profile's settings |
+
+Behaviour (tested in `e2e/tv-sidebar.spec.ts` at 1280 × 720, 1920 × 1080 and 3840 × 2160): Left from the leftmost content item opens the sidebar on the current section; Up/Down walk UPDATE → Search → Home → TV → Movies → New & Hot → Categories → My Space and stop at the ends (no exits up, down or left); Right or Back closes it and returns focus to the exact item you left; Enter navigates and the sidebar closes. Back inside the sidebar never leaves the page.
+
+Result (v1.1.7, 3 passes): pass 1 fixed the My Space row being pulled into the list by the expanded transform; pass 2 enlarged the logo and pill to the blueprint ratio and moved the pill beside the logo; pass 3 replaced the pill-shaped focus box with the blueprint's glow band and made the panel opaque so rows no longer show through.
+
 ## 5. TV Home hero (tv2#0–#4, tv1#7, tv1#15, tv1#29, tv1#30)
 
 5.1 Hero card at x=150 → 1500, y=70 → 700 (1350 × 630), radius 22, `1.5px solid rgba(170,215,255,.55)` border when focused, glow as 1.5.
