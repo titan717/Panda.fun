@@ -1,9 +1,11 @@
 import { Component, useEffect, useRef, useState, useSyncExternalStore, type CSSProperties, type ReactNode } from "react";
 import { Icon, PandaMark } from "./Icon";
+import { sizedImage } from "../lib/imageTier";
 import type { AvatarKind } from "../lib/store";
 
 /* ---------- Image with graceful fallback (spec 18.5) ---------- */
-export function Img({ src, alt, className, title, eager, sizes, style }: { src: string | null | undefined; alt: string; className?: string; title?: string; eager?: boolean; sizes?: string; style?: CSSProperties }) {
+export function Img({ src: rawSrc, alt, className, title, eager, sizes, style }: { src: string | null | undefined; alt: string; className?: string; title?: string; eager?: boolean; sizes?: string; style?: CSSProperties }) {
+  const src = sizedImage(rawSrc);
   // State is keyed by URL rather than reset in an effect: a cached image can fire `load` before effects run,
   // and an effect-based reset would then hide an image that is already on screen.
   const [failedSrc, setFailedSrc] = useState<string | null>(null);

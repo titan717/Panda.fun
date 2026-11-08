@@ -9,8 +9,10 @@ import { App } from "./App";
 import { flushStore } from "./lib/store";
 import { hydrateCache } from "./lib/cache";
 import { installAudioUnlock, stopAllTrailers } from "./lib/audio";
+import { registerServiceWorker } from "./lib/sw";
 
 window.addEventListener("pagehide", flushStore);
+registerServiceWorker();
 installAudioUnlock();
 document.addEventListener("visibilitychange", () => { if (document.hidden) stopAllTrailers(); });
 

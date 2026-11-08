@@ -230,6 +230,17 @@ function Player({ type, id, season, episode, start }: { type: MediaType; id: num
   };
   const seekBy = (by: number) => seekTo(pos.current.position + by);
   const reloadEmbed = () => { save(); setReloadAt(pos.current.position); setReady(false); };
+  /* ---- back online: retry the stream from where it stopped ---- */
+  const reconnect = useRef<() => void>(() => {});
+  reconnect.current = () => {
+    if (play.error) { void play.mutate(); return; }
+    if (!ready) reloadEmbed();
+  };
+  useEffect(() => {
+    const h = () => reconnect.current();
+    window.addEventListener("panda:reconnect", h);
+    return () => window.removeEventListener("panda:reconnect", h);
+  }, []);
 
   /* ---- remote keys while the overlay is hidden ---- */
   const onKeyDown = (k: React.KeyboardEvent) => {

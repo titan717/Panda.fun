@@ -56,3 +56,9 @@ Reviewed each release. Ideas are only adopted when they fit the blueprints.
 - Google TV's watchlist and Netflix's My List on TV can be filtered and edited with the remote. Panda's My Space now has Movies/Shows filters, three sort orders and a remove mode.
 - Netflix's Manage Profiles is a plain list; Prime Video shows profile activity. Panda shows each profile's saved and in-progress counts.
 
+## v1.0.9 round (2026-11-08)
+
+- YouTube and Netflix on the web open instantly on a repeat visit because their app shell is cached. Panda now has a service worker for the shell, scripts and artwork.
+- Netflix and Prime Video on 4K TVs load sharper artwork than on 1080p. Panda now steps artwork up one size on 4K screens only.
+- Netflix resumes a stalled stream when the connection returns and YouTube shows a "Back online" notice. Panda does both now, and also retries every row that failed while offline.
+

@@ -1,6 +1,6 @@
-import { Suspense, useEffect, useState, type ReactNode } from "react";
+import { Suspense, useEffect, useRef, useState, type ReactNode } from "react";
 import { KidsGate } from "./components/KidsGate";
-import { SWRConfig } from "swr";
+import { SWRConfig, useSWRConfig } from "swr";
 import { Route, Router, Switch, useLocation, useParams } from "wouter";
 import { useHashLocation } from "wouter/use-hash-location";
 import { fetcher } from "./lib/api";
@@ -13,7 +13,7 @@ import { actions, getState, usePrefs, useProfile } from "./lib/store";
 import { exitApp, isAndroidApp } from "./lib/native";
 import { useOnline, useReducedMotion } from "./lib/hooks";
 import { compareVersions, fetchLatestRelease, installedVersion, takeUpdateNotice } from "./lib/updates";
-import { ErrorBoundary, OfflineBanner, Toasts } from "./components/ui";
+import { ErrorBoundary, OfflineBanner, Toasts, toast } from "./components/ui";
 import { PandaMark, Wordmark } from "./components/Icon";
 import { BrowsePage, ContinueWatchingPage, MyListPage, NotFoundPage } from "./pages/Lists";
 import { ProfileEdit, ProfileManage, ProfileSelect } from "./pages/Profiles";
@@ -160,6 +160,26 @@ function Shell({ mode, children }: { mode: LayoutMode; children: ReactNode }) {
   return mode === "tv" ? <TvShell>{children}</TvShell> : <MobileShell>{children}</MobileShell>;
 }
 
+/** When the connection returns: say so, and retry every request that failed while offline. */
+function ReconnectRecovery() {
+  const online = useOnline();
+  const { mutate, cache } = useSWRConfig();
+  const wasOffline = useRef(false);
+  useEffect(() => {
+    if (!online) { wasOffline.current = true; return; }
+    if (!wasOffline.current) return;
+    wasOffline.current = false;
+    toast("Back online");
+    void mutate((key) => {
+      if (typeof key !== "string") return false;
+      const entry = cache.get(key) as { error?: unknown; data?: unknown } | undefined;
+      return Boolean(entry && (entry.error || entry.data === undefined));
+    });
+    window.dispatchEvent(new Event("panda:reconnect"));
+  }, [online, mutate, cache]);
+  return null;
+}
+
 function Routes({ mode }: { mode: LayoutMode }) {
   const [location, navigate] = useLocation();
   const profile = useProfile();
@@ -250,6 +270,7 @@ export function App() {
             <Routes mode={mode} />
           </Router>
           <Toasts />
+          <ReconnectRecovery />
           {splash !== "done" && <Splash leaving={splash === "leave"} />}
         </div>
       </LayoutContext.Provider>

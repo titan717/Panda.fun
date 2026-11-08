@@ -301,3 +301,7 @@ html[data-mode="mobile"] .set-panel, html[data-mode="mobile"] .upd-card, html[da
 }
 .m-ep.is-upcoming .m-ep-still, .m-ep.is-upcoming .m-ep-overview { opacity: 0.55; }
 .m-ep.is-upcoming .m-ep-meta { color: #8fb0ff; font-weight: 600; }
+
+/* Rows far below the fold skip layout and paint until they approach the viewport (D-55, perf round 2).
+   `auto` remembers each row's real height once rendered, so scrolling back never jumps. */
+section.m-row:nth-of-type(n+4) { content-visibility: auto; contain-intrinsic-block-size: auto 230px; }

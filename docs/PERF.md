@@ -2,6 +2,16 @@
 
 Measured on every release. Never regress.
 
+## v1.0.9
+
+| Metric | Value |
+|---|---|
+| Repeat web visit | The service worker serves the app shell and hashed `/assets/*` from cache, so a repeat load on the web makes no JavaScript or CSS request; pages are network-first with a 3 s cut-off, so a new deploy still shows at once. |
+| Artwork | TMDB posters and backdrops are cached on first view (CORS responses only, capped at 500 images; old hashed assets capped at 160). Revisited rows draw from the cache with no network wait and also work offline. |
+| 4K TVs | Screens ≥ 2560 physical px wide step artwork up one TMDB size (w342→w500, w780→w1280). Phones and 1080p TVs keep the light sizes, so their bytes are unchanged. |
+| Mobile Home | Rows from the fourth down use `content-visibility: auto` (230 px intrinsic height), so off-screen rows skip layout and paint until they come near the viewport. |
+| First load (gzip JS) | Index 28.4 KB (+0.3 KB for reconnect recovery, the image tier and SW registration); CSS 20.1 KB. No regression. |
+
 ## v1.0.8
 
 | Metric | Value |
