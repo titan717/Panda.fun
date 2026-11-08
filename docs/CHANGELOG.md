@@ -7,7 +7,7 @@ Every stable release of Panda.fun. The same notes ship in each GitHub Release an
 - **Personalize Home**: a new section in Help & Settings lets each profile reorder Home (Continue Watching, Top Picks, Top 10, Because You Watched, Shows You Watched and Panda's rows), hide whole sections or single rows such as Coming Soon, and reset everything in one step. On TV the up and down arrows keep focus, so a row can be pushed several places with repeated presses.
 - **Compact cards**: Settings › Display › Card size › Compact fits more titles in every row and grid, on TV (250 × 333 posters instead of 300 × 400) and on phones (four posters across instead of three). Standard keeps the blueprint size and is still the default.
 - **Trailers your way on TV**: a new "Trailers behind rows" switch keeps trailers on the hero and Details but stops them behind the rows while you browse.
-- **Smaller, faster Android app**: release builds are now shrunk and optimised with R8, so the APK is smaller and starts with less code to load. The web bridge and update checker are kept intact.
+- **Smaller, faster Android app**: release builds are now shrunk and optimised with R8, so the download is 61 % smaller (11.7 MB → 4.5 MB) and starts with less code to load. The web bridge and update checker are kept intact.
 - **Smoother feel**: pages fade in instead of popping, and on phones posters, tiles and buttons press in slightly under your finger.
 - **Faster first load**: the Home row builder no longer loads before the profile picker, and the player's prompt styles load with the player (entry JavaScript 28.9 → 26.0 KB, styles 22.1 → 21.6 KB gzip).
 
