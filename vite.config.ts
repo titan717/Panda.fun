@@ -26,5 +26,5 @@ export default defineConfig(({ mode }) => ({
     rollupOptions: { output: { manualChunks: { react: ["preact", "preact/compat", "preact/hooks"], vendor: ["swr", "wouter", "@bbc/tv-lrud-spatial"] } } }
   },
   server: { port: 5173, host: true },
-  test: { environment: "happy-dom", include: ["src/**/*.test.{ts,tsx}"], globals: false }
+  test: { environment: "happy-dom", include: ["src/**/*.test.{ts,tsx}"], globals: false, css: { include: [/styles\/(tokens|tv)\.css/] } }
 }));
