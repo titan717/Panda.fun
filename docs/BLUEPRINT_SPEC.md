@@ -260,3 +260,21 @@ Side-by-side comparisons of the app (Playwright screenshots, `scripts/qa-shots.m
 | TV Settings | No blueprint screen (G-series gap) | Two-column layout from 17.1 unchanged; checked for overflow at 1280/1920/3840. |
 | TV player | Panel colour, focus pill, note size, check colour, Report icon, top-bar glyphs (tvplayer p3, p7, p9, p10) | Fixed (D-101). Pass 1 colours, pass 2 spacing (title 56 tu lower, 14 tu row gap), pass 3 icons. Matches except seek-preview frames (D-25, iframe limit). |
 | Phone player | Overlay per section 16 | No differences found. |
+
+## 24. v1.1.8 refinement results (Addendum 2, Release 2)
+
+Same method as section 23: `scripts/qa-shots.mjs` side by side with the Drive blueprints, `scripts/qa-viewports.mjs` (now takes `ROUTES=`) at all ten viewports for `/profiles`, `/collection/263`, `/continue-watching`, `/my-list`, `/calendar`, `/person/31`, `/settings/whats-new`, `/settings/updates`, `/browse/movie` and `/categories` with no overflow or clipped text left. Empty and populated states were both captured (`STATE_FILE=` seeds a Watchlist, history and a custom list).
+
+| Page | Differences found | Result after 3 passes |
+|---|---|---|
+| Who's watching (TV) | tv1#33 (part1 p34/35): avatars sit on a glowing horizon line low on the screen, upright poster band behind, cyan title and names; the app had a tilted full-screen wall and a centred row | Horizon line at 78 % with blue glow, avatars centred on it, upright centred poster band (7 columns, 6 in lite mode), title `#A9DCFF`, names `#7FA6C9`, focused name `#8FD3FF` bold ×1.18 (D-104). Pass 1 geometry, pass 2 colours and glow, pass 3 Manage Profiles placement. Matches. |
+| Who's watching (phone) | Same composition at phone scale | Horizon at 68 %, 4-column band. Matches at 360–430 and landscape. |
+| Profiles manage / edit | No differences against 3.x | Unchanged. |
+| My List and custom lists | Empty state small and high on the page | Glass-disc icon, centred in the free space on phones and TV (D-105). Populated grid unchanged. |
+| Continue Watching | TV grid used 3 of 4 possible columns at 1920; cards without a backdrop showed a flat blue tile | 4 columns at every TV size (D-107); cards fall back to the poster artwork before the text tile. |
+| Coming Up (calendar) | Empty state as above | Fixed with D-105; populated groups unchanged from v1.1.7. |
+| Cast and crew | No differences against 6.x / person spec | Unchanged; checked for clipping at all sizes. |
+| Collections | No dedicated page (gap G-14) | New Collection page (D-106) reached from Details › Collection (TV tile, phone row title). |
+| Browse and genre pages | Phone chip row cut "Top Rated" at the edge | Right-edge fade on scrollable chip rows ≤480 px so the cut chip reads as scrollable. |
+| Updates and What's New | Rate-limited GitHub requests showed "GitHub returned 403."; bullets were one undifferentiated block; TV text at phone size; long notes could not be scrolled with the remote | Notes ship with the build, API mirror fallback (D-108); headed items (bold title + body); 10-foot sizes; Up/Down scroll the notes card. |
+| Empty, loading and error states | TV states used phone sizes (fixed in this release before the pass); phone states were small | TV: 36 tu title, 24 tu body, 64 tu pill button, glass disc; phone: 18 px title, 44 px pill, centred. |

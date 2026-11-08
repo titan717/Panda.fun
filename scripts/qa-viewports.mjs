@@ -1,7 +1,7 @@
 import { chromium } from "playwright";
 const base = "http://127.0.0.1:4173";
 const VPS = [[360,640],[390,844],[430,932],[932,430],[768,1024],[820,1180],[1280,720],[1440,900],[1920,1080],[3840,2160]];
-const ROUTES = ["/", "/title/movie/550", "/title/tv/1396", "/search", "/settings", "/settings/sources", "/movies", "/new"];
+const ROUTES = process.env.ROUTES ? process.env.ROUTES.split(",") : ["/", "/title/movie/550", "/title/tv/1396", "/search", "/settings", "/settings/sources", "/movies", "/new"];
 const state = JSON.stringify({ profiles: [{ id: "p1", name: "You", avatar: "smile", kids: false, createdAt: 1 }], activeProfileId: "p1", prefs: {}, data: {} });
 const browser = await chromium.launch();
 for (const [w,h] of VPS) {
@@ -21,7 +21,7 @@ for (const [w,h] of VPS) {
         for (const el of document.querySelectorAll("button, a, h1, h2, h3, p, span, label")) {
           const cs = getComputedStyle(el); if (cs.visibility === "hidden" || cs.display === "none" || +cs.opacity === 0) continue;
           const b = el.getBoundingClientRect(); if (!b.width || !b.height) continue;
-          if (el.closest("[aria-hidden='true'], .tv-row-track, .m-row-track, [class*='track'], [class*='scroller'], .hero, [class*='hero'], .rail, iframe")) continue;
+          if (el.closest("[aria-hidden='true'], .tv-row-track, .m-row-track, [class*='track'], [class*='scroller'], [class*='chips'], .hero, [class*='hero'], .rail, iframe")) continue;
           if (b.right > innerWidth + 2 && b.left < innerWidth && el.children.length === 0 && el.textContent.trim()) out.push(`offscreen-right ${el.tagName}.${el.className} "${el.textContent.trim().slice(0,30)}" ${Math.round(b.right)}`);
           if (cs.textOverflow !== "ellipsis" && cs.overflow !== "visible" && el.scrollWidth > el.clientWidth + 2 && el.children.length === 0 && el.textContent.trim() && cs.whiteSpace === "nowrap") out.push(`clipped ${el.tagName}.${el.className} "${el.textContent.trim().slice(0,30)}"`);
         }

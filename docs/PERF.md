@@ -2,6 +2,15 @@
 
 Measured on every release. Never regress.
 
+## v1.1.8 (Release 2 pages; performance round 5)
+
+| Metric | Value |
+|---|---|
+| Entry chunk (gzip) | 28.9 KB, down from 29.6 KB. New code (collection route, release mirror fallback, bundled notes lookup) briefly took it to 30.1 KB; the YouTube IFrame loader moved out of `Trailer.tsx` into `src/lib/youtube.ts`, so Who's watching warms the API without pulling the trailer player (≈1.2 KB) into the entry. |
+| Entry CSS (gzip) | 22.1 KB, down from 22.65 KB: Details styles (TV 1.1 KB, phone 1.2 KB) load with the TV and phone chunks, which Vite loads before those chunks render, so there is no unstyled flash. |
+| Collection page | Own lazy chunk: 1.8 KB JS + 1.1 KB CSS gzip. |
+| Release notes | Each version's notes are a ~1.1 KB lazy chunk read only by What's New; no GitHub request is needed for the installed version. |
+
 ## v1.1.7 (ad shield, calendar, TV sidebar; performance round 4)
 
 | Metric | Value |

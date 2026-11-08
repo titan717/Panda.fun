@@ -483,3 +483,7 @@ html[data-mode="tv"] .p2-still-actions { gap: calc(16 * var(--tu)); margin-top: 
 .tvp-seekflash.is-r { right: 12%; }
 @keyframes tvp-flash { 0% { opacity: 0; } 20% { opacity: 1; } 100% { opacity: 0; } }
 /* v1.1.8: "View collection" tile closing the Details › Collection row */
+/* v1.1.8: Continue Watching / landscape grids use the full width — 4 columns at every TV size (D-107) */
+.tv-land-grid { grid-template-columns: repeat(4, minmax(0, 1fr)); padding-right: var(--safe-x); }
+.tv-land-grid > .tv-land { width: auto; }
+.tv-land-grid .tv-land-media { height: auto; aspect-ratio: 16 / 9; }

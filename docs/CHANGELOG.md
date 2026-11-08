@@ -2,6 +2,16 @@
 
 Every stable release of Panda.fun. The same notes ship in each GitHub Release and in Settings › What's New.
 
+## 1.1.8
+
+- **Who's watching, redesigned**: the profile picker now matches the blueprint, with your profiles standing on a glowing horizon line, an upright band of posters behind them, and brighter names that light up as you move.
+- **Collection pages**: open any movie collection from Details (the "View collection" tile on TV, the collection title on phones) to see every part in order, play the next one you haven't finished, and add the whole collection to your Watchlist in one step.
+- **Continue Watching fills the screen**: on TV the grid now uses four columns at every size, and titles without wide artwork show their poster instead of a blank tile, on TV and phones.
+- **What's New and updates that always load**: release notes now come with the app, update checks fall back to Panda's own server when GitHub is busy, notes are easier to read with a bold headline per change, and on TV the text is sized for the couch and scrolls with the remote.
+- **Clearer empty and error screens**: empty Watchlist, Continue Watching, Coming Up and error screens are centred, with a larger icon and a pill button, sized for the TV and for phones.
+- **Easier filters on phones**: filter chips that run past the edge of the screen now fade out, so it's clear you can scroll for more.
+- **Faster start**: the first download is smaller again (entry JavaScript 29.6 → 28.9 KB, styles 22.65 → 22.1 KB gzip).
+
 ## 1.1.7
 
 

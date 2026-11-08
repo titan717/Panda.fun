@@ -60,7 +60,7 @@ export const TvPoster = memo(function TvPoster({ item, id, rank, expand = true, 
 export const TvLandscape = memo(function TvLandscape({ item, id, sub, onFocusItem, pos }: { item: PandaItem; id: string; sub?: string | null } & CardFocus) {
   return (
     <Link href={titlePath(item)} id={id} className="tv-card tv-land" data-hover-focus onFocus={() => onFocusItem?.(item)} aria-label={cardLabel(item, pos, sub)}>
-      <span className="tv-land-media"><Img src={item.backdrop} alt="" title={item.title} /></span>
+      <span className="tv-land-media"><Img src={item.backdrop} fallback={item.poster} alt="" title={item.title} /></span>
       <span className="tv-land-title">{item.title}</span>
       <span className="tv-land-sub">{sub ?? landMeta(item)}</span>
     </Link>
@@ -89,7 +89,7 @@ export const TvContinue = memo(function TvContinue({ entry, id, onFocusItem, onR
       onClick={onRemove ? (e) => { e.preventDefault(); onRemove(); } : onOptions ? (e) => { e.preventDefault(); onOptions(); } : undefined}
       aria-label={onRemove ? `Remove ${entry.item.title} from Continue Watching` : onOptions ? `Options for ${entry.item.title}` : `${entry.upNext ? "Play" : "Resume"} ${entry.item.title}${continueSub(entry) ? `, ${continueSub(entry)}` : ""}`}>
       <span className="tv-land-media">
-        <Img src={entry.item.backdrop} alt="" title={entry.item.title} />
+        <Img src={entry.item.backdrop} fallback={entry.item.poster} alt="" title={entry.item.title} />
         <span className="progress"><span style={{ width: `${pct}%` }} /></span>
         {onRemove ? <span className="remove-mark" aria-hidden="true"><Icon name="trash" /></span> : onOptions ? <span className="remove-mark is-options" aria-hidden="true"><Icon name="more" /></span> : <Icon name="play" className="tv-land-play" />}
       </span>

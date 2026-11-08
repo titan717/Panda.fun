@@ -4,7 +4,8 @@ import { sizedImage } from "../lib/imageTier";
 import type { AvatarKind } from "../lib/store";
 
 /* ---------- Image with graceful fallback (spec 18.5) ---------- */
-export function Img({ src: rawSrc, alt, className, title, eager, sizes, style }: { src: string | null | undefined; alt: string; className?: string; title?: string; eager?: boolean; sizes?: string; style?: CSSProperties }) {
+/** `fallback` (v1.1.8): a second image (e.g. the poster when a title has no backdrop) tried before the text tile. */
+export function Img({ src: rawSrc, alt, className, title, eager, sizes, style, fallback }: { src: string | null | undefined; alt: string; className?: string; title?: string; eager?: boolean; sizes?: string; style?: CSSProperties; fallback?: string | null }) {
   const src = sizedImage(rawSrc);
   // State is keyed by URL rather than reset in an effect: a cached image can fire `load` before effects run,
   // and an effect-based reset would then hide an image that is already on screen.
@@ -16,6 +17,7 @@ export function Img({ src: rawSrc, alt, className, title, eager, sizes, style }:
     if (el && src && el.complete && el.naturalWidth > 0) setLoadedSrc(src);
   }, [src]);
   if (!src || failedSrc === src) {
+    if (fallback && fallback !== rawSrc) return <Img src={fallback} alt={alt} className={`img--fill ${className ?? ""}`} title={title} eager={eager} style={style} />;
     return (
       <div className={`img-fallback ${className ?? ""}`} role="img" aria-label={alt}>
         <span>{title ?? alt}</span>

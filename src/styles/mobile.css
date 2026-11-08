@@ -325,3 +325,5 @@ a.m-cast { color: inherit; text-decoration: none; }
 .m-page > .state .btn { min-height: 44px; padding: 0 24px; border-radius: 999px; }
 .m-row-link { display: inline-flex; align-items: center; gap: 4px; }
 .m-row-link .icon { width: 18px; height: 18px; color: var(--text-2); }
+/* v1.1.8: scrollable chip rows fade out at the right edge on phones so a cut chip reads as "scroll for more" */
+@media (max-width: 480px) { .m-chips:not(.m-chips--wrap) { -webkit-mask-image: linear-gradient(90deg, #000 calc(100% - 32px), transparent); mask-image: linear-gradient(90deg, #000 calc(100% - 32px), transparent); padding-right: 32px; } }

@@ -339,3 +339,4 @@ html[data-motion="reduce"] .p2-skip, html[data-motion="reduce"] .p2-next, html[d
 .p2-next-x .icon { width: calc(14 * var(--u)); height: calc(14 * var(--u)); }
 
 /* v1.1.7 Coming Up badges and notification prompt */
+.img--fill { object-fit: cover; object-position: 50% 22%; }

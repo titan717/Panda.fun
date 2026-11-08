@@ -39,7 +39,7 @@ export const MLand = memo(function MLand({ item, sub }: { item: PandaItem; sub?:
   return (
     <div className="m-land">
       <Link href={titlePath(item)} className="m-land-link" aria-label={item.title} onPointerDown={() => prefetchItem(item)}>
-        <span className="m-land-media"><Img src={item.backdrop} alt="" title={item.title} />{!isUpcoming(item) && <Icon name="play" className="m-land-play" />}</span>
+        <span className="m-land-media"><Img src={item.backdrop} fallback={item.poster} alt="" title={item.title} />{!isUpcoming(item) && <Icon name="play" className="m-land-play" />}</span>
         <span className="m-land-title">{item.title}</span>
         <span className="m-land-sub">{sub ?? landMeta(item)}</span>
       </Link>
@@ -56,7 +56,7 @@ export const MContinue = memo(function MContinue({ entry }: { entry: HistoryEntr
     <div className="m-land">
       <Link href={continueHref(entry)} className="m-land-link" aria-label={`${entry.upNext ? "Play" : "Resume"} ${entry.item.title}, ${continueSub(entry) ?? ""}`}>
         <span className="m-land-media">
-          <Img src={entry.item.backdrop} alt="" title={entry.item.title} />
+          <Img src={entry.item.backdrop} fallback={entry.item.poster} alt="" title={entry.item.title} />
           <Icon name="play" className="m-land-play" />
           <span className="progress"><span style={{ width: `${pct}%` }} /></span>
         </span>
