@@ -2,6 +2,8 @@
 # Called by .github/workflows/emulator-check.yml inside a booted emulator.
 set -uo pipefail
 NAME="$1"; PKG=com.kinoma.tv; mkdir -p shots
+# Every adb call is bounded: when the emulator itself dies ("error: closed") adb would otherwise block until the job timeout.
+adb() { timeout 90 command adb "$@"; local rc=$?; if [[ $rc == 124 ]]; then echo "adb timed out: $*"; command adb devices | tee -a shots/emulator.txt; fi; return $rc; }
 shot() { adb exec-out screencap -p > "shots/$NAME-$1.png"; echo "captured $1"; }
 # Update path (master mission §10: in-app update verified from the previous version)
 if compgen -G "prev/*.apk" >/dev/null; then
@@ -11,6 +13,8 @@ if compgen -G "prev/*.apk" >/dev/null; then
   # the old build's own updater must see the new release
   adb shell am start -W -n "$PKG/.ui.MainActivity" --es panda_path /settings/updates >/dev/null
   sleep 16; shot "updater-on-$PREV_TAG"
+  # What the old build's Check for Updates screen says (WebView text is exposed to uiautomator)
+  adb shell uiautomator dump /sdcard/upd.xml >/dev/null 2>&1 && adb shell cat /sdcard/upd.xml | grep -oE 'text="[^"]*(pdate|ersion|atest)[^"]*"' | head -8 | tee -a shots/upgrade.txt || true
   adb shell am force-stop "$PKG"
   # upgrade in place: fails on a different signing key or a lower versionCode
   if ! adb install -r apk/*.apk 2>&1 | tee -a shots/upgrade.txt | grep -q Success; then echo "UPDATE FAILURE: $PREV_TAG -> new APK did not install over the old one" | tee -a shots/upgrade.txt; exit 1; fi
