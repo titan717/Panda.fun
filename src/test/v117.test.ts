@@ -1,4 +1,7 @@
 import { describe, expect, it } from "vitest";
+import shellSrc from "../tv/TvShell.tsx?raw";
+import tokensSrc from "../styles/tokens.css?raw";
+import tvCssSrc from "../styles/tv.css?raw";
 import { buildCalendar, calendarBadges, getCalendarBadge, setCalendarBadges, dayLabel, followedIds, groupByDay, localDay, unseen } from "../lib/calendar";
 import { actions, getState, selectData } from "../lib/store";
 import { detailsCtas } from "../lib/watch";
@@ -92,16 +95,15 @@ describe("v1.1.7 calendar badges", () => {
 });
 
 describe("v1.1.7 TV sidebar", () => {
-  it("keeps the blueprint order, labels and geometry tokens", async () => {
-    const fs = await import("node:fs");
-    const shell = fs.readFileSync("src/tv/TvShell.tsx", "utf8");
+  it("keeps the blueprint order, labels and geometry tokens", () => {
+    const shell = shellSrc;
     const ids = [...shell.matchAll(/id: "(rail-[a-z]+)"/g)].map((m) => m[1]);
     expect(ids).toEqual(["rail-search", "rail-home", "rail-tv", "rail-movies", "rail-new", "rail-categories", "rail-myspace"]);
     expect(shell).toContain('label: "My Space"');
-    const tokens = fs.readFileSync("src/styles/tokens.css", "utf8");
+    const tokens = tokensSrc;
     expect(tokens).toContain("--rail-w-open: calc(400 * var(--tu))");
     expect(tokens).toContain("--rail-row: calc(94 * var(--tu))");
-    const css = fs.readFileSync("src/styles/tv.css", "utf8");
+    const css = tvCssSrc;
     const rail = css.slice(css.indexOf("/* ---------- sidebar (4"), css.indexOf("/* ---------- home (5, 6)"));
     for (const m of rail.matchAll(/transition: ([^;]+);/g)) for (const part of m[1]!.split(",")) expect(["transform", "opacity", "color", "box-shadow"]).toContain(part.trim().split(" ")[0]);
     expect(rail).not.toMatch(/transition:[^;]*\b(width|left|margin|padding)\b/);
