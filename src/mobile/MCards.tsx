@@ -11,7 +11,7 @@ import { continueHref, continueSub } from "../tv/TvCards";
 import type { PandaItem } from "../lib/types";
 
 /** Mobile poster (spec 12.3–12.5). */
-export const MPoster = memo(function MPoster({ item, rank, top10, className, context }: { item: PandaItem; rank?: number; top10?: boolean; className?: string; context?: ActionContext }) {
+export const MPoster = memo(function MPoster({ item, rank, top10, className, context, onOpen }: { item: PandaItem; rank?: number; top10?: boolean; className?: string; context?: ActionContext; onOpen?: () => void }) {
   const calBadge = useCalendarBadge(item.id);
   const reminded = useHasReminder(item.id);
   const badge = calBadge ?? itemBadge(item);
@@ -20,7 +20,7 @@ export const MPoster = memo(function MPoster({ item, rank, top10, className, con
     <>
     {/* press and hold opens quick actions (Watchlist 2.0) */}
     <Link href={titlePath(item)} className={`m-poster ${rank ? "has-rank" : ""} ${className ?? ""}`} aria-label={item.title}
-      onPointerDown={() => prefetchItem(item)} onContextMenu={(e) => { e.preventDefault(); setMenu(true); }}>
+      onPointerDown={() => prefetchItem(item)} onClick={onOpen} onContextMenu={(e) => { e.preventDefault(); setMenu(true); }}>
       {rank !== undefined && <span className="m-rank" aria-hidden="true">{rank}</span>}
       <span className="m-poster-media">
         <Img src={item.poster} alt="" title={item.title} />

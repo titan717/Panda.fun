@@ -109,3 +109,20 @@ describe("v1.1.7 TV sidebar", () => {
     expect(rail).not.toMatch(/transition:[^;]*\b(width|left|margin|padding)\b/);
   });
 });
+
+describe("v1.1.7 Search refinement", () => {
+  it("remembers titles opened from Search, newest first, without duplicates", async () => {
+    const { actions: a, getState: g, selectData: sel } = await import("../lib/store");
+    const one = { id: "movie:1", tmdbId: 1, type: "movie", title: "One" } as unknown as PandaItem;
+    const two = { id: "tv:2", tmdbId: 2, type: "tv", title: "Two" } as unknown as PandaItem;
+    a.clearRecentSearches();
+    a.addRecentTitle(one); a.addRecentTitle(two); a.addRecentTitle(one);
+    expect(sel(g()).recentTitles.map((i) => i.id)).toEqual(["movie:1", "tv:2"]);
+    a.clearRecentSearches();
+    expect(sel(g()).recentTitles).toEqual([]);
+  });
+  it("offers the blueprint's Popular Searches tabs in order", async () => {
+    const { POPULAR_TABS } = await import("../lib/useSearchState");
+    expect(POPULAR_TABS.map((t) => t.label)).toEqual(["India", "Hot & New", "Movies", "Shows"]);
+  });
+});

@@ -118,6 +118,8 @@ interface ProfileData {
   history: Record<string, HistoryEntry>;
   ratings: Record<string, Rating>;
   recentSearches: string[];
+  /** Titles opened from Search, newest first (blueprint 13.2 "Recent Searches" thumbnails). */
+  recentTitles: PandaItem[];
   /** "Remind Me" titles that are not out yet (v1.1.7), newest first. */
   reminders: PandaItem[];
   /** When the profile last opened Coming Up; alerts after this count as new. */
@@ -158,7 +160,7 @@ const defaultPrefs: Prefs = {
   preloadMode: "smart"
 };
 
-const emptyData = (): ProfileData => ({ watchlist: [], lists: [], history: {}, ratings: {}, recentSearches: [], reminders: [], alertsSeenAt: 0, alerted: [] });
+const emptyData = (): ProfileData => ({ watchlist: [], lists: [], history: {}, ratings: {}, recentSearches: [], recentTitles: [], reminders: [], alertsSeenAt: 0, alerted: [] });
 const MAX_REMINDERS = 100;
 const MAX_ALERTED = 300;
 
@@ -195,6 +197,7 @@ function load(): State {
     for (const p of parsed.profiles) {
       const d = { ...emptyData(), ...(parsed.data?.[p.id] ?? {}) };
       d.lists = Array.isArray(d.lists) ? d.lists.filter((l) => l && typeof l.id === "string" && typeof l.name === "string" && Array.isArray(l.items)) : [];
+      d.recentTitles = Array.isArray(d.recentTitles) ? d.recentTitles.filter((i) => i && typeof i.id === "string" && typeof i.tmdbId === "number").slice(0, 12) : [];
       d.reminders = Array.isArray(d.reminders) ? d.reminders.filter((i) => i && typeof i.id === "string" && typeof i.tmdbId === "number") : [];
       d.alerted = Array.isArray(d.alerted) ? d.alerted.filter((k) => typeof k === "string") : [];
       d.alertsSeenAt = typeof d.alertsSeenAt === "number" && Number.isFinite(d.alertsSeenAt) ? d.alertsSeenAt : 0;
@@ -296,6 +299,7 @@ export const getActiveData = () => selectData(state);
 export function useRatings() { return useStore((s) => selectData(s).ratings); }
 export function useRating(id: string) { return useStore((s) => selectData(s).ratings[id] ?? null); }
 export function useRecentSearches() { return useStore((s) => selectData(s).recentSearches); }
+export function useRecentTitles() { return useStore((s) => selectData(s).recentTitles); }
 export function useHistoryMap() { return useStore((s) => selectData(s).history); }
 export function useHistoryEntry(id: string) { return useStore((s) => selectData(s).history[id] ?? null); }
 
@@ -406,7 +410,10 @@ export const actions = {
     if (query.length < 2) return;
     patchActive((d) => ({ ...d, recentSearches: [query, ...d.recentSearches.filter((x) => x.toLowerCase() !== query.toLowerCase())].slice(0, 8) }));
   },
-  clearRecentSearches() { patchActive((d) => ({ ...d, recentSearches: [] })); },
+  addRecentTitle(item: PandaItem) {
+    patchActive((d) => ({ ...d, recentTitles: [item, ...d.recentTitles.filter((x) => x.id !== item.id)].slice(0, 12) }));
+  },
+  clearRecentSearches() { patchActive((d) => ({ ...d, recentSearches: [], recentTitles: [] })); },
   clearHistory() { patchActive((d) => ({ ...d, history: {} })); },
   saveProgress(item: PandaItem, p: { position: number; duration: number; season?: number; episode?: number; episodeTitle?: string | null; next?: { season: number; episode: number } | null; upcoming?: { season: number; episode: number; airDate: string } | null }) {
     if (!Number.isFinite(p.position) || p.position < 0) return;

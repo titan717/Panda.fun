@@ -240,11 +240,13 @@ html[data-mode="tv"] .tv-season:focus { background: var(--tv-translucent); borde
 
 /* ---------- search (8) ---------- */
 .tv-search { padding-top: calc(70 * var(--tu)); }
+/* 6-column Popular Searches / results grid (BLUEPRINT_SPEC 8.3, 19) */
+.tv-search .tv-grid { --poster-w: calc(256 * var(--tu)); --poster-h: calc(341 * var(--tu)); grid-template-columns: repeat(6, var(--poster-w)); gap: calc(24 * var(--tu)) calc(20 * var(--tu)); }
 .tv-search-bar { display: flex; align-items: center; gap: calc(20 * var(--tu)); }
 .tv-mic { display: grid; place-items: center; width: calc(72 * var(--tu)); height: calc(72 * var(--tu)); border-radius: 50%; background: var(--tv-mic-fill); font-size: calc(30 * var(--tu)); flex: none; transition: box-shadow var(--dur-focus); }
 .tv-mic.is-listening { background: var(--danger); animation: pulse 1.2s ease-in-out infinite; }
 html[data-mode="tv"] .tv-mic:focus { outline: var(--focus-border); box-shadow: var(--focus-glow); }
-.tv-search-field { flex: 1; max-width: calc(1360 * var(--tu)); display: flex; align-items: center; gap: calc(16 * var(--tu)); height: calc(72 * var(--tu)); padding: 0 calc(24 * var(--tu)); border-radius: calc(10 * var(--tu)); background: var(--tv-search-fill); border: calc(1.5 * var(--tu)) solid transparent; font-size: calc(28 * var(--tu)); }
+.tv-search-field { flex: 1; max-width: calc(1552 * var(--tu)); display: flex; align-items: center; gap: calc(16 * var(--tu)); height: calc(72 * var(--tu)); padding: 0 calc(24 * var(--tu)); border-radius: calc(10 * var(--tu)); background: var(--tv-search-fill); border: calc(1.5 * var(--tu)) solid transparent; font-size: calc(28 * var(--tu)); }
 .tv-search-clear { flex: none; display: inline-flex; align-items: center; gap: calc(10 * var(--tu)); height: calc(72 * var(--tu)); padding: 0 calc(26 * var(--tu)); border-radius: calc(10 * var(--tu)); background: var(--tv-mic-fill); color: var(--text-1); font-size: calc(24 * var(--tu)); font-weight: var(--fw-semibold); }
 .tv-search-clear svg { width: calc(26 * var(--tu)); height: calc(26 * var(--tu)); }
 .tv-search-clear:focus { outline: var(--focus-border); box-shadow: var(--focus-glow); }

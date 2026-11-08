@@ -1,18 +1,26 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useSearch as useQueryString } from "wouter";
 import { useDebounced, useSearch, useTrending } from "./hooks";
-import { actions, useProfile, useRecentSearches } from "./store";
+import useSWR from "swr";
+import { keys } from "./api";
+import { actions, usePrefs, useProfile, useRecentSearches, useRecentTitles } from "./store";
+import { isNew, isUpcoming } from "./format";
 import { isKidsSafe } from "./rows";
 import { listen, voiceSupported } from "./voice";
 import { toast } from "../components/ui";
-import type { PandaItem } from "./types";
+import type { PandaItem, Top10Payload } from "./types";
 
 export type SearchFilter = "all" | "movie" | "tv";
+/** "Popular Searches in" tabs (blueprint 13.3, TV 8.x). */
+export type PopularTab = "india" | "new" | "movie" | "tv" | "all";
+export const POPULAR_TABS: { id: PopularTab; label: string; icon: "trend" | "flame" | "movie" | "tv" }[] = [
+  { id: "india", label: "India", icon: "trend" }, { id: "new", label: "Hot & New", icon: "flame" }, { id: "movie", label: "Movies", icon: "movie" }, { id: "tv", label: "Shows", icon: "tv" }
+];
 export type SearchSort = "relevance" | "newest" | "rating";
 export const SEARCH_SORTS: { id: SearchSort; label: string }[] = [{ id: "relevance", label: "Best match" }, { id: "newest", label: "Newest" }, { id: "rating", label: "Top rated" }];
 
 /** Shared search state for TV and mobile (spec 8, 13): debounced live results, filters, recents, voice. */
-export function useSearchState() {
+export function useSearchState(defaultTab: PopularTab = "india") {
   const qs = useQueryString();
   const initial = new URLSearchParams(qs).get("q") ?? "";
   const [query, setQuery] = useState(initial);
@@ -21,8 +29,14 @@ export function useSearchState() {
   const [sort, setSort] = useState<SearchSort>("relevance");
   const debounced = useDebounced(query, 350);
   const search = useSearch(debounced);
-  const trending = useTrending("all", "day");
+  const [popularTab, setPopularTab] = useState<PopularTab>(defaultTab);
+  const trending = useTrending(popularTab === "movie" || popularTab === "tv" ? popularTab : "all", popularTab === "new" ? "week" : "day");
+  // India: the Top 10 for the profile's Top 10 language and for Hindi, merged (backend /panda/top10/:lang)
+  const lang = usePrefs().top10Lang;
+  const indiaA = useSWR<Top10Payload>(popularTab === "india" ? keys.top10(lang) : null, { revalidateOnFocus: false });
+  const indiaB = useSWR<Top10Payload>(popularTab === "india" && lang !== "hi" ? keys.top10("hi") : null, { revalidateOnFocus: false });
   const recents = useRecentSearches();
+  const recentTitles = useRecentTitles();
   const profile = useProfile();
   const [listening, setListening] = useState(false);
   const stop = useRef<() => void>(() => {});
@@ -48,7 +62,16 @@ export function useSearchState() {
   }, [base]);
   const results = useMemo(() => sortResults(genre ? base.filter((i) => i.genres.includes(genre)) : base, sort), [base, genre, sort]);
 
-  const popular = useMemo(() => (trending.data?.results ?? []).filter((i) => !profile?.kids || isKidsSafe(i)), [trending.data, profile?.kids]);
+  const popular = useMemo(() => {
+    const source = popularTab === "india"
+      ? [...(indiaA.data?.results ?? []), ...(indiaB.data?.results ?? [])].filter((i, n, all) => all.findIndex((x) => x.id === i.id) === n)
+      : trending.data?.results ?? [];
+    const list = source.filter((i) => !profile?.kids || isKidsSafe(i));
+    // Hot & New: this week's trending titles released in the last 90 days or still to come
+    if (popularTab !== "new") return list;
+    const fresh = list.filter((i) => isNew(i, 90) || isUpcoming(i));
+    return fresh.length >= 6 ? fresh : list;
+  }, [trending.data, indiaA.data, indiaB.data, profile?.kids, popularTab]);
 
   const active = debounced.trim().length >= 2;
   const commit = (q = query) => { if (q.trim().length >= 2) actions.addRecentSearch(q); };
@@ -65,8 +88,13 @@ export function useSearchState() {
     people: search.data?.query === debounced.trim() ? search.data?.people ?? [] : [],
     results, loading: active && !search.data && !search.error, error: search.error, retry: () => search.mutate(),
     stale: active && search.data?.query !== debounced.trim(),
-    popular, popularLoading: !trending.data && !trending.error,
-    recents, commit, clearRecents: actions.clearRecentSearches,
+    popular,
+    popularLoading: popularTab === "india" ? !indiaA.data && !indiaA.error : !trending.data && !trending.error,
+    popularError: (popularTab === "india" ? indiaA.error : trending.error) as Error | undefined,
+    retryPopular: () => { void (popularTab === "india" ? indiaA.mutate() : trending.mutate()); },
+    popularTab, setPopularTab,
+    recents, recentTitles, openTitle: (item: PandaItem) => { commit(); actions.addRecentTitle(item); },
+    commit, clearRecents: actions.clearRecentSearches,
     voiceSupported, listening, startVoice
   };
 }

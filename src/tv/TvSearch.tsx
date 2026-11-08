@@ -2,9 +2,6 @@ import { useEffect, useRef, useState } from "react";
 import { Icon } from "../components/Icon";
 import { EmptyState, ErrorState, Skeleton } from "../components/ui";
 import { SEARCH_SORTS, useSearchState, type SearchFilter } from "../lib/useSearchState";
-import { useLocation } from "wouter";
-import { useGenres } from "../lib/hooks";
-import { useProfile } from "../lib/store";
 import { focusEl } from "../lib/focus";
 import { TvPoster } from "./TvCards";
 
@@ -12,7 +9,8 @@ const FILTERS: { id: SearchFilter; label: string }[] = [{ id: "all", label: "All
 
 /** TV Search (spec 8). */
 export function TvSearch() {
-  const s = useSearchState();
+  // TV: one "Popular Searches" grid of today's trending titles (spec 8.3)
+  const s = useSearchState("all");
   const input = useRef<HTMLInputElement>(null);
   // Remote-friendly field (D-45): landing on Search focuses the field without popping the on-screen keyboard;
   // OK opens it, Enter/Search on the keyboard closes it and jumps to the first result.
@@ -34,10 +32,6 @@ export function TvSearch() {
     if (first && s.active) focusEl(first); else openKeyboard();
   };
   const grid = s.active ? s.results : s.popular;
-  const [, go] = useLocation();
-  const genres = useGenres();
-  const kids = Boolean(useProfile()?.kids);
-  const browse = (genres.data?.movie ?? []).filter((g) => !kids || g.name === "Animation" || g.name === "Family");
   const sortLabel = SEARCH_SORTS.find((x) => x.id === s.sort)?.label ?? "Best match";
   const nextSort = () => { const i = SEARCH_SORTS.findIndex((x) => x.id === s.sort); s.setSort(SEARCH_SORTS[(i + 1) % SEARCH_SORTS.length]!.id); };
   const note = s.active && !s.stale ? (s.interpreted ? `Showing ${s.interpreted}` : s.corrected ? `Showing results for “${s.corrected}”` : s.people.length ? `Including titles with ${s.people.join(", ")}` : null) : null;
@@ -68,16 +62,6 @@ export function TvSearch() {
           <button id="recent-clear" className="tv-chip tv-chip--quiet" onClick={() => { s.clearRecents(); focusEl(input.current); }} data-hover-focus><Icon name="close" /> Clear history</button>
         </section>
       )}
-      {!s.active && browse.length > 0 && (
-        <>
-          <h2 className="tv-section-title">Browse by Genre</h2>
-          <section className="tv-chips tv-chips--genres" aria-label="Browse by genre">
-            {browse.map((g) => (
-              <button key={g.id} id={`genre-${g.id}`} className="tv-chip" onClick={() => go(`/browse/movie?genre=${g.id}`)} data-hover-focus>{g.name}</button>
-            ))}
-          </section>
-        </>
-      )}
       {s.active && (
         <section className="tv-chips" aria-label="Filter results">
           {FILTERS.map((f) => (
@@ -99,7 +83,7 @@ export function TvSearch() {
       <section className={`tv-grid ${s.stale ? "is-stale" : ""}`} aria-busy={s.loading || s.popularLoading}>
         {(s.loading || (!s.active && s.popularLoading)) && Array.from({ length: 12 }, (_, i) => <Skeleton key={i} className="sk-poster" />)}
         {grid.map((it, i) => (
-          <div key={it.id} onClick={() => s.commit()}>
+          <div key={it.id} onClick={() => s.openTitle(it)}>
             <TvPoster item={it} id={`res-${i}`} expand={false} />
           </div>
         ))}
