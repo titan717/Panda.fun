@@ -9,6 +9,14 @@ export interface NativeBridge {
   exitApp?(): void;
   hasVoiceSearch?(): boolean;
   startVoiceSearch?(): void;
+  /** v1.1.7 notifications: "granted" | "denied" | "default". */
+  notificationPermission?(): string;
+  requestNotificationPermission?(): void;
+  showNotification?(tag: string, title: string, body: string, path: string): void;
+  takeLaunchPath?(): string;
+  /** v1.1.7 ad shield: JSON {events:[{source,kind,host}]} drained since the last call. */
+  shieldStats?(): string;
+  setShieldSource?(id: string): void;
 }
 
 declare global {

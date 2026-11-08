@@ -17,6 +17,7 @@ import type { TvChromeProps } from "../tv/TvPlayerChrome";
 import { lazyNamed } from "../lib/lazy";
 import { api } from "../lib/api";
 import { ADAPTERS, embedUrl, parseMessage, READY_TIMEOUT_MS, sendCommand, sourceName, SOURCE_ORDER } from "../lib/player";
+import { COMPAT, lastResortOnly, nativeShield, rankSources, recordPlay, SANDBOX, setShieldSource, shieldStats, syncNative } from "../lib/shield";
 import { nextEpisodeOf, prevEpisodeOf } from "../lib/watch";
 import { airsLater, pluralEps, runtime, titlePath, watchPath } from "../lib/format";
 import { PlayerPrompts, PlayerOptionsSheet } from "../components/PlayerPrompts";
@@ -73,14 +74,16 @@ function Player({ type, id, season, episode, start }: { type: MediaType; id: num
 
   const sources = useMemo(() => {
     const list = play.data?.sources ?? [];
-    return [...list].sort((a, b) => SOURCE_ORDER.indexOf(a.id) - SOURCE_ORDER.indexOf(b.id));
-  }, [play.data]);
+    return rankSources(list, SOURCE_ORDER, { tv });
+  }, [play.data, tv]);
   const [sourceId, setSourceId] = useState<SourceId>(prefs.preferredSource);
-  const source: PlaybackSource | undefined = sources.find((x) => x.id === sourceId) ?? sources[0];
   const tried = useRef(new Set<SourceId>());
+  // a compatibility source is never the first pick on a TV browser (ad shield §C.5)
+  const source: PlaybackSource | undefined = sources.find((x) => x.id === sourceId && !(lastResortOnly(x.id, tv) && !tried.current.size && sources.length > 1)) ?? sources[0];
   const [nativeControls, setNativeControls] = useState(false);
-  // TV draws the TV PLAYER blueprint chrome over sources that can hide their own controls (§6, §20)
-  const customChrome = tv && Boolean(source && ADAPTERS[source.id]?.hideControls) && !nativeControls;
+  // The TV PLAYER blueprint chrome is drawn over every source that can hide its own controls, on TV
+  // and touch alike: the iframe then never receives a click or tap (§6, §20, ad shield layer 1).
+  const customChrome = Boolean(source && ADAPTERS[source.id]?.hideControls) && !nativeControls;
   const [ready, setReady] = useState(false);
   const [paused, setPaused] = useState(false);
   const [overlay, setOverlay] = useState(true);
@@ -136,6 +139,46 @@ function Player({ type, id, season, episode, start }: { type: MediaType; id: num
   }, []);
   useEffect(() => { poke(); return () => { if (hideTimer.current) clearTimeout(hideTimer.current); }; }, [poke]);
   useEffect(() => { if (overlay && tv && !customChrome) focusEl(document.getElementById("pl-back")); }, [overlay, tv]); // eslint-disable-line react-hooks/exhaustive-deps
+
+  /* ---- ad shield (docs/AD_SHIELD.md) ---- */
+  const reclaimFocus = useCallback(() => {
+    // the embed must never keep keyboard / remote focus: hand it back to Panda's own controls
+    if (document.activeElement === frame.current) {
+      const target = document.getElementById("tvp-track") ?? document.getElementById("pl-back") ?? root.current;
+      (target as HTMLElement | null)?.focus({ preventScroll: true });
+    }
+  }, []);
+  useEffect(() => {
+    const onBlur = () => setTimeout(() => { if (customChrome) reclaimFocus(); }, 0);
+    window.addEventListener("blur", onBlur);
+    return () => window.removeEventListener("blur", onBlur);
+  }, [customChrome, reclaimFocus]);
+  useEffect(() => {
+    if (!source) return;
+    setShieldSource(source.id);
+    if (COMPAT[source.id]) toast(nativeShield ? `${SHORT[source.id]} uses its own controls. Panda blocks its popups and redirects` : `${SHORT[source.id]} uses its own controls. Popups are blocked where your browser allows it`, 4200);
+    // compatibility sources run unsandboxed on the web: ask before anything navigates the app away
+    if (!COMPAT[source.id] || nativeShield) return;
+    const guard = (e: BeforeUnloadEvent) => { e.preventDefault(); e.returnValue = ""; };
+    window.addEventListener("beforeunload", guard);
+    return () => window.removeEventListener("beforeunload", guard);
+  }, [source?.id]); // eslint-disable-line react-hooks/exhaustive-deps
+  useEffect(() => { if (ready && source) recordPlay(source.id); }, [ready, source?.id]); // eslint-disable-line react-hooks/exhaustive-deps
+  useEffect(() => () => {
+    // drain what the Android shield stopped; a noisy session becomes an automatic ranking signal
+    const before = shieldStats();
+    syncNative();
+    const after = shieldStats();
+    const blocked = after.popups + after.navigations - before.popups - before.navigations;
+    setShieldSource(null);
+    const s = sourceRef.current;
+    const e = epRef.current;
+    if (s && blocked >= 3) void api.report({ type, tmdbId: id, season: isTv ? e.s : undefined, episode: isTv ? e.e : undefined, source: s, issue: "popups", position: Math.floor(pos.current.position) }).catch(() => undefined);
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps
+  const sourceRef = useRef<SourceId | null>(null);
+  sourceRef.current = source?.id ?? null;
+  const epRef = useRef(ep);
+  epRef.current = ep;
 
   /* ---- source readiness + automatic fallback (spec 16.4) ---- */
   const fallback = useCallback((reason: string) => {
@@ -286,7 +329,7 @@ function Player({ type, id, season, episode, start }: { type: MediaType; id: num
     if (optionsSheet) { setOptionsSheet(null); return; }
     if (upNext) { setUpNext(null); return; }
     exit();
-  }, !(tv && customChrome));
+  }, !customChrome);
 
   const switchSource = (sid: SourceId) => {
     if (sid === source?.id) return;
@@ -393,6 +436,7 @@ function Player({ type, id, season, episode, start }: { type: MediaType; id: num
   }
 
   const title = details?.title ?? "";
+  const isolated = Boolean(source) && customChrome && !COMPAT[source!.id];
   const subtitle = isTv ? `S${ep.s} E${ep.e}${epInfo?.title ? ` · ${epInfo.title}` : ""}` : [details?.year, runtime(details?.runtime)].filter(Boolean).join(" · ");
   const src = source ? embedUrl(source, { customChrome, start: reloadAt ?? undefined, quality: prefs.quality, autoskip: prefs.autoSkipIntro }) : null;
 
@@ -400,9 +444,10 @@ function Player({ type, id, season, episode, start }: { type: MediaType; id: num
     <div ref={root} className={`player ${overlay ? "is-overlay" : ""} ${tv ? "player--tv" : "player--touch"}`} onKeyDown={onKeyDown} onMouseMove={poke} role="application" aria-label={`Playing ${title}`}>
       {play.error && !play.data && <div className="player-center"><ErrorState message={play.error.message} onRetry={() => play.mutate()} /></div>}
       {src && source && (
-        <iframe key={`${source.id}-${customChrome ? "c" : "n"}-${prefs.quality}`} ref={frame} className="player-frame" src={src} title={`${title} — ${SHORT[source.id]}`}
-          allow="autoplay; fullscreen; encrypted-media; picture-in-picture" allowFullScreen referrerPolicy="origin" tabIndex={tv && !nativeControls ? -1 : 0}
-          onLoad={() => { if (source.events !== "cinesrc") setReady(true); }} />
+        <iframe key={`${source.id}-${customChrome ? "c" : "n"}-${prefs.quality}`} ref={frame} className={`player-frame ${isolated ? "is-isolated" : ""}`} src={src} title={`${title} — ${SHORT[source.id]}`}
+          {...(SANDBOX[source.id]?.attr ? { sandbox: SANDBOX[source.id]!.attr! } : {})} data-sandbox={SANDBOX[source.id]?.id ?? "none"}
+          allow="autoplay; fullscreen; encrypted-media; picture-in-picture" allowFullScreen referrerPolicy="origin" tabIndex={isolated || (tv && !nativeControls) ? -1 : 0}
+          onLoad={() => { if (source.events !== "cinesrc") setReady(true); if (isolated) reclaimFocus(); }} />
       )}
       {!ready && !play.error && (
         <div className="player-loading" aria-live="polite">
@@ -411,7 +456,7 @@ function Player({ type, id, season, episode, start }: { type: MediaType; id: num
         </div>
       )}
       <div className="player-hotzone" onMouseEnter={poke} aria-hidden="true" />
-      {tv && customChrome ? <Suspense fallback={null}><TvPlayerChrome {...chromeProps()} /></Suspense> : <>
+      {customChrome ? <Suspense fallback={null}><TvPlayerChrome {...chromeProps()} touch={!tv} /></Suspense> : <>
       <div className="player-top lrud-container">
         <button id="pl-back" className="pl-btn" onClick={exit} aria-label="Back" data-hover-focus><Icon name="back" /></button>
         <div className="pl-title"><strong>{title}</strong><span>{subtitle}</span></div>

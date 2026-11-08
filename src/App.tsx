@@ -3,15 +3,17 @@ import { KidsGate } from "./components/KidsGate";
 import { SWRConfig, useSWRConfig } from "swr";
 import { Route, Router, Switch, useLocation, useParams } from "wouter";
 import { useHashLocation } from "wouter/use-hash-location";
-import { fetcher } from "./lib/api";
+import { api, fetcher } from "./lib/api";
 import { persistentCache } from "./lib/cache";
 import { setPrefetchDataSaver, setPreloadMode } from "./lib/network";
 import { detectLayout, type LayoutMode } from "./lib/device";
 import { LayoutContext, useLayout } from "./lib/layout";
 import { installKeyHandling, setRootBackHandler, setTvNavigation } from "./lib/focus";
 import { BUILD_TARGET } from "./lib/nav";
-import { actions, getState, usePrefs, useProfile } from "./lib/store";
-import { exitApp, isAndroidApp } from "./lib/native";
+import { actions, getActiveData, getState, usePrefs, useProfile, useStore } from "./lib/store";
+import { notifyPermission, setNotifyNavigator, showNotification, takeLaunchPath } from "./lib/notify";
+import { alertSub, buildCalendar, dayStart, followedIds, localDay } from "./lib/calendar";
+import { exitApp, isAndroidApp, native } from "./lib/native";
 import { useOnline, useReducedMotion } from "./lib/hooks";
 import { compareVersions, fetchLatestRelease, installedVersion, takeUpdateNotice } from "./lib/updates";
 import { ErrorBoundary, OfflineBanner, Toasts, toast } from "./components/ui";
@@ -29,6 +31,7 @@ const loadUpdates = () => import("./pages/Updates");
 const loadInfo = () => import("./pages/Info");
 const loadWhatsNew = () => import("./pages/WhatsNew");
 const loadPerson = () => import("./pages/Person");
+const loadCalendar = () => import("./pages/Calendar");
 
 const lz = lazyNamed;
 const TvShell = lz(loadTv, "TvShell");
@@ -53,6 +56,7 @@ const TermsPage = lz(loadInfo, "TermsPage");
 const WhatsNewPage = lz(loadWhatsNew, "WhatsNewPage");
 const WhatsNewSheet = lz(loadWhatsNew, "WhatsNewSheet");
 const PersonPage = lz(loadPerson, "PersonPage");
+const CalendarPage = lz(loadCalendar, "CalendarPage");
 
 /** Start downloading the active layout at once, and the rest of the app when the device is idle. */
 export function prefetchRoutes(mode: LayoutMode) {
@@ -118,20 +122,56 @@ function useSplash() {
   return phase;
 }
 
-/** Background check for new releases when the user opted into notifications. */
+/** Background check for new app releases when the user opted into notifications. */
 function useReleaseNotifications() {
   const prefs = usePrefs();
   useEffect(() => {
-    if (!prefs.notifications || !("Notification" in window) || Notification.permission !== "granted") return;
+    if (!prefs.notifications || notifyPermission() !== "granted") return;
     const ctrl = new AbortController();
     fetchLatestRelease(ctrl.signal).then((r) => {
       if (compareVersions(r.version, installedVersion()) > 0 && getState().prefs.notifiedTag !== r.tag) {
-        new Notification("Panda.fun update available", { body: `Version ${r.version} is ready to install.`, icon: "./pwa-192x192.png" });
+        showNotification({ tag: `update-${r.tag}`, title: "Panda.fun update available", body: `Version ${r.version} is ready to install.`, path: "/settings/updates" });
         actions.setPrefs({ notifiedTag: r.tag });
       }
     }).catch(() => { /* offline or rate-limited: try again next launch */ });
     return () => ctrl.abort();
   }, [prefs.notifications]);
+}
+
+const ALERT_EVERY = 3 * 3600_000;
+
+/** New-episode and release notifications for followed titles (v1.1.7, spec 15.4). */
+function useEpisodeAlerts() {
+  const prefs = usePrefs();
+  const profileId = useStore((s) => s.activeProfileId);
+  useEffect(() => {
+    if (!prefs.notifications || !profileId) return;
+    let ctrl: AbortController | null = null;
+    const run = async () => {
+      if (notifyPermission() !== "granted" || (document.visibilityState === "hidden" && !native)) return;
+      const data = getActiveData();
+      if (!data) return;
+      const ids = followedIds(data);
+      if (!ids.length) return;
+      ctrl?.abort(); ctrl = new AbortController();
+      try {
+        const res = await api.calendar(ids, ctrl.signal);
+        const { fresh } = buildCalendar(res.entries, data);
+        const minDay = dayStart(localDay(Date.now() - 2 * 86_400_000));
+        const sent = new Set(data.alerted);
+        const due = fresh.filter((a) => !sent.has(a.key) && dayStart(a.airDate) >= minDay);
+        if (due.length > 3) {
+          showNotification({ tag: "panda-new", title: `${due.length} new episodes and releases`, body: [...new Set(due.map((a) => a.item.title))].slice(0, 4).join(", "), path: "/calendar" });
+        } else {
+          for (const a of due) showNotification({ tag: a.key, title: a.kind === "episode" ? `New episode of ${a.item.title}` : `${a.item.title} is out now`, body: alertSub(a), path: a.href });
+        }
+        if (fresh.length) actions.markAlerted(fresh.map((a) => a.key));
+      } catch { /* offline: next tick */ }
+    };
+    const first = setTimeout(run, 8000);
+    const every = setInterval(run, ALERT_EVERY);
+    return () => { clearTimeout(first); clearInterval(every); ctrl?.abort(); };
+  }, [prefs.notifications, profileId]);
 }
 
 function Home({ kind }: { kind: PageKind }) {
@@ -204,6 +244,11 @@ function Routes({ mode }: { mode: LayoutMode }) {
     if (t) document.title = t;
   }, [location]);
 
+  // notification taps: live (window.__pandaOpen) and cold start (path kept until a profile is chosen)
+  const launch = useRef<string | null>(takeLaunchPath());
+  useEffect(() => { setNotifyNavigator((p) => { if (getState().activeProfileId) navigate(p); else launch.current = p; }); return () => setNotifyNavigator(null); }, [navigate]);
+  useEffect(() => { if (profile && launch.current) { const p = launch.current; launch.current = null; navigate(p); } }, [profile, navigate]);
+
   const [notice, setNotice] = useState<string | null>(takeUpdateNotice);
   const needsProfile = !profile && !PUBLIC_PATHS.includes(location) && !location.startsWith("/profiles");
   if (needsProfile) return <ProfileSelect />;
@@ -240,6 +285,7 @@ function Routes({ mode }: { mode: LayoutMode }) {
             <Route path="/my-space">{tv ? <TvMySpace /> : <MMySpace />}</Route>
             <Route path="/my-list"><MyListPage /></Route>
             <Route path="/continue-watching"><ContinueWatchingPage /></Route>
+            <Route path="/calendar"><CalendarPage /></Route>
             <Route path="/profiles/manage"><ProfileManage /></Route>
             <Route path="/profiles/new"><ProfileEdit isNew /></Route>
             <Route path="/profiles/edit/:id"><ProfileEdit /></Route>
@@ -266,6 +312,7 @@ export function App() {
   useDisplayPrefs(mode);
   const splash = useSplash();
   useReleaseNotifications();
+  useEpisodeAlerts();
   const routerProps = BUILD_TARGET === "android" ? { hook: useHashLocation } : {};
   return (
     <SWRConfig value={{ fetcher, provider: persistentCache, revalidateOnFocus: false, errorRetryCount: 2, shouldRetryOnError: true }}>

@@ -7,8 +7,9 @@ import { VideoOverlay } from "../components/VideoOverlay";
 import { warmPlayback } from "../lib/prefetch";
 import { whenIdle } from "../lib/lazy";
 import { useLiteMotion, useSeason, useTitle, useTrailerStage } from "../lib/hooks";
-import { actions, useHasLists, useHistoryEntry, useInWatchlist, useListCount, usePrefs, useRating } from "../lib/store";
+import { actions, useHasReminder, useHasLists, useHistoryEntry, useInWatchlist, useListCount, usePrefs, useRating } from "../lib/store";
 import { SaveToSheet } from "../components/QuickActions";
+import { toggleReminder } from "../components/Remind";
 import { castAndCrew, detailsMeta, languageName, voteLabel, pluralEps, runtime, shortDate, airsLater } from "../lib/format";
 import { detailsCtas, episodeRow } from "../lib/watch";
 import { focusEl, focusFirst, useBackHandler } from "../lib/focus";
@@ -68,6 +69,8 @@ function TvDetailsView({ d, initialTab }: { d: TitleDetails; initialTab?: Tab })
   const root = useRef<HTMLDivElement>(null);
   const cta = useRef<HTMLAnchorElement>(null);
   const { primary, secondary } = detailsCtas(d, history);
+  const reminded = useHasReminder(d.id);
+  const remind = primary.kind === "remind";
 
   useEffect(() => {
     const panel = initialTab ? document.getElementById("tab-panel") : null;
@@ -121,8 +124,9 @@ function TvDetailsView({ d, initialTab }: { d: TitleDetails; initialTab?: Tab })
                     <Icon name="play" /> {secondary.label} <span className="tv-cta-sub">{secondary.sub}</span>
                   </a>
                 )}
-                <a ref={cta} href={primary.href} id="det-primary" className="tv-cta" data-hover-focus onClick={(e) => { e.preventDefault(); go(primary.href); }}>
-                  <Icon name="play" /> {primary.label} {primary.sub && <span className="tv-cta-sub">{primary.sub}</span>}
+                <a ref={cta} href={primary.href} id="det-primary" className={`tv-cta ${remind && reminded ? "is-reminded" : ""}`} data-hover-focus aria-pressed={remind ? reminded : undefined}
+                  onClick={(e) => { e.preventDefault(); if (remind) toggleReminder(d); else go(primary.href); }}>
+                  <Icon name={remind ? (reminded ? "check" : "bell") : "play"} /> {remind && reminded ? "Reminder Set" : primary.label} {primary.sub && <span className="tv-cta-sub">{primary.sub}</span>}
                 </a>
               </div>
               <button id="det-list" className={`tv-square ${inList ? "is-on" : ""}`} onClick={toggleList} aria-pressed={inList} aria-label={hasLists ? `Save to a list${inList ? ", saved" : ""}` : inList ? "Remove from Watchlist" : "Add to Watchlist"} data-hover-focus>

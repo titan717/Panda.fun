@@ -40,6 +40,12 @@ import androidx.webkit.WebViewAssetLoader
 import com.kinoma.tv.data.UpdateChecker
 import com.kinoma.tv.data.UpdateInfo
 import kotlinx.coroutines.launch
+import com.kinoma.tv.shield.AdShield
+import android.Manifest
+import android.os.Message
+import android.webkit.PermissionRequest
+import android.webkit.JsResult
+import android.webkit.JsPromptResult
 import java.io.InputStream
 
 class MainActivity : ComponentActivity() {
@@ -65,11 +71,26 @@ class MainActivity : ComponentActivity() {
     private lateinit var diagnosticContainer: LinearLayout
     private lateinit var diagnosticText: TextView
     private var pendingVerifiedUpdateUri: Uri? = null
+    /** Path from a tapped notification, handed to the web app once it asks (cold start). */
+    @Volatile private var launchPath: String? = null
+
+    private val notifPermLauncher = registerForActivityResult(ActivityResultContracts.RequestPermission()) { _ ->
+        val js = "window.__pandaNotifPerm && window.__pandaNotifPerm(${JSONObject.quote(Notifier.permission(this))})"
+        if (::webView.isInitialized) webView.evaluateJavascript(js, null)
+    }
 
     companion object {
         private const val TAG = "KinomaTV"
         private const val APP_DOMAIN = "appassets.androidplatform.net"
         private const val WEB_ENTRY_URL = "https://$APP_DOMAIN/assets/web/index.html"
+
+        /** Same policy as vercel.json (checked by src/test/v117.test.ts) for the web build: only the two providers and YouTube may be framed. */
+        private val SECURITY_HEADERS = mapOf(
+            "Content-Security-Policy" to "default-src 'self'; base-uri 'self'; object-src 'none'; frame-ancestors 'self'; form-action 'self'; script-src 'self' https://www.youtube.com https://s.ytimg.com; style-src 'self' 'unsafe-inline'; font-src 'self' data:; img-src 'self' data: blob: https://image.tmdb.org https://i.ytimg.com https://img.youtube.com; media-src 'self' blob:; connect-src 'self' https://apikinoma.vercel.app https://api.github.com; frame-src https://cinesrc.st https://*.cinesrc.st https://vidy.st https://*.vidy.st https://www.youtube-nocookie.com https://www.youtube.com; worker-src 'self' blob:; manifest-src 'self'",
+            "Permissions-Policy" to "autoplay=(self \"https://cinesrc.st\" \"https://www.vidy.st\" \"https://vidy.st\" \"https://www.youtube-nocookie.com\"), fullscreen=(self \"https://cinesrc.st\" \"https://www.vidy.st\" \"https://vidy.st\" \"https://www.youtube-nocookie.com\"), picture-in-picture=(self \"https://cinesrc.st\" \"https://www.vidy.st\" \"https://vidy.st\"), microphone=(), camera=(), geolocation=()",
+            "Referrer-Policy" to "strict-origin-when-cross-origin",
+            "X-Content-Type-Options" to "nosniff"
+        )
     }
 
     @SuppressLint("SetJavaScriptEnabled")
@@ -77,6 +98,8 @@ class MainActivity : ComponentActivity() {
         super.onCreate(savedInstanceState)
 
         Log.i(TAG, "Starting Panda.fun MainActivity")
+        AdShield.load(applicationContext)
+        launchPath = intent?.getStringExtra(Notifier.EXTRA_PATH)
 
         // TV viewing stays immersive; phones and tablets retain their system bars.
         if (isTelevisionDevice()) {
@@ -160,7 +183,7 @@ class MainActivity : ComponentActivity() {
         // Add JavaScript bridge for TV and updater integration
         webView.addJavascriptInterface(KinomaTVBridge(this), "KinomaNative")
 
-        webView.webViewClient = object : WebViewClient() {
+        webView.webViewClient = object : CrashSafeWebViewClient() {
             override fun shouldInterceptRequest(
                 view: WebView,
                 request: WebResourceRequest
@@ -175,8 +198,36 @@ class MainActivity : ComponentActivity() {
                     // Fall back to asset loader
                     return assetLoader.shouldInterceptRequest(url)
                 }
+                // Ad shield layer 4: known ad, tracker and popup hosts get an empty response.
+                if (AdShield.isBlockedHost(url.host)) {
+                    AdShield.record("request", url)
+                    return AdShield.emptyResponse()
+                }
                 // External HTTPS requests (MovieApi, artwork CDNs and playback providers) pass through
                 return super.shouldInterceptRequest(view, request)
+            }
+
+            /**
+             * Ad shield layer 3: the top-level document may only ever be the bundled app. Provider frames may
+             * navigate inside themselves over http(s); intent:, market:, app links and every other scheme are
+             * refused everywhere, so nothing can launch the Play Store, a browser or another app.
+             */
+            override fun shouldOverrideUrlLoading(view: WebView, request: WebResourceRequest): Boolean {
+                val url = request.url
+                val scheme = url.scheme?.lowercase()
+                if (scheme != "https" && scheme != "http") {
+                    AdShield.record("app-launch", url)
+                    return true
+                }
+                if (request.isForMainFrame && !AdShield.isAllowedNavigation(url, APP_DOMAIN)) {
+                    AdShield.record("navigation", url)
+                    return true
+                }
+                if (AdShield.isBlockedHost(url.host)) {
+                    AdShield.record("navigation", url)
+                    return true
+                }
+                return false
             }
 
             override fun onPageStarted(view: WebView, url: String, favicon: android.graphics.Bitmap?) {
@@ -251,17 +302,48 @@ class MainActivity : ComponentActivity() {
                 super.onReceivedSslError(view, handler, error)
             }
 
-            override fun onRenderProcessGone(
-                view: WebView,
-                detail: android.webkit.RenderProcessGoneDetail
-            ): Boolean {
-                Log.e(TAG, "WebView renderer process gone didCrash=${detail.didCrash()}")
-                showDiagnosticScreen("WebView renderer crash", WEB_ENTRY_URL, null, "WebView renderer process crashed. didCrash=${detail.didCrash()}")
+            override fun rendererGone(view: WebView, didCrash: Boolean): Boolean {
+                Log.e(TAG, "WebView renderer process gone didCrash=$didCrash")
+                showDiagnosticScreen("WebView renderer crash", WEB_ENTRY_URL, null, "WebView renderer process crashed. didCrash=$didCrash")
                 return true
             }
         }
 
+        // Ad shield layer 3: downloads started by embeds are refused (the updater uses its own downloader).
+        webView.setDownloadListener { url, _, _, _, _ -> AdShield.record("download", Uri.parse(url)) }
+
         webView.webChromeClient = object : WebChromeClient() {
+            // Multiple windows are "supported" only so every window.open / target=_blank lands here and is refused,
+            // instead of replacing the app's own page.
+            override fun onCreateWindow(view: WebView, isDialog: Boolean, isUserGesture: Boolean, resultMsg: Message?): Boolean {
+                val href = view.hitTestResult.extra
+                AdShield.record("popup", href?.let { Uri.parse(it) })
+                return false
+            }
+
+            override fun onPermissionRequest(request: PermissionRequest) {
+                AdShield.record("permission", request.origin)
+                request.deny()
+            }
+
+            override fun onGeolocationPermissionsShowPrompt(origin: String?, callback: android.webkit.GeolocationPermissions.Callback?) {
+                callback?.invoke(origin, false, false)
+            }
+
+            // Embedded frames cannot raise native dialogs over the app; the app itself never uses them.
+            override fun onJsAlert(view: WebView, url: String?, message: String?, result: JsResult): Boolean {
+                AdShield.record("dialog", url?.let { Uri.parse(it) }); result.cancel(); return true
+            }
+            override fun onJsConfirm(view: WebView, url: String?, message: String?, result: JsResult): Boolean {
+                AdShield.record("dialog", url?.let { Uri.parse(it) }); result.cancel(); return true
+            }
+            override fun onJsPrompt(view: WebView, url: String?, message: String?, defaultValue: String?, result: JsPromptResult): Boolean {
+                AdShield.record("dialog", url?.let { Uri.parse(it) }); result.cancel(); return true
+            }
+            override fun onJsBeforeUnload(view: WebView, url: String?, message: String?, result: JsResult): Boolean {
+                result.confirm(); return true
+            }
+
             override fun onShowCustomView(view: View?, callback: CustomViewCallback?) {
                 if (customView != null) {
                     callback?.onCustomViewHidden()
@@ -322,10 +404,12 @@ class MainActivity : ComponentActivity() {
                 val stream = assets.open(candidate)
                 val mimeType = getMimeType(candidate)
                 val response = WebResourceResponse(mimeType, "UTF-8", stream)
-                response.responseHeaders = mapOf(
+                val headers = mutableMapOf(
                     "Access-Control-Allow-Origin" to "*",
                     "Cache-Control" to "no-cache"
                 )
+                if (mimeType == "text/html") headers.putAll(SECURITY_HEADERS)
+                response.responseHeaders = headers
                 return response
             } catch (_: Exception) {
                 // Try next candidate
@@ -338,7 +422,7 @@ class MainActivity : ComponentActivity() {
             return try {
                 val stream = assets.open("web/index.html")
                 val response = WebResourceResponse("text/html", "UTF-8", stream)
-                response.responseHeaders = mapOf("Access-Control-Allow-Origin" to "*")
+                response.responseHeaders = mapOf("Access-Control-Allow-Origin" to "*") + SECURITY_HEADERS
                 response
             } catch (e: Exception) {
                 Log.e(TAG, "Failed to open fallback web/index.html for SPA route: $path", e)
@@ -402,9 +486,14 @@ class MainActivity : ComponentActivity() {
             displayZoomControls = false
             builtInZoomControls = false
             setSupportZoom(false)
-            // Embeds may try to open popups or new windows; never allow that.
-            setSupportMultipleWindows(false)
+            // Embeds may try to open popups or new windows; never allow that. With multiple-window support on,
+            // window.open and target=_blank are routed to onCreateWindow (which refuses) instead of taking over
+            // the app's page; scripts cannot open windows without a gesture at all.
+            setSupportMultipleWindows(true)
             javaScriptCanOpenWindowsAutomatically = false
+            allowFileAccessFromFileURLs = false
+            allowUniversalAccessFromFileURLs = false
+            setGeolocationEnabled(false)
 
             // Advertise the real device class: only TVs get the Leanback/SmartTV tokens that select the TV layout.
             val defaultUa = userAgentString
@@ -457,6 +546,17 @@ class MainActivity : ComponentActivity() {
             hideSystemUI()
             webView.requestFocus()
         }
+    }
+
+    override fun onNewIntent(intent: Intent) {
+        super.onNewIntent(intent)
+        setIntent(intent)
+        val path = intent.getStringExtra(Notifier.EXTRA_PATH) ?: return
+        if (::webView.isInitialized) {
+            webView.evaluateJavascript("window.__pandaOpen ? (window.__pandaOpen(${JSONObject.quote(path)}), 1) : 0") { r ->
+                if (r != "1") launchPath = path
+            }
+        } else launchPath = path
     }
 
     override fun onResume() {
@@ -744,6 +844,38 @@ class MainActivity : ComponentActivity() {
                 checkUpdatesFromSettings()
             }
         }
+
+        @JavascriptInterface
+        fun notificationPermission(): String = Notifier.permission(context)
+
+        @JavascriptInterface
+        fun requestNotificationPermission() {
+            runOnUiThread {
+                if (Build.VERSION.SDK_INT >= 33 && Notifier.permission(context) == "default") {
+                    notifPermLauncher.launch(Manifest.permission.POST_NOTIFICATIONS)
+                } else {
+                    webView.evaluateJavascript("window.__pandaNotifPerm && window.__pandaNotifPerm(${JSONObject.quote(Notifier.permission(context))})", null)
+                }
+            }
+        }
+
+        @JavascriptInterface
+        fun showNotification(tag: String, title: String, body: String, path: String) {
+            Notifier.show(context, tag, title, body, path)
+        }
+
+        @JavascriptInterface
+        fun takeLaunchPath(): String {
+            val p = launchPath ?: ""
+            launchPath = null
+            return p
+        }
+
+        @JavascriptInterface
+        fun shieldStats(): String = AdShield.drain()
+
+        @JavascriptInterface
+        fun setShieldSource(id: String) { AdShield.activeSource = id.take(24) }
 
         @JavascriptInterface
         fun downloadUpdate() {

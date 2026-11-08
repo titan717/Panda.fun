@@ -32,6 +32,8 @@ const PATHS = {
   volumeOff: "M5 10v4h3l4 4V6L8 10H5Zm11 0 5 5m0-5-5 5",
   volumeDown: "M5 10v4h3l4 4V6L8 10H5Zm11-1a4 4 0 0 1 0 6",
   next: "M6 6v12l9-6-9-6Zm11 0v12",
+  replay10: "M4 12a8 8 0 1 0 2.4-5.7M4 4v4h4M10.5 9.5v5M13.5 9.5h1.5a1 1 0 0 1 1 1v3a1 1 0 0 1-1 1h-1.5a1 1 0 0 1-1-1v-3a1 1 0 0 1 1-1Z",
+  forward10: "M20 12a8 8 0 1 1-2.4-5.7M20 4v4h-4M8.5 9.5v5M11.5 9.5H13a1 1 0 0 1 1 1v3a1 1 0 0 1-1 1h-1.5a1 1 0 0 1-1-1v-3a1 1 0 0 1 1-1Z",
   prev: "M18 6v12L9 12l9-6ZM7 6v12",
   list: "M8 6h12M8 12h12M8 18h12M4 6h.01M4 12h.01M4 18h.01",
   edit: "M4 20h4L19 9l-4-4L4 16v4Zm9-13 4 4",

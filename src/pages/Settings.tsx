@@ -7,16 +7,18 @@ import { Icon, PandaMark, type IconName } from "../components/Icon";
 import { PageHeader } from "../components/PageHeader";
 import { toast } from "../components/ui";
 import { Sheet } from "../components/Sheet";
-import { actions, usePrefs, useProfile, type Prefs } from "../lib/store";
+import { actions, usePrefs, useProfile, useReminders, type Prefs } from "../lib/store";
 import { useGenres, useSourceHealth } from "../lib/hooks";
 import { focusFirst } from "../lib/focus";
 import { useNav } from "../lib/nav";
 import { useIsTv } from "../lib/layout";
 import { installedVersion } from "../lib/updates";
 import { languageName } from "../lib/format";
+import { notifyPermission, requestNotify } from "../lib/notify";
 import type { SourceId } from "../lib/types";
+import { clearShield, COMPAT, nativeShield, SANDBOX, shieldStats, syncNative } from "../lib/shield";
 
-type SectionId = "profiles" | "playback" | "trailers" | "sources" | "languages" | "parental" | "display" | "storage" | "whatsnew" | "updates" | "help";
+type SectionId = "profiles" | "playback" | "trailers" | "sources" | "languages" | "parental" | "display" | "storage" | "notifications" | "whatsnew" | "updates" | "help";
 const SECTIONS: { id: SectionId; icon: IconName; title: string; sub: string }[] = [
   { id: "profiles", icon: "user", title: "Profiles & Account", sub: "Add, edit or switch profiles" },
   { id: "playback", icon: "play", title: "Playback", sub: "Quality and autoplay" },
@@ -26,6 +28,7 @@ const SECTIONS: { id: SectionId; icon: IconName; title: string; sub: string }[] 
   { id: "parental", icon: "lock", title: "Parental Controls", sub: "PIN for leaving Kids profiles" },
   { id: "display", icon: "tv", title: "Display", sub: "Layout, screen size, text, motion and contrast" },
   { id: "storage", icon: "file", title: "Data & Storage", sub: "Preloading, space used and clearing saved data" },
+  { id: "notifications", icon: "bell", title: "Notifications", sub: "New episodes, premieres and reminders" },
   { id: "whatsnew", icon: "sparkle", title: "What's New", sub: "Highlights of this version" },
   { id: "updates", icon: "download", title: "Check for Updates", sub: "Get the newest version of the app" },
   { id: "help", icon: "info", title: "About", sub: "Version, privacy and terms" }
@@ -113,7 +116,38 @@ function SourcesPanel() {
       <button id="sp-src-refresh" className="set-row" data-hover-focus onClick={() => void health.mutate()}>
         <span className="set-row-text"><span className="set-row-title">Check again</span></span><Icon name="refresh" />
       </button>
+      <ShieldInfo />
     </div>
+  );
+}
+
+/** Ad shield (docs/AD_SHIELD.md, layer 8): read-only counters and the sandbox mode of each source. */
+function ShieldInfo() {
+  const [stats, setStats] = useState(() => { syncNative(); return shieldStats(); });
+  const total = stats.popups + stats.navigations;
+  return (
+    <>
+      <p className="set-group-title">Ad shield</p>
+      <ul className="src-health" id="sp-shield">
+        <li className="src-health-row"><Icon name="shield" />
+          <span className="src-health-name">Blocked popups</span>
+          <span className="src-health-meta" id="sp-shield-count">{stats.popups} popups · {stats.navigations} redirects and app launches{nativeShield ? ` · ${stats.requests} ad requests` : ""}</span>
+        </li>
+        {SOURCES.map((s) => {
+          const b = stats.by[s.id];
+          const n = b ? b.popup + b.navigation + b.external + b.download : 0;
+          return (
+            <li key={s.id} className="src-health-row">
+              <span className={`src-dot src-dot--${SANDBOX[s.id].id === "strict" ? "healthy" : "degraded"}`} aria-hidden="true" />
+              <span className="src-health-name">{s.label}</span>
+              <span className="src-health-meta">{SANDBOX[s.id].label}{COMPAT[s.id] && nativeShield ? " · popups blocked by the app" : ""} · {n} blocked</span>
+            </li>
+          );
+        })}
+      </ul>
+      <p className="set-note">Panda stops popups, new tabs, redirects and app launches from video sources. Ads a provider draws inside its own video cannot be removed. Only the source and blocked host are counted, on this device.</p>
+      {total > 0 && <Row id="sp-shield-clear" title="Reset counters" onClick={() => { clearShield(); setStats(shieldStats()); toast("Ad shield counters reset"); }} right={<Icon name="refresh" />} />}
+    </>
   );
 }
 
@@ -142,6 +176,27 @@ function PinSetup({ onClose }: { onClose: () => void }) {
         <button className="btn btn--secondary" onClick={onClose}>Cancel</button>
       </div>
     </Sheet>
+  );
+}
+
+function NotificationsPanel() {
+  const prefs = usePrefs();
+  const reminders = useReminders();
+  const [perm, setPerm] = useState(notifyPermission);
+  const on = prefs.notifications && perm === "granted";
+  const toggle = async (v: boolean) => {
+    if (!v) { actions.setPrefs({ notifications: false }); toast("Notifications turned off"); return; }
+    const p = perm === "granted" ? perm : await requestNotify();
+    setPerm(p);
+    actions.setPrefs({ notifications: p === "granted" });
+    toast(p === "granted" ? "We'll let you know when new episodes land" : p === "unsupported" ? "This device can't show notifications" : "Notifications are blocked in your device settings");
+  };
+  return (
+    <div className="set-panel">
+      <Toggle id="sp-notify" title="New episodes and releases" sub={perm === "denied" ? "Blocked in your device settings. Allow notifications for Panda.fun there, then try again" : perm === "unsupported" ? "This device can't show notifications. Coming Up still lists everything" : "Notify me when a show on my Watchlist gets a new episode, or a title I set a reminder for comes out"} value={on} onChange={(v) => void toggle(v)} />
+      <Row id="sp-calendar" title="Coming Up" sub="New episodes and premieres for what you follow" href="/calendar" />
+      <p className="set-note">{reminders.length ? `${reminders.length} ${reminders.length === 1 ? "reminder" : "reminders"} set on this profile.` : "Tap Remind Me on any upcoming title to follow its release."} Panda checks for new episodes every few hours while the app is open.</p>
+    </div>
   );
 }
 
@@ -239,6 +294,8 @@ function Panel({ id }: { id: SectionId }) {
           <Row id="sp-terms" title="Terms of Use" href="/terms" />
         </div>
       );
+    case "notifications":
+      return <NotificationsPanel />;
     case "whatsnew":
       return (
         <div className="set-panel">

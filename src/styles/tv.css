@@ -488,3 +488,31 @@ html[data-mode="tv"] .p2-still h2 { font-size: calc(40 * var(--tu)); }
 html[data-mode="tv"] .p2-still p { font-size: calc(22 * var(--tu)); }
 html[data-mode="tv"] .p2-still-ring { height: calc(4 * var(--tu)); }
 html[data-mode="tv"] .p2-still-actions { gap: calc(16 * var(--tu)); margin-top: calc(10 * var(--tu)); }
+
+/* v1.1.7 Coming Up */
+.tv-count-badge { display: inline-grid; place-items: center; min-width: calc(30 * var(--tu)); height: calc(30 * var(--tu)); padding: 0 calc(8 * var(--tu)); margin-left: calc(4 * var(--tu)); border-radius: 999px; background: var(--badge-gradient); color: #fff; font-size: calc(17 * var(--tu)); font-weight: var(--fw-bold); }
+.cal-page .cal-group { margin-top: calc(30 * var(--tu)); }
+.tv-cta.is-reminded { background: rgba(255, 255, 255, 0.14); color: var(--text-1); }
+
+/* v1.1.7 touch mode of the blueprint player chrome (phones and tablets; iframe never receives taps) */
+.tvp.is-touch { --tu: clamp(0.5px, min(calc(100vw / 1100), calc(100vh / 620)), 1px); }
+.tvp-touch { position: absolute; inset: 0; pointer-events: auto; touch-action: manipulation; -webkit-tap-highlight-color: transparent; }
+.tvp-center { position: absolute; left: 50%; top: 50%; display: flex; align-items: center; gap: calc(70 * var(--tu)); transform: translate(-50%, -50%); opacity: 0; pointer-events: none; transition: opacity 300ms var(--ease-out); }
+.tvp.is-visible:not(.has-panel) .tvp-center { opacity: 1; pointer-events: auto; }
+.tvp-round { display: grid; place-items: center; width: calc(96 * var(--tu)); height: calc(96 * var(--tu)); min-width: 44px; min-height: 44px; border-radius: 50%; background: rgba(0, 0, 0, 0.35); color: #fff; }
+.tvp-round svg { width: 55%; height: 55%; }
+.tvp-round--main { width: calc(130 * var(--tu)); height: calc(130 * var(--tu)); min-width: 60px; min-height: 60px; background: rgba(255, 255, 255, 0.16); }
+.tvp-round--main .pause-glyph { transform: scale(1.3); }
+.tvp-back { display: grid; place-items: center; flex: none; width: 44px; height: 44px; margin: -8px 4px 0 -12px; color: #fff; }
+.tvp-back svg { width: 26px; height: 26px; }
+.tvp.is-touch .tvp-top { left: max(calc(40 * var(--tu)), env(safe-area-inset-left)); right: max(calc(40 * var(--tu)), env(safe-area-inset-right)); top: max(calc(30 * var(--tu)), env(safe-area-inset-top)); justify-content: flex-start; flex-wrap: wrap; }
+.tvp.is-touch .tvp-actions { margin-left: auto; }
+.tvp.is-touch .tvp-pill { min-height: 40px; }
+.tvp.is-touch .tvp-track { height: 5px; }
+.tvp.is-touch .tvp-track::before { content: ""; position: absolute; inset: -16px 0; }
+.tvp-seekflash { position: absolute; top: 50%; display: flex; align-items: center; gap: 6px; padding: 10px 16px; border-radius: 999px; background: rgba(0, 0, 0, 0.55); color: #fff; font-weight: var(--fw-semibold); transform: translateY(-50%); animation: tvp-flash 650ms var(--ease-out) forwards; pointer-events: none; }
+.tvp-seekflash svg { width: 22px; height: 22px; }
+.tvp-seekflash.is-l { left: 12%; }
+.tvp-seekflash.is-r { right: 12%; }
+@keyframes tvp-flash { 0% { opacity: 0; } 20% { opacity: 1; } 100% { opacity: 0; } }
+.player-frame.is-isolated { pointer-events: none; }

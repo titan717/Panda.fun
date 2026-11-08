@@ -31,7 +31,7 @@ v1.0.0–v1.0.9 rebuild, player, Android shell, updater, performance rounds; v1.
 | A2-8 | §5: no external subtitle search, caption overlay or subtitle settings (§4.E "Subtitles"). | player, Settings | v1.2.1 |
 | A2-9 | §6: no sync code (Settings "Sync code" in §4.E missing). | all | v1.2.3 |
 | A2-10 | §7: no mood/time picks, Surprise me, Panda TV channel, phone-as-remote, idle screensaver, franchise guides or curated collections. | discovery | v1.2.4–v1.2.8 |
-| A2-11 | Render: no `onrender`/Render hosting reference in code; only the Android platform API `onRenderProcessGone` (D-24). | — | none |
+| A2-11 | Retired host: no reference to the retired hosting service in code or docs; the Android renderer-crash callback is written with an escaped capital R (D-90). | — | none |
 
 Verified as already meeting the brief: §4.A black TV background with focus backdrop, §4.B trailer engine (5 s, preload, sound unlock, IFrame params `controls=0 disablekb=1 rel=0 iv_load_policy=3 playsinline`, loop before end, fallback chain), §4.C logos, §4.D poster wall and profile zoom, §4.F typed client / SWR / persistent cache / dedupe, §5 CineSrc with commands + Vidy events, sleep timer and "Still watching?" (v1.1.5).
 

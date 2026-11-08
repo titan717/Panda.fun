@@ -1,5 +1,5 @@
 import type {
-  CategoriesPayload, Episode, GenresPayload, ListPayload, PagePayload, PandaItem, PlaybackPayload, PlaybackSource, Rail,
+  CalendarEntry, CalendarEpisode, CalendarPayload, CalendarRef, CategoriesPayload, Episode, GenresPayload, ListPayload, PagePayload, PandaItem, PlaybackPayload, PlaybackSource, Rail,
   CrewMember, PersonCredit, PersonDetails, SearchPayload, SeasonDetails, SourceHealthPayload, TitleDetails, Top10Payload, Video, WallPayload, WallPoster
 } from "./types";
 
@@ -198,6 +198,32 @@ export function wall(path: string, v: unknown): WallPayload {
 }
 
 /** Validator chosen from the API path, so the generic SWR fetcher validates too. */
+const isDate = (v: unknown): v is string => typeof v === "string" && /^\d{4}-\d{2}-\d{2}$/.test(v);
+function calRef(v: unknown): CalendarRef | null {
+  if (!isObj(v)) return null;
+  const season = num(v.season), episode = num(v.episode);
+  if (season === null || episode === null) return null;
+  return { season, episode, name: str(v.name), airDate: isDate(v.airDate) ? v.airDate : null };
+}
+
+/** Release calendar (v1.1.7): entries with an unusable item are dropped, episodes need a real air date. */
+export function calendar(path: string, v: unknown): CalendarPayload {
+  const o = need(path, v);
+  const entries = arr(o.entries).map((x): CalendarEntry | null => {
+    if (!isObj(x)) return null;
+    const it = item(x.item);
+    if (!it) return null;
+    const episodes = arr(x.episodes).map((e): CalendarEpisode | null => {
+      if (!isObj(e) || !isDate(e.airDate)) return null;
+      const season = num(e.season), episode = num(e.episode);
+      if (season === null || episode === null || season < 1) return null;
+      return { season, episode, name: str(e.name), airDate: e.airDate, still: str(e.still), runtime: num(e.runtime) };
+    }).filter((e): e is CalendarEpisode => e !== null);
+    return { item: it, status: str(x.status), lastEpisode: calRef(x.lastEpisode), nextEpisode: calRef(x.nextEpisode), episodes };
+  }).filter((e): e is CalendarEntry => e !== null);
+  return { entries };
+}
+
 export function validatorFor(path: string): ((path: string, v: unknown) => unknown) | null {
   if (path.startsWith("/panda/page/")) return page;
   if (/^\/panda\/title\/tv\/\d+\/season\//.test(path)) return season;
@@ -211,5 +237,6 @@ export function validatorFor(path: string): ((path: string, v: unknown) => unkno
   if (path.startsWith("/panda/sources/health")) return sourceHealth;
   if (path.startsWith("/panda/wall")) return wall;
   if (path.startsWith("/panda/person/")) return person;
+  if (path.startsWith("/panda/calendar")) return calendar;
   return null;
 }

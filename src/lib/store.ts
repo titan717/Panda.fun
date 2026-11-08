@@ -118,6 +118,12 @@ interface ProfileData {
   history: Record<string, HistoryEntry>;
   ratings: Record<string, Rating>;
   recentSearches: string[];
+  /** "Remind Me" titles that are not out yet (v1.1.7), newest first. */
+  reminders: PandaItem[];
+  /** When the profile last opened Coming Up; alerts after this count as new. */
+  alertsSeenAt: number;
+  /** Alert keys already shown as a system notification, so each one is sent once. */
+  alerted: string[];
 }
 
 interface State {
@@ -152,7 +158,9 @@ const defaultPrefs: Prefs = {
   preloadMode: "smart"
 };
 
-const emptyData = (): ProfileData => ({ watchlist: [], lists: [], history: {}, ratings: {}, recentSearches: [] });
+const emptyData = (): ProfileData => ({ watchlist: [], lists: [], history: {}, ratings: {}, recentSearches: [], reminders: [], alertsSeenAt: 0, alerted: [] });
+const MAX_REMINDERS = 100;
+const MAX_ALERTED = 300;
 
 function uid() {
   return Math.random().toString(36).slice(2, 10) + Date.now().toString(36).slice(-4);
@@ -187,6 +195,9 @@ function load(): State {
     for (const p of parsed.profiles) {
       const d = { ...emptyData(), ...(parsed.data?.[p.id] ?? {}) };
       d.lists = Array.isArray(d.lists) ? d.lists.filter((l) => l && typeof l.id === "string" && typeof l.name === "string" && Array.isArray(l.items)) : [];
+      d.reminders = Array.isArray(d.reminders) ? d.reminders.filter((i) => i && typeof i.id === "string" && typeof i.tmdbId === "number") : [];
+      d.alerted = Array.isArray(d.alerted) ? d.alerted.filter((k) => typeof k === "string") : [];
+      d.alertsSeenAt = typeof d.alertsSeenAt === "number" && Number.isFinite(d.alertsSeenAt) ? d.alertsSeenAt : 0;
       for (const [k, h] of Object.entries(d.history ?? {})) if (h && h.episodes && typeof h.episodes !== "object") d.history[k] = { ...h, episodes: undefined };
       data[p.id] = d;
     }
@@ -277,6 +288,11 @@ export function useList(id: string | null) { return useStore((s) => (id ? select
 export function useHasLists() { return useStore((s) => selectData(s).lists.length > 0); }
 /** How many custom lists hold this title (the details + button shows it as saved). */
 export function useListCount(id: string) { return useStore((s) => selectData(s).lists.reduce((n, l) => n + (l.items.some((i) => i.id === id) ? 1 : 0), 0)); }
+export function useReminders() { return useStore((s) => selectData(s).reminders); }
+export function useHasReminder(id: string) { return useStore((s) => selectData(s).reminders.some((i) => i.id === id)); }
+export function useAlertsSeenAt() { return useStore((s) => selectData(s).alertsSeenAt); }
+/** Non-hook read of the active profile's data (background alert checks). */
+export const getActiveData = () => selectData(state);
 export function useRatings() { return useStore((s) => selectData(s).ratings); }
 export function useRating(id: string) { return useStore((s) => selectData(s).ratings[id] ?? null); }
 export function useRecentSearches() { return useStore((s) => selectData(s).recentSearches); }
@@ -364,6 +380,19 @@ export const actions = {
       watchlist: d.watchlist.filter((i) => i.id !== item.id),
       history: { ...d.history, [item.id]: { ...(d.history[item.id] ?? {}), item: slim(item), position: 0, duration: 0, completed: true, upNext: false, updatedAt: Date.now() } }
     }));
+  },
+  /** "Remind Me" on a title that is not out yet. Returns true when the reminder was set. */
+  toggleReminder(item: PandaItem) {
+    const exists = activeData().reminders.some((i) => i.id === item.id);
+    patchActive((d) => ({ ...d, reminders: exists ? d.reminders.filter((i) => i.id !== item.id) : [slim(item), ...d.reminders].slice(0, MAX_REMINDERS) }));
+    return !exists;
+  },
+  /** Coming Up was opened: everything up to now is no longer "new". */
+  markAlertsSeen(at = Date.now()) { patchActive((d) => (d.alertsSeenAt >= at ? d : { ...d, alertsSeenAt: at })); },
+  /** Remember alerts that were sent as system notifications (bounded, newest kept). */
+  markAlerted(keys: string[]) {
+    if (!keys.length) return;
+    patchActive((d) => ({ ...d, alerted: [...keys, ...d.alerted.filter((k) => !keys.includes(k))].slice(0, MAX_ALERTED) }));
   },
   rate(id: string, rating: Rating | null) {
     patchActive((d) => {

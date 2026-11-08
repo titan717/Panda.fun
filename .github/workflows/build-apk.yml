@@ -139,6 +139,12 @@ jobs:
       - name: Run web tests
         run: npm test
 
+      - name: Ad shield release gate (Playwright play flow per adapter, docs/AD_SHIELD.md)
+        run: |
+          npm run build
+          npx playwright install --with-deps chromium
+          npx playwright test e2e/shield.spec.ts --reporter=line
+
       - name: Build web application (Android bundle)
         run: npm run build:android
 
@@ -149,6 +155,9 @@ jobs:
           rm -rf android/app/src/main/assets/web
           mkdir -p android/app/src/main/assets/web
           cp -R dist/. android/app/src/main/assets/web/
+
+      - name: Refresh ad shield host list (falls back to the committed copy)
+        run: node scripts/update-blocklist.mjs
 
       - name: Build signed production APK
         working-directory: android
@@ -176,6 +185,20 @@ jobs:
           "$APKSIGNER" verify --verbose --print-certs release/Panda.fun-Android-TV.apk
           sha256sum release/Panda.fun-Android-TV.apk | tee release/Panda.fun-Android-TV.apk.sha256
 
+      - name: Release notes
+        shell: bash
+        run: |
+          set -euo pipefail
+          NOTES="docs/release-notes/v${KINOMA_VERSION_NAME}.md"
+          {
+            if [[ -f "$NOTES" ]]; then cat "$NOTES"; else echo "# Panda.fun v${KINOMA_VERSION_NAME}"; fi
+            echo
+            echo "---"
+            echo "- Version code: ${KINOMA_VERSION_CODE}"
+            echo "- APK: Panda.fun-Android-TV.apk (one signed APK for phone, tablet and Android TV)"
+            echo "- SHA-256 checksum attached; the in-app updater verifies it before installing."
+          } > release/NOTES.md
+
       - name: Publish GitHub stable release
         id: release
         uses: softprops/action-gh-release@v2
@@ -184,15 +207,7 @@ jobs:
           name: Panda.fun Android TV v${{ steps.version.outputs.version_name }}
           prerelease: false
           make_latest: true
-          body: |
-            # Panda.fun Android TV v${{ steps.version.outputs.version_name }}
-
-            Signed release build for Android phones, tablets and Android TV.
-
-            - Version code: ${{ steps.version.outputs.version_code }}
-            - APK: Panda.fun-Android-TV.apk (one APK for phone and TV)
-            - SHA-256 checksum attached; the in-app updater verifies it before installing.
-            - Installed apps pick this release up from Settings > Check for Updates.
+          body_path: release/NOTES.md
           files: |
             release/Panda.fun-Android-TV.apk
             release/Panda.fun-Android-TV.apk.sha256

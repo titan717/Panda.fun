@@ -226,3 +226,9 @@ export interface WallPayload { posters: WallPoster[] }
 /** Intro / recap / credits markers for an episode or movie (IntroDB via /panda/segments, v1.1.5). */
 export interface Segment { start: number; end: number }
 export interface SkipSegments { imdbId: string; season: number | null; episode: number | null; intro: Segment | null; recap: Segment | null; credits: Segment | null; source: string }
+
+/** Release calendar for followed titles (GET /panda/calendar?ids=, v1.1.7). */
+export interface CalendarEpisode { season: number; episode: number; name: string | null; airDate: string; still: string | null; runtime: number | null }
+export interface CalendarRef { season: number; episode: number; name: string | null; airDate: string | null }
+export interface CalendarEntry { item: PandaItem; status: string | null; lastEpisode: CalendarRef | null; nextEpisode: CalendarRef | null; episodes: CalendarEpisode[] }
+export interface CalendarPayload { entries: CalendarEntry[] }

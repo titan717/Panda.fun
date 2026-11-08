@@ -7,7 +7,8 @@ import { VideoOverlay } from "../components/VideoOverlay";
 import { warmPlayback } from "../lib/prefetch";
 import { whenIdle } from "../lib/lazy";
 import { useDwell, useSeason, useTitle } from "../lib/hooks";
-import { actions, useHasLists, useHistoryEntry, useInWatchlist, useListCount, usePrefs, useRating } from "../lib/store";
+import { actions, useHasReminder, useHasLists, useHistoryEntry, useInWatchlist, useListCount, usePrefs, useRating } from "../lib/store";
+import { toggleReminder } from "../components/Remind";
 import { SaveToSheet } from "../components/QuickActions";
 import { Sheet, SheetItem } from "../components/Sheet";
 import { castAndCrew, detailsMeta, voteLabel, runtime, shortDate, airsLater } from "../lib/format";
@@ -114,6 +115,7 @@ function MDetailsView({ d }: { d: TitleDetails }) {
   const epsRef = useRef<HTMLDivElement>(null);
   const trailersRef = useRef<HTMLDivElement>(null);
   const { primary } = detailsCtas(d, history);
+  const reminded = useHasReminder(d.id);
   const meta = detailsMeta(d);
   const people = castAndCrew(d);
 
@@ -156,7 +158,9 @@ function MDetailsView({ d }: { d: TitleDetails }) {
           {meta.slice(1).map((m) => <span key={m}>{m}</span>)}
         </p>
         {d.rating ? <p className="m-det-rating"><Icon name="star" size={14} /> {d.rating.toFixed(1)} <span>TMDB</span>{voteLabel(d.voteCount) && <span className="m-det-votes">{voteLabel(d.voteCount)}</span>}</p> : null}
-        <button className="m-cta" onClick={() => go(primary.href)}><Icon name="play" /> {primary.label}{primary.sub ? ` ${primary.sub}` : ""}</button>
+        {primary.kind === "remind"
+          ? <button className={`m-cta ${reminded ? "is-reminded" : ""}`} aria-pressed={reminded} onClick={() => toggleReminder(d)}><Icon name={reminded ? "check" : "bell"} /> {reminded ? "Reminder Set" : primary.label} · {primary.sub}</button>
+          : <button className="m-cta" onClick={() => go(primary.href)}><Icon name="play" /> {primary.label}{primary.sub ? ` ${primary.sub}` : ""}</button>}
         {d.genres.length > 0 && <p className="m-det-genres">{d.genres.map((g) => <span key={g}>{g}</span>)}</p>}
         {d.overview && <p className="m-det-overview">{d.overview}</p>}
         <div className="m-det-actions">

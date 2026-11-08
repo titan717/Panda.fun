@@ -3,15 +3,16 @@ import useSWR from "swr";
 import { Link } from "wouter";
 import { Icon, PandaMark } from "../components/Icon";
 import { Avatar, EmptyState, toast } from "../components/ui";
-import { actions, continueWatching, MAX_LISTS, useHistoryMap, useLists, usePrefs, useProfile, useStore, useWatchlist } from "../lib/store";
+import { actions, continueWatching, MAX_LISTS, useAlertsSeenAt, useHistoryMap, useLists, usePrefs, useProfile, useStore, useWatchlist } from "../lib/store";
 import { ListCard, NewListCard } from "../components/ListCard";
 import { NewListSheet } from "../components/QuickActions";
 import { compareVersions, fetchLatestRelease, installedVersion } from "../lib/updates";
 import { isAndroidApp } from "../lib/native";
+import { notifyPermission, requestNotify, type NotifyPermission } from "../lib/notify";
+import { unseen, useCalendar } from "../lib/calendar";
 import { useNav } from "../lib/nav";
 import { MContinue, MPoster } from "./MCards";
 
-const notifSupported = typeof window !== "undefined" && "Notification" in window;
 
 /** Mobile My Space (spec 14). */
 export function MMySpace() {
@@ -25,14 +26,17 @@ export function MMySpace() {
   const { go } = useNav();
   const latest = useSWR("github:latest-release", () => fetchLatestRelease(), { revalidateOnFocus: false, shouldRetryOnError: false, dedupingInterval: 600_000 });
   const hasUpdate = latest.data ? compareVersions(latest.data.version, installedVersion()) > 0 : false;
-  const [perm, setPerm] = useState<NotificationPermission | "unsupported">(notifSupported ? Notification.permission : "unsupported");
+  const [perm, setPerm] = useState<NotifyPermission>(() => notifyPermission());
+  const cal = useCalendar();
+  const seenAt = useAlertsSeenAt();
+  const newCount = unseen(cal.fresh, seenAt).length;
+  const notifOn = perm === "granted" && prefs.notifications;
 
   const enableNotifs = async () => {
-    if (!notifSupported) return;
-    const p = await Notification.requestPermission();
+    const p = await requestNotify();
     setPerm(p);
     actions.setPrefs({ notifications: p === "granted" });
-    toast(p === "granted" ? "Notifications turned on" : "Notifications are blocked in your browser settings");
+    toast(p === "granted" ? "We'll let you know when new episodes land" : "Notifications are blocked in your device settings");
   };
 
   return (
@@ -65,16 +69,20 @@ export function MMySpace() {
         </div>
       </section>
 
-      {perm !== "unsupported" && !(perm === "granted" && prefs.notifications) && (
-        <section className="m-notif-card">
-          <Icon name="bell" size={28} />
-          <span className="m-notif-text">
-            <span className="m-notif-title">YOU'RE ALL CAUGHT UP</span>
-            <span className="m-notif-sub">{perm === "denied" ? "Notifications are blocked. Allow them in your browser settings." : "Enable notifications to stay updated"}</span>
-          </span>
-          {perm !== "denied" && <button className="m-allow" onClick={() => void enableNotifs()}>Allow</button>}
-        </section>
-      )}
+      <section className={`m-notif-card ${newCount ? "has-new" : ""}`} aria-live="polite">
+        <Icon name="bell" size={28} />
+        <span className="m-notif-text">
+          <span className="m-notif-title">{newCount ? `${newCount} NEW ${newCount === 1 ? "EPISODE" : "EPISODES"}` : "YOU'RE ALL CAUGHT UP"}</span>
+          <span className="m-notif-sub">{newCount
+            ? "From shows and films you follow"
+            : !notifOn && perm !== "unsupported"
+              ? (perm === "denied" ? "Notifications are blocked. Allow them in your device settings." : "Enable notifications to stay updated")
+              : cal.upcoming[0] ? `Next: ${cal.upcoming[0].item.title}` : "New episodes from your Watchlist show up here"}</span>
+        </span>
+        {newCount || notifOn || perm === "denied" || perm === "unsupported"
+          ? <Link href="/calendar" className="m-allow">{newCount ? "View" : "Calendar"}</Link>
+          : <button className="m-allow" onClick={() => void enableNotifs()}>Allow</button>}
+      </section>
 
       <section className="m-section">
         <div className="m-row-head"><h2 className="m-row-title">Continue Watching</h2>{cw.length > 0 && <Link href="/continue-watching" className="m-row-more" aria-label="See all Continue Watching"><Icon name="chevronRight" /></Link>}</div>

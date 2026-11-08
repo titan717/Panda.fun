@@ -39,3 +39,25 @@ adb shell input keyevent KEYCODE_DPAD_CENTER; sleep 4; shot after-ok
 sleep 8; shot after-ok-12s
 adb shell pidof "$PKG" >/dev/null && echo "app running" | tee -a shots/package.txt || { echo "app not running"; { adb logcat -d -b crash; echo ----; adb logcat -d | grep -iE "kinoma|AndroidRuntime|chromium|ActivityTaskManager|am_" | tail -400; } > shots/logcat.txt; exit 1; }
 adb logcat -d | grep -iE "kinoma|panda|chromium|AndroidRuntime|KinomaTVWeb" | tail -300 > shots/logcat.txt || true
+
+# Ad shield release gate (docs/AD_SHIELD.md, layer 7): play a title, press and tap around the player for a
+# minute, and fail if any other activity (browser, Play Store, another app) ever comes to the front.
+resumed() { adb shell dumpsys activity activities | grep -E "mResumedActivity|topResumedActivity" | head -1; }
+adb logcat -c || true
+adb shell am start -W -n "$PKG/.ui.MainActivity" --es panda_path /watch/movie/550 | tee -a shots/package.txt
+sleep 6; adb shell input keyevent KEYCODE_DPAD_CENTER; sleep 25; shot player
+FOREIGN=0
+for i in $(seq 1 12); do
+  if [[ "$NAME" == *tv* ]]; then
+    for k in DPAD_CENTER DPAD_RIGHT DPAD_LEFT MEDIA_PLAY_PAUSE; do adb shell input keyevent "KEYCODE_$k"; sleep 0.6; done
+  else
+    adb shell input tap $((200 + i * 60)) $((600 + (i % 4) * 120)); sleep 1
+    adb shell input tap 540 1200; sleep 1
+  fi
+  R="$(resumed)"; echo "$i $R" >> shots/shield.txt
+  [[ "$R" == *"$PKG/"* ]] || FOREIGN=1
+done
+shot player-after-input
+adb logcat -d | grep -E "PandaShield" | tail -200 >> shots/shield.txt || true
+if [[ "$FOREIGN" == 1 ]]; then echo "AD SHIELD FAILURE: another activity came to the front during playback" | tee -a shots/shield.txt; exit 1; fi
+echo "ad shield: no external activity launched during playback" | tee -a shots/shield.txt

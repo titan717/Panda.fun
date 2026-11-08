@@ -6,11 +6,12 @@ import { sortList, LIST_SORTS, type ListFilter, type ListSort } from "../lib/lis
 import { ListCard, NewListCard } from "../components/ListCard";
 import { NewListSheet, QuickActions, type ActionContext } from "../components/QuickActions";
 import type { PandaItem } from "../lib/types";
-import { actions, continueWatching, MAX_LISTS, useHistoryMap, useLists, useProfile, useStore, useWatchlist } from "../lib/store";
+import { actions, continueWatching, MAX_LISTS, useAlertsSeenAt, useHistoryMap, useLists, useProfile, useStore, useWatchlist } from "../lib/store";
 import { focusFirst } from "../lib/focus";
 import { useNav } from "../lib/nav";
 import { installedVersion } from "../lib/updates";
 import { TvContinue, TvPoster } from "./TvCards";
+import { unseen, useCalendar } from "../lib/calendar";
 
 /** TV My Space (spec 10). */
 type Tab = "watchlist" | "lists" | "continue";
@@ -46,6 +47,7 @@ export function TvMySpace({ initialTab = "watchlist" }: { initialTab?: Tab }) {
         </div>
         <div className="tv-ms-actions">
           <Link href="/settings/updates" id="ms-updates" className="tv-btn" data-hover-focus data-autofocus><Icon name="download" /> Check for Updates</Link>
+          <CalendarButton />
           <Link href="/settings" id="ms-settings" className="tv-btn" data-hover-focus><Icon name="settings" /> Help & Settings</Link>
         </div>
       </header>
@@ -122,5 +124,16 @@ export function TvMySpace({ initialTab = "watchlist" }: { initialTab?: Tab }) {
       {sheet && <QuickActions item={sheet.item} context={sheet.context} onClose={() => setSheet(null)} />}
       {naming && <NewListSheet onClose={() => setNaming(false)} onDone={(id) => go(`/my-list?list=${encodeURIComponent(id)}`)} />}
     </div>
+  );
+}
+
+/** "Coming Up" with the count of new episodes since the calendar was last opened (v1.1.7). */
+function CalendarButton() {
+  const cal = useCalendar();
+  const n = unseen(cal.fresh, useAlertsSeenAt()).length;
+  return (
+    <Link href="/calendar" id="ms-calendar" className="tv-btn" data-hover-focus aria-label={n ? `Coming Up, ${n} new` : "Coming Up"}>
+      <Icon name="bell" /> Coming Up {n > 0 && <span className="tv-count-badge">{n > 9 ? "9+" : n}</span>}
+    </Link>
   );
 }

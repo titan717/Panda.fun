@@ -1,8 +1,8 @@
 import { episodeProgress, type HistoryEntry } from "./store";
 import type { SeasonSummary, TitleDetails } from "./types";
-import { watchPath } from "./format";
+import { isUpcoming, shortDate, titlePath, watchPath } from "./format";
 
-export interface Cta { label: string; sub: string | null; href: string; kind: "watch" | "resume" | "next" | "first" | "latest" }
+export interface Cta { label: string; sub: string | null; href: string; kind: "watch" | "resume" | "next" | "first" | "latest" | "remind" }
 
 const realSeasons = (seasons: SeasonSummary[]) => seasons.filter((s) => s.number > 0 && s.episodeCount > 0).sort((a, b) => a.number - b.number);
 
@@ -34,6 +34,10 @@ export function episodeRow(h: HistoryEntry | null, tmdbId: number, season: numbe
 
 /** Primary + optional secondary CTA for the details screens (spec 7.5, 14.4). */
 export function detailsCtas(d: TitleDetails, h: HistoryEntry | null): { primary: Cta; secondary: Cta | null } {
+  // nothing to play before release: the CTA sets a reminder instead (v1.1.7, D-87)
+  if (isUpcoming(d) && !(d.type === "tv" && d.seasons.some((s) => s.number > 0 && s.episodeCount > 0 && s.airDate && Date.parse(s.airDate) <= Date.now()))) {
+    return { primary: { label: "Remind Me", sub: `Coming ${shortDate(d.releaseDate)}`, href: titlePath(d), kind: "remind" }, secondary: null };
+  }
   if (d.type === "movie") {
     if (h && !h.completed && h.position > 30) {
       return { primary: { label: "Resume", sub: null, href: `${watchPath("movie", d.tmdbId)}?t=${h.position}`, kind: "resume" }, secondary: null };

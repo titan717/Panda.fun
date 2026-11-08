@@ -347,3 +347,10 @@ a.m-cast { color: inherit; text-decoration: none; }
 @media (min-width: 1024px) { .m-list-card { width: calc((min(100vw, 1180px) - 2 * var(--m-gutter)) / 3.3); max-width: 340px; } }
 .m-ep.is-watched .m-ep-still img { filter: brightness(0.72); }
 .m-ep { -webkit-touch-callout: none; }
+
+/* v1.1.7 Coming Up */
+.cal-page .cal-group { margin-top: 18px; }
+.cal-page .cal-group > .m-row-title { padding: 0 var(--m-gutter); }
+.cal-page .m-land-grid > .cal-card { width: auto; max-width: none; }
+.m-notif-card.has-new .m-notif-title { color: var(--m-link); }
+.m-cta.is-reminded { background: rgba(255, 255, 255, 0.16); color: var(--text-1); }

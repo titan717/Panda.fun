@@ -78,6 +78,8 @@ export interface TvChromeProps {
   onPlayEpisode: (s: number, e: number) => void;
   onPlayTitle: (item: PandaItem) => void;
   onExit: () => void;
+  /** Phones and tablets: tap layer, back button and centre transport (v1.1.7 ad shield, D-91). */
+  touch?: boolean;
 }
 
 type Panel = null | "quality" | "audio" | "next" | "report" | "sleep";
@@ -103,11 +105,11 @@ export function TvPlayerChrome(p: TvChromeProps) {
 
   // focus the seek track whenever the chrome appears with nothing else focused
   useEffect(() => {
-    if (p.visible && !panel) {
+    if (p.visible && !panel && !p.touch) {
       const a = document.activeElement as HTMLElement | null;
       if (!a || a === document.body || !a.closest(".tvp")) focusEl(track.current);
     }
-  }, [p.visible, panel]);
+  }, [p.visible, panel, p.touch]);
 
   // Back: panel → chrome → exit (§20.12)
   useBackHandler(() => {
@@ -153,11 +155,19 @@ export function TvPlayerChrome(p: TvChromeProps) {
   const lang = d?.originalLanguage ?? languageName(d?.language) ?? null;
   const otherLangs = (d?.languages ?? []).filter((l) => l !== lang).slice(0, 3);
   const showIntro = intro && p.ready && !panel;
-  const cls = `tvp ${p.visible || panel || pending !== null ? "is-visible" : ""} ${panel ? "has-panel" : ""} ${pending !== null ? "is-seeking" : ""}`;
+  const cls = `tvp ${p.touch ? "is-touch" : ""} ${p.visible || panel || pending !== null ? "is-visible" : ""} ${panel ? "has-panel" : ""} ${pending !== null ? "is-seeking" : ""}`;
 
   return (
     <div className={cls} onKeyDown={(e) => { if (!panel && track.current && document.activeElement === track.current) onTrackKey(e); }}>
       <div className="tvp-scrim" aria-hidden="true" />
+      {p.touch && <TouchLayer p={p} />}
+      {p.touch && (
+        <div className="tvp-center" aria-hidden={!p.visible}>
+          {p.controllable && <button className="tvp-round" onClick={() => { p.onSeek(Math.max(0, p.position - 10)); p.poke(); }} aria-label="Back 10 seconds"><Icon name="replay10" /></button>}
+          {p.controllable && <button className="tvp-round tvp-round--main" onClick={() => { p.onTogglePlay(); p.poke(); }} aria-label={p.paused ? "Play" : "Pause"}>{p.paused ? <Icon name="play" /> : <span className="pause-glyph" aria-hidden="true" />}</button>}
+          {p.controllable && <button className="tvp-round" onClick={() => { p.onSeek(Math.min(Math.max(0, p.duration - 2), p.position + 10)); p.poke(); }} aria-label="Forward 10 seconds"><Icon name="forward10" /></button>}
+        </div>
+      )}
       {showIntro && d?.certification && (
         <div className="tvp-advisory" aria-live="polite">
           <span className="tvp-advisory-bar" aria-hidden="true" />
@@ -176,6 +186,7 @@ export function TvPlayerChrome(p: TvChromeProps) {
       {p.paused && p.ready && !panel && pending === null && <span className="tvp-paused" aria-label="Paused"><span className="pause-glyph" /></span>}
 
       <header className="tvp-top lrud-container">
+        {p.touch && <button className="tvp-back" onClick={p.onExit} aria-label="Back"><Icon name="back" /></button>}
         <div className="tvp-title">
           <strong>{d?.title ?? ""}</strong>
           {isSeries && <span>S{ep.s} E{ep.e}{p.episodeTitle ? ` · ${p.episodeTitle}` : ""}</span>}
@@ -402,6 +413,38 @@ function WatchNext({ d, isSeries, ep, upNext, countdown, onPlayEpisode, onPlayTi
             })}
           </div>
         )}
+    </div>
+  );
+}
+
+/**
+ * Touch input layer: the provider iframe never receives taps (docs/AD_SHIELD.md, layer 1).
+ * One tap shows or hides the controls; a double tap on the left or right third seeks 10 s.
+ */
+function TouchLayer({ p }: { p: TvChromeProps }) {
+  const last = useRef({ t: 0, x: 0 });
+  const single = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const [flash, setFlash] = useState<null | { side: "l" | "r"; n: number }>(null);
+  useEffect(() => () => { if (single.current) clearTimeout(single.current); }, []);
+  return (
+    <div className="tvp-touch" onPointerUp={(e) => {
+      const w = e.currentTarget.clientWidth || 1;
+      const x = e.clientX / w;
+      const now = e.timeStamp;
+      const dbl = now - last.current.t < 300 && Math.abs(x - last.current.x) < 0.2;
+      last.current = { t: now, x };
+      if (dbl && p.controllable && (x < 1 / 3 || x > 2 / 3)) {
+        if (single.current) { clearTimeout(single.current); single.current = null; }
+        const fwd = x > 2 / 3;
+        p.onSeek(fwd ? Math.min(Math.max(0, p.duration - 2), p.position + 10) : Math.max(0, p.position - 10));
+        setFlash((f) => ({ side: fwd ? "r" : "l", n: (f?.n ?? 0) + 1 }));
+        setTimeout(() => setFlash(null), 650);
+        return;
+      }
+      if (single.current) clearTimeout(single.current);
+      single.current = setTimeout(() => { single.current = null; if (p.visible) p.hide(); else p.poke(); }, 220);
+    }}>
+      {flash && <span key={flash.n} className={`tvp-seekflash is-${flash.side}`} aria-hidden="true"><Icon name={flash.side === "r" ? "forward10" : "replay10"} /> 10s</span>}
     </div>
   );
 }

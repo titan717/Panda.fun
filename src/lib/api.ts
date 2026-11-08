@@ -1,5 +1,5 @@
 import type {
-  CategoriesPayload, GenresPayload, ListPayload, MediaType, PagePayload, PageKind, PlaybackPayload,
+  CalendarPayload, CategoriesPayload, GenresPayload, ListPayload, MediaType, PagePayload, PageKind, PlaybackPayload,
   SearchPayload, SeasonDetails, SourceHealthPayload, TitleDetails, Top10Payload, WallPayload
 } from "./types";
 import { validatorFor } from "./validate";
@@ -108,6 +108,8 @@ export const keys = {
   sourceHealth: () => `/panda/sources/health`,
   segments: (imdbId: string, s?: number, e?: number) => `/panda/segments/${imdbId}${qs({ s, e })}`,
   wall: () => `/panda/wall`,
+  /** ids are sorted so the same followed set always shares one cache entry. */
+  calendar: (ids: string[]) => `/panda/calendar${qs({ ids: [...ids].sort().join(",") })}`,
   health: () => `/health`
 };
 
@@ -123,6 +125,7 @@ export const api = {
   categories: () => apiGet<CategoriesPayload>(keys.categories()),
   play: (type: MediaType, id: number, o: { s?: number; e?: number; t?: number; quality?: string } = {}) => apiGet<PlaybackPayload>(keys.play(type, id, o), { retries: 1, timeoutMs: 10_000 }),
   wall: () => apiGet<WallPayload>(keys.wall()),
+  calendar: (ids: string[], signal?: AbortSignal) => apiGet<CalendarPayload>(keys.calendar(ids), { signal, retries: 1 }),
   report: (r: PlaybackReport) => sendReport(r),
   sourceHealth: () => apiGet<SourceHealthPayload>(keys.sourceHealth(), { retries: 0, timeoutMs: 10_000 })
 };
