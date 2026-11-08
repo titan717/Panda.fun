@@ -20,7 +20,35 @@ import java.io.File
 object UpdateChecker {
     /** Stable releases are published by .github/workflows/build-apk.yml as GitHub Releases. */
     private const val LATEST_RELEASE_URL = "https://api.github.com/repos/titan717/Panda.fun/releases/latest"
+    /** Panda API cached mirror (v1.1.8) used when GitHub rate-limits (60 calls/hour per IP) or is unreachable. */
+    private const val MIRROR_URL = "https://apikinoma.vercel.app/api/v1/panda/release/latest"
     private val client by lazy { OkHttpClient() }
+
+    /** null = no published release (404). */
+    private fun fetchLatest(): GitHubRelease? {
+        val ua = "Panda.fun-Android/${BuildConfig.VERSION_NAME}"
+        var githubError: Exception? = null
+        try {
+            val request = Request.Builder().url(LATEST_RELEASE_URL).header("Accept", "application/vnd.github+json").header("User-Agent", ua).build()
+            client.newCall(request).execute().use { response ->
+                if (response.code == 404) return null
+                if (response.isSuccessful) {
+                    val body = response.body?.string()?.trim()
+                    if (!body.isNullOrEmpty()) Gson().fromJson(body, GitHubRelease::class.java)?.let { return it }
+                }
+                githubError = java.io.IOException("GitHub returned ${response.code}.")
+            }
+        } catch (e: Exception) { githubError = e }
+        val mirror = Request.Builder().url(MIRROR_URL).header("User-Agent", ua).build()
+        return try {
+            client.newCall(mirror).execute().use { r ->
+                if (r.code == 404) return null
+                if (!r.isSuccessful) throw java.io.IOException("Update server returned ${r.code}.")
+                Gson().fromJson(r.body?.string().orEmpty(), MirrorEnvelope::class.java)?.data
+                    ?: throw java.io.IOException("Release information could not be read.")
+            }
+        } catch (e: Exception) { throw githubError ?: e }
+    }
 
     /** Silent background check: returns null when up to date or when anything goes wrong. */
     suspend fun checkForUpdate(): UpdateInfo? {
@@ -33,18 +61,7 @@ object UpdateChecker {
 
     /** Same check, but failures are thrown so the Settings screen can tell "up to date" from "offline". */
     suspend fun checkForUpdateOrThrow(): UpdateInfo? = withContext(Dispatchers.IO) {
-        val request = Request.Builder()
-            .url(LATEST_RELEASE_URL)
-            .header("Accept", "application/vnd.github+json")
-            .header("User-Agent", "Panda.fun-Android/${BuildConfig.VERSION_NAME}")
-            .build()
-        val release = client.newCall(request).execute().use { response ->
-            if (response.code == 404) return@withContext null
-            if (!response.isSuccessful) throw java.io.IOException("GitHub returned ${response.code}.")
-            val body = response.body?.string()?.trim()
-            if (body.isNullOrEmpty()) throw java.io.IOException("Release information was empty.")
-            Gson().fromJson(body, GitHubRelease::class.java) ?: throw java.io.IOException("Release information could not be read.")
-        }
+        val release = fetchLatest() ?: return@withContext null
         val version = release.tagName.removePrefix("v").removePrefix("V")
         if (compareVersions(version, BuildConfig.VERSION_NAME) <= 0) return@withContext null
         val apk = release.assets.firstOrNull { it.name.endsWith(".apk", ignoreCase = true) }
@@ -243,6 +260,9 @@ object UpdateChecker {
         }
     }
 }
+
+/** `/panda/release/latest` response: `{ success, data: <GitHub release subset> }`. */
+data class MirrorEnvelope(@SerializedName("data") val data: GitHubRelease?)
 
 data class GitHubRelease(
     @SerializedName("tag_name") val tagName: String,

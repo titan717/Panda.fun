@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { isAndroidApp, native, nativeVersion } from "./native";
+import { API_BASE } from "./api";
 
 export const RELEASES_REPO = (import.meta.env.VITE_RELEASES_REPO as string | undefined) ?? "titan717/Panda.fun";
 export const WEB_VERSION: string = __APP_VERSION__;
@@ -39,6 +40,27 @@ export function installedVersion(): string {
 const RELEASE_CACHE_KEY = "panda:release-cache";
 const RELEASE_CACHE_MS = 15 * 60_000;
 
+type GhRelease = { tag_name: string; name: string | null; body: string | null; published_at: string; html_url: string; assets: { name: string; browser_download_url: string; size: number }[] };
+
+/**
+ * GitHub first; when it rate-limits (403/429, 60 calls/hour per IP — shared carrier IPs hit this)
+ * or is unreachable, ask the Panda API's cached mirror (`/panda/release/:tag`, v1.1.8).
+ * Returns null for a release that does not exist.
+ */
+async function githubRelease(tag: "latest" | string, signal?: AbortSignal): Promise<GhRelease | null> {
+  let status = 0;
+  try {
+    const res = await fetch(`https://api.github.com/repos/${RELEASES_REPO}/releases/${tag === "latest" ? "latest" : `tags/${tag}`}`, { signal, headers: { Accept: "application/vnd.github+json" } });
+    if (res.ok) return (await res.json()) as GhRelease;
+    if (res.status === 404) return null;
+    status = res.status;
+  } catch (e) { if (signal?.aborted) throw e; }
+  const res = await fetch(`${API_BASE}/panda/release/${tag}`, { signal }).catch(() => null);
+  if (res?.status === 404) return null;
+  if (res?.ok) { const j = (await res.json()) as { data?: GhRelease }; if (j.data) return j.data; }
+  throw new Error(status === 403 || status === 429 ? "RATE_LIMIT" : "UNREACHABLE");
+}
+
 function readReleaseCache(): { at: number; release: ReleaseInfo } | null {
   try {
     const raw = localStorage.getItem(RELEASE_CACHE_KEY);
@@ -54,12 +76,14 @@ function readReleaseCache(): { at: number; release: ReleaseInfo } | null {
 export async function fetchLatestRelease(signal?: AbortSignal, force = false): Promise<ReleaseInfo> {
   const cached = readReleaseCache();
   if (!force && cached && Date.now() - cached.at < RELEASE_CACHE_MS) return cached.release;
-  const res = await fetch(`https://api.github.com/repos/${RELEASES_REPO}/releases/latest`, { signal, headers: { Accept: "application/vnd.github+json" } });
-  if (res.status === 404) throw new Error("No published release yet.");
-  if ((res.status === 403 || res.status === 429) && cached) return cached.release;
-  if (res.status === 403 || res.status === 429) throw new Error("GitHub is limiting update checks right now. Try again in a few minutes.");
-  if (!res.ok) throw new Error(`GitHub returned ${res.status}.`);
-  const r = (await res.json()) as { tag_name: string; name: string | null; body: string | null; published_at: string; html_url: string; assets: { name: string; browser_download_url: string; size: number }[] };
+  let r: GhRelease | null;
+  try { r = await githubRelease("latest", signal); }
+  catch (e) {
+    if (signal?.aborted) throw e;
+    if (cached) return cached.release;
+    throw new Error((e as Error).message === "RATE_LIMIT" ? "Update checks are busy right now. Try again in a few minutes." : "Couldn't reach the update server. Check your connection and try again.");
+  }
+  if (!r) throw new Error("No published release yet.");
   const apk = r.assets.find((a) => a.name.toLowerCase().endsWith(".apk")) ?? null;
   const release: ReleaseInfo = {
     tag: r.tag_name,
@@ -108,12 +132,20 @@ export function whatsNewSection(body: string, version: string): string {
 }
 
 /** Release notes for one version (GitHub Release `v{version}`), cached forever once fetched. */
+const bundledNotes = import.meta.glob<string>("/docs/release-notes/v*.md", { query: "?raw", import: "default" });
+
 export async function fetchReleaseNotes(version: string, signal?: AbortSignal): Promise<string> {
   const key = `panda:notes:${version}`;
   try { const c = localStorage.getItem(key); if (c) return c; } catch { /* storage disabled */ }
-  const res = await fetch(`https://api.github.com/repos/${RELEASES_REPO}/releases/tags/v${version}`, { signal, headers: { Accept: "application/vnd.github+json" } });
-  if (!res.ok) throw new Error(res.status === 404 ? "No release notes for this version." : `GitHub returned ${res.status}.`);
-  const r = (await res.json()) as { body: string | null };
+  // v1.1.8: notes shipped with the build need no network and are never rate-limited (each file is its own tiny lazy chunk).
+  const local = bundledNotes[`/docs/release-notes/v${version}.md`];
+  if (local) {
+    try { const md = await local(); const notes = whatsNewSection(md, version); if (notes) return notes; } catch { /* fall through to GitHub */ }
+  }
+  let r: GhRelease | null;
+  try { r = await githubRelease(`v${version}`, signal); }
+  catch (e) { if (signal?.aborted) throw e; throw new Error("Release notes are busy right now. Try again in a few minutes."); }
+  if (!r) throw new Error("No release notes for this version.");
   const notes = whatsNewSection(r.body ?? "", version);
   try { localStorage.setItem(key, notes); } catch { /* storage full */ }
   return notes;

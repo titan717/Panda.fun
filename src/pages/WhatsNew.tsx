@@ -1,5 +1,6 @@
 import "./updates.css";
 import { useEffect, useRef, useState } from "react";
+import type React from "react";
 import { Icon } from "../components/Icon";
 import { PageHeader } from "../components/PageHeader";
 import { ReleaseNotes } from "../components/ReleaseNotes";
@@ -50,6 +51,14 @@ export function WhatsNewSheet({ version, onClose }: { version: string; onClose: 
   );
 }
 
+/** TV remote: Up/Down scroll the notes card; Up at the top falls through so focus can leave it. */
+function scrollKeys(e: React.KeyboardEvent<HTMLDivElement>) {
+  const el = e.currentTarget;
+  const step = Math.round(el.clientHeight * 0.6);
+  if (e.key === "ArrowDown" && el.scrollTop + el.clientHeight < el.scrollHeight - 2) { el.scrollBy({ top: step, behavior: "smooth" }); e.preventDefault(); e.stopPropagation(); }
+  else if (e.key === "ArrowUp" && el.scrollTop > 2) { el.scrollBy({ top: -step, behavior: "smooth" }); e.preventDefault(); e.stopPropagation(); }
+}
+
 /** Settings › What's New: notes for the installed version. */
 export function WhatsNewPage() {
   const version = installedVersion();
@@ -58,7 +67,7 @@ export function WhatsNewPage() {
   return (
     <div className={tv ? "tv-page tv-settings-page tv-updates" : "m-page m-updates"}>
       <PageHeader title="What's New" sub={`Version ${version}`} fallback="/settings" />
-      <div className="upd-card wn-page" data-autofocus tabIndex={-1}><Body notes={notes} /></div>
+      <div className="upd-card wn-page" data-autofocus tabIndex={-1} onKeyDown={tv ? scrollKeys : undefined}><Body notes={notes} /></div>
     </div>
   );
 }

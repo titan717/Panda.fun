@@ -27,3 +27,24 @@ html[data-mode="tv"] .whatsnew--tv .wn-body { flex: 1; min-height: 0; overflow-y
 html[data-mode="tv"] .whatsnew--tv .upd-notes { font-size: calc(20 * var(--tu)); gap: calc(10 * var(--tu)); color: rgba(255, 255, 255, 0.82); }
 html[data-mode="tv"] .whatsnew--tv .upd-h { font-size: calc(22 * var(--tu)); }
 html[data-mode="tv"] .whatsnew--tv .wn-done { align-self: flex-start; width: auto; min-width: calc(220 * var(--tu)); margin-top: calc(20 * var(--tu)); }
+/* v1.1.8: headed release-note items */
+.upd-notes { gap: calc(12 * var(--u)); }
+.upd-item { display: grid; grid-template-columns: calc(8 * var(--u)) 1fr; gap: calc(12 * var(--u)); align-items: start; }
+.upd-dot { width: calc(8 * var(--u)); height: calc(8 * var(--u)); margin-top: calc(7 * var(--u)); border-radius: 50%; background: var(--arc-gradient, #3BA0FF); box-shadow: 0 0 8px rgba(80, 160, 255, 0.6); }
+.upd-item-t { color: var(--text-1); font-weight: var(--fw-bold); font-size: 1.07em; margin-bottom: 2px; }
+.upd-item-b { color: var(--m-meta); }
+html[data-mode="tv"] .upd-notes { gap: calc(18 * var(--tu)); }
+html[data-mode="tv"] .upd-item { grid-template-columns: calc(10 * var(--tu)) 1fr; gap: calc(16 * var(--tu)); }
+html[data-mode="tv"] .upd-dot { width: calc(10 * var(--tu)); height: calc(10 * var(--tu)); margin-top: calc(10 * var(--tu)); }
+html[data-mode="tv"] .whatsnew--tv .upd-item-b { color: rgba(255, 255, 255, 0.72); }
+/* v1.1.8: 10-foot sizes for the Settings › What's New and Check for Updates pages */
+html[data-mode="tv"] .tv-updates .upd-card { max-width: calc(1240 * var(--tu)); padding: calc(36 * var(--tu)) calc(40 * var(--tu)); border-radius: calc(24 * var(--tu)); gap: calc(14 * var(--tu)); }
+html[data-mode="tv"] .tv-updates .upd-notes { font-size: calc(22 * var(--tu)); }
+html[data-mode="tv"] .tv-updates .wn-page { max-height: calc(100vh - 300 * var(--tu)); overflow-y: auto; scrollbar-width: none; }
+html[data-mode="tv"] .tv-updates .wn-page:focus-visible { box-shadow: 0 0 0 calc(3 * var(--tu)) rgba(143, 211, 255, 0.55); }
+html[data-mode="tv"] .tv-updates .upd-current, html[data-mode="tv"] .tv-updates .upd-sub { font-size: calc(22 * var(--tu)); }
+html[data-mode="tv"] .tv-updates .upd-status { font-size: calc(30 * var(--tu)); gap: calc(12 * var(--tu)); }
+html[data-mode="tv"] .tv-updates .upd-status .icon { width: calc(30 * var(--tu)); height: calc(30 * var(--tu)); }
+html[data-mode="tv"] .tv-updates .upd-notes-title { font-size: calc(24 * var(--tu)); margin-top: calc(12 * var(--tu)); }
+html[data-mode="tv"] .tv-updates .upd-card .btn { min-height: calc(60 * var(--tu)); padding: 0 calc(28 * var(--tu)); font-size: calc(22 * var(--tu)); border-radius: 999px; }
+html[data-mode="tv"] .tv-updates .upd-progress { height: calc(10 * var(--tu)); }
