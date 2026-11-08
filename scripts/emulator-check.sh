@@ -3,7 +3,22 @@
 set -uo pipefail
 NAME="$1"; PKG=com.kinoma.tv; mkdir -p shots
 shot() { adb exec-out screencap -p > "shots/$NAME-$1.png"; echo "captured $1"; }
-adb install -r apk/*.apk
+# Update path (master mission §10: in-app update verified from the previous version)
+if compgen -G "prev/*.apk" >/dev/null; then
+  PREV_TAG="$(cat prev/TAG)"
+  adb install prev/*.apk | tee shots/upgrade.txt
+  adb shell dumpsys package "$PKG" | grep -E "versionName|firstInstallTime" | tee -a shots/upgrade.txt
+  # the old build's own updater must see the new release
+  adb shell am start -W -n "$PKG/.ui.MainActivity" --es panda_path /settings/updates >/dev/null
+  sleep 16; shot "updater-on-$PREV_TAG"
+  adb shell am force-stop "$PKG"
+  # upgrade in place: fails on a different signing key or a lower versionCode
+  if ! adb install -r apk/*.apk 2>&1 | tee -a shots/upgrade.txt | grep -q Success; then echo "UPDATE FAILURE: $PREV_TAG -> new APK did not install over the old one" | tee -a shots/upgrade.txt; exit 1; fi
+  adb shell dumpsys package "$PKG" | grep -E "versionName|versionCode|firstInstallTime|lastUpdateTime" | tee -a shots/upgrade.txt
+  echo "update from $PREV_TAG installed in place with the same signing key" | tee -a shots/upgrade.txt
+else
+  adb install -r apk/*.apk
+fi
 adb shell dumpsys package "$PKG" | grep -E "versionName|versionCode|LEANBACK_LAUNCHER|android.intent.category.LAUNCHER" | tee shots/package.txt
 adb shell cmd package resolve-activity --brief -c android.intent.category.LEANBACK_LAUNCHER -a android.intent.action.MAIN "$PKG" | tee -a shots/package.txt
 adb shell input keyevent KEYCODE_HOME; sleep 6; shot launcher

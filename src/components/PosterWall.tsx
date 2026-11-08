@@ -12,7 +12,8 @@ export const PosterWall = memo(function PosterWall({ tv }: { tv: boolean }) {
   const trending = useTrending("all", "week");
   const lite = useLiteMotion();
   const reduce = useReducedMotion();
-  const cols = tv ? (lite ? 10 : 14) : (lite ? 5 : 6);
+  // tv1#33: a centred band of about seven upright columns (four on phones)
+  const cols = tv ? (lite ? 6 : 7) : 4;
 
   const columns = useMemo(() => {
     const src = wall.data?.posters.length

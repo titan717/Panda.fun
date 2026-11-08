@@ -39,7 +39,12 @@ jobs:
           GH_TOKEN: ${{ github.token }}
         run: |
           gh release download "${{ inputs.tag }}" -R "${{ github.repository }}" -p "*.apk" -D apk
-          ls -l apk
+          # previous stable release, to verify the in-app update path (install old → updater sees new → upgrade in place)
+          CUR="${{ inputs.tag }}"
+          PREV="$({ gh release list -R "${{ github.repository }}" --exclude-pre-releases --limit 40 --json tagName -q '.[].tagName' | grep -E '^v[0-9]+\.[0-9]+\.[0-9]+$' | grep -vx "$CUR"; echo "$CUR"; } | sort -V | grep -B1 -x "$CUR" | grep -vx "$CUR" | head -1 || true)"
+          echo "previous release: ${PREV:-none}"
+          if [[ -n "$PREV" ]]; then gh release download "$PREV" -R "${{ github.repository }}" -p "*.apk" -D prev; echo "$PREV" > prev/TAG; fi
+          ls -l apk prev || true
 
       - name: Run on emulator and capture screenshots
         uses: reactivecircus/android-emulator-runner@v2
