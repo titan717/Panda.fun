@@ -357,3 +357,5 @@ a.m-cast { color: inherit; text-decoration: none; }
 .m-page > .state > .icon { box-sizing: content-box; width: 30px; height: 30px; padding: 20px; border-radius: 50%; color: rgba(255, 255, 255, 0.85); background: radial-gradient(circle at 50% 30%, rgba(255, 255, 255, 0.14), rgba(255, 255, 255, 0.04)); box-shadow: inset 0 0 0 1.5px rgba(255, 255, 255, 0.12); margin-bottom: 10px; }
 .m-page > .state .state-title { font-size: 18px; }
 .m-page > .state .btn { min-height: 44px; padding: 0 24px; border-radius: 999px; }
+.m-row-link { display: inline-flex; align-items: center; gap: 4px; }
+.m-row-link .icon { width: 18px; height: 18px; color: var(--text-2); }

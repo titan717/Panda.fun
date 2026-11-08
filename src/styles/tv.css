@@ -514,3 +514,8 @@ html[data-mode="tv"] .p2-still-actions { gap: calc(16 * var(--tu)); margin-top: 
 .tvp-seekflash.is-l { left: 12%; }
 .tvp-seekflash.is-r { right: 12%; }
 @keyframes tvp-flash { 0% { opacity: 0; } 20% { opacity: 1; } 100% { opacity: 0; } }
+/* v1.1.8: "View collection" tile closing the Details › Collection row */
+.tv-part-all { flex: none; width: var(--poster-w); height: var(--poster-h); border-radius: var(--r-card); display: flex; flex-direction: column; align-items: center; justify-content: center; gap: calc(10 * var(--tu)); background: rgba(255, 255, 255, 0.07); box-shadow: inset 0 0 0 calc(2 * var(--tu)) rgba(255, 255, 255, 0.12); font-size: calc(22 * var(--tu)); font-weight: var(--fw-semibold); color: var(--text-1); transition: transform var(--dur-focus) var(--ease-out); }
+.tv-part-all .icon { width: calc(40 * var(--tu)); height: calc(40 * var(--tu)); color: var(--tv-ice); }
+.tv-part-all small { font-size: calc(17 * var(--tu)); color: var(--text-2); font-weight: var(--fw-medium); }
+html[data-mode="tv"] .tv-part-all:focus { outline: none; transform: scale(1.06); background: rgba(255, 255, 255, 0.16); box-shadow: inset 0 0 0 calc(3 * var(--tu)) #fff; }

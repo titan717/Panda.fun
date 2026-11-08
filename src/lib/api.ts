@@ -98,6 +98,7 @@ export const keys = {
   title: (type: MediaType, id: number) => `/panda/title/${type}/${id}`,
   season: (id: number, season: number) => `/panda/title/tv/${id}/season/${season}`,
   person: (id: number) => `/panda/person/${id}`,
+  collection: (id: number) => `/panda/collection/${id}`,
   search: (q: string, page = 1) => `/panda/search${qs({ q, page })}`,
   discover: (type: MediaType, o: { genre?: string; lang?: string; country?: string; sort?: string; page?: number }) => `/panda/discover/${type}${qs(o)}`,
   trending: (type: "all" | MediaType = "all", window: "day" | "week" = "day", page = 1) => `/panda/trending${qs({ type, window, page })}`,

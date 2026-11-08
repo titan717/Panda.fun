@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 import { Icon } from "../components/Icon";
+import { Link } from "wouter";
 import { ErrorState, Img, Skeleton, TitleArt, toast } from "../components/ui";
 import { Trailer, rankTrailers } from "../components/Trailer";
 import { RatePopover } from "../components/RatePopover";
@@ -174,6 +175,9 @@ function TvDetailsView({ d, initialTab }: { d: TitleDetails; initialTab?: Tab })
                   <span className="tv-part-label">{it.id === d.id ? "Now viewing" : `Part ${i + 1}${it.year ? ` • ${it.year}` : ""}`}</span>
                 </div>
               ))}
+              <Link href={`/collection/${d.collection.id}`} id="part-all" className="tv-part-all" data-hover-focus aria-label={`Open ${d.collection.name}`}>
+                <Icon name="grid" /><span>View collection</span><small>{d.collection.parts.length} movies</small>
+              </Link>
             </div>
           )}
           {tab === "cast" && (

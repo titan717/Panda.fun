@@ -1,5 +1,5 @@
 import type {
-  CalendarEntry, CalendarEpisode, CalendarPayload, CalendarRef, CategoriesPayload, Episode, GenresPayload, ListPayload, PagePayload, PandaItem, PlaybackPayload, PlaybackSource, Rail,
+  CalendarEntry, Collection, CalendarEpisode, CalendarPayload, CalendarRef, CategoriesPayload, Episode, GenresPayload, ListPayload, PagePayload, PandaItem, PlaybackPayload, PlaybackSource, Rail,
   CrewMember, PersonCredit, PersonDetails, SearchPayload, SeasonDetails, SourceHealthPayload, TitleDetails, Top10Payload, Video, WallPayload, WallPoster
 } from "./types";
 
@@ -100,6 +100,13 @@ export function title(path: string, v: unknown): TitleDetails {
       .map((c): CrewMember => ({ id: num(c.id)!, name: str(c.name)!, job: str(c.job)!, profile: str(c.profile) })),
     collection: collection(o.collection)
   };
+}
+
+/** `/panda/collection/:id` page payload (v1.1.8). */
+export function collectionPage(path: string, v: unknown): Collection {
+  const c = collection(need(path, v));
+  if (!c) throw new ValidationError(path, "invalid collection");
+  return c;
 }
 
 function collection(v: unknown) {
@@ -237,6 +244,7 @@ export function validatorFor(path: string): ((path: string, v: unknown) => unkno
   if (path.startsWith("/panda/sources/health")) return sourceHealth;
   if (path.startsWith("/panda/wall")) return wall;
   if (path.startsWith("/panda/person/")) return person;
+  if (path.startsWith("/panda/collection/")) return collectionPage;
   if (path.startsWith("/panda/calendar")) return calendar;
   return null;
 }

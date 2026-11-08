@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from "react";
+import { Link } from "wouter";
 import { Icon } from "../components/Icon";
 import { ErrorState, Img, Skeleton, TitleArt, toast } from "../components/ui";
 import { Trailer, pickTrailer, rankTrailers } from "../components/Trailer";
@@ -193,7 +194,7 @@ function MDetailsView({ d }: { d: TitleDetails }) {
         )}
         {d.collection && (
           <div className="m-det-section">
-            <h2 className="m-row-title">{d.collection.name}</h2>
+            <Link href={`/collection/${d.collection.id}`} className="m-row-title m-row-link" id="det-collection">{d.collection.name} <Icon name="chevronRight" /></Link>
             <div className="m-row-track">
               {d.collection.parts.map((it, i) => (
                 <div key={it.id} className={`m-part ${it.id === d.id ? "is-current" : ""}`}>

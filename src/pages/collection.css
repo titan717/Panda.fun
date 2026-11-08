@@ -1,0 +1,53 @@
+/* Collection page (v1.1.8, D-106): backdrop hero like Details, parts grid with progress. Loaded with the lazy page chunk. */
+.coll-hero { position: relative; overflow: hidden; display: flex; align-items: flex-end; }
+.coll-backdrop { position: absolute; inset: 0; width: 100% !important; height: 100% !important; object-fit: cover; object-position: 50% 20%; }
+.coll-scrim { position: absolute; inset: 0; background: linear-gradient(90deg, rgba(0, 0, 0, 0.92) 0%, rgba(0, 0, 0, 0.7) 38%, rgba(0, 0, 0, 0.1) 75%), linear-gradient(0deg, #000 0%, rgba(0, 0, 0, 0) 45%); }
+.coll-text { position: relative; display: flex; flex-direction: column; align-items: flex-start; }
+.coll-kicker { text-transform: uppercase; letter-spacing: 0.14em; font-weight: var(--fw-bold); color: var(--tv-ice, #8FD3FF); }
+.coll-name { font-weight: var(--fw-bold); line-height: 1.08; }
+.coll-facts { color: var(--text-2); font-weight: var(--fw-medium); }
+.coll-done { color: var(--tv-ice, #8FD3FF); }
+.coll-overview { color: var(--tv-body, rgba(255, 255, 255, 0.8)); line-height: 1.5; display: -webkit-box; -webkit-line-clamp: 4; -webkit-box-orient: vertical; overflow: hidden; }
+.coll-actions { display: flex; flex-wrap: wrap; }
+.coll-btn { max-width: 100%; overflow: hidden; text-overflow: ellipsis; }
+.coll-part { display: flex; flex-direction: column; min-width: 0; }
+.coll-part-label { color: var(--text-2); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.coll-progress { display: block; background: rgba(255, 255, 255, 0.18); border-radius: 999px; overflow: hidden; }
+.coll-progress > span { display: block; height: 100%; background: var(--progress, #3BA0FF); }
+.coll-hero-sk { display: block; width: 100%; }
+
+.tv-collection { padding-top: 0; }
+.tv-collection { padding-top: 0; }
+.tv-collection .coll-hero { height: calc(640 * var(--tu)); margin: 0 calc(-1 * var(--safe-x)) calc(24 * var(--tu)) calc(-1 * var(--content-x)); padding: 0 var(--safe-x) calc(40 * var(--tu)) var(--content-x); }
+.tv-collection .coll-text { gap: calc(14 * var(--tu)); max-width: calc(980 * var(--tu)); }
+.tv-collection .coll-kicker { font-size: calc(18 * var(--tu)); }
+.tv-collection .coll-name { font-size: calc(64 * var(--tu)); }
+.tv-collection .coll-facts { font-size: calc(22 * var(--tu)); }
+.tv-collection .coll-overview { font-size: calc(22 * var(--tu)); }
+.tv-collection .coll-actions { gap: calc(16 * var(--tu)); margin-top: calc(10 * var(--tu)); }
+.tv-collection .coll-btn { max-width: calc(620 * var(--tu)); }
+.tv-collection .coll-btn:first-child { background: #fff; color: #000; }
+.tv-collection .coll-part { gap: calc(8 * var(--tu)); }
+.tv-collection .coll-part-label { font-size: calc(18 * var(--tu)); max-width: var(--poster-w); }
+.tv-collection .coll-progress { height: calc(5 * var(--tu)); max-width: var(--poster-w); }
+.tv-collection .coll-hero-sk { height: calc(620 * var(--tu)); }
+
+.m-collection .coll-hero { min-height: 300px; margin-top: -56px; padding: 72px var(--m-gutter) 18px; }
+.m-collection .coll-scrim { background: linear-gradient(0deg, var(--m-bg, #0E0F14) 0%, rgba(14, 15, 20, 0.85) 45%, rgba(14, 15, 20, 0.25) 100%); }
+.m-collection .coll-text { gap: 8px; }
+.m-collection .coll-kicker { font-size: 11px; }
+.m-collection .coll-name { font-size: 26px; }
+.m-collection .coll-facts { font-size: 13px; }
+.m-collection .coll-overview { font-size: 13.5px; color: var(--text-2); }
+.m-collection .coll-actions { gap: 10px; margin-top: 6px; width: 100%; }
+.m-collection .coll-btn { flex: 1 1 100%; }
+.m-collection .coll-part { gap: 4px; }
+.m-collection .coll-part > :first-child { width: 100%; }
+.m-collection .coll-part-label { font-size: 11.5px; }
+.m-collection .coll-progress { height: 3px; }
+.m-collection .coll-hero-sk { height: 300px; }
+@media (min-width: 700px) { .m-collection .coll-btn { flex: 0 1 auto; } .m-collection .coll-hero { min-height: 380px; } }
+.m-collection > section[aria-label] { padding-bottom: 24px; }
+.m-collection > section[aria-label] .m-row-title { padding: 0 var(--m-gutter); }
+.m-collection .coll-hero { min-height: 400px; }
+.m-collection .coll-btn:not(.btn--primary) { background: rgba(255, 255, 255, 0.12); color: var(--text-1); }

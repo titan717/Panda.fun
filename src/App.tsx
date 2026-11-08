@@ -30,6 +30,7 @@ const loadUpdates = () => import("./pages/Updates");
 const loadInfo = () => import("./pages/Info");
 const loadWhatsNew = () => import("./pages/WhatsNew");
 const loadPerson = () => import("./pages/Person");
+const loadCollection = () => import("./pages/Collection");
 const loadCalendar = () => import("./pages/Calendar");
 const loadLists = () => import("./pages/Lists");
 
@@ -56,6 +57,7 @@ const TermsPage = lz(loadInfo, "TermsPage");
 const WhatsNewPage = lz(loadWhatsNew, "WhatsNewPage");
 const WhatsNewSheet = lz(loadWhatsNew, "WhatsNewSheet");
 const PersonPage = lz(loadPerson, "PersonPage");
+const CollectionPage = lz(loadCollection, "CollectionPage");
 const CalendarPage = lz(loadCalendar, "CalendarPage");
 const BrowsePage = lz(loadLists, "BrowsePage");
 const ContinueWatchingPage = lz(loadLists, "ContinueWatchingPage");
@@ -273,6 +275,7 @@ function Routes({ mode }: { mode: LayoutMode }) {
             <Route path="/title/tv/:id/episodes"><AllEpisodes /></Route>
             <Route path="/title/:type/:id"><Details /></Route>
             <Route path="/person/:id"><PersonPage /></Route>
+            <Route path="/collection/:id"><CollectionPage /></Route>
             <Route path="/my-space">{tv ? <TvMySpace /> : <MMySpace />}</Route>
             <Route path="/my-list"><MyListPage /></Route>
             <Route path="/continue-watching"><ContinueWatchingPage /></Route>
