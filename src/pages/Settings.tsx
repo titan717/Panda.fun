@@ -7,7 +7,7 @@ import { PageHeader } from "../components/PageHeader";
 import { toast } from "../components/ui";
 import { Sheet } from "../components/Sheet";
 import { actions, usePrefs, useProfile, type Prefs } from "../lib/store";
-import { useGenres } from "../lib/hooks";
+import { useGenres, useSourceHealth } from "../lib/hooks";
 import { focusFirst } from "../lib/focus";
 import { useNav } from "../lib/nav";
 import { useIsTv } from "../lib/layout";
@@ -15,18 +15,19 @@ import { installedVersion } from "../lib/updates";
 import { languageName } from "../lib/format";
 import type { SourceId } from "../lib/types";
 
-type SectionId = "profiles" | "playback" | "trailers" | "languages" | "parental" | "display" | "storage" | "help" | "whatsnew" | "updates";
+type SectionId = "profiles" | "playback" | "trailers" | "sources" | "languages" | "parental" | "display" | "storage" | "whatsnew" | "updates" | "help";
 const SECTIONS: { id: SectionId; icon: IconName; title: string; sub: string }[] = [
   { id: "profiles", icon: "user", title: "Profiles & Account", sub: "Add, edit or switch profiles" },
-  { id: "playback", icon: "play", title: "Playback", sub: "Video source and autoplay" },
+  { id: "playback", icon: "play", title: "Playback", sub: "Quality and autoplay" },
   { id: "trailers", icon: "volume", title: "Trailers", sub: "Autoplay, sound, volume and delay" },
+  { id: "sources", icon: "globe", title: "Sources", sub: "Preferred source and live status" },
   { id: "languages", icon: "globe", title: "App Language & Content Languages", sub: "Top 10 language and content preferences" },
   { id: "parental", icon: "lock", title: "Parental Controls", sub: "PIN for leaving Kids profiles" },
-  { id: "display", icon: "tv", title: "Display", sub: "TV or phone layout" },
-  { id: "storage", icon: "file", title: "Storage & Data", sub: "Clear saved data on this device" },
-  { id: "help", icon: "info", title: "Help & Support", sub: "About Panda.fun, privacy and terms" },
+  { id: "display", icon: "tv", title: "Display", sub: "Layout, screen size, text, motion and contrast" },
+  { id: "storage", icon: "file", title: "Data & Storage", sub: "Space used and clearing saved data" },
   { id: "whatsnew", icon: "sparkle", title: "What's New", sub: "Highlights of this version" },
-  { id: "updates", icon: "download", title: "Check for Updates", sub: "Get the newest version of the app" }
+  { id: "updates", icon: "download", title: "Check for Updates", sub: "Get the newest version of the app" },
+  { id: "help", icon: "info", title: "About", sub: "Version, privacy and terms" }
 ];
 
 const TRAILER_VOLUMES = ["25", "50", "80", "100"].map((id) => ({ id, label: `${id}%` }));
@@ -72,6 +73,55 @@ function Choice<T extends string>({ id, title, value, options, onChange }: { id:
   );
 }
 
+const QUALITIES: { id: Prefs["quality"]; label: string; note?: string }[] = [
+  { id: "auto", label: "Automatic", note: "Best for your connection" }, { id: "2160", label: "4K" }, { id: "1080", label: "1080p" }, { id: "720", label: "720p", note: "Saves data" }, { id: "480", label: "480p", note: "Slow connections" }
+];
+
+function ago(iso: string) {
+  const s = Math.max(0, Math.round((Date.now() - Date.parse(iso)) / 1000));
+  return s < 60 ? `${s} s ago` : `${Math.round(s / 60)} min ago`;
+}
+
+/** Settings › Sources (G-7): preferred source plus the backend's live health check. */
+function SourcesPanel() {
+  const prefs = usePrefs();
+  const health = useSourceHealth();
+  return (
+    <div className="set-panel">
+      <Choice id="src" title="Preferred video source" value={prefs.preferredSource} options={SOURCES}
+        onChange={(v) => { actions.setPrefs({ preferredSource: v }); toast(`Preferred source: ${SOURCES.find((s) => s.id === v)!.label}`); }} />
+      <p className="set-group-title">Status</p>
+      <ul className="src-health" aria-live="polite">
+        {health.error && !health.data && <li className="src-health-row"><span className="src-dot src-dot--down" />Status unavailable right now</li>}
+        {!health.data && !health.error && <li className="src-health-row"><span className="src-dot" />Checking sources…</li>}
+        {health.data?.sources.map((h) => (
+          <li key={h.id} className="src-health-row">
+            <span className={`src-dot src-dot--${h.state}`} aria-hidden="true" />
+            <span className="src-health-name">{h.label}</span>
+            <span className="src-health-meta">{h.state === "healthy" ? "Working" : h.state === "degraded" ? "Slow" : "Not responding"}{h.latencyMs != null ? ` · ${h.latencyMs} ms` : ""} · checked {ago(h.checkedAt)}</span>
+          </li>
+        ))}
+      </ul>
+      <button id="sp-src-refresh" className="set-row" data-hover-focus onClick={() => void health.mutate()}>
+        <span className="set-row-text"><span className="set-row-title">Check again</span></span><Icon name="refresh" />
+      </button>
+    </div>
+  );
+}
+
+function fmtBytes(n: number) {
+  return n >= 1e9 ? `${(n / 1e9).toFixed(1)} GB` : n >= 1e6 ? `${(n / 1e6).toFixed(1)} MB` : `${Math.max(1, Math.round(n / 1e3))} KB`;
+}
+
+function StorageUsage() {
+  const [usage, setUsage] = useState<{ used: number; quota: number } | null>(null);
+  useEffect(() => {
+    navigator.storage?.estimate?.().then((e) => setUsage({ used: e.usage ?? 0, quota: e.quota ?? 0 })).catch(() => {});
+  }, []);
+  if (!usage) return null;
+  return <p className="set-note">Panda.fun is using {fmtBytes(usage.used)} on this device{usage.quota ? ` of ${fmtBytes(usage.quota)} available` : ""}.</p>;
+}
+
 function PinSetup({ onClose }: { onClose: () => void }) {
   const [pin, setPin] = useState("");
   return (
@@ -92,6 +142,8 @@ function Panel({ id }: { id: SectionId }) {
   const set = (p: Partial<Prefs>) => actions.setPrefs(p);
   const genres = useGenres().data;
   const [pinOpen, setPinOpen] = useState(false);
+  const [confirmHistory, setConfirmHistory] = useState(false);
+  const tv = useIsTv();
   const { mutate } = useSWRConfig();
   const { go } = useNav();
   switch (id) {
@@ -105,7 +157,7 @@ function Panel({ id }: { id: SectionId }) {
     case "playback":
       return (
         <div className="set-panel">
-          <Choice id="src" title="Preferred video source" value={prefs.preferredSource} options={SOURCES} onChange={(v) => { set({ preferredSource: v }); toast(`Preferred source: ${SOURCES.find((s) => s.id === v)!.label}`); }} />
+          <Choice id="quality" title="Preferred quality" value={prefs.quality} options={QUALITIES} onChange={(v) => { set({ quality: v }); toast(`Preferred quality: ${QUALITIES.find((q) => q.id === v)!.label}`); }} />
           <Toggle id="sp-autonext" title="Autoplay next episode" sub="Start the next episode after a 10 second countdown" value={prefs.autoplayNext} onChange={(v) => set({ autoplayNext: v })} />
         </div>
       );
@@ -120,6 +172,8 @@ function Panel({ id }: { id: SectionId }) {
             options={TRAILER_DELAYS} onChange={(v) => set({ trailerDelay: Number(v) })} />
         </div>
       );
+    case "sources":
+      return <SourcesPanel />;
     case "languages": {
       const langs = (genres?.languages ?? [{ code: "ml", name: "Malayalam" }, { code: "hi", name: "Hindi" }, { code: "en", name: "English" }]).map((l) => ({ id: l.code, label: l.name }));
       return (
@@ -142,6 +196,12 @@ function Panel({ id }: { id: SectionId }) {
         <div className="set-panel">
           <Choice id="layout" title="Layout" value={prefs.layout} options={[{ id: "auto", label: "Automatic", note: "Pick based on screen and input" }, { id: "tv", label: "TV", note: "Remote and keyboard friendly" }, { id: "mobile", label: "Phone", note: "Touch friendly" }]}
             onChange={(v) => set({ layout: v })} />
+          {tv && <Choice id="scale" title="Screen size" value={String(prefs.uiScale) as "90" | "95" | "100"} options={[{ id: "100", label: "Full screen", note: "Use the whole picture" }, { id: "95", label: "95%", note: "If your TV cuts off the edges" }, { id: "90", label: "90%", note: "For TVs with strong overscan" }]}
+            onChange={(v) => { set({ uiScale: Number(v) as Prefs["uiScale"] }); toast(v === "100" ? "Full screen" : `Screen size ${v}%`); }} />}
+          <Choice id="text" title="Text size" value={prefs.textSize} options={[{ id: "default", label: "Default" }, { id: "large", label: "Large", note: "15% bigger" }, { id: "larger", label: "Larger", note: "30% bigger" }]}
+            onChange={(v) => set({ textSize: v })} />
+          <Toggle id="sp-motion" title="Reduce motion" sub="Turn off animations, zooms and fades" value={prefs.reduceMotion} onChange={(v) => set({ reduceMotion: v })} />
+          <Toggle id="sp-contrast" title="High contrast" sub="Brighter text, solid panels and a stronger focus ring" value={prefs.highContrast} onChange={(v) => set({ highContrast: v })} />
         </div>
       );
     case "storage":
@@ -153,6 +213,9 @@ function Panel({ id }: { id: SectionId }) {
             toast("Cache cleared");
           }} />
           <Row id="sp-recents" title="Clear recent searches" onClick={() => { actions.clearRecentSearches(); toast("Recent searches cleared"); }} />
+          <Row id="sp-history" title="Clear watch history" sub={confirmHistory ? "Press again to remove Continue Watching for this profile" : "Removes Continue Watching for this profile"}
+            onClick={() => { if (!confirmHistory) { setConfirmHistory(true); return; } actions.clearHistory(); setConfirmHistory(false); toast("Watch history cleared"); }} />
+          <StorageUsage />
         </div>
       );
     case "help":

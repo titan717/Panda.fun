@@ -299,3 +299,5 @@ html[data-mode="mobile"] .set-panel, html[data-mode="mobile"] .upd-card, html[da
   .m-grid, .m-mosaic { grid-template-columns: repeat(6, 1fr); }
   .m-hero-slide, .m-hero-track > .m-hero-card { width: min(calc(36% - 30px), 440px); }
 }
+.m-ep.is-upcoming .m-ep-still, .m-ep.is-upcoming .m-ep-overview { opacity: 0.55; }
+.m-ep.is-upcoming .m-ep-meta { color: #8fb0ff; font-weight: 600; }

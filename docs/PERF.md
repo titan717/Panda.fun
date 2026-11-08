@@ -2,6 +2,15 @@
 
 Measured on every release. Never regress.
 
+## v1.0.7
+
+| Metric | Value |
+|---|---|
+| First load (gzip JS) | 55.5 KB on TV (index 27.2 + vendor 10.3 + runtime 9.7 + TV layout 8.3), +0.9 KB for the display preferences, voice bridge and remote-friendly search. Settings stays a separate 4.4 KB chunk loaded only when opened. |
+| Text size | Absolute font sizes are wrapped in `calc(X * var(--fs, 1))` at build time (PostCSS), so changing text size is a single CSS variable write with no re-render; CSS grew 0.3 KB gzip. |
+| Screen size | TV UI scale (90/95/100 %) is one transform on `#root`, so the rows keep their compositor layers. |
+| Source health | Settings polls `/panda/sources/health` once a minute, only while the Sources section is open. |
+
 ## v1.0.6
 
 | Metric | Value |

@@ -14,6 +14,13 @@ export function timeLeft(position: number, duration: number) {
 }
 
 const MONTHS = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
+/** True when an episode's air date is still in the future (local calendar day), so it can't be played yet. */
+export function airsLater(iso: string | null | undefined, now = new Date()) {
+  if (!iso || !/^\d{4}-\d{2}-\d{2}/.test(iso)) return false;
+  const today = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, "0")}-${String(now.getDate()).padStart(2, "0")}`;
+  return iso.slice(0, 10) > today;
+}
+
 export function shortDate(iso: string | null | undefined, withYear = true) {
   if (!iso) return null;
   const [y, m, d] = iso.split("-").map(Number);

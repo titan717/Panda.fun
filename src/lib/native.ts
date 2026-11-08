@@ -7,10 +7,12 @@ export interface NativeBridge {
   downloadUpdate(): void;
   installDownloadedUpdate?(): void;
   exitApp?(): void;
+  hasVoiceSearch?(): boolean;
+  startVoiceSearch?(): void;
 }
 
 declare global {
-  interface Window { KinomaNative?: NativeBridge }
+  interface Window { KinomaNative?: NativeBridge; __pandaVoice?: (text: string) => void }
 }
 
 export const native: NativeBridge | null = typeof window !== "undefined" && window.KinomaNative ? window.KinomaNative : null;

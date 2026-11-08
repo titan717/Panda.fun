@@ -231,6 +231,9 @@ html[data-mode="tv"] .tv-season:focus { background: var(--tv-translucent); borde
 .tv-mic.is-listening { background: var(--danger); animation: pulse 1.2s ease-in-out infinite; }
 html[data-mode="tv"] .tv-mic:focus { outline: var(--focus-border); box-shadow: var(--focus-glow); }
 .tv-search-field { flex: 1; max-width: calc(1360 * var(--tu)); display: flex; align-items: center; gap: calc(16 * var(--tu)); height: calc(72 * var(--tu)); padding: 0 calc(24 * var(--tu)); border-radius: calc(10 * var(--tu)); background: var(--tv-search-fill); border: calc(1.5 * var(--tu)) solid transparent; font-size: calc(28 * var(--tu)); }
+.tv-search-clear { flex: none; display: inline-flex; align-items: center; gap: calc(10 * var(--tu)); height: calc(72 * var(--tu)); padding: 0 calc(26 * var(--tu)); border-radius: calc(10 * var(--tu)); background: var(--tv-mic-fill); color: var(--text-1); font-size: calc(24 * var(--tu)); font-weight: var(--fw-semibold); }
+.tv-search-clear svg { width: calc(26 * var(--tu)); height: calc(26 * var(--tu)); }
+.tv-search-clear:focus { outline: var(--focus-border); box-shadow: var(--focus-glow); }
 .tv-search-field:focus-within { border-color: var(--tv-ice-strong); box-shadow: var(--focus-glow); }
 .tv-search-field input { flex: 1; min-width: 0; height: 100%; background: none; border: 0; font-size: calc(28 * var(--tu)); color: var(--text-1); }
 .tv-search-field input::placeholder { color: rgba(255, 255, 255, 0.75); }
@@ -405,3 +408,5 @@ html[data-mode="tv"] .tvp-wn:focus .tvp-wn-media { border-color: #fff; transform
 html[data-mode="tv"] .tvp-wn:focus .tvp-wn-play { left: 50%; top: 50%; bottom: auto; transform: translate(-50%, -50%); }
 html[data-mode="tv"] .tvp-wn:focus .tvp-wn-play .icon { width: calc(46 * var(--tu)); height: calc(46 * var(--tu)); }
 .tvp.has-panel .tvp-top, .tvp.has-panel .tvp-bottom { opacity: 0.35; }
+.tv-ep.is-upcoming .tv-ep-still, .tv-ep.is-upcoming .tv-ep-overview { opacity: 0.55; }
+.tv-ep.is-upcoming .tv-ep-meta { color: #8fb0ff; font-weight: var(--fw-semibold); }

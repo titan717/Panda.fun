@@ -1,7 +1,8 @@
 import useSWR, { type SWRConfiguration } from "swr";
 import { useEffect, useState } from "react";
 import { keys } from "./api";
-import type { CategoriesPayload, GenresPayload, ListPayload, MediaType, PagePayload, PageKind, SearchPayload, SeasonDetails, TitleDetails, Top10Payload, WallPayload } from "./types";
+import { usePrefs } from "./store";
+import type { CategoriesPayload, GenresPayload, ListPayload, MediaType, PagePayload, PageKind, SearchPayload, SeasonDetails, SourceHealthPayload, TitleDetails, Top10Payload, WallPayload } from "./types";
 
 const slow: SWRConfiguration = { revalidateOnFocus: false, dedupingInterval: 60_000 };
 
@@ -15,6 +16,9 @@ export const useWall = () => useSWR<WallPayload>(keys.wall(), { ...slow, dedupin
 export const useTrending = (type: "all" | MediaType = "all", window: "day" | "week" = "day") => useSWR<ListPayload>(keys.trending(type, window), slow);
 export const useDiscover = (type: MediaType, o: Parameters<typeof keys.discover>[1]) => useSWR<ListPayload>(keys.discover(type, o), slow);
 export const useSearch = (q: string) => useSWR<SearchPayload>(q.trim().length >= 2 ? keys.search(q.trim()) : null, { ...slow, keepPreviousData: true });
+
+/** Live source status from the backend, refreshed every minute while Settings › Sources is open. */
+export const useSourceHealth = () => useSWR<SourceHealthPayload>(keys.sourceHealth(), { refreshInterval: 60_000, revalidateOnMount: true, dedupingInterval: 10_000 });
 
 export function useDebounced<T>(value: T, ms = 350) {
   const [v, setV] = useState(value);
@@ -54,7 +58,12 @@ export function useMediaQuery(q: string) {
   return m;
 }
 
-export const useReducedMotion = () => useMediaQuery("(prefers-reduced-motion: reduce)");
+/** Reduced motion from the system setting or the profile's Settings › Display switch. */
+export const useReducedMotion = () => {
+  const system = useMediaQuery("(prefers-reduced-motion: reduce)");
+  const pref = usePrefs().reduceMotion;
+  return system || pref;
+};
 
 /**
  * Trailer timing (MASTER §4.B): after `delayS` seconds of uninterrupted focus the trailer plays;

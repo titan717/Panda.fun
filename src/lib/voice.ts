@@ -16,9 +16,26 @@ const Ctor: RecognitionCtor | undefined = typeof window !== "undefined"
     ?? (window as unknown as { webkitSpeechRecognition?: RecognitionCtor }).webkitSpeechRecognition)
   : undefined;
 
-export const voiceSupported = Boolean(Ctor);
+const nativeVoice = (() => {
+  try { return typeof window !== "undefined" && Boolean(window.KinomaNative?.hasVoiceSearch?.()); } catch { return false; }
+})();
+
+/** Voice works through the Android system recogniser inside the app, or the Web Speech API in browsers. */
+export const voiceSupported = nativeVoice || Boolean(Ctor);
 
 export function listen(onText: (t: string) => void, onState: (listening: boolean) => void, onError: (msg: string) => void) {
+  if (nativeVoice) {
+    let open = true;
+    window.__pandaVoice = (text: string) => {
+      if (!open) return;
+      open = false;
+      onState(false);
+      if (text.trim()) onText(text.trim()); else onError("Didn't catch that. Try again.");
+    };
+    onState(true);
+    window.KinomaNative?.startVoiceSearch?.();
+    return () => { open = false; window.__pandaVoice = undefined; onState(false); };
+  }
   if (!Ctor) return () => {};
   const r = new Ctor();
   r.lang = navigator.language || "en-IN";

@@ -1,6 +1,7 @@
 import { defineConfig } from "vite";
 import react from "@vitejs/plugin-react";
 import { readFileSync } from "node:fs";
+import fontScale from "./scripts/postcss-font-scale.mjs";
 
 const pkg = JSON.parse(readFileSync(new URL("./package.json", import.meta.url), "utf8")) as { version: string };
 
@@ -8,6 +9,7 @@ export default defineConfig(({ mode }) => ({
   // The Android WebView loads the bundle from appassets.androidplatform.net/assets/web/, so it needs relative URLs.
   base: mode === "android" ? "./" : "/",
   plugins: [react()],
+  css: { postcss: { plugins: [fontScale()] } },
   // Preact's compat layer replaces react-dom in production builds (~41 KB gzip less on first load). Tests keep real React. See DECISIONS D-37.
   resolve: mode === "test" ? {} : {
     alias: { "react-dom/test-utils": "preact/test-utils", "react-dom/client": "preact/compat/client", "react-dom": "preact/compat", "react/jsx-runtime": "preact/jsx-runtime", "react/jsx-dev-runtime": "preact/jsx-dev-runtime", react: "preact/compat" }

@@ -32,6 +32,9 @@ import android.widget.TextView
 import android.net.Uri
 import android.widget.Button
 import androidx.activity.ComponentActivity
+import androidx.activity.result.contract.ActivityResultContracts
+import android.speech.RecognizerIntent
+import org.json.JSONObject
 import androidx.lifecycle.lifecycleScope
 import androidx.webkit.WebViewAssetLoader
 import com.kinoma.tv.data.UpdateChecker
@@ -42,6 +45,19 @@ import java.io.InputStream
 class MainActivity : ComponentActivity() {
 
     private lateinit var webView: WebView
+
+    /** System speech recogniser (Google voice on Android TV and phones); the result is handed to the web app. */
+    private val voiceLauncher = registerForActivityResult(ActivityResultContracts.StartActivityForResult()) { result ->
+        val text = result.data?.getStringArrayListExtra(RecognizerIntent.EXTRA_RESULTS)?.firstOrNull().orEmpty()
+        val js = "window.__pandaVoice && window.__pandaVoice(${JSONObject.quote(text)})"
+        if (::webView.isInitialized) webView.evaluateJavascript(js, null)
+    }
+
+    private fun voiceIntent() = Intent(RecognizerIntent.ACTION_RECOGNIZE_SPEECH).apply {
+        putExtra(RecognizerIntent.EXTRA_LANGUAGE_MODEL, RecognizerIntent.LANGUAGE_MODEL_FREE_FORM)
+        putExtra(RecognizerIntent.EXTRA_PROMPT, "Search movies and shows")
+        putExtra(RecognizerIntent.EXTRA_MAX_RESULTS, 1)
+    }
     private lateinit var assetLoader: WebViewAssetLoader
     private var customView: View? = null
     private var customViewCallback: WebChromeClient.CustomViewCallback? = null
@@ -693,6 +709,19 @@ class MainActivity : ComponentActivity() {
                     uri == null -> downloadAvailableUpdate()
                     canInstallPackages() -> installVerifiedApk(uri)
                     else -> openInstallPermissionSettings()
+                }
+            }
+        }
+
+        @JavascriptInterface
+        fun hasVoiceSearch(): Boolean = voiceIntent().resolveActivity(context.packageManager) != null
+
+        @JavascriptInterface
+        fun startVoiceSearch() {
+            runOnUiThread {
+                try { voiceLauncher.launch(voiceIntent()) } catch (e: Exception) {
+                    Log.w(TAG, "Voice search unavailable", e)
+                    webView.evaluateJavascript("window.__pandaVoice && window.__pandaVoice('')", null)
                 }
             }
         }

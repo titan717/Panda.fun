@@ -48,6 +48,13 @@ export interface Prefs {
   trailerDelay: number;
   /** Preferred stream quality (TV PLAYER §20.9); passed to sources that accept a hint. */
   quality: "auto" | "2160" | "1080" | "720" | "480";
+  /** TV overscan compensation: the whole UI is drawn at this percentage of the screen. */
+  uiScale: 90 | 95 | 100;
+  /** Turn off animations, zooms and trailer fades regardless of the system setting. */
+  reduceMotion: boolean;
+  /** Brighter secondary text, opaque panels and a thicker focus ring. */
+  highContrast: boolean;
+  textSize: "default" | "large" | "larger";
 }
 
 /** Preferences shared by every profile on the device; everything else is saved per profile. */
@@ -84,7 +91,11 @@ const defaultPrefs: Prefs = {
   trailerSound: true,
   trailerVolume: 0.8,
   trailerDelay: 5,
-  quality: "auto"
+  quality: "auto",
+  uiScale: 100,
+  reduceMotion: false,
+  highContrast: false,
+  textSize: "default"
 };
 
 const emptyData = (): ProfileData => ({ watchlist: [], history: {}, ratings: {}, recentSearches: [] });
@@ -254,6 +265,7 @@ export const actions = {
     patchActive((d) => ({ ...d, recentSearches: [query, ...d.recentSearches.filter((x) => x.toLowerCase() !== query.toLowerCase())].slice(0, 8) }));
   },
   clearRecentSearches() { patchActive((d) => ({ ...d, recentSearches: [] })); },
+  clearHistory() { patchActive((d) => ({ ...d, history: {} })); },
   saveProgress(item: PandaItem, p: { position: number; duration: number; season?: number; episode?: number; episodeTitle?: string | null }) {
     if (!Number.isFinite(p.position) || p.position < 0) return;
     const completed = p.duration > 0 && p.position / p.duration > 0.94;

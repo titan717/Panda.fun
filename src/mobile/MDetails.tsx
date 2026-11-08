@@ -6,7 +6,7 @@ import { RatePopover, rateLabel } from "../components/RatePopover";
 import { VideoOverlay } from "../components/VideoOverlay";
 import { useDwell, useSeason, useTitle } from "../lib/hooks";
 import { actions, useHistoryEntry, useInWatchlist, usePrefs, useRating } from "../lib/store";
-import { detailsMeta, runtime, shortDate, watchPath } from "../lib/format";
+import { detailsMeta, runtime, shortDate, watchPath, airsLater } from "../lib/format";
 import { detailsCtas } from "../lib/watch";
 import { useNav } from "../lib/nav";
 import type { MediaType, TitleDetails } from "../lib/types";
@@ -50,14 +50,15 @@ export function EpisodeList({ d, limit, onSeason }: { d: TitleDetails; limit?: n
       {shown.map((ep) => {
         const isCur = history?.season === ep.season && history.episode === ep.number;
         const href = watchPath("tv", d.tmdbId, ep.season, ep.number) + (isCur && !history.completed ? `&t=${history.position}` : "");
-        const pct = isCur && history.duration ? Math.min(100, (history.position / history.duration) * 100) : 0;
+        const soon = airsLater(ep.airDate);
+          const pct = isCur && history.duration ? Math.min(100, (history.position / history.duration) * 100) : 0;
         return (
-          <button key={ep.id} className="m-ep" onClick={() => go(href)}>
+          <button key={ep.id} className={`m-ep ${soon ? "is-upcoming" : ""}`} aria-disabled={soon || undefined} onClick={() => { if (soon) toast(`Episode ${ep.number} arrives ${shortDate(ep.airDate)}`); else go(href); }}>
             <span className="m-ep-row">
-              <span className="m-ep-still"><Img src={ep.still} alt="" title={`E${ep.number}`} /><Icon name="play" className="m-ep-play" />{pct > 0 && <span className="progress"><span style={{ width: `${pct}%` }} /></span>}</span>
+              <span className="m-ep-still"><Img src={ep.still} alt="" title={`E${ep.number}`} />{!soon && <Icon name="play" className="m-ep-play" />}{pct > 0 && <span className="progress"><span style={{ width: `${pct}%` }} /></span>}</span>
               <span className="m-ep-text">
                 <span className="m-ep-title">{ep.number}. {ep.title}</span>
-                <span className="m-ep-meta">{[`S${ep.season} E${ep.number}`, shortDate(ep.airDate), runtime(ep.runtime)].filter(Boolean).join(" • ")}</span>
+                <span className="m-ep-meta">{soon ? `Coming ${shortDate(ep.airDate)}` : [`S${ep.season} E${ep.number}`, shortDate(ep.airDate), runtime(ep.runtime)].filter(Boolean).join(" • ")}</span>
               </span>
             </span>
             {ep.overview && <span className="m-ep-overview">{ep.overview}</span>}

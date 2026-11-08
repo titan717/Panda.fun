@@ -6,7 +6,7 @@ import { RatePopover } from "../components/RatePopover";
 import { VideoOverlay } from "../components/VideoOverlay";
 import { useLiteMotion, useSeason, useTitle, useTrailerStage } from "../lib/hooks";
 import { actions, useHistoryEntry, useInWatchlist, usePrefs, useRating } from "../lib/store";
-import { detailsMeta, languageName, pluralEps, runtime, shortDate, watchPath } from "../lib/format";
+import { detailsMeta, languageName, pluralEps, runtime, shortDate, watchPath, airsLater } from "../lib/format";
 import { detailsCtas } from "../lib/watch";
 import { focusEl, focusFirst, useBackHandler } from "../lib/focus";
 import { useNav } from "../lib/nav";
@@ -190,13 +190,15 @@ function EpisodesTab({ d }: { d: TitleDetails }) {
         {data?.number === season && data.episodes.map((ep) => {
           const isCur = history?.season === ep.season && history.episode === ep.number;
           const href = watchPath("tv", d.tmdbId, ep.season, ep.number) + (isCur && !history.completed ? `&t=${history.position}` : "");
+          const soon = airsLater(ep.airDate);
           const pct = isCur && history.duration ? Math.min(100, (history.position / history.duration) * 100) : 0;
           return (
-            <a key={ep.id} id={`ep-${ep.season}-${ep.number}`} href={href} className="tv-ep" data-hover-focus onClick={(e) => { e.preventDefault(); go(href); }}>
-              <span className="tv-ep-still"><Img src={ep.still} alt="" title={`Episode ${ep.number}`} /><Icon name="play" className="tv-ep-play" />{pct > 0 && <span className="progress"><span style={{ width: `${pct}%` }} /></span>}</span>
+            <a key={ep.id} id={`ep-${ep.season}-${ep.number}`} href={href} className={`tv-ep ${soon ? "is-upcoming" : ""}`} aria-disabled={soon || undefined} data-hover-focus
+              onClick={(e) => { e.preventDefault(); if (soon) toast(`Episode ${ep.number} arrives ${shortDate(ep.airDate)}`); else go(href); }}>
+              <span className="tv-ep-still"><Img src={ep.still} alt="" title={`Episode ${ep.number}`} />{!soon && <Icon name="play" className="tv-ep-play" />}{pct > 0 && <span className="progress"><span style={{ width: `${pct}%` }} /></span>}</span>
               <span className="tv-ep-text">
                 <span className="tv-ep-title">{ep.number}. {ep.title}</span>
-                <span className="tv-ep-meta">{[`S${ep.season} E${ep.number}`, shortDate(ep.airDate), runtime(ep.runtime)].filter(Boolean).join(" • ")}</span>
+                <span className="tv-ep-meta">{soon ? `Coming ${shortDate(ep.airDate)}` : [`S${ep.season} E${ep.number}`, shortDate(ep.airDate), runtime(ep.runtime)].filter(Boolean).join(" • ")}</span>
                 {ep.overview && <span className="tv-ep-overview">{ep.overview}</span>}
               </span>
             </a>

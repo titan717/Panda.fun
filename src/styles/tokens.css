@@ -197,3 +197,38 @@ html[data-mode="tv"] {
     --focus-scale: 1;
   }
 }
+
+/* ---------- Settings › Display (D-44) ---------- */
+html[data-motion="reduce"] {
+  --dur-focus: 0ms;
+  --dur-expand: 0ms;
+  --dur-page: 0ms;
+  --dur-crossfade: 0ms;
+  --focus-scale: 1;
+}
+html[data-motion="reduce"] *, html[data-motion="reduce"] *::before, html[data-motion="reduce"] *::after {
+  animation-duration: 0.01ms !important;
+  animation-iteration-count: 1 !important;
+  transition-duration: 0.01ms !important;
+  scroll-behavior: auto !important;
+}
+
+html[data-contrast="high"] {
+  --text-2: #e6ebf5;
+  --text-3: #c9d1e0;
+  --tv-ep-body: #eef2f8;
+  --tv-rail-icon: #ffffff;
+  --tv-glass: rgba(4, 10, 20, 0.96);
+  --tv-glass-badge: rgba(0, 0, 0, 0.9);
+  --tv-badge-border: rgba(255, 255, 255, 0.6);
+  --m-raised: #2a2d38;
+  --focus-border: 4px solid #ffffff;
+  --focus-glow: 0 0 0 2px #000000, 0 0 0 6px #ffd84d;
+  --tv-hero-scrim: linear-gradient(0deg, rgba(0, 0, 0, 0.97) 0%, rgba(0, 0, 0, 0.75) 40%, rgba(0, 0, 0, 0.15) 70%);
+  --tv-det-scrim: linear-gradient(90deg, #000000 0%, rgba(0, 0, 0, 0.97) 38%, rgba(0, 0, 0, 0.6) 60%, transparent 80%);
+}
+
+/* TV overscan: draw the whole app inside 95 % or 90 % of the screen; the margin stays true black. */
+html[data-mode="tv"][data-scale="95"] #root, html[data-mode="tv"][data-scale="90"] #root { transform-origin: 50% 50%; height: 100vh; overflow: hidden; }
+html[data-mode="tv"][data-scale="95"] #root { transform: scale(0.95); }
+html[data-mode="tv"][data-scale="90"] #root { transform: scale(0.9); }

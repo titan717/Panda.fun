@@ -40,3 +40,12 @@ Reviewed each release. Ideas are only adopted when they fit the blueprints.
 - Netflix, Prime Video and Google TV prefetch the artwork next to the focused tile, so a fast scroll never shows blank tiles. Panda now warms the next rows' posters and the neighbouring backdrops.
 - Google TV and Netflix announce tiles to TalkBack with title, type and position. Panda cards now read "Title, year, Movie/Series, rating, n of m", and each row is labelled by its heading.
 - Shimmering placeholders shaped like the real layout, not a spinner, are standard (YouTube, Netflix). Panda's TV home skeleton now mirrors the hero, poster and landscape rows, and each card shimmers until its art is decoded.
+
+## v1.0.7 round (2026-11-08)
+
+- Android TV and Google TV offer system-wide text scaling and high-contrast text; Netflix and Prime Video follow the system font scale on TV. Panda now has its own Text size, Screen size, Reduce motion and High contrast settings per profile, because a WebView ignores parts of the system setting.
+- Google TV and Netflix start voice search from the remote's mic button through the system recogniser. Panda's mic now does the same inside the app.
+- Netflix's TV search does not pop a keyboard when you arrive; you browse suggestions first. Panda's field now waits for OK before opening the keyboard, and has a Clear button so deleting a query with a remote is one press.
+- Netflix and Prime list upcoming episodes with their release date, not as playable tiles. Panda now shows "Coming <date>" and blocks play.
+- Stremio and Kodi-style apps show provider status; Panda's Sources settings show live health and latency for CineSrc and Vidy.
+

@@ -58,6 +58,20 @@ export function prefetchRoutes(mode: LayoutMode) {
 
 const PUBLIC_PATHS = ["/about", "/privacy", "/terms"];
 
+export const TEXT_SCALE = { default: 1, large: 1.15, larger: 1.3 } as const;
+
+/** Settings › Display: mirror the profile's display prefs onto <html> so CSS can react (D-44). */
+function useDisplayPrefs(mode: LayoutMode) {
+  const { uiScale, reduceMotion, highContrast, textSize } = usePrefs();
+  useEffect(() => {
+    const html = document.documentElement;
+    html.dataset.scale = mode === "tv" ? String(uiScale) : "100";
+    html.dataset.motion = reduceMotion ? "reduce" : "auto";
+    html.dataset.contrast = highContrast ? "high" : "normal";
+    html.style.setProperty("--fs", String(TEXT_SCALE[textSize] ?? 1));
+  }, [mode, uiScale, reduceMotion, highContrast, textSize]);
+}
+
 function useLayoutMode(): LayoutMode {
   const { layout } = usePrefs();
   const [mode, setMode] = useState<LayoutMode>(() => detectLayout(layout));
@@ -219,6 +233,7 @@ function Routes({ mode }: { mode: LayoutMode }) {
 
 export function App() {
   const mode = useLayoutMode();
+  useDisplayPrefs(mode);
   const splash = useSplash();
   useReleaseNotifications();
   const routerProps = BUILD_TARGET === "android" ? { hook: useHashLocation } : {};

@@ -1,4 +1,4 @@
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, useState } from "react";
 import { Icon } from "../components/Icon";
 import { EmptyState, ErrorState, Skeleton } from "../components/ui";
 import { useSearchState, type SearchFilter } from "../lib/useSearchState";
@@ -11,7 +11,25 @@ const FILTERS: { id: SearchFilter; label: string }[] = [{ id: "all", label: "All
 export function TvSearch() {
   const s = useSearchState();
   const input = useRef<HTMLInputElement>(null);
+  // Remote-friendly field (D-45): landing on Search focuses the field without popping the on-screen keyboard;
+  // OK opens it, Enter/Search on the keyboard closes it and jumps to the first result.
+  const [editing, setEditing] = useState(false);
   useEffect(() => { focusEl(input.current); }, []);
+  const openKeyboard = () => {
+    const el = input.current;
+    if (!el) return;
+    setEditing(true);
+    requestAnimationFrame(() => { el.blur(); el.focus(); });
+  };
+  const onKey = (e: React.KeyboardEvent<HTMLInputElement>) => {
+    if (e.key !== "Enter") return;
+    e.preventDefault();
+    if (!editing && !s.query) { openKeyboard(); return; }
+    s.commit();
+    setEditing(false);
+    const first = document.getElementById("res-0");
+    if (first && s.active) focusEl(first); else openKeyboard();
+  };
   const grid = s.active ? s.results : s.popular;
 
   return (
@@ -22,9 +40,15 @@ export function TvSearch() {
         )}
         <label className="tv-search-field">
           <Icon name="search" />
-          <input ref={input} id="search-input" type="search" value={s.query} placeholder="Search" aria-label="Search movies and shows" autoComplete="off" spellCheck={false}
-            enterKeyHint="search" onChange={(e) => s.setQuery(e.target.value)} onKeyDown={(e) => { if (e.key === "Enter") s.commit(); }} />
+          <input ref={input} id="search-input" type="search" value={s.query} placeholder={s.listening ? "Listening…" : "Search"} aria-label="Search movies and shows" autoComplete="off" spellCheck={false}
+            inputMode={editing ? "search" : "none"} enterKeyHint="search" onChange={(e) => s.setQuery(e.target.value)} onKeyDown={onKey}
+            onClick={() => { if (!editing) openKeyboard(); }} onBlur={() => setEditing(false)} />
         </label>
+        {s.query && (
+          <button id="search-clear" className="tv-search-clear" onClick={() => { s.setQuery(""); focusEl(input.current); }} aria-label="Clear search" data-hover-focus>
+            <Icon name="close" /> Clear
+          </button>
+        )}
       </section>
       {!s.active && s.recents.length > 0 && (
         <section className="tv-chips" aria-label="Recent searches">
