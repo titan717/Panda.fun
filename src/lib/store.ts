@@ -46,6 +46,8 @@ export interface Prefs {
   trailerVolume: number;
   /** Seconds a title must stay focused before its trailer starts. */
   trailerDelay: number;
+  /** Preferred stream quality (TV PLAYER §20.9); passed to sources that accept a hint. */
+  quality: "auto" | "2160" | "1080" | "720" | "480";
 }
 
 /** Preferences shared by every profile on the device; everything else is saved per profile. */
@@ -81,7 +83,8 @@ const defaultPrefs: Prefs = {
   notifiedTag: null,
   trailerSound: true,
   trailerVolume: 0.8,
-  trailerDelay: 5
+  trailerDelay: 5,
+  quality: "auto"
 };
 
 const emptyData = (): ProfileData => ({ watchlist: [], history: {}, ratings: {}, recentSearches: [] });

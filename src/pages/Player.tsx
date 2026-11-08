@@ -12,6 +12,8 @@ import { useBackHandler, focusEl } from "../lib/focus";
 import { useNav } from "../lib/nav";
 import { useIsTv } from "../lib/layout";
 import { navKey } from "../lib/keys";
+import { TvPlayerChrome, type TvChromeProps } from "../tv/TvPlayerChrome";
+import { api } from "../lib/api";
 import { ADAPTERS, embedUrl, parseMessage, READY_TIMEOUT_MS, sendCommand, sourceName, SOURCE_ORDER } from "../lib/player";
 import { nextEpisodeOf, prevEpisodeOf } from "../lib/watch";
 import { pluralEps, runtime, titlePath, watchPath } from "../lib/format";
@@ -48,12 +50,19 @@ function Player({ type, id, season, episode, start }: { type: MediaType; id: num
   const [sourceId, setSourceId] = useState<SourceId>(prefs.preferredSource);
   const source: PlaybackSource | undefined = sources.find((x) => x.id === sourceId) ?? sources[0];
   const tried = useRef(new Set<SourceId>());
+  const [nativeControls, setNativeControls] = useState(false);
+  // TV draws the TV PLAYER blueprint chrome over sources that can hide their own controls (§6, §20)
+  const customChrome = tv && Boolean(source && ADAPTERS[source.id]?.hideControls) && !nativeControls;
   const [ready, setReady] = useState(false);
   const [paused, setPaused] = useState(false);
   const [overlay, setOverlay] = useState(true);
   const [drawer, setDrawer] = useState(false);
   const [upNext, setUpNext] = useState<{ s: number; e: number } | null>(null);
   const [countdown, setCountdown] = useState(10);
+  const [time, setTime] = useState({ p: start, d: 0 });
+  const [muted, setMuted] = useState(false);
+  // position to reopen at when the embed reloads (source / quality / controls change)
+  const [reloadAt, setReloadAt] = useState<number | null>(null);
   const frame = useRef<HTMLIFrameElement>(null);
   const pos = useRef({ position: start, duration: 0, dirty: false });
   const hideTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -87,7 +96,7 @@ function Player({ type, id, season, episode, start }: { type: MediaType; id: num
     hideTimer.current = setTimeout(() => setOverlay(false), 4000);
   }, []);
   useEffect(() => { poke(); return () => { if (hideTimer.current) clearTimeout(hideTimer.current); }; }, [poke]);
-  useEffect(() => { if (overlay && tv) focusEl(document.getElementById("pl-back")); }, [overlay, tv]);
+  useEffect(() => { if (overlay && tv && !customChrome) focusEl(document.getElementById("pl-back")); }, [overlay, tv]); // eslint-disable-line react-hooks/exhaustive-deps
 
   /* ---- source readiness + automatic fallback (spec 16.4) ---- */
   const fallback = useCallback((reason: string) => {
@@ -96,6 +105,7 @@ function Player({ type, id, season, episode, start }: { type: MediaType; id: num
     const nextSrc = sources.find((x) => !tried.current.has(x.id));
     if (nextSrc) {
       toast(`Switched to ${SHORT[nextSrc.id]}`);
+      setReloadAt(pos.current.position);
       setReady(false);
       setSourceId(nextSrc.id);
     } else {
@@ -124,10 +134,12 @@ function Player({ type, id, season, episode, start }: { type: MediaType; id: num
           break;
         case "play": setReady(true); setPaused(false); break;
         case "pause": setPaused(true); break;
+        case "volume": setMuted(ev.muted); break;
         case "time":
           setReady(true); setPaused(false);
           if (ev.duration > 0) {
             pos.current = { position: ev.position, duration: ev.duration, dirty: true };
+            setTime((t) => (Math.abs(t.p - ev.position) >= 0.25 || t.d !== ev.duration ? { p: ev.position, d: ev.duration } : t));
             if (isTv && next && ev.duration - ev.position < 1.5 && !upNext) setUpNext({ s: next.season, e: next.episode });
           }
           break;
@@ -168,15 +180,17 @@ function Player({ type, id, season, episode, start }: { type: MediaType; id: num
     back(titlePath({ type, tmdbId: id }));
   }
 
+  // On TV the blueprint chrome owns Back (panel → chrome → exit, §20.12).
   useBackHandler(() => {
     if (upNext) { setUpNext(null); return; }
     exit();
-  });
+  }, !(tv && customChrome));
 
   const switchSource = (sid: SourceId) => {
     if (sid === source?.id) return;
     save();
     tried.current.clear();
+    setReloadAt(pos.current.position);
     setReady(false);
     setSourceId(sid);
     actions.setPrefs({ preferredSource: sid });
@@ -193,7 +207,15 @@ function Player({ type, id, season, episode, start }: { type: MediaType; id: num
     sendCommand(frame.current, source, { c: paused ? "play" : "pause" });
     setPaused((p) => !p);
   };
-  const seekBy = (by: number) => { if (source) sendCommand(frame.current, source, { c: "seek", to: pos.current.position + by }); };
+  const seekTo = (to: number) => {
+    if (!source) return;
+    const t = Math.max(0, to);
+    sendCommand(frame.current, source, { c: "seek", to: t });
+    pos.current = { ...pos.current, position: t, dirty: true };
+    setTime((x) => ({ ...x, p: t }));
+  };
+  const seekBy = (by: number) => seekTo(pos.current.position + by);
+  const reloadEmbed = () => { save(); setReloadAt(pos.current.position); setReady(false); };
 
   /* ---- remote keys while the overlay is hidden ---- */
   const onKeyDown = (k: React.KeyboardEvent) => {
@@ -201,11 +223,20 @@ function Player({ type, id, season, episode, start }: { type: MediaType; id: num
     if (!key || key === "back") return;
     const hidden = !overlay;
     poke();
+    if (k.defaultPrevented) return; // handled by the TV chrome (seek track)
     if (key === "playpause" || key === "play" || key === "pause") { k.preventDefault(); togglePlay(); return; }
     if (key === "ff") { k.preventDefault(); seekBy(10); return; }
     if (key === "rw") { k.preventDefault(); seekBy(-10); return; }
     if (key === "next" && next) { k.preventDefault(); playEpisode(next.season, next.episode); return; }
     if (key === "prev" && prev) { k.preventDefault(); playEpisode(prev.season, prev.episode); return; }
+    if (tv && customChrome) {
+      if (hidden && key !== "enter") {
+        // first press only reveals the chrome; Left/Right go straight to the seek track
+        k.preventDefault();
+        if (key === "left" || key === "right") focusEl(document.getElementById("tvp-track"));
+      }
+      return;
+    }
     if (hidden) {
       k.preventDefault();
       if (key === "enter") togglePlay();
@@ -214,16 +245,46 @@ function Player({ type, id, season, episode, start }: { type: MediaType; id: num
     }
   };
 
+  function chromeProps(): TvChromeProps {
+    return {
+      d: details, isSeries: isTv, ep, episodeTitle: epInfo?.title,
+      visible: overlay, poke, hide: () => { if (hideTimer.current) clearTimeout(hideTimer.current); setOverlay(false); },
+      paused, ready, position: time.p, duration: time.d,
+      controllable: Boolean(source && ADAPTERS[source.id]?.commands),
+      onSeek: seekTo, onTogglePlay: togglePlay,
+      quality: prefs.quality,
+      onQuality: (q) => { if (q === prefs.quality) return; reloadEmbed(); actions.setPrefs({ quality: q }); toast(q === "auto" ? "Quality: Auto" : `Quality: ${q === "480" ? "Data Saver" : q === "2160" ? "4K" : `${q}p`}`); },
+      sources, sourceId: source?.id, onSource: switchSource,
+      onReport: (issue) => {
+        void api.report({ type, tmdbId: id, season: isTv ? ep.s : undefined, episode: isTv ? ep.e : undefined, source: source?.id ?? null, issue: issue.id, position: Math.round(pos.current.position) }).catch(() => undefined);
+        const other = sources.find((x) => x.id !== source?.id);
+        if (issue.switchSource && other) { switchSource(other.id); toast(`Thanks for the report. Trying ${SHORT[other.id]}`); }
+        else if (issue.id === "subs") { reloadEmbed(); setNativeControls(true); toast("Thanks for the report. Pick subtitles in the source player"); }
+        else toast("Thanks for the report");
+      },
+      nativeControls, onNativeControls: (on) => {
+        if (on === nativeControls) return;
+        reloadEmbed(); setNativeControls(on);
+        if (on) setTimeout(() => frame.current?.focus(), 1200);
+      },
+      muted, onMuted: (m) => { if (source) sendCommand(frame.current, source, { c: "muted", value: m }); setMuted(m); },
+      upNext, countdown: upNext && prefs.autoplayNext ? countdown : null, onCancelUpNext: () => setUpNext(null),
+      onPlayEpisode: playEpisode,
+      onPlayTitle: (item) => { save(); go(watchPath(item.type, item.tmdbId), { replace: true }); },
+      onExit: exit
+    };
+  }
+
   const title = details?.title ?? "";
   const subtitle = isTv ? `S${ep.s} E${ep.e}${epInfo?.title ? ` · ${epInfo.title}` : ""}` : [details?.year, runtime(details?.runtime)].filter(Boolean).join(" · ");
-  const src = source ? embedUrl(source, { customChrome: false }) : null;
+  const src = source ? embedUrl(source, { customChrome, start: reloadAt ?? undefined, quality: prefs.quality }) : null;
 
   return (
     <div ref={root} className={`player ${overlay ? "is-overlay" : ""} ${tv ? "player--tv" : "player--touch"}`} onKeyDown={onKeyDown} onMouseMove={poke} role="application" aria-label={`Playing ${title}`}>
       {play.error && !play.data && <div className="player-center"><ErrorState message={play.error.message} onRetry={() => play.mutate()} /></div>}
       {src && source && (
-        <iframe key={source.id} ref={frame} className="player-frame" src={src} title={`${title} — ${SHORT[source.id]}`}
-          allow="autoplay; fullscreen; encrypted-media; picture-in-picture" allowFullScreen referrerPolicy="origin" tabIndex={tv ? -1 : 0}
+        <iframe key={`${source.id}-${customChrome ? "c" : "n"}-${prefs.quality}`} ref={frame} className="player-frame" src={src} title={`${title} — ${SHORT[source.id]}`}
+          allow="autoplay; fullscreen; encrypted-media; picture-in-picture" allowFullScreen referrerPolicy="origin" tabIndex={tv && !nativeControls ? -1 : 0}
           onLoad={() => { if (source.events !== "cinesrc") setReady(true); }} />
       )}
       {!ready && !play.error && (
@@ -233,6 +294,7 @@ function Player({ type, id, season, episode, start }: { type: MediaType; id: num
         </div>
       )}
       <div className="player-hotzone" onMouseEnter={poke} aria-hidden="true" />
+      {tv && customChrome ? <TvPlayerChrome {...chromeProps()} /> : <>
       <div className="player-top lrud-container">
         <button id="pl-back" className="pl-btn" onClick={exit} aria-label="Back" data-hover-focus><Icon name="back" /></button>
         <div className="pl-title"><strong>{title}</strong><span>{subtitle}</span></div>
@@ -272,6 +334,7 @@ function Player({ type, id, season, episode, start }: { type: MediaType; id: num
           </div>
         </div>
       )}
+      </>}
       {drawer && details && <EpisodesDrawer d={details} current={ep} onClose={() => setDrawer(false)} onPick={(sn, en) => { setDrawer(false); playEpisode(sn, en); }} />}
     </div>
   );

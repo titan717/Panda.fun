@@ -20,3 +20,10 @@ Reviewed each release. Ideas are only adopted when they fit the blueprints.
 | Netflix TV | Hero/row trailers start after a dwell, title logo shrinks, synopsis fades, sound on after first interaction. | Same staging: 5 s dwell (configurable), 3 s preload, logo scale 0.72, synopsis fade. |
 | Disney+ / Hotstar TV | Profile picker over a dark, slowly moving artwork wall. | Drifting tilted poster wall, mostly black under a vignette. |
 | Prime Video TV | Mute toggle on the hero, remembered between sessions. | Per-profile trailer sound toggle on the hero and mobile details. |
+
+## v1.0.4 round (2026-11-08)
+
+- Netflix and Prime Video (TV): their players use one thin track with time remaining on the right, no visible play button (OK toggles), and accelerating scrubbing with thumbnail previews. Panda copies the blueprint version of this: a 3-tile seek strip and 10/30/60 s steps while a key is held.
+- Prime Video and Disney+: the source/quality/audio settings live in right-side sheets that dim the video instead of stopping it. Panda's Quality and Audio & Subtitles sheets follow the blueprint gradient sheets.
+- YouTube TV / Apple TV: Back closes the innermost layer first (panel → scrub → chrome → exit). Panda uses the same order.
+- Netflix's "Report a problem" sends the playback context automatically. Panda's Report an Issue sends source and position, then fixes the problem right away by switching source.

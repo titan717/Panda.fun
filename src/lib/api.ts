@@ -121,8 +121,19 @@ export const api = {
   categories: () => apiGet<CategoriesPayload>(keys.categories()),
   play: (type: MediaType, id: number, o: { s?: number; e?: number; t?: number; quality?: string } = {}) => apiGet<PlaybackPayload>(keys.play(type, id, o), { retries: 1, timeoutMs: 10_000 }),
   wall: () => apiGet<WallPayload>(keys.wall()),
+  report: (r: PlaybackReport) => sendReport(r),
   sourceHealth: () => apiGet<SourceHealthPayload>(keys.sourceHealth(), { retries: 0, timeoutMs: 10_000 })
 };
+
+export interface PlaybackReport { type: MediaType; tmdbId: number; season?: number; episode?: number; source: string | null; issue: string; position: number }
+
+/** "Report an Issue" from the player (§20.9). Fire-and-forget; text/plain keeps it a simple CORS request. */
+export async function sendReport(r: PlaybackReport) {
+  const body = JSON.stringify(r);
+  const url = `${API_BASE}/panda/report`;
+  if (navigator.sendBeacon?.(url, new Blob([body], { type: "text/plain" }))) return;
+  await fetch(url, { method: "POST", body, headers: { "Content-Type": "text/plain" }, keepalive: true });
+}
 
 /** Generic SWR fetcher: the key is the API path. */
 export const fetcher = <T,>(path: string) => apiGet<T>(path);

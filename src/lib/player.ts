@@ -95,14 +95,23 @@ export function sendCommand(frame: HTMLIFrameElement | null, source: PlaybackSou
   return true;
 }
 
-/** Final iframe URL: Panda's own chrome replaces the embed's controls where the adapter allows it. */
-export function embedUrl(source: PlaybackSource, o: { customChrome: boolean }) {
+/**
+ * Final iframe URL: Panda's own chrome replaces the embed's controls where the adapter allows it.
+ * `start` re-opens at a position (quality / controls changes reload the embed); `quality` is the
+ * CineSrc preferred-quality hint ("auto" leaves the choice to the source).
+ */
+export function embedUrl(source: PlaybackSource, o: { customChrome: boolean; start?: number; quality?: string }) {
   try {
     const u = new URL(source.url);
+    const start = o.start && o.start > 1 ? String(Math.floor(o.start)) : null;
     if (source.events === "cinesrc") {
       u.searchParams.set("autonext", "false");
       u.searchParams.set("back", "close");
       if (o.customChrome) u.searchParams.set("controls", "false");
+      if (o.quality && o.quality !== "auto") u.searchParams.set("quality", o.quality);
+      if (start) { u.searchParams.set("t", start); u.searchParams.set("continueprompt", "false"); }
+    } else if (source.events === "vidy" && start) {
+      u.searchParams.set("progress", start);
     }
     return u.toString();
   } catch { return source.url; }

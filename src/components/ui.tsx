@@ -1,9 +1,9 @@
-import { Component, useEffect, useState, useSyncExternalStore, type ReactNode } from "react";
+import { Component, useEffect, useState, useSyncExternalStore, type CSSProperties, type ReactNode } from "react";
 import { Icon, PandaMark } from "./Icon";
 import type { AvatarKind } from "../lib/store";
 
 /* ---------- Image with graceful fallback (spec 18.5) ---------- */
-export function Img({ src, alt, className, title, eager, sizes }: { src: string | null | undefined; alt: string; className?: string; title?: string; eager?: boolean; sizes?: string }) {
+export function Img({ src, alt, className, title, eager, sizes, style }: { src: string | null | undefined; alt: string; className?: string; title?: string; eager?: boolean; sizes?: string; style?: CSSProperties }) {
   const [failed, setFailed] = useState(false);
   const [loaded, setLoaded] = useState(false);
   useEffect(() => { setFailed(false); setLoaded(false); }, [src]);
@@ -15,7 +15,7 @@ export function Img({ src, alt, className, title, eager, sizes }: { src: string 
     );
   }
   return (
-    <img src={src} alt={alt} className={`img ${loaded ? "is-loaded" : ""} ${className ?? ""}`} loading={eager ? "eager" : "lazy"} decoding="async" sizes={sizes}
+    <img src={src} alt={alt} className={`img ${loaded ? "is-loaded" : ""} ${className ?? ""}`} loading={eager ? "eager" : "lazy"} decoding="async" sizes={sizes} style={style}
       draggable={false} onLoad={() => setLoaded(true)} onError={() => setFailed(true)} />
   );
 }
@@ -29,7 +29,7 @@ export function TitleArt({ logo, title, className }: { logo?: string | null; tit
 }
 
 /* ---------- Skeleton (spec 18.1) ---------- */
-export function Skeleton({ className, style }: { className?: string; style?: React.CSSProperties }) {
+export function Skeleton({ className, style }: { className?: string; style?: CSSProperties }) {
   return <div className={`skeleton ${className ?? ""}`} style={style} aria-hidden="true" />;
 }
 

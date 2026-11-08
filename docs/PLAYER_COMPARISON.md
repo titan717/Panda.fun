@@ -45,3 +45,7 @@ Both play the real title. Vidy starts slightly faster; CineSrc is the only one t
 ## Choice
 
 CineSrc is the primary source: it reports events, takes commands, can hide its own controls (needed for the TV PLAYER blueprint chrome) and accepts a quality hint. Vidy is the automatic fallback.
+
+## v1.0.4 custom TV chrome
+
+On TV, CineSrc loads with `controls=false` and Panda draws the TV PLAYER blueprint chrome itself (`src/tv/TvPlayerChrome.tsx`), driving the embed through the `cinesrc:command` postMessage API (play, pause, seek, setMuted) and reading `timeupdate`/`play`/`pause`/`ended`. Vidy accepts no commands, so it keeps its own controls and the chrome shows title, panels and Watch Next with a hint to use the source controls. Mobile keeps the v1.0.3 player unchanged.

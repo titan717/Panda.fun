@@ -2,6 +2,15 @@
 
 Measured on every release. Never regress.
 
+## v1.0.4
+
+| Metric | Value |
+|---|---|
+| Player chrome | All overlays are compositor-only (opacity/transform); the track fill uses `scaleX` so time updates (4/s) never trigger layout. The panels and Watch Next mount only while open. |
+| Seek | Left/Right accumulate a pending seek and send one `seek` command after 900 ms of no input or on OK, so holding a key doesn't flood the embed. |
+| Resume / switch | Source switch and quality change reload the embed at the current position (`t`/`progress`) with `continueprompt=false`, so there's no extra resume dialog. |
+| Bundle (gzip) | JS 131.0 KB (index 116.6 + vendor 13.0 + react 1.4), CSS 18.6 KB. +4.2 KB JS for the new TV player; route splitting is scheduled for v1.0.5 to bring the first load well below v1.0.2. |
+
 ## v1.0.3
 
 | Metric | Value |
