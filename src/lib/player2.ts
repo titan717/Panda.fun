@@ -39,6 +39,32 @@ export function sleepPillLabel(t: SleepTimer, isSeries: boolean, now = Date.now(
 /** Seconds the "Still watching?" prompt waits before playback ends for the night. */
 export const SLEEP_GRACE_S = 60;
 
+/* ---------------- Still watching? after N episodes (v1.2.2) ---------------- */
+
+/** Choices for "Ask if I'm still watching": 0 = never. */
+export const STILL_AFTER: { id: string; label: string; note?: string }[] = [
+  { id: "2", label: "After 2 episodes" },
+  { id: "3", label: "After 3 episodes", note: "Default" },
+  { id: "4", label: "After 4 episodes" },
+  { id: "0", label: "Never" }
+];
+
+/**
+ * Episodes that started by themselves in a row (Panda's countdown or the source's own autoplay).
+ * Any key, click or touch in the player resets it, and so does starting an episode yourself.
+ */
+const run = { count: 0, auto: false };
+export const binge = {
+  get count() { return run.count; },
+  /** Call right before an episode starts by itself. */
+  markAuto() { run.auto = true; },
+  /** Call when the episode changes: keeps the count for automatic starts, resets it otherwise. */
+  onEpisode() { if (run.auto) run.count += 1; else run.count = 0; run.auto = false; },
+  reset() { run.count = 0; run.auto = false; }
+};
+/** True when the next automatic start should ask first (`limit` episodes watched in a row). */
+export const shouldAskStill = (limit: number, count = run.count) => limit > 0 && count + 1 >= limit;
+
 /* ---------------- Skip Intro (learned per show) ---------------- */
 
 import type { Segment } from "./types";
@@ -115,3 +141,36 @@ export function nextCardDue(pos: number, duration: number, hasNext: boolean, cre
   const credits = creditsStart && creditsStart > duration * 0.6 && creditsStart < duration ? creditsStart : null;
   return credits !== null ? pos >= credits : left <= NEXT_CARD_S;
 }
+
+/* ---- v1.2.2 swipe gestures (phones and tablets) ---- */
+/** Pixels a finger must travel before a drag counts as a gesture rather than a tap. */
+export const DRAG_SLOP = 14;
+/** A full-width horizontal drag moves this many seconds. */
+export const DRAG_SEEK_SPAN = 120;
+/** Holding a finger still this long plays at 2× until it lifts. */
+export const HOLD_MS = 450;
+
+export type DragKind = "seek" | "volume" | "brightness";
+
+/** Decides what a drag does from its first movement: sideways seeks, up/down on the right is volume, on the left brightness. */
+export function classifyDrag(dx: number, dy: number, startX: number, width: number): DragKind | null {
+  if (Math.hypot(dx, dy) < DRAG_SLOP) return null;
+  if (Math.abs(dx) > Math.abs(dy)) return "seek";
+  return startX / Math.max(1, width) >= 0.5 ? "volume" : "brightness";
+}
+
+/** Seek target for a horizontal drag of dx pixels across a layer width pixels wide. */
+export function dragSeek(position: number, duration: number, dx: number, width: number): number {
+  const to = position + (dx / Math.max(1, width)) * DRAG_SEEK_SPAN;
+  return Math.round(Math.max(0, Math.min(duration > 0 ? Math.max(0, duration - 2) : to, to)));
+}
+
+/** New level (volume 0–1, brightness 0.2–1) after dragging dy pixels; up raises. 60 % of the height covers the whole range. */
+export function dragLevel(start: number, dy: number, height: number, min = 0): number {
+  const v = start - dy / (Math.max(1, height) * 0.6);
+  return Math.round(Math.max(min, Math.min(1, v)) * 100) / 100;
+}
+
+/** Brightness never goes below this, so the picture stays visible. */
+export const BRIGHT_MIN = 0.2;
+

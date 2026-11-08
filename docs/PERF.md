@@ -2,6 +2,14 @@
 
 Measured on every release. Never regress.
 
+## v1.2.2 (still watching, gestures, PiP, spoilers)
+
+| Metric | Value |
+|---|---|
+| Entry chunk (gzip) | 24.3 KB, down from 25.6 KB: Profile manage/edit now load on demand (2.0 KB JS chunk); the new icons and PiP bridge are in lazy modules (D-129). |
+| Entry CSS (gzip) | 19.0 KB, down from 19.2 KB: profile-editor (0.5 KB) and spoiler styles ship with their chunks. |
+| Gestures | Pointer events with pointer capture, no per-move React render outside the readout; volume is saved once 450 ms after the finger settles. |
+
 ## v1.2.1 (subtitles)
 
 | Metric | Value |

@@ -1,6 +1,8 @@
 import "./details.css";
 import { useEffect, useRef, useState } from "react";
 import { Icon } from "../components/Icon";
+import { ExtraIcon } from "../components/ExtraIcons";
+import "../styles/spoilers.css";
 import { Link } from "wouter";
 import { ErrorState, Img, Skeleton, TitleArt, toast } from "../components/ui";
 import { Trailer, rankTrailers } from "../components/Trailer";
@@ -13,7 +15,7 @@ import { actions, useHasReminder, useHasLists, useHistoryEntry, useInWatchlist, 
 import { SaveToSheet } from "../components/QuickActions";
 import { toggleReminder } from "../components/Remind";
 import { castAndCrew, detailsMeta, languageName, voteLabel, pluralEps, runtime, shortDate, airsLater } from "../lib/format";
-import { detailsCtas, episodeRow } from "../lib/watch";
+import { detailsCtas, episodeRow, hideSpoiler, SPOILER_NOTE } from "../lib/watch";
 import { focusEl, focusFirst, useBackHandler } from "../lib/focus";
 import { useNav } from "../lib/nav";
 import type { MediaType, TitleDetails } from "../lib/types";
@@ -202,6 +204,7 @@ function TvDetailsView({ d, initialTab }: { d: TitleDetails; initialTab?: Tab })
 
 function EpisodesTab({ d }: { d: TitleDetails }) {
   const history = useHistoryEntry(d.id);
+  const prefs = usePrefs();
   const seasons = d.seasons.filter((s) => s.number > 0);
   const [season, setSeason] = useState(history?.season ?? seasons[0]?.number ?? 1);
   const { data, error, mutate } = useSeason(d.tmdbId, season);
@@ -225,14 +228,15 @@ function EpisodesTab({ d }: { d: TitleDetails }) {
           const href = row.href;
           const soon = airsLater(ep.airDate);
           const pct = row.pct;
+          const spoil = hideSpoiler(prefs.hideSpoilers, row.done, pct);
           return (
             <a key={ep.id} id={`ep-${ep.season}-${ep.number}`} href={href} className={`tv-ep ${soon ? "is-upcoming" : ""} ${row.done ? "is-watched" : ""}`} aria-disabled={soon || undefined} data-hover-focus
               onClick={(e) => { e.preventDefault(); if (soon) toast(`Episode ${ep.number} arrives ${shortDate(ep.airDate)}`); else go(href); }}>
-              <span className="tv-ep-still"><Img src={ep.still} alt="" title={`Episode ${ep.number}`} />{!soon && <Icon name="play" className="tv-ep-play" />}{pct > 0 && <span className="progress"><span style={{ width: `${pct}%` }} /></span>}</span>
+              <span className={`tv-ep-still ${spoil ? "is-spoiler" : ""}`}><Img src={ep.still} alt="" title={`Episode ${ep.number}`} />{spoil && <ExtraIcon name="eyeOff" className="spoiler-mark" />}{!soon && <Icon name="play" className="tv-ep-play" />}{pct > 0 && <span className="progress"><span style={{ width: `${pct}%` }} /></span>}</span>
               <span className="tv-ep-text">
                 <span className="tv-ep-title">{ep.number}. {ep.title}</span>
                 <span className="tv-ep-meta">{soon ? `Coming ${shortDate(ep.airDate)}` : [`S${ep.season} E${ep.number}`, row.done ? null : shortDate(ep.airDate), row.left ? `${row.left}m left` : runtime(ep.runtime)].filter(Boolean).join(" • ")}{row.done && <span className="ep-watched"><Icon name="check" /> Watched</span>}</span>
-                {ep.overview && <span className="tv-ep-overview">{ep.overview}</span>}
+                {ep.overview && <span className={`tv-ep-overview ${spoil ? "is-spoiler-note" : ""}`}>{spoil ? SPOILER_NOTE : ep.overview}</span>}
               </span>
             </a>
           );

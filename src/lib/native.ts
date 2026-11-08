@@ -17,10 +17,14 @@ export interface NativeBridge {
   /** v1.1.7 ad shield: JSON {events:[{source,kind,host}]} drained since the last call. */
   shieldStats?(): string;
   setShieldSource?(id: string): void;
+  /** v1.2.2 picture-in-picture (Android 8+ phones and tablets). */
+  canPictureInPicture?(): boolean;
+  setPlaybackActive?(active: boolean, auto: boolean): void;
+  enterPictureInPicture?(): boolean;
 }
 
 declare global {
-  interface Window { KinomaNative?: NativeBridge; __pandaVoice?: (text: string) => void }
+  interface Window { KinomaNative?: NativeBridge; __pandaVoice?: (text: string) => void; __pandaPip?: (on: boolean) => void }
 }
 
 export const native: NativeBridge | null = typeof window !== "undefined" && window.KinomaNative ? window.KinomaNative : null;
@@ -37,3 +41,4 @@ export function nativeIsTV(): boolean {
 export function exitApp() {
   try { native?.exitApp?.(); } catch { /* not available */ }
 }
+

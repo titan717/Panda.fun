@@ -313,3 +313,13 @@ Drive folder re-checked for this release (2026-11-09): newest file is still tvne
 | Phone player panels (390×844, 844×390) | Panels had no background on phones (tokens were TV-only); now deep blue, portrait bottom sheet with stacked columns, focus pill border no longer clipped | Fixed (D-124) |
 | Settings › Subtitles (TV 1920/1280, phone 390) | Preview card, three radio rows, language chips wrap without overflow, SDH toggle, size and style choices | Screenshots in `docs/screenshots/v1.2.1/` |
 
+## 28. v1.2.2 still watching, gestures, picture-in-picture, spoilers
+
+Drive folder re-checked for this release (2026-11-09): newest file is still tvnewblueprint.pdf, modified 2026-11-08 12:05 UTC; no blueprint changed.
+
+| Area | Check | Result |
+|---|---|---|
+| "Are you still watching?" (TV 1920, phone 390) | Blueprint Quality-sheet gradient dialog, episode count and next episode line, Continue Watching / End for the night | Fixed during review: the Watch Next panel stayed open under the dialog |
+| Gestures (844×390, 390×844) | Seek readout at 24 % height, volume/brightness level pill at 46 %, 2× pill; no text selection while dragging | Fixed during review: a previous gesture's fade-out hid the 2× readout |
+| Spoiler protection (TV 1920, phone 390) | Blurred stills with eye-off mark, hidden overview line, started/finished episodes unchanged | `e2e/v122.spec.ts` |
+| Settings › Playback (TV 1920, phone 390) | Still-watching choice, spoiler toggle, gestures toggle (phones), PiP toggle (Android app only) | Screenshots in `docs/screenshots/v1.2.2/` |

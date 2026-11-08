@@ -43,6 +43,8 @@ import kotlinx.coroutines.launch
 import com.kinoma.tv.shield.AdShield
 import android.Manifest
 import android.os.Message
+import android.app.PictureInPictureParams
+import android.util.Rational
 import android.webkit.PermissionRequest
 import android.webkit.JsResult
 import android.webkit.JsPromptResult
@@ -540,6 +542,39 @@ class MainActivity : ComponentActivity() {
         }
     }
 
+    /* ---- v1.2.2 picture-in-picture (phones and tablets, Android 8+) ---- */
+    @Volatile private var playbackActive = false
+    @Volatile private var autoPip = true
+
+    fun pipSupported(): Boolean =
+        Build.VERSION.SDK_INT >= Build.VERSION_CODES.O &&
+            !isTelevisionDevice() &&
+            packageManager.hasSystemFeature(PackageManager.FEATURE_PICTURE_IN_PICTURE)
+
+    fun enterPip(): Boolean {
+        if (!pipSupported()) return false
+        return try {
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+                enterPictureInPictureMode(PictureInPictureParams.Builder().setAspectRatio(Rational(16, 9)).build())
+            } else false
+        } catch (e: Exception) {
+            Log.w("Panda", "picture-in-picture refused: ${e.message}")
+            false
+        }
+    }
+
+    override fun onUserLeaveHint() {
+        super.onUserLeaveHint()
+        if (playbackActive && autoPip) enterPip()
+    }
+
+    override fun onPictureInPictureModeChanged(isInPictureInPictureMode: Boolean, newConfig: Configuration) {
+        super.onPictureInPictureModeChanged(isInPictureInPictureMode, newConfig)
+        if (::webView.isInitialized) {
+            webView.evaluateJavascript("window.__pandaPip && window.__pandaPip($isInPictureInPictureMode)", null)
+        }
+    }
+
     override fun onWindowFocusChanged(hasFocus: Boolean) {
         super.onWindowFocusChanged(hasFocus)
         if (hasFocus) {
@@ -577,6 +612,8 @@ class MainActivity : ComponentActivity() {
 
     override fun onPause() {
         super.onPause()
+        // keep the video running while it sits in the picture-in-picture window
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N && isInPictureInPictureMode) return
         webView.onPause()
     }
 
@@ -876,6 +913,23 @@ class MainActivity : ComponentActivity() {
 
         @JavascriptInterface
         fun setShieldSource(id: String) { AdShield.activeSource = id.take(24) }
+
+        /** v1.2.2: true when this device can show the player in a picture-in-picture window. */
+        @JavascriptInterface
+        fun canPictureInPicture(): Boolean = pipSupported()
+
+        /** v1.2.2: the web player tells the app when a video is on screen (auto PiP when leaving). */
+        @JavascriptInterface
+        fun setPlaybackActive(active: Boolean, auto: Boolean) { playbackActive = active; autoPip = auto }
+
+        @JavascriptInterface
+        fun enterPictureInPicture(): Boolean {
+            var ok = false
+            val latch = java.util.concurrent.CountDownLatch(1)
+            runOnUiThread { ok = enterPip(); latch.countDown() }
+            latch.await(800, java.util.concurrent.TimeUnit.MILLISECONDS)
+            return ok
+        }
 
         @JavascriptInterface
         fun downloadUpdate() {

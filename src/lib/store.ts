@@ -109,6 +109,14 @@ export interface Prefs {
   subtitleSdh: boolean;
   subtitleSize: "small" | "medium" | "large" | "xlarge";
   subtitleStyle: "shadow" | "box" | "yellow" | "outline";
+  /** v1.2.2: ask "Are you still watching?" after this many episodes in a row (0 = never). */
+  stillAfter: number;
+  /** v1.2.2: phone and tablet swipe gestures in the player (volume, brightness, seek, hold for 2×). */
+  gestures: boolean;
+  /** v1.2.2: hide stills and descriptions of episodes the profile has not watched yet. */
+  hideSpoilers: boolean;
+  /** v1.2.2: go to picture-in-picture when you leave the app during playback (Android phones and tablets). */
+  autoPip: boolean;
 }
 
 /** Preferences shared by every profile on the device; everything else is saved per profile. */
@@ -187,7 +195,11 @@ const defaultPrefs: Prefs = {
   subtitleLang2: null,
   subtitleSdh: false,
   subtitleSize: "medium",
-  subtitleStyle: "shadow"
+  subtitleStyle: "shadow",
+  stillAfter: 3,
+  gestures: true,
+  hideSpoilers: false,
+  autoPip: true
 };
 
 const emptyData = (): ProfileData => ({ watchlist: [], lists: [], history: {}, ratings: {}, recentSearches: [], recentTitles: [], reminders: [], alertsSeenAt: 0, alerted: [] });

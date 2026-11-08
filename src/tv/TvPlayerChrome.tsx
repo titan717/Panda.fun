@@ -1,6 +1,7 @@
 import "./tvplayer.css";
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState, type PointerEvent as RPointerEvent } from "react";
 import { Icon } from "../components/Icon";
+import { ExtraIcon } from "../components/ExtraIcons";
 import { Img } from "../components/ui";
 import { useBackHandler, useFocusScope, focusEl } from "../lib/focus";
 import { navKey } from "../lib/keys";
@@ -9,7 +10,7 @@ import { languageName, runtime } from "../lib/format";
 import { capabilityLabels, sourceName } from "../lib/player";
 import { ISSUES, rankOf, reliabilityLabel, reliabilityTone } from "../lib/sources";
 import type { Prefs } from "../lib/store";
-import { SLEEP_OPTIONS, SPEEDS, speedLabel, type SleepMode } from "../lib/player2";
+import { BRIGHT_MIN, classifyDrag, dragLevel, dragSeek, HOLD_MS, SLEEP_OPTIONS, SPEEDS, speedLabel, type DragKind, type SleepMode } from "../lib/player2";
 import type { Episode, PandaItem, PlaybackSource, SourceId, SourceRankingPayload, SubtitleTrack, TitleDetails } from "../lib/types";
 import { offsetLabel, subLangName } from "../lib/captions";
 
@@ -108,6 +109,18 @@ export interface TvChromeProps {
   /** Phones and tablets: tap layer, back button and centre transport (v1.1.7 ad shield, D-91). */
   touch?: boolean;
   captions?: CaptionControls;
+  /** v1.2.2: Watch Next shows the show's artwork instead of unwatched episode stills. */
+  hideSpoilers?: boolean;
+  /** v1.2.2 phone gestures (Settings › Playback › Swipe gestures). */
+  gestures?: boolean;
+  volume?: number;
+  onVolume?: (v: number) => void;
+  brightness?: number;
+  onBrightness?: (b: number) => void;
+  /** Hold for 2×: true while a finger rests on the video, false when it lifts. */
+  onHold?: (on: boolean) => void;
+  /** v1.2.2: set only where the Android app can open a picture-in-picture window. */
+  onPip?: () => void;
 }
 
 type Panel = null | "quality" | "audio" | "next" | "report" | "sleep";
@@ -129,7 +142,12 @@ export function TvPlayerChrome(p: TvChromeProps) {
   }, [p.ready]);
 
   // auto-next opens Watch Next (§20.8)
-  useEffect(() => { if (p.upNext) setPanel("next"); }, [p.upNext]);
+  // ...and closes again when the countdown is taken away (cancelled, or "Still watching?" took over)
+  const autoOpened = useRef(false);
+  useEffect(() => {
+    if (p.upNext) { autoOpened.current = true; setPanel("next"); }
+    else if (autoOpened.current) { autoOpened.current = false; setPanel((x) => (x === "next" ? null : x)); }
+  }, [p.upNext]);
 
   // focus the seek track whenever the chrome appears with nothing else focused
   useEffect(() => {
@@ -220,6 +238,7 @@ export function TvPlayerChrome(p: TvChromeProps) {
           {isSeries && <span>S{ep.s} E{ep.e}{p.episodeTitle ? ` · ${p.episodeTitle}` : ""}</span>}
         </div>
         <div className="tvp-actions lrud-container">
+          {p.onPip && <button id="tvp-pip" className="tvp-pill tvp-pill--icon" onClick={p.onPip} aria-label="Picture in picture" title="Picture in picture" data-hover-focus><ExtraIcon name="pip" /></button>}
           <button id="tvp-quality" className="tvp-pill" onClick={() => setPanel("quality")} data-hover-focus>
             <Icon name="videoBox" /> Quality <span className="tvp-pill-val">{QUALITIES.find((q) => q.id === p.quality)?.label ?? "Auto"}</span>
           </button>
@@ -351,7 +370,7 @@ export function TvPlayerChrome(p: TvChromeProps) {
       )}
 
       {panel === "next" && d && (
-        <WatchNext d={d} isSeries={isSeries} ep={ep} upNext={p.upNext} countdown={p.countdown}
+        <WatchNext d={d} isSeries={isSeries} ep={ep} upNext={p.upNext} countdown={p.countdown} spoilers={Boolean(p.hideSpoilers)}
           onPlayEpisode={p.onPlayEpisode} onPlayTitle={p.onPlayTitle} onClose={() => { if (p.upNext) p.onCancelUpNext(); setPanel(null); }} />
       )}
     </div>
@@ -389,8 +408,8 @@ function SeekStrip({ d, to, duration }: { d: TitleDetails | undefined; to: numbe
   );
 }
 
-function WatchNext({ d, isSeries, ep, upNext, countdown, onPlayEpisode, onPlayTitle, onClose }: {
-  d: TitleDetails; isSeries: boolean; ep: { s: number; e: number }; upNext: { s: number; e: number } | null; countdown: number | null;
+function WatchNext({ d, isSeries, ep, upNext, countdown, spoilers, onPlayEpisode, onPlayTitle, onClose }: {
+  d: TitleDetails; isSeries: boolean; ep: { s: number; e: number }; upNext: { s: number; e: number } | null; countdown: number | null; spoilers: boolean;
   onPlayEpisode: (s: number, e: number) => void; onPlayTitle: (i: PandaItem) => void; onClose: () => void;
 }) {
   const ref = useRef<HTMLDivElement>(null);
@@ -405,11 +424,11 @@ function WatchNext({ d, isSeries, ep, upNext, countdown, onPlayEpisode, onPlayTi
     if (!isSeries) {
       return d.moreLikeThis.slice(0, 12).map((i) => ({ kind: "title" as const, key: i.id, item: i, title: i.title, image: i.backdrop ?? i.poster, sub: i.genres.slice(0, 2).join(" · ") }));
     }
-    const epCard = (x: Episode): WatchNextCard => ({ kind: "episode", key: `${x.season}-${x.number}`, season: x.season, episode: x.number, title: `E${x.number} · ${x.title}`, image: x.still ?? d.backdrop, sub: [`Season ${x.season}`, runtime(x.runtime)].filter(Boolean).join(" · ") });
+    const epCard = (x: Episode): WatchNextCard => ({ kind: "episode", key: `${x.season}-${x.number}`, season: x.season, episode: x.number, title: `E${x.number} · ${x.title}`, image: (spoilers ? null : x.still) ?? d.backdrop, sub: [`Season ${x.season}`, runtime(x.runtime)].filter(Boolean).join(" · ") });
     const list = rest.map(epCard);
     if (nextSeason && nextSeason.number === nextSeasonNo) list.push(...nextSeason.episodes.slice(0, 6).map(epCard));
     return list.slice(0, 12);
-  }, [isSeries, d, rest, nextSeason, nextSeasonNo]);
+  }, [isSeries, d, rest, nextSeason, nextSeasonNo, spoilers]);
 
   return (
     <div ref={ref} className="tvp-next" role="dialog" aria-label="Watch Next">
@@ -446,31 +465,118 @@ function WatchNext({ d, isSeries, ep, upNext, countdown, onPlayEpisode, onPlayTi
 /**
  * Touch input layer: the provider iframe never receives taps (docs/AD_SHIELD.md, layer 1).
  * One tap shows or hides the controls; a double tap on the left or right third seeks 10 s.
+ * v1.2.2 gestures: drag sideways to seek, up/down on the right for volume and on the left for
+ * brightness, and hold a finger still to play at 2× until it lifts.
  */
 function TouchLayer({ p }: { p: TvChromeProps }) {
   const last = useRef({ t: 0, x: 0 });
   const single = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const holdTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const hudTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const drag = useRef<null | { id: number; x: number; y: number; w: number; h: number; kind: DragKind | null; base: number; holding: boolean }>(null);
   const [flash, setFlash] = useState<null | { side: "l" | "r"; n: number }>(null);
-  useEffect(() => () => { if (single.current) clearTimeout(single.current); }, []);
+  const [hud, setHud] = useState<null | { kind: DragKind | "hold"; value: number }>(null);
+  const g = p.gestures;
+  useEffect(() => () => { for (const t of [single, holdTimer, hudTimer]) if (t.current) clearTimeout(t.current); }, []);
+  const clearHold = () => { if (holdTimer.current) { clearTimeout(holdTimer.current); holdTimer.current = null; } };
+
+  function tap(e: RPointerEvent<HTMLDivElement>) {
+    const w = e.currentTarget.clientWidth || 1;
+    const x = (e.clientX - e.currentTarget.getBoundingClientRect().left) / w;
+    const now = e.timeStamp;
+    const dbl = now - last.current.t < 300 && Math.abs(x - last.current.x) < 0.2;
+    last.current = { t: now, x };
+    if (dbl && p.controllable && (x < 1 / 3 || x > 2 / 3)) {
+      if (single.current) { clearTimeout(single.current); single.current = null; }
+      const fwd = x > 2 / 3;
+      p.onSeek(fwd ? Math.min(Math.max(0, p.duration - 2), p.position + 10) : Math.max(0, p.position - 10));
+      setFlash((f) => ({ side: fwd ? "r" : "l", n: (f?.n ?? 0) + 1 }));
+      setTimeout(() => setFlash(null), 650);
+      return;
+    }
+    if (single.current) clearTimeout(single.current);
+    single.current = setTimeout(() => { single.current = null; if (p.visible) p.hide(); else p.poke(); }, 220);
+  }
+
   return (
-    <div className="tvp-touch" onPointerUp={(e) => {
-      const w = e.currentTarget.clientWidth || 1;
-      const x = e.clientX / w;
-      const now = e.timeStamp;
-      const dbl = now - last.current.t < 300 && Math.abs(x - last.current.x) < 0.2;
-      last.current = { t: now, x };
-      if (dbl && p.controllable && (x < 1 / 3 || x > 2 / 3)) {
-        if (single.current) { clearTimeout(single.current); single.current = null; }
-        const fwd = x > 2 / 3;
-        p.onSeek(fwd ? Math.min(Math.max(0, p.duration - 2), p.position + 10) : Math.max(0, p.position - 10));
-        setFlash((f) => ({ side: fwd ? "r" : "l", n: (f?.n ?? 0) + 1 }));
-        setTimeout(() => setFlash(null), 650);
-        return;
-      }
-      if (single.current) clearTimeout(single.current);
-      single.current = setTimeout(() => { single.current = null; if (p.visible) p.hide(); else p.poke(); }, 220);
-    }}>
+    <div className={`tvp-touch ${g ? "has-gestures" : ""}`}
+      onPointerDown={(e) => {
+        if (!g || drag.current) return;
+        const r = e.currentTarget.getBoundingClientRect();
+        drag.current = { id: e.pointerId, x: e.clientX, y: e.clientY, w: r.width, h: r.height, kind: null, base: 0, holding: false };
+        try { e.currentTarget.setPointerCapture(e.pointerId); } catch { /* synthetic events */ }
+        clearHold();
+        // a new gesture owns the readout: the last one's fade-out must not hide it
+        if (hudTimer.current) { clearTimeout(hudTimer.current); hudTimer.current = null; }
+        if (p.controllable && !p.paused) holdTimer.current = setTimeout(() => {
+          holdTimer.current = null;
+          const d = drag.current;
+          if (!d || d.kind) return;
+          d.holding = true; p.onHold?.(true); setHud({ kind: "hold", value: 2 });
+        }, HOLD_MS);
+      }}
+      onPointerMove={(e) => {
+        const d = drag.current;
+        if (!d || d.id !== e.pointerId || d.holding) return;
+        const dx = e.clientX - d.x, dy = e.clientY - d.y;
+        if (!d.kind) {
+          const k = classifyDrag(dx, dy, d.x - e.currentTarget.getBoundingClientRect().left, d.w);
+          if (!k || (k === "seek" && (!p.controllable || p.duration <= 0)) || (k === "volume" && !p.controllable)) return;
+          clearHold();
+          d.kind = k;
+          d.base = k === "seek" ? p.position : k === "volume" ? (p.muted ? 0 : p.volume ?? 1) : p.brightness ?? 1;
+        }
+        const value = d.kind === "seek" ? dragSeek(d.base, p.duration, dx, d.w) : dragLevel(d.base, dy, d.h, d.kind === "brightness" ? BRIGHT_MIN : 0);
+        if (d.kind === "volume") p.onVolume?.(value);
+        if (d.kind === "brightness") p.onBrightness?.(value);
+        setHud({ kind: d.kind, value });
+      }}
+      onPointerUp={(e) => {
+        clearHold();
+        const d = drag.current;
+        drag.current = null;
+        if (d?.holding) { p.onHold?.(false); setHud(null); return; }
+        if (d?.kind) {
+          if (d.kind === "seek") p.onSeek(dragSeek(d.base, p.duration, e.clientX - d.x, d.w));
+          if (d.kind === "seek") setHud(null);
+          else hudTimer.current = setTimeout(() => { hudTimer.current = null; setHud(null); }, 500);
+          return;
+        }
+        tap(e);
+      }}
+      onPointerCancel={() => {
+        clearHold();
+        const d = drag.current; drag.current = null;
+        if (d?.holding) p.onHold?.(false);
+        setHud(null);
+      }}>
       {flash && <span key={flash.n} className={`tvp-seekflash is-${flash.side}`} aria-hidden="true"><Icon name={flash.side === "r" ? "forward10" : "replay10"} /> 10s</span>}
+      {hud && <GestureHud kind={hud.kind} value={hud.value} position={p.position} duration={p.duration} />}
+    </div>
+  );
+}
+
+/** "1:05" / "12 s" for the seek preview. */
+function deltaLabel(sec: number) {
+  return sec < 60 ? `${sec} s` : `${Math.floor(sec / 60)}:${String(sec % 60).padStart(2, "0")}`;
+}
+
+function GestureHud({ kind, value, position, duration }: { kind: DragKind | "hold"; value: number; position: number; duration: number }) {
+  if (kind === "hold") return <div className="tvp-ghud tvp-ghud--hold" role="status"><Icon name="next" /> 2× speed</div>;
+  if (kind === "seek") {
+    const delta = Math.round(value - position);
+    return (
+      <div className="tvp-ghud tvp-ghud--seek" role="status">
+        <strong>{clock(value)}</strong><span>{delta >= 0 ? "+" : "−"}{deltaLabel(Math.abs(delta))} · {clock(duration)}</span>
+      </div>
+    );
+  }
+  const pct = Math.round(value * 100);
+  return (
+    <div className={`tvp-ghud tvp-ghud--level is-${kind}`} role="status" aria-label={`${kind === "volume" ? "Volume" : "Brightness"} ${pct}%`}>
+      {kind === "volume" ? <Icon name={value <= 0 ? "volumeOff" : "volume"} /> : <ExtraIcon name="sun" />}
+      <span className="tvp-ghud-bar" aria-hidden="true"><i style={{ height: `${pct}%` }} /></span>
+      <small>{pct}%</small>
     </div>
   );
 }

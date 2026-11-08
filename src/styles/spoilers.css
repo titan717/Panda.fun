@@ -1,0 +1,5 @@
+/* v1.2.2 spoiler protection: unwatched episode pictures stay blurred */
+.is-spoiler { position: relative; overflow: hidden; }
+.is-spoiler img { filter: blur(max(12px, calc(14 * var(--u, 1px)))) saturate(0.5) brightness(0.68); transform: scale(1.15); }
+.spoiler-mark { position: absolute; left: 50%; top: 50%; width: 28%; max-width: 40px; height: auto; aspect-ratio: 1; transform: translate(-50%, -50%); color: rgba(255, 255, 255, 0.9); filter: drop-shadow(0 1px 4px rgba(0, 0, 0, 0.6)); pointer-events: none; }
+.is-spoiler-note { font-style: normal; opacity: 0.62; }

@@ -1,4 +1,5 @@
 import "./player.css";
+import "../styles/spoilers.css";
 import "../lib/validateLazy"; // validators for this page's payloads, loaded with the page
 import { Suspense, useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useParams, useSearch } from "wouter";
@@ -13,9 +14,10 @@ import { KidsGate } from "../components/KidsGate";
 import { keys } from "../lib/api";
 import { useSeason, useSourceRanking, useTitle } from "../lib/hooks";
 import { ISSUES, isAnimeTitle, rankOf, reliabilityLabel, reliabilityTone, sourceOrder } from "../lib/sources";
-import { actions, getPrefs, usePrefs } from "../lib/store";
+import { actions, getPrefs, useHistoryEntry, usePrefs } from "../lib/store";
 import { stopAllTrailers } from "../lib/audio";
 import { useBackHandler, focusEl } from "../lib/focus";
+import { nativeEnterPip, nativePipSupported, nativePlaybackActive } from "../lib/pip";
 import { useNav } from "../lib/nav";
 import { useIsTv } from "../lib/layout";
 import { navKey } from "../lib/keys";
@@ -24,9 +26,9 @@ import { lazyNamed } from "../lib/lazy";
 import { api } from "../lib/api";
 import { ADAPTERS, embedUrl, parseMessage, READY_TIMEOUT_MS, sendCommand, sourceName, SOURCE_ORDER } from "../lib/player";
 import { COMPAT, lastResortOnly, nativeShield, rankSources, recordPlay, SANDBOX, setShieldSource, shieldStats, syncNative } from "../lib/shield";
-import { nextEpisodeOf, prevEpisodeOf } from "../lib/watch";
+import { episodeRow, hideSpoiler, nextEpisodeOf, prevEpisodeOf } from "../lib/watch";
 import { airsLater, pluralEps, runtime, titlePath, watchPath } from "../lib/format";
-import { activeSkip, getIntro, learnIntro, nextCardDue, SLEEP_GRACE_S, SLEEP_OFF, sleepDue, sleepLeft, sleepPillLabel, speedLabel, startSleep, type Intro, type SleepMode, type SleepTimer } from "../lib/player2";
+import { activeSkip, binge, shouldAskStill, getIntro, learnIntro, nextCardDue, SLEEP_GRACE_S, SLEEP_OFF, sleepDue, sleepLeft, sleepPillLabel, speedLabel, startSleep, type Intro, type SleepMode, type SleepTimer } from "../lib/player2";
 /** TV-only chrome lives in its own chunk so phones never download it (v1.1.6, D-85). TV warms it at idle. */
 export const loadTvChrome = () => import("../tv/TvPlayerChrome");
 const TvPlayerChrome = lazyNamed(loadTvChrome, "TvPlayerChrome");
@@ -123,6 +125,12 @@ function Player({ type, id, season, episode, start }: { type: MediaType; id: num
   const [countdown, setCountdown] = useState(10);
   const [time, setTime] = useState({ p: start, d: 0 });
   const [muted, setMuted] = useState(false);
+  /* ---- v1.2.2 gestures and picture-in-picture ---- */
+  const [brightness, setBrightness] = useState(1);
+  const [dragVolume, setDragVolume] = useState<number | null>(null);
+  const volSave = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const [pip, setPip] = useState(false);
+  const pipOk = useMemo(() => nativePipSupported(), []);
   // position to reopen at when the embed reloads (source / quality / controls change)
   const [reloadAt, setReloadAt] = useState<number | null>(null);
   const frame = useRef<HTMLIFrameElement>(null);
@@ -133,6 +141,8 @@ function Player({ type, id, season, episode, start }: { type: MediaType; id: num
   /* ---- Player 2.0 (v1.1.5) ---- */
   const [sleep, setSleep] = useState<SleepTimer>(SLEEP_OFF);
   const [stillWatching, setStillWatching] = useState<number | null>(null);
+  // v1.2.2: why "Still watching?" is up — the sleep timer, or a run of episodes that started by themselves
+  const [stillWhy, setStillWhy] = useState<{ kind: "sleep" } | { kind: "episodes"; count: number; next: { s: number; e: number } | null }>({ kind: "sleep" });
   const [intro, setIntro] = useState<Intro | null>(() => (type === "tv" ? getIntro(id) : null));
   const [introSkipped, setIntroSkipped] = useState(false);
   const [nextDismissed, setNextDismissed] = useState(false);
@@ -285,6 +295,12 @@ function Player({ type, id, season, episode, start }: { type: MediaType; id: num
           if (isTv && next) setUpNext({ s: next.season, e: next.episode });
           break;
         case "episode":
+          if (ev.internal && shouldAskStill(prefs.stillAfter) && controllable) {
+            // the source moved on by itself: hold the new episode until someone answers
+            sendCommand(frame.current, source, { c: "pause" }); setPaused(true);
+            setStillWhy({ kind: "episodes", count: binge.count + 1, next: null }); setStillWatching(SLEEP_GRACE_S);
+          }
+          if (ev.internal) binge.markAuto();
           if (ev.internal) { save(); setEp({ s: ev.season, e: ev.episode }); setIntroSkipped(false); setNextDismissed(false); lastTime.current = null; pos.current = { position: 0, duration: 0, dirty: false }; }
           break;
         case "close": exit(); break;
@@ -304,10 +320,34 @@ function Player({ type, id, season, episode, start }: { type: MediaType; id: num
     const i = setInterval(() => setCountdown((c) => c - 1), 1000);
     return () => clearInterval(i);
   }, [upNext, prefs.autoplayNext, poke]);
-  useEffect(() => { if (upNext && prefs.autoplayNext && countdown <= 0) playEpisode(upNext.s, upNext.e); });  
+  useEffect(() => {
+    if (!(upNext && prefs.autoplayNext && countdown <= 0)) return;
+    // v1.2.2: after N episodes in a row with nobody touching the remote, ask before starting another
+    if (shouldAskStill(prefs.stillAfter)) { setStillWhy({ kind: "episodes", count: binge.count + 1, next: upNext }); setUpNext(null); setStillWatching(SLEEP_GRACE_S); return; }
+    binge.markAuto();
+    playEpisode(upNext.s, upNext.e);
+  }, [upNext, countdown, prefs.autoplayNext, prefs.stillAfter]); // eslint-disable-line react-hooks/exhaustive-deps
+  // episodes in a row: counted when an episode starts by itself, reset by any key, click or touch
+  useEffect(() => { binge.onEpisode(); }, [id, ep.s, ep.e]);
+  useEffect(() => {
+    const reset = () => binge.reset();
+    window.addEventListener("keydown", reset, true);
+    window.addEventListener("pointerdown", reset, true);
+    return () => { window.removeEventListener("keydown", reset, true); window.removeEventListener("pointerdown", reset, true); };
+  }, []);  
 
   /* ---- Player 2.0 helpers ---- */
   const controllable = Boolean(source && ADAPTERS[source.id]?.commands);
+  // the Android app opens picture-in-picture when you leave during playback (Settings › Playback)
+  useEffect(() => {
+    if (!pipOk) return;
+    nativePlaybackActive(ready && !paused, prefs.autoPip);
+  }, [pipOk, ready, paused, prefs.autoPip]);
+  useEffect(() => {
+    if (!pipOk) return;
+    window.__pandaPip = (on: boolean) => { setPip(on); if (on) { setOverlay(false); setOptionsSheet(null); setSubsSheet(false); } };
+    return () => { nativePlaybackActive(false, false); delete window.__pandaPip; };
+  }, [pipOk]);
   function noteJump(from: number, to: number) {
     const learned = learnIntro(id, from, to);
     if (learned) setIntro(learned);
@@ -316,8 +356,16 @@ function Player({ type, id, season, episode, start }: { type: MediaType; id: num
     setStillWatching(null);
     setSleep(SLEEP_OFF);
     if (source && controllable) sendCommand(frame.current, source, { c: "pause" });
-    toast("Sleep timer ended playback", 3200);
+    toast(stillWhy.kind === "episodes" ? `Paused after ${stillWhy.count} episodes in a row` : "Sleep timer ended playback", 3200);
+    binge.reset();
     exit();
+  }
+  function keepWatching() {
+    setStillWatching(null);
+    binge.reset();
+    if (stillWhy.kind === "episodes" && stillWhy.next) { playEpisode(stillWhy.next.s, stillWhy.next.e); return; }
+    if (source) sendCommand(frame.current, source, { c: "play" });
+    setPaused(false);
   }
   // sleep timer: tick once a second while armed; on time, pause and ask "Still watching?" (or stop when the source can't pause)
   useEffect(() => {
@@ -326,7 +374,7 @@ function Player({ type, id, season, episode, start }: { type: MediaType; id: num
       setTick((n) => n + 1);
       if (sleepDue(sleep)) {
         setSleep({ mode: "off", at: null });
-        if (source && controllable) { sendCommand(frame.current, source, { c: "pause" }); setPaused(true); setStillWatching(SLEEP_GRACE_S); }
+        if (source && controllable) { sendCommand(frame.current, source, { c: "pause" }); setPaused(true); setStillWhy({ kind: "sleep" }); setStillWatching(SLEEP_GRACE_S); }
         else endForTheNight();
       }
     }, 1000);
@@ -495,11 +543,24 @@ function Player({ type, id, season, episode, start }: { type: MediaType; id: num
       onPlayEpisode: playEpisode,
       onPlayTitle: (item) => { save(); go(watchPath(item.type, item.tmdbId), { replace: true }); },
       onExit: exit,
+      hideSpoilers: prefs.hideSpoilers,
       captions: {
         available: captionsOk && Boolean(details?.imdbId), tracks: caps.tracks, trackId: caps.track?.id ?? null, loading: caps.loading, failed: caps.failed, error: caps.error,
         offset: caps.offset, langs: [prefs.subtitleLang, prefs.subtitleLang2].filter((x): x is string => Boolean(x)),
         onTrack: chooseSubtitle, onNudge: nudgeSubtitle
-      }
+      },
+      gestures: !tv && prefs.gestures,
+      volume: dragVolume ?? prefs.volume, onVolume: (v) => {
+        if (!source) return;
+        sendCommand(frame.current, source, { c: "volume", value: v }); setDragVolume(v);
+        // saved once the finger settles, not on every move
+        if (volSave.current) clearTimeout(volSave.current);
+        volSave.current = setTimeout(() => { actions.setPrefs({ volume: v }); setDragVolume(null); }, 450);
+        if (muted !== (v <= 0)) { sendCommand(frame.current, source, { c: "muted", value: v <= 0 }); setMuted(v <= 0); }
+      },
+      brightness, onBrightness: setBrightness,
+      onHold: (on) => { if (source) sendCommand(frame.current, source, { c: "rate", value: on ? 2 : prefs.playbackSpeed }); },
+      onPip: pipOk ? () => { if (!nativeEnterPip()) toast("Picture-in-picture is turned off for Panda in Android settings", 3200); } : undefined
     };
   }
 
@@ -509,13 +570,16 @@ function Player({ type, id, season, episode, start }: { type: MediaType; id: num
   const src = source ? embedUrl(source, { customChrome, start: reloadAt ?? undefined, quality: prefs.quality, autoskip: prefs.autoSkipIntro }) : null;
 
   return (
-    <div ref={root} className={`player ${overlay ? "is-overlay" : ""} ${tv ? "player--tv" : "player--touch"}`} onKeyDown={onKeyDown} onMouseMove={poke} role="application" aria-label={`Playing ${title}`}>
+    <div ref={root} className={`player ${overlay ? "is-overlay" : ""} ${tv ? "player--tv" : "player--touch"} ${pip ? "is-pip" : ""}`} onKeyDown={onKeyDown} onMouseMove={poke} role="application" aria-label={`Playing ${title}`}>
       {play.error && !play.data && <div className="player-center"><ErrorState message={play.error.message} onRetry={() => play.mutate()} /></div>}
       {src && source && (
         <iframe key={`${source.id}-${customChrome ? "c" : "n"}-${prefs.quality}`} ref={frame} className={`player-frame ${isolated ? "is-isolated" : ""}`} src={src} title={`${title} — ${SHORT[source.id]}`}
           {...(SANDBOX[source.id]?.attr ? { sandbox: SANDBOX[source.id]!.attr! } : {})} data-sandbox={SANDBOX[source.id]?.id ?? "none"}
           allow="autoplay; fullscreen; encrypted-media; picture-in-picture" allowFullScreen referrerPolicy="origin" tabIndex={isolated || (tv && !nativeControls) ? -1 : 0}
           onLoad={() => { if (source.events !== "cinesrc") setReady(true); if (isolated) reclaimFocus(); }} />
+      )}
+      {brightness < 1 && !tv && (
+        <div className="player-dim" style={{ opacity: Math.round((1 - brightness) * 0.85 * 100) / 100 }} aria-hidden="true" />
       )}
       {ready && caps.track && caps.cues && (
         <CaptionLayer cues={caps.cues} clock={caps.clock} offset={caps.offset} raised={overlay || Boolean(upNext)} size={prefs.subtitleSize} look={prefs.subtitleStyle} />
@@ -578,9 +642,10 @@ function Player({ type, id, season, episode, start }: { type: MediaType; id: num
       </>}
       <Suspense fallback={null}>
       <PlayerPrompts tv={tv} skip={showSkip} skipLabel={skip?.kind === "recap" ? "Skip Recap" : "Skip Intro"} onSkip={skipIntro}
-        nextCard={showNextCard && next ? { s: next.season, e: next.episode, title: nextEp?.title ?? null, still: nextEp?.still ?? details?.backdrop ?? null, left: Math.max(0, Math.ceil(time.d - time.p)) } : null}
+        nextCard={showNextCard && next ? { s: next.season, e: next.episode, title: nextEp?.title ?? null, still: (prefs.hideSpoilers ? null : nextEp?.still) ?? details?.backdrop ?? null, left: Math.max(0, Math.ceil(time.d - time.p)) } : null}
         onPlayNext={() => next && playEpisode(next.season, next.episode)} onDismissNext={() => setNextDismissed(true)}
-        stillWatching={stillWatching} onKeepWatching={() => { setStillWatching(null); if (source) sendCommand(frame.current, source, { c: "play" }); setPaused(false); }} onStop={endForTheNight} />
+        stillWatching={stillWatching} stillNote={stillWhy.kind === "episodes" ? `You've watched ${stillWhy.count} episodes in a row.${stillWhy.next ? ` Next: S${stillWhy.next.s}\u00a0E${stillWhy.next.e}.` : ""}` : null}
+        onKeepWatching={keepWatching} onStop={endForTheNight} />
       {optionsSheet && <PlayerOptionsSheet kind={optionsSheet} controllable={controllable} onKind={setOptionsSheet} speed={prefs.playbackSpeed} sleep={sleep.mode} isSeries={isTv} onSpeed={(r) => { chooseSpeed(r); setOptionsSheet(null); }} onSleep={(m) => { chooseSleep(m); setOptionsSheet(null); }} onClose={() => setOptionsSheet(null)} />}
       </Suspense>
       {reportSheet && (
@@ -622,12 +687,13 @@ function Player({ type, id, season, episode, start }: { type: MediaType; id: num
           )}
         </Sheet>
       )}
-      {drawer && details && <EpisodesDrawer d={details} current={ep} onClose={() => setDrawer(false)} onPick={(sn, en) => { setDrawer(false); playEpisode(sn, en); }} />}
+      {drawer && details && <EpisodesDrawer d={details} current={ep} spoilers={prefs.hideSpoilers} onClose={() => setDrawer(false)} onPick={(sn, en) => { setDrawer(false); playEpisode(sn, en); }} />}
     </div>
   );
 }
 
-function EpisodesDrawer({ d, current, onClose, onPick }: { d: TitleDetails; current: { s: number; e: number }; onClose: () => void; onPick: (s: number, e: number) => void }) {
+function EpisodesDrawer({ d, current, spoilers, onClose, onPick }: { d: TitleDetails; current: { s: number; e: number }; spoilers: boolean; onClose: () => void; onPick: (s: number, e: number) => void }) {
+  const history = useHistoryEntry(d.id);
   const seasons = d.seasons.filter((x) => x.number > 0);
   const [season, setSeason] = useState(current.s);
   const { data } = useSeason(d.tmdbId, season);
@@ -641,7 +707,7 @@ function EpisodesDrawer({ d, current, onClose, onPick }: { d: TitleDetails; curr
         {data?.number === season && data.episodes.map((x) => (
           <button key={x.id} id={`dr-e-${x.season}-${x.number}`} className={`drawer-ep ${x.season === current.s && x.number === current.e ? "is-current" : ""}`} onClick={() => onPick(x.season, x.number)} data-hover-focus
             data-autofocus={x.season === current.s && x.number === current.e ? true : undefined}>
-            <Img src={x.still} alt="" title={`E${x.number}`} />
+            <span className={`drawer-ep-still ${spoilers && !(x.season === current.s && x.number === current.e) && hideSpoiler(true, episodeRow(history, d.tmdbId, x.season, x.number).done, episodeRow(history, d.tmdbId, x.season, x.number).pct) ? "is-spoiler" : ""}`}><Img src={x.still} alt="" title={`E${x.number}`} /></span>
             <span><strong>{x.number}. {x.title}</strong><small>{[runtime(x.runtime)].filter(Boolean).join("")}</small></span>
           </button>
         ))}

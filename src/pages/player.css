@@ -117,3 +117,7 @@ html[data-mode="tv"] .report-lead { font-size: calc(20 * var(--tu)); margin-bott
 .subs-sync .btn { flex: 1; min-width: 0; white-space: nowrap; }
 .subs-offset { flex: none; min-width: calc(96 * var(--u)); text-align: center; color: var(--text-2); font-size: calc(13 * var(--u)); }
 html[data-mode="tv"] .subs-offset { font-size: calc(18 * var(--tu)); min-width: calc(160 * var(--tu)); }
+
+/* v1.2.2 picture-in-picture: only the picture shows in the small window */
+.player.is-pip > :not(.player-frame):not(.player-dim) { display: none !important; }
+.player-dim { position: absolute; inset: 0; z-index: 1; background: #000; pointer-events: none; transition: opacity .12s linear; }

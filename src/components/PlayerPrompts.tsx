@@ -15,13 +15,13 @@ export function PlayerPrompts(p: {
   tv: boolean;
   skip: boolean; skipLabel: string; onSkip: () => void;
   nextCard: NextCardInfo | null; onPlayNext: () => void; onDismissNext: () => void;
-  stillWatching: number | null; onKeepWatching: () => void; onStop: () => void;
+  stillWatching: number | null; stillNote?: string | null; onKeepWatching: () => void; onStop: () => void;
 }) {
   return (
     <>
       {p.skip && <SkipIntro key={p.skipLabel} tv={p.tv} label={p.skipLabel} onSkip={p.onSkip} />}
       {p.nextCard && !p.skip && <NextCard tv={p.tv} info={p.nextCard} onPlay={p.onPlayNext} onDismiss={p.onDismissNext} />}
-      {p.stillWatching !== null && <StillWatching left={p.stillWatching} onKeep={p.onKeepWatching} onStop={p.onStop} />}
+      {p.stillWatching !== null && <StillWatching left={p.stillWatching} note={p.stillNote ?? null} onKeep={p.onKeepWatching} onStop={p.onStop} />}
     </>
   );
 }
@@ -60,16 +60,16 @@ function NextCard({ tv, info, onPlay, onDismiss }: { tv: boolean; info: NextCard
   );
 }
 
-function StillWatching({ left, onKeep, onStop }: { left: number; onKeep: () => void; onStop: () => void }) {
+function StillWatching({ left, note, onKeep, onStop }: { left: number; note: string | null; onKeep: () => void; onStop: () => void }) {
   const ref = useRef<HTMLDivElement>(null);
   useFocusScope(ref);
   useBackHandler(() => { onKeep(); });
   return (
     <div className="p2-still-root">
       <div ref={ref} className="p2-still lrud-container" role="alertdialog" aria-modal="true" aria-labelledby="p2-still-title">
-        <Icon name="clock" />
+        <Icon name={note ? "episodes" : "clock"} />
         <h2 id="p2-still-title">Are you still watching?</h2>
-        <p>The sleep timer paused playback. It stops in {Math.max(0, left)} s.</p>
+        <p>{note ?? "The sleep timer paused playback."} {note ? "Panda stops" : "It stops"} in {Math.max(0, left)} s.</p>
         <span className="p2-still-ring" style={{ ["--p" as string]: `${(left / SLEEP_GRACE_S) * 100}` }} aria-hidden="true" />
         <div className="p2-still-actions">
           <button id="p2-keep" className="btn btn--primary" data-autofocus autoFocus onClick={onKeep}><Icon name="play" /> Continue Watching</button>

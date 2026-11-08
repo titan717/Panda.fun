@@ -65,3 +65,10 @@ export function detailsCtas(d: TitleDetails, h: HistoryEntry | null): { primary:
     : null;
   return { primary, secondary };
 }
+
+/* ---- v1.2.2 spoiler protection ---- */
+/** True when an episode's picture and description should stay hidden: the setting is on and the profile has not started it. */
+export function hideSpoiler(on: boolean, done: boolean, pct: number): boolean {
+  return on && !done && !(pct > 0);
+}
+export const SPOILER_NOTE = "Description hidden until you watch it";

@@ -1,6 +1,7 @@
 import "./settings.css";
 import "../lib/validateLazy"; // validators for this page's payloads, loaded with the page
-import { forgetIntros, SPEEDS, speedLabel } from "../lib/player2";
+import { forgetIntros, SPEEDS, speedLabel, STILL_AFTER } from "../lib/player2";
+import { nativePipSupported } from "../lib/pip";
 import { useEffect, useRef, useState, type ReactNode } from "react";
 import { Link, useParams } from "wouter";
 import { useSWRConfig } from "swr";
@@ -73,6 +74,8 @@ const PRELOAD_CHOICES: { id: "smart" | "wifi" | "off"; label: string; note: stri
   { id: "wifi", label: "Wi-Fi only", note: "Never preload on mobile data" },
   { id: "off", label: "Off", note: "Load only what you open" }
 ];
+
+const PIP = nativePipSupported();
 
 function Toggle({ id, title, sub, value, onChange }: { id: string; title: string; sub?: string; value: boolean; onChange: (v: boolean) => void }) {
   return (
@@ -341,6 +344,11 @@ function Panel({ id }: { id: SectionId }) {
         <div className="set-panel">
           <Choice id="quality" title="Preferred quality" value={prefs.quality} options={QUALITIES} onChange={(v) => { set({ quality: v }); toast(`Preferred quality: ${QUALITIES.find((q) => q.id === v)!.label}`); }} />
           <Toggle id="sp-autonext" title="Autoplay next episode" sub="Start the next episode after a 10 second countdown" value={prefs.autoplayNext} onChange={(v) => set({ autoplayNext: v })} />
+          <Choice id="stillafter" title="Ask “Are you still watching?”" value={String(prefs.stillAfter)} options={STILL_AFTER}
+            onChange={(v) => { set({ stillAfter: Number(v) }); toast(v === "0" ? "Panda keeps playing episodes until the season ends" : `Panda checks in after ${v} episodes in a row`); }} />
+          <Toggle id="sp-spoilers" title="Hide spoilers" sub="Blur pictures and hide descriptions of episodes you haven't watched yet" value={prefs.hideSpoilers} onChange={(v) => set({ hideSpoilers: v })} />
+          {!tv && <Toggle id="sp-gestures" title="Swipe gestures" sub="In the player, swipe sideways to seek, up or down on the right for volume and on the left for brightness. Hold to play at 2×" value={prefs.gestures} onChange={(v) => set({ gestures: v })} />}
+          {PIP && <Toggle id="sp-autopip" title="Picture-in-picture" sub="Keep the video playing in a small window when you leave Panda during playback" value={prefs.autoPip} onChange={(v) => set({ autoPip: v })} />}
           <Toggle id="sp-autoskip" title="Skip intros and recaps" sub="Let CineSrc jump past openings and recaps it detects. Otherwise Panda shows a Skip Intro button" value={prefs.autoSkipIntro} onChange={(v) => set({ autoSkipIntro: v })} />
           <Choice id="speed" title="Playback speed" value={String(prefs.playbackSpeed)} options={SPEED_CHOICES} onChange={(v) => { set({ playbackSpeed: Number(v) }); toast(`Playback speed: ${speedLabel(Number(v))}`); }} />
           <Row id="sp-intros" title="Forget learned intros" sub="Panda learns where each show's opening ends when you skip it" onClick={() => { forgetIntros(); toast("Learned intros cleared"); }} />

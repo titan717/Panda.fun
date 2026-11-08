@@ -18,7 +18,7 @@ import { useOnline, useReducedMotion } from "./lib/hooks";
 import { compareVersions, fetchLatestRelease, installedVersion, takeUpdateNotice } from "./lib/updates";
 import { ErrorBoundary, OfflineBanner, Toasts, toast } from "./components/ui";
 import { PandaMark, Wordmark } from "./components/Icon";
-import { ProfileEdit, ProfileManage, ProfileSelect } from "./pages/Profiles";
+import { ProfileSelect } from "./pages/Profiles";
 import { lazyNamed, whenIdle } from "./lib/lazy";
 import type { MediaType, PageKind } from "./lib/types";
 
@@ -34,6 +34,7 @@ const loadCollection = () => import("./pages/Collection");
 const loadAnime = () => import("./pages/Anime");
 const loadCalendar = () => import("./pages/Calendar");
 const loadLists = () => import("./pages/Lists");
+const loadProfileEditor = () => import("./pages/ProfileEditor");
 
 const lz = lazyNamed;
 const TvShell = lz(loadTv, "TvShell");
@@ -65,11 +66,13 @@ const BrowsePage = lz(loadLists, "BrowsePage");
 const ContinueWatchingPage = lz(loadLists, "ContinueWatchingPage");
 const MyListPage = lz(loadLists, "MyListPage");
 const NotFoundPage = lz(loadLists, "NotFoundPage");
+const ProfileManage = lz(loadProfileEditor, "ProfileManage");
+const ProfileEdit = lz(loadProfileEditor, "ProfileEdit");
 
 /** Start downloading the active layout at once, and the rest of the app when the device is idle. */
 export function prefetchRoutes(mode: LayoutMode) {
   void (mode === "tv" ? loadTv() : loadMobile());
-  whenIdle(() => { void loadPlayer().then((m) => { if (mode === "tv") void m.loadTvChrome(); }); void loadSettings(); void loadUpdates(); void loadInfo(); void loadWhatsNew(); void loadPerson(); void loadLists(); void loadCalendar(); });
+  whenIdle(() => { void loadPlayer().then((m) => { if (mode === "tv") void m.loadTvChrome(); }); void loadSettings(); void loadUpdates(); void loadInfo(); void loadWhatsNew(); void loadPerson(); void loadLists(); void loadCalendar(); void loadProfileEditor(); });
 }
 
 const PUBLIC_PATHS = ["/about", "/privacy", "/terms"];
