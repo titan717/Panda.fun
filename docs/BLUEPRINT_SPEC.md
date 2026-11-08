@@ -244,3 +244,19 @@ The first pass of sections 5–9 was estimated from contact sheets. Measuring th
 22.2 Season pill "Season 2  7 Eps". Episode cards: play icon, blue progress bar, "S2 E1 • 13 Apr 2025 • 58m" + synopsis.
 22.3 Rate popover: Love / Like / Not for me.
 22.4 CTA "Watch Now" with blue→magenta gradient (`#1F80E0` → `#C2187A`), square "+" and "♡" buttons; language chips; genres separated by "|"; "IMDb 8.4" line; meta "2025 • A • 2 Seasons • 5 Languages • 4K • 5.1".
+
+## 23. v1.1.7 refinement results (Addendum 2, Release 1)
+
+Side-by-side comparisons of the app (Playwright screenshots, `scripts/qa-shots.mjs`) against the Drive blueprints at 360×640, 390×844, 430×932 (+ landscape), 768×1024, 820×1180, 1280×720, 1440×900, 1920×1080 and 3840×2160. `scripts/qa-viewports.mjs` checks every page at every size for horizontal overflow and clipped text; the only items it reports are intentionally scrollable chip and season rows.
+
+| Page | Differences found | Result after 3 passes |
+|---|---|---|
+| TV sidebar | Narrow icon rail vs blueprint overlay panel with labels, sub-items, glow highlight, focus return | Rebuilt (4.6–4.16); `e2e/tv-sidebar.spec.ts` at 1280/1920/3840. Pass 1 geometry, pass 2 My Space transform bug + logo/pill size, pass 3 glow focus + opaque panel. Matches. |
+| TV Home hero and rows | Rating badge missing on the hero (tv1#15); row title position | Badge added; row title at ≈42 % height matches tvpanda p3. Matches. |
+| TV Details | Meta line and quality chips | Matches tvnew p1–p6 within earlier decisions (D-60s); no new differences. |
+| TV Search | 5-column grid and extra genre block not in tv2#13–#19 | 6 columns 256×341 tu, genre block removed (D-100). Matches. |
+| Phone Search | No "Popular Searches in" tabs, no recent thumbnails, extra genre block (m#13, m#14, m#18, m#29) | Tabs India / Hot & New / Movies / Shows, recent title thumbnails, suggestion chips (D-100). Matches. |
+| Phone My Space and Help & Settings | Card rows vs plain rows, missing Notifications heading, "Continue Watching" without the profile name (m#30, m#31) | Fixed (D-102). Pass 1 layout, pass 2 row pitch and dividers, pass 3 title weight and legal links. Matches; "Log Out" stays "Switch Profile". |
+| TV Settings | No blueprint screen (G-series gap) | Two-column layout from 17.1 unchanged; checked for overflow at 1280/1920/3840. |
+| TV player | Panel colour, focus pill, note size, check colour, Report icon, top-bar glyphs (tvplayer p3, p7, p9, p10) | Fixed (D-101). Pass 1 colours, pass 2 spacing (title 56 tu lower, 14 tu row gap), pass 3 icons. Matches except seek-preview frames (D-25, iframe limit). |
+| Phone player | Overlay per section 16 | No differences found. |
