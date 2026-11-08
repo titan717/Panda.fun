@@ -42,6 +42,7 @@ const PATHS = {
   download: "M12 4v11m-4-4 4 4 4-4M5 19h14",
   refresh: "M20 11a8 8 0 1 0-2.3 5.7M20 5v6h-6",
   more: "M12 6h.01M12 12h.01M12 18h.01",
+  sort: "M7 5v14m0 0-3-3m3 3 3-3M17 19V5m0 0-3 3m3-3 3 3",
   trash: "M5 7h14M10 7V5h4v2m-7 0 1 12h8l1-12",
   lock: "M7 11V8a5 5 0 0 1 10 0v3M6 11h12v9H6z",
   signal: "M5 19v-3M10 19v-7M15 19V9M20 19V5",

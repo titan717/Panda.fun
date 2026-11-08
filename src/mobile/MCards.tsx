@@ -59,7 +59,7 @@ export const MContinue = memo(function MContinue({ entry }: { entry: HistoryEntr
   const pct = entry.duration ? Math.min(100, (entry.position / entry.duration) * 100) : 0;
   return (
     <div className="m-land">
-      <Link href={continueHref(entry)} className="m-land-link" aria-label={`Resume ${entry.item.title}`}>
+      <Link href={continueHref(entry)} className="m-land-link" aria-label={`${entry.upNext ? "Play" : "Resume"} ${entry.item.title}, ${continueSub(entry) ?? ""}`}>
         <span className="m-land-media">
           <Img src={entry.item.backdrop} alt="" title={entry.item.title} />
           <Icon name="play" className="m-land-play" />

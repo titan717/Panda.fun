@@ -2,6 +2,15 @@
 
 Measured on every release. Never regress.
 
+## v1.0.8
+
+| Metric | Value |
+|---|---|
+| First load (gzip JS) | 57.0 KB on TV (index 28.2 + vendor 10.3 + runtime 9.7 + TV layout 8.9), +1.5 KB for the Kids gate, list tools and Next Episode. CSS 20.3 KB gzip. |
+| Kids gate | Uses the same cached title request as Details, so it adds no network request; the player waits only on a Kids profile, and only until the cached details resolve. |
+| My Space | Filtering and sorting are memoised in memory (no storage writes); removing an item writes once to the debounced store. |
+| Mobile suite | 10 screens × 7 sizes (portrait and landscape phones, tablets) checked for sideways scroll, off-screen elements, text size and nav tap targets in 1.7 min. |
+
 ## v1.0.7
 
 | Metric | Value |

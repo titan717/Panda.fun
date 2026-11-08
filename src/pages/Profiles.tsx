@@ -14,6 +14,7 @@ import { PosterWall } from "../components/PosterWall";
 import { focusFirst, useBackHandler } from "../lib/focus";
 import { useNav } from "../lib/nav";
 import { useIsTv } from "../lib/layout";
+import { useRemoteField } from "../lib/remoteInput";
 
 /** PIN prompt guarding adult profiles when leaving a Kids profile (Parental Controls, spec 15.6). */
 export function PinDialog({ title, onSuccess, onClose }: { title: string; onSuccess: () => void; onClose: () => void }) {
@@ -106,10 +107,19 @@ export function ProfileSelect() {
 /** Manage profiles list (spec 15.3). */
 export function ProfileManage() {
   const profiles = useStore((s) => s.profiles);
+  const data = useStore((s) => s.data);
   const tv = useIsTv();
   const { go } = useNav();
   const root = useRef<HTMLDivElement>(null);
   useEffect(() => { if (tv && root.current) focusFirst(root.current); }, [tv]);
+  const summary = (id: string) => {
+    const d = data[id];
+    if (!d) return null;
+    const saved = d.watchlist.length;
+    const watching = Object.values(d.history).filter((h) => !h.completed && (h.position > 30 || h.upNext)).length;
+    const parts = [saved ? `${saved} in Watchlist` : null, watching ? `${watching} in progress` : null].filter(Boolean);
+    return parts.length ? parts.join(" • ") : "Nothing saved yet";
+  };
   return (
     <div ref={root} className={tv ? "tv-page tv-settings-page" : "m-page"}>
       <PageHeader title="Manage Profiles" fallback="/my-space" />
@@ -118,7 +128,10 @@ export function ProfileManage() {
           <li key={p.id}>
             <button id={`man-${p.id}`} className="manage-item" onClick={() => go(`/profiles/edit/${p.id}`)} data-hover-focus>
               <Avatar kind={p.avatar} />
-              <span className="manage-name">{p.name}{p.kids && <span className="manage-tag">Kids</span>}</span>
+              <span className="manage-text">
+                <span className="manage-name">{p.name}{p.kids && <span className="manage-tag">Kids</span>}</span>
+                <span className="manage-sub">{summary(p.id)}</span>
+              </span>
               <Icon name="edit" />
             </button>
           </li>
@@ -150,6 +163,7 @@ export function ProfileEdit({ isNew }: { isNew?: boolean }) {
   const tv = useIsTv();
   const { back } = useNav();
   const root = useRef<HTMLDivElement>(null);
+  const field = useRemoteField(tv, () => document.getElementById(`pf-av-${avatar}`)?.focus());
   useEffect(() => { if (tv && root.current) focusFirst(root.current); }, [tv]);
   useBackHandler(() => { if (confirmDelete) { setConfirmDelete(false); return; } return false; }, confirmDelete);
 
@@ -172,7 +186,7 @@ export function ProfileEdit({ isNew }: { isNew?: boolean }) {
         <Avatar kind={avatar} className="profile-form-avatar" />
         <label className="field">
           <span className="field-label">Name</span>
-          <input id="pf-name" className="field-input" value={name} maxLength={20} onChange={(e) => setName(e.target.value)} placeholder="Profile name" autoComplete="off" data-autofocus />
+          <input ref={field.ref} {...field.props} id="pf-name" className="field-input" value={name} enterKeyHint="next" maxLength={20} onChange={(e) => setName(e.target.value)} placeholder="Profile name" autoComplete="off" data-autofocus />
         </label>
         <div className="field">
           <span className="field-label">Avatar</span>
@@ -185,7 +199,7 @@ export function ProfileEdit({ isNew }: { isNew?: boolean }) {
           </div>
         </div>
         <button id="pf-kids" role="switch" aria-checked={kids} className="toggle-row" onClick={() => setKids((k) => !k)} data-hover-focus>
-          <span><span className="toggle-title">Kids profile</span><span className="toggle-sub">Only shows animation and family titles{prefs.kidsPin ? "; PIN needed to leave it" : ""}</span></span>
+          <span><span className="toggle-title">Kids profile</span><span className="toggle-sub">Only animation and family titles rated for children{prefs.kidsPin ? "; PIN needed to leave it" : ""}</span></span>
           <span className={`toggle ${kids ? "is-on" : ""}`} aria-hidden="true" />
         </button>
         <div className="form-actions lrud-container">

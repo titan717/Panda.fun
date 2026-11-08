@@ -4,6 +4,7 @@ import useSWR from "swr";
 import { Icon } from "../components/Icon";
 import { ErrorState, Img, Spinner, toast } from "../components/ui";
 import { Sheet } from "../components/Sheet";
+import { KidsGate } from "../components/KidsGate";
 import { keys } from "../lib/api";
 import { useSeason, useTitle } from "../lib/hooks";
 import { actions, getPrefs, usePrefs } from "../lib/store";
@@ -16,7 +17,7 @@ import { TvPlayerChrome, type TvChromeProps } from "../tv/TvPlayerChrome";
 import { api } from "../lib/api";
 import { ADAPTERS, embedUrl, parseMessage, READY_TIMEOUT_MS, sendCommand, sourceName, SOURCE_ORDER } from "../lib/player";
 import { nextEpisodeOf, prevEpisodeOf } from "../lib/watch";
-import { pluralEps, runtime, titlePath, watchPath } from "../lib/format";
+import { airsLater, pluralEps, runtime, titlePath, watchPath } from "../lib/format";
 import type { MediaType, PlaybackPayload, PlaybackSource, SourceId, TitleDetails } from "../lib/types";
 
 const SHORT: Record<SourceId, string> = { cinesrc: sourceName("cinesrc"), vidy: sourceName("vidy") };
@@ -30,7 +31,11 @@ export function PlayerPage() {
   const t = Number(qs.get("t")) || 0;
   if (!Number.isFinite(id) || id <= 0) return <div className="player player--error"><ErrorState message="This title link is invalid." /></div>;
   // re-mount the player when the episode changes through our own navigation (next / episodes drawer)
-  return <Player key={`${type}-${id}-${type === "tv" ? `${s}-${e}` : ""}`} type={type} id={id} season={s} episode={e} start={t} />;
+  return (
+    <KidsGate type={type} id={id} wait>
+      <Player key={`${type}-${id}-${type === "tv" ? `${s}-${e}` : ""}`} type={type} id={id} season={s} episode={e} start={t} />
+    </KidsGate>
+  );
 }
 
 function Player({ type, id, season, episode, start }: { type: MediaType; id: number; season: number; episode: number; start: number }) {
@@ -77,9 +82,18 @@ function Player({ type, id, season, episode, start }: { type: MediaType; id: num
   const save = useCallback(() => {
     const d = getDetails();
     if (!d || !pos.current.dirty || pos.current.duration <= 0) return;
-    actions.saveProgress(d, { position: pos.current.position, duration: pos.current.duration, season: isTv ? ep.s : undefined, episode: isTv ? ep.e : undefined, episodeTitle: epInfo?.title ?? null });
+    actions.saveProgress(d, { position: pos.current.position, duration: pos.current.duration, season: isTv ? ep.s : undefined, episode: isTv ? ep.e : undefined, episodeTitle: epInfo?.title ?? null, next: playableNext(d) });
     pos.current.dirty = false;
-  }, [ep.s, ep.e, epInfo?.title, isTv]);  
+  }, [ep.s, ep.e, epInfo?.title, isTv]);
+  /** The episode after this one, unless it hasn't aired yet. */
+  function playableNext(d: TitleDetails) {
+    if (!isTv) return null;
+    const n = nextEpisodeOf(d.seasons, ep.s, ep.e);
+    if (!n) return null;
+    const air = d.nextEpisode;
+    if (air && air.season === n.season && air.episode === n.episode && airsLater(air.airDate)) return null;
+    return n;
+  }  
   const detailsRef = useRef<TitleDetails | undefined>(details);
   detailsRef.current = details;
   function getDetails() { return detailsRef.current; }

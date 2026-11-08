@@ -1,0 +1,16 @@
+import { chromium } from "playwright";
+import fs from "node:fs";
+const state = fs.readFileSync(process.env.STATE_FILE, "utf8");
+const b = await chromium.launch(); const ctx = await b.newContext({ viewport: { width: 1920, height: 1080 } });
+await ctx.addInitScript((s) => { if (!localStorage.getItem("panda:v1:state")) localStorage.setItem("panda:v1:state", s); sessionStorage.setItem("panda:splash", "1"); }, state);
+const p = await ctx.newPage(); const errs = []; p.on("pageerror", (e) => errs.push(e.message));
+await p.goto("http://127.0.0.1:4173/my-space?layout=tv", { waitUntil: "networkidle" }); await p.waitForTimeout(1500);
+await p.focus("#ms-remove"); await p.keyboard.press("Enter"); await p.waitForTimeout(300);
+await p.focus("#msw-1"); await p.waitForTimeout(400); await p.screenshot({ path: "/tmp/qa/ms-remove.png" });
+const before = await p.locator(".tv-grid .tv-card").count();
+await p.keyboard.press("Enter"); await p.waitForTimeout(400);
+const after = await p.locator(".tv-grid .tv-card").count();
+await p.focus("#mst-continue"); await p.waitForTimeout(600); await p.screenshot({ path: "/tmp/qa/ms-continue.png" });
+const subs = await p.locator(".tv-land-sub").allTextContents();
+console.log({ before, after, subs, url: p.url(), errs });
+await b.close();

@@ -49,3 +49,10 @@ Reviewed each release. Ideas are only adopted when they fit the blueprints.
 - Netflix and Prime list upcoming episodes with their release date, not as playable tiles. Panda now shows "Coming <date>" and blocks play.
 - Stremio and Kodi-style apps show provider status; Panda's Sources settings show live health and latency for CineSrc and Vidy.
 
+## v1.0.8 round (2026-11-08)
+
+- Netflix and Disney+ Kids profiles cap titles by maturity rating, not only by genre, and block deep links to anything above the cap. Panda's Kids profiles now check the rating and show a clear blocked screen.
+- Netflix moves a finished episode's Continue Watching tile to the next episode. Panda now does the same and labels it "Next Episode".
+- Google TV's watchlist and Netflix's My List on TV can be filtered and edited with the remote. Panda's My Space now has Movies/Shows filters, three sort orders and a remove mode.
+- Netflix's Manage Profiles is a plain list; Prime Video shows profile activity. Panda shows each profile's saved and in-progress counts.
+

@@ -26,6 +26,8 @@ export interface HistoryEntry {
   duration: number;
   updatedAt: number;
   completed: boolean;
+  /** The previous episode was finished and this one is queued (blueprint 10.3 "Next Episode"). */
+  upNext?: boolean;
 }
 
 export type Rating = "love" | "like" | "dislike";
@@ -220,7 +222,7 @@ export function useHistoryEntry(id: string) { return useStore((s) => selectData(
 
 /** Continue Watching: unfinished entries, newest first. */
 export function continueWatching(history: Record<string, HistoryEntry>) {
-  return Object.values(history).filter((h) => !h.completed && h.position > 30).sort((a, b) => b.updatedAt - a.updatedAt);
+  return Object.values(history).filter((h) => !h.completed && (h.position > 30 || h.upNext)).sort((a, b) => b.updatedAt - a.updatedAt);
 }
 /** Shows/movies the profile has watched (any progress), newest first. */
 export function watchedTitles(history: Record<string, HistoryEntry>) {
@@ -266,9 +268,17 @@ export const actions = {
   },
   clearRecentSearches() { patchActive((d) => ({ ...d, recentSearches: [] })); },
   clearHistory() { patchActive((d) => ({ ...d, history: {} })); },
-  saveProgress(item: PandaItem, p: { position: number; duration: number; season?: number; episode?: number; episodeTitle?: string | null }) {
+  saveProgress(item: PandaItem, p: { position: number; duration: number; season?: number; episode?: number; episodeTitle?: string | null; next?: { season: number; episode: number } | null }) {
     if (!Number.isFinite(p.position) || p.position < 0) return;
     const completed = p.duration > 0 && p.position / p.duration > 0.94;
+    if (completed && p.next && item.type === "tv") {
+      const next = p.next;
+      patchActive((d) => ({
+        ...d,
+        history: { ...d.history, [item.id]: { item: slim(item), season: next.season, episode: next.episode, episodeTitle: null, position: 0, duration: 0, completed: false, upNext: true, updatedAt: Date.now() } }
+      }));
+      return;
+    }
     patchActive((d) => ({
       ...d,
       history: { ...d.history, [item.id]: { item: slim(item), season: p.season, episode: p.episode, episodeTitle: p.episodeTitle ?? null, position: Math.round(p.position), duration: Math.round(p.duration), completed, updatedAt: Date.now() } }

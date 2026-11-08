@@ -1,7 +1,7 @@
 import { chromium } from "playwright";
 const base = process.env.BASE ?? "http://127.0.0.1:4173";
 const [,, mode = "mobile", w = "390", h = "844", ...routes] = process.argv;
-const state = { profiles: [{ id: "p1", name: "You", avatar: "smile", kids: false, createdAt: 1 }, { id: "p2", name: "Kids", avatar: "kids", kids: true, createdAt: 1 }], activeProfileId: "p1", prefs: {}, data: {} };
+const state = process.env.STATE_FILE ? JSON.parse((await import("node:fs")).readFileSync(process.env.STATE_FILE, "utf8")) : { profiles: [{ id: "p1", name: "You", avatar: "smile", kids: false, createdAt: 1 }, { id: "p2", name: "Kids", avatar: "kids", kids: true, createdAt: 1 }], activeProfileId: "p1", prefs: {}, data: {} };
 const browser = await chromium.launch();
 const ctx = await browser.newContext({ viewport: { width: +w, height: +h }, deviceScaleFactor: 1, hasTouch: mode === "mobile", isMobile: mode === "mobile" && +w < 1000 });
 await ctx.addInitScript((s) => { if (!localStorage.getItem("panda:v1:state")) localStorage.setItem("panda:v1:state", s); sessionStorage.setItem("panda:splash", "1"); }, JSON.stringify(state));

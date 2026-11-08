@@ -40,7 +40,7 @@ export function detailsCtas(d: TitleDetails, h: HistoryEntry | null): { primary:
     } else {
       const n = h.completed ? nextEpisodeOf(d.seasons, h.season, h.episode) : { season: h.season, episode: h.episode };
       primary = n
-        ? { label: h.completed ? "Watch Next" : "Watch", sub: `S${n.season} E${n.episode}`, href: watchPath("tv", d.tmdbId, n.season, n.episode), kind: "next" }
+        ? { label: h.completed || h.upNext ? "Watch Next" : "Watch", sub: `S${n.season} E${n.episode}`, href: watchPath("tv", d.tmdbId, n.season, n.episode), kind: "next" }
         : { label: "Watch Again", sub: `S${first?.number ?? 1} E1`, href: watchPath("tv", d.tmdbId, first?.number ?? 1, 1), kind: "first" };
     }
   } else {

@@ -1,4 +1,5 @@
 import { Suspense, useEffect, useState, type ReactNode } from "react";
+import { KidsGate } from "./components/KidsGate";
 import { SWRConfig } from "swr";
 import { Route, Router, Switch, useLocation, useParams } from "wouter";
 import { useHashLocation } from "wouter/use-hash-location";
@@ -140,7 +141,11 @@ function Details() {
   const t: MediaType | null = type === "movie" || type === "tv" ? type : null;
   const n = Number(id);
   if (!t || !Number.isInteger(n) || n <= 0) return <NotFoundPage />;
-  return mode === "tv" ? <TvDetails key={`${t}-${n}`} type={t} id={n} /> : <MDetails key={`${t}-${n}`} type={t} id={n} />;
+  return (
+    <KidsGate type={t} id={n}>
+      {mode === "tv" ? <TvDetails key={`${t}-${n}`} type={t} id={n} /> : <MDetails key={`${t}-${n}`} type={t} id={n} />}
+    </KidsGate>
+  );
 }
 
 function AllEpisodes() {

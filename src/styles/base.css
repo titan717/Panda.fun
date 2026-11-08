@@ -180,6 +180,8 @@ html[data-mode="tv"] .profiles-manage:focus { box-shadow: var(--focus-glow); out
 .manage-item { display: flex; align-items: center; gap: calc(14 * var(--u)); width: 100%; padding: calc(10 * var(--u)) calc(12 * var(--u)); border-radius: var(--r-glass-m); background: var(--m-surface); text-align: left; }
 .manage-item .avatar { width: calc(48 * var(--u)); height: calc(48 * var(--u)); }
 .manage-name { flex: 1; font-size: calc(15 * var(--u)); font-weight: var(--fw-semibold); display: flex; align-items: center; gap: 8px; }
+.manage-text { flex: 1; display: flex; flex-direction: column; gap: calc(3 * var(--u)); min-width: 0; }
+.manage-sub { font-size: calc(12 * var(--u)); color: var(--text-2); }
 .manage-tag { font-size: calc(10 * var(--u)); font-weight: var(--fw-heavy); letter-spacing: 0.06em; text-transform: uppercase; padding: 2px 6px; border-radius: 4px; background: var(--kids-gradient); }
 .profile-form { display: flex; flex-direction: column; gap: calc(18 * var(--u)); max-width: 560px; }
 .profile-form-avatar { width: calc(84 * var(--u)) !important; height: calc(84 * var(--u)) !important; }
@@ -298,3 +300,15 @@ html[data-mode="tv"] .whatsnew--tv .wn-body { flex: 1; min-height: 0; overflow-y
 html[data-mode="tv"] .whatsnew--tv .upd-notes { font-size: calc(20 * var(--tu)); gap: calc(10 * var(--tu)); color: rgba(255, 255, 255, 0.82); }
 html[data-mode="tv"] .whatsnew--tv .upd-h { font-size: calc(22 * var(--tu)); }
 html[data-mode="tv"] .whatsnew--tv .wn-done { align-self: flex-start; width: auto; min-width: calc(220 * var(--tu)); margin-top: calc(20 * var(--tu)); }
+
+/* Kids gate (D-48) */
+.kids-gate { position: fixed; inset: 0; z-index: 30; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 14px; padding: 24px; text-align: center; background: #000; color: #fff; }
+.kids-gate-icon { display: grid; place-items: center; width: 96px; height: 96px; border-radius: 50%; background: linear-gradient(135deg, #ff4fa3, #8c4bff); }
+.kids-gate .state-sub { max-width: 560px; }
+.kids-gate-actions { display: flex; flex-wrap: wrap; justify-content: center; gap: 12px; margin-top: 8px; }
+.kids-gate .btn:focus-visible, .kids-gate .btn:focus { outline: 3px solid #fff; outline-offset: 3px; }
+html[data-mode="tv"] .kids-gate { gap: calc(22 * var(--tu)); }
+html[data-mode="tv"] .kids-gate-icon { width: calc(140 * var(--tu)); height: calc(140 * var(--tu)); }
+html[data-mode="tv"] .kids-gate .state-title { font-size: calc(44 * var(--tu)); }
+html[data-mode="tv"] .kids-gate .state-sub { font-size: calc(26 * var(--tu)); max-width: calc(900 * var(--tu)); }
+html[data-mode="tv"] .kids-gate .btn { height: calc(68 * var(--tu)); padding: 0 calc(30 * var(--tu)); font-size: calc(26 * var(--tu)); }
