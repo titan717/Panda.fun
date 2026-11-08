@@ -9,7 +9,7 @@ import { useReducedMotion } from "../lib/hooks";
 import { preload } from "swr";
 import { api, fetcher, keys } from "../lib/api";
 import { unlockAudio } from "../lib/audio";
-import { loadYouTubeApi } from "../components/Trailer";
+import { loadYouTubeApi } from "../lib/youtube";
 import { PosterWall } from "../components/PosterWall";
 import { focusFirst, useBackHandler } from "../lib/focus";
 import { useNav } from "../lib/nav";

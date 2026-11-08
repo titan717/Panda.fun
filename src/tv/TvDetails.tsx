@@ -1,3 +1,4 @@
+import "./details.css";
 import { useEffect, useRef, useState } from "react";
 import { Icon } from "../components/Icon";
 import { Link } from "wouter";

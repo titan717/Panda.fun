@@ -1,0 +1,38 @@
+/* Details-only styles, loaded with the TV / mobile chunk (v1.1.8 perf, docs/PERF.md). Moved from styles/*.css. */
+
+.tv-det { padding: 0; overflow: hidden; background: var(--tv-bg-deep); }
+.tv-det-bg { position: absolute; inset: 0 0 0 25%; z-index: 0; }
+.tv-det-bg > .img, .tv-det-bg > .img-fallback { position: absolute; inset: 0; transition: opacity var(--dur-crossfade) var(--ease-out); }
+.tv-det-bg > .img.is-hidden { opacity: 0 !important; }
+.tv-det-scrim { position: absolute; inset: 0 0 0 -1px; background: var(--tv-det-scrim), var(--tv-det-scrim-bottom); pointer-events: none; }
+.tv-det.is-tabs .tv-det-bg { opacity: 0.25; transition: opacity var(--dur-expand); }
+.tv-det-slider { position: relative; z-index: 1; transition: transform 380ms var(--ease-out); }
+.tv-det.is-tabs .tv-det-slider { transform: translateY(calc(-930 * var(--tu))); }
+.tv-det-main { height: calc(985 * var(--tu)); display: flex; align-items: center; padding-left: calc(156 * var(--tu)); }
+.tv-det-col { width: calc(820 * var(--tu)); display: flex; flex-direction: column; align-items: flex-start; gap: calc(14 * var(--tu)); }
+.tv-det-logo.title-logo { max-width: calc(440 * var(--tu)); max-height: calc(170 * var(--tu)); margin-bottom: calc(10 * var(--tu)); }
+.tv-det-logo { transform-origin: left bottom; transition: transform 600ms var(--ease-out); }
+.tv-det.is-trailer .tv-det-logo { transform: scale(0.72); }
+.tv-det-overview { transition: opacity 500ms var(--ease-out); }
+.tv-det.is-trailer .tv-det-overview { opacity: 0; }
+.tv-det-logo.title-text { font-size: calc(68 * var(--tu)); }
+.tv-det-rating { display: flex; align-items: center; gap: calc(6 * var(--tu)); color: var(--tv-ice); font-size: calc(22 * var(--tu)); font-weight: var(--fw-bold); }
+.tv-det-rating .icon { width: calc(20 * var(--tu)); height: calc(20 * var(--tu)); }
+.tv-det-rating span { font-size: calc(16 * var(--tu)); opacity: 0.8; }
+.tv-det-overview { color: var(--tv-body-2); font-size: var(--t-body); line-height: 1.45; display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden; }
+.tv-det-genres { display: flex; flex-wrap: wrap; font-size: var(--t-small); font-weight: var(--fw-bold); }
+.tv-det-genres span + span::before { content: "|"; margin: 0 calc(14 * var(--tu)); opacity: 0.6; font-weight: var(--fw-regular); }
+.tv-det-langs { display: flex; align-items: center; gap: calc(30 * var(--tu)); margin-top: calc(26 * var(--tu)); font-size: var(--t-small); font-weight: var(--fw-semibold); }
+.tv-det-actions { display: flex; align-items: flex-end; gap: calc(16 * var(--tu)); margin-top: calc(30 * var(--tu)); }
+.tv-det-ctas { display: flex; flex-direction: column; gap: calc(14 * var(--tu)); }
+.tv-det-tabbar { height: calc(95 * var(--tu)); display: flex; align-items: center; padding-left: calc(156 * var(--tu)); border-bottom: 1px solid transparent; transition: border-color var(--dur-expand); }
+.tv-det.is-tabs .tv-det-tabbar { border-bottom-color: var(--tv-divider); margin: 0 calc(120 * var(--tu)) 0 0; }
+.tv-det-panel { height: calc(1000 * var(--tu)); padding: calc(40 * var(--tu)) var(--safe-x) calc(40 * var(--tu)) calc(156 * var(--tu)); overflow: hidden; }
+.tv-det-rating .tv-det-votes { margin-left: calc(10 * var(--tu)); color: var(--text-2); font-weight: var(--fw-medium); opacity: 1; }
+.tv-part { flex: none; display: flex; flex-direction: column; gap: calc(10 * var(--tu)); }
+.tv-part-label { font-size: calc(19 * var(--tu)); color: var(--text-2); padding-left: calc(4 * var(--tu)); }
+.tv-part.is-current .tv-part-label { color: var(--tv-ice); font-weight: var(--fw-semibold); }
+.tv-part-all { flex: none; width: var(--poster-w); height: var(--poster-h); border-radius: var(--r-card); display: flex; flex-direction: column; align-items: center; justify-content: center; gap: calc(10 * var(--tu)); background: rgba(255, 255, 255, 0.07); box-shadow: inset 0 0 0 calc(2 * var(--tu)) rgba(255, 255, 255, 0.12); font-size: calc(22 * var(--tu)); font-weight: var(--fw-semibold); color: var(--text-1); transition: transform var(--dur-focus) var(--ease-out); }
+.tv-part-all .icon { width: calc(40 * var(--tu)); height: calc(40 * var(--tu)); color: var(--tv-ice); }
+.tv-part-all small { font-size: calc(17 * var(--tu)); color: var(--text-2); font-weight: var(--fw-medium); }
+html[data-mode="tv"] .tv-part-all:focus { outline: none; transform: scale(1.06); background: rgba(255, 255, 255, 0.16); box-shadow: inset 0 0 0 calc(3 * var(--tu)) #fff; }
