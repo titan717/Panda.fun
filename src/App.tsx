@@ -5,6 +5,7 @@ import { Route, Router, Switch, useLocation, useParams } from "wouter";
 import { useHashLocation } from "wouter/use-hash-location";
 import { fetcher } from "./lib/api";
 import { persistentCache } from "./lib/cache";
+import { setPrefetchDataSaver, setPreloadMode } from "./lib/network";
 import { detectLayout, type LayoutMode } from "./lib/device";
 import { LayoutContext, useLayout } from "./lib/layout";
 import { installKeyHandling, setRootBackHandler, setTvNavigation } from "./lib/focus";
@@ -56,7 +57,7 @@ const PersonPage = lz(loadPerson, "PersonPage");
 /** Start downloading the active layout at once, and the rest of the app when the device is idle. */
 export function prefetchRoutes(mode: LayoutMode) {
   void (mode === "tv" ? loadTv() : loadMobile());
-  whenIdle(() => { void loadPlayer(); void loadSettings(); void loadUpdates(); void loadInfo(); void loadWhatsNew(); void loadPerson(); });
+  whenIdle(() => { void loadPlayer().then((m) => { if (mode === "tv") void m.loadTvChrome(); }); void loadSettings(); void loadUpdates(); void loadInfo(); void loadWhatsNew(); void loadPerson(); });
 }
 
 const PUBLIC_PATHS = ["/about", "/privacy", "/terms"];
@@ -65,7 +66,8 @@ export const TEXT_SCALE = { default: 1, large: 1.15, larger: 1.3 } as const;
 
 /** Settings › Display: mirror the profile's display prefs onto <html> so CSS can react (D-44). */
 function useDisplayPrefs(mode: LayoutMode) {
-  const { uiScale, reduceMotion, highContrast, textSize } = usePrefs();
+  const { uiScale, reduceMotion, highContrast, textSize, quality, preloadMode } = usePrefs();
+  useEffect(() => { setPrefetchDataSaver(quality === "480"); setPreloadMode(preloadMode); }, [quality, preloadMode]);
   useEffect(() => {
     const html = document.documentElement;
     html.dataset.scale = mode === "tv" ? String(uiScale) : "100";

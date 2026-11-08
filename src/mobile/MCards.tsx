@@ -3,6 +3,7 @@ import { Link } from "wouter";
 import { Icon } from "../components/Icon";
 import { Img } from "../components/ui";
 import { QuickActions, type ActionContext } from "../components/QuickActions";
+import { prefetchItem } from "../lib/prefetch";
 import { isUpcoming, itemBadge, landMeta, titlePath } from "../lib/format";
 import type { HistoryEntry } from "../lib/store";
 import { continueHref, continueSub } from "../tv/TvCards";
@@ -16,7 +17,7 @@ export const MPoster = memo(function MPoster({ item, rank, top10, className, con
     <>
     {/* press and hold opens quick actions (Watchlist 2.0) */}
     <Link href={titlePath(item)} className={`m-poster ${rank ? "has-rank" : ""} ${className ?? ""}`} aria-label={item.title}
-      onContextMenu={(e) => { e.preventDefault(); setMenu(true); }}>
+      onPointerDown={() => prefetchItem(item)} onContextMenu={(e) => { e.preventDefault(); setMenu(true); }}>
       {rank !== undefined && <span className="m-rank" aria-hidden="true">{rank}</span>}
       <span className="m-poster-media">
         <Img src={item.poster} alt="" title={item.title} />
@@ -34,7 +35,7 @@ export const MLand = memo(function MLand({ item, sub }: { item: PandaItem; sub?:
   const [menu, setMenu] = useState(false);
   return (
     <div className="m-land">
-      <Link href={titlePath(item)} className="m-land-link" aria-label={item.title}>
+      <Link href={titlePath(item)} className="m-land-link" aria-label={item.title} onPointerDown={() => prefetchItem(item)}>
         <span className="m-land-media"><Img src={item.backdrop} alt="" title={item.title} />{!isUpcoming(item) && <Icon name="play" className="m-land-play" />}</span>
         <span className="m-land-title">{item.title}</span>
         <span className="m-land-sub">{sub ?? landMeta(item)}</span>

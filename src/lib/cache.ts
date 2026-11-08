@@ -1,4 +1,5 @@
 import type { Cache, State } from "swr";
+import { detectLayout } from "./device";
 
 /**
  * Persistent SWR cache (spec §8 "instant warm start").
@@ -116,19 +117,56 @@ export function cacheStats() {
   return { entries: seed.size, bytes };
 }
 
-export function persistentCache(): Cache {
+/** In-memory entry cap: TV and low-memory devices keep fewer payloads alive (v1.1.6, D-84). */
+export function memoryCap(): number {
+  if (typeof navigator === "undefined") return 400;
+  const n = navigator as Navigator & { deviceMemory?: number };
+  const tv = (typeof document !== "undefined" && document.documentElement.dataset.mode === "tv") || detectLayout() === "tv";
+  return tv || (n.deviceMemory !== undefined && n.deviceMemory <= 2) ? 240 : 400;
+}
+
+/**
+ * Bounded LRU map for SWR state. Reads and writes move an entry to the young end; when the map grows
+ * past `cap`, the oldest entries are evicted from memory (they stay in IndexedDB for the next start).
+ * Keys in `pinned` (mounted hooks) are never evicted.
+ */
+export function lruMap(cap: number, pinned: (k: string) => boolean = () => false) {
   const map = new Map<string, State>();
-  for (const [k, e] of seed) map.set(k, { data: e.data });
+  const touch = (k: string, v: State) => { map.delete(k); map.set(k, v); };
+  const trim = () => {
+    if (map.size <= cap) return;
+    for (const k of map.keys()) {
+      if (map.size <= cap) break;
+      if (!pinned(k)) map.delete(k);
+    }
+  };
+  return {
+    map,
+    get(k: string) { const v = map.get(k); if (v !== undefined) touch(k, v); return v; },
+    set(k: string, v: State) { touch(k, v); trim(); },
+    delete(k: string) { return map.delete(k); },
+    keys: () => map.keys(),
+    get size() { return map.size; }
+  };
+}
+
+export function persistentCache(): Cache {
+  // SWR keeps its own "$..." bookkeeping keys and in-flight entries; never evict those
+  const lru = lruMap(memoryCap(), (k) => k.startsWith("$") || lru.map.get(k)?.data === undefined);
+  // seed only the most recent entries into memory; older ones are re-read from IDB on the next cold start
+  const recent = [...seed.entries()].slice(-memoryCap());
+  for (const [k, e] of recent) lru.map.set(k, { data: e.data });
   if (typeof window !== "undefined") {
     window.addEventListener("pagehide", flush);
     document.addEventListener("visibilitychange", () => { if (document.visibilityState === "hidden") flush(); });
+    (window as Window & { __pandaCacheSize?: () => number }).__pandaCacheSize = () => lru.size;
   }
   return {
-    keys: () => map.keys(),
-    get: (k: string) => map.get(k),
+    keys: () => lru.keys(),
+    get: (k: string) => lru.get(k),
     set: (k: string, v: State) => {
-      const prev = map.get(k);
-      map.set(k, v);
+      const prev = lru.map.get(k);
+      lru.set(k, v);
       if (v.data !== undefined && v.data !== prev?.data && persistable(k)) {
         const e = { k, data: v.data, at: Date.now() };
         seed.delete(k);
@@ -136,6 +174,6 @@ export function persistentCache(): Cache {
         write(e);
       }
     },
-    delete: (k: string) => { map.delete(k); if (seed.delete(k)) remove(k); }
+    delete: (k: string) => { lru.delete(k); if (seed.delete(k)) remove(k); }
   };
 }

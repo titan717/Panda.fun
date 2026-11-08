@@ -4,6 +4,8 @@ import { ErrorState, Img, Skeleton, TitleArt, toast } from "../components/ui";
 import { Trailer, rankTrailers } from "../components/Trailer";
 import { RatePopover } from "../components/RatePopover";
 import { VideoOverlay } from "../components/VideoOverlay";
+import { warmPlayback } from "../lib/prefetch";
+import { whenIdle } from "../lib/lazy";
 import { useLiteMotion, useSeason, useTitle, useTrailerStage } from "../lib/hooks";
 import { actions, useHasLists, useHistoryEntry, useInWatchlist, useListCount, usePrefs, useRating } from "../lib/store";
 import { SaveToSheet } from "../components/QuickActions";
@@ -53,6 +55,8 @@ function TvDetailsView({ d, initialTab }: { d: TitleDetails; initialTab?: Tab })
     ...(d.videos.length ? [{ id: "trailers" as Tab, label: "Trailers & More" }] : []),
     ...(people.length ? [{ id: "cast" as Tab, label: "Cast" }] : [])
   ];
+  // v1.1.6: warm the source connection, skip markers and season for the next Play press
+  useEffect(() => { whenIdle(() => warmPlayback({ type: d.type, tmdbId: d.tmdbId, imdbId: d.imdbId, season: history?.season, episode: history?.episode }, prefs.preferredSource), 1500); }, [d.id]); // eslint-disable-line react-hooks/exhaustive-deps
   const [tab, setTab] = useState<Tab | null>(tabs.find((t) => t.id === initialTab)?.id ?? tabs[0]?.id ?? null);
   const [rateOpen, setRateOpen] = useState(false);
   const [video, setVideo] = useState<{ key: string; name: string } | null>(null);

@@ -91,6 +91,8 @@ export interface Prefs {
   playbackSpeed: number;
   /** Ask the source to skip intros and recaps it detects (CineSrc `autoskip`). */
   autoSkipIntro: boolean;
+  /** Settings › Data & storage › Preload titles (v1.1.6, D-83). */
+  preloadMode: "smart" | "wifi" | "off";
 }
 
 /** Preferences shared by every profile on the device; everything else is saved per profile. */
@@ -146,7 +148,8 @@ const defaultPrefs: Prefs = {
   highContrast: false,
   textSize: "default",
   playbackSpeed: 1,
-  autoSkipIntro: false
+  autoSkipIntro: false,
+  preloadMode: "smart"
 };
 
 const emptyData = (): ProfileData => ({ watchlist: [], lists: [], history: {}, ratings: {}, recentSearches: [] });

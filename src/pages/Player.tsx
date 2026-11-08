@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { Suspense, useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useParams, useSearch } from "wouter";
 import useSWR from "swr";
 import { Icon } from "../components/Icon";
@@ -13,13 +13,17 @@ import { useBackHandler, focusEl } from "../lib/focus";
 import { useNav } from "../lib/nav";
 import { useIsTv } from "../lib/layout";
 import { navKey } from "../lib/keys";
-import { TvPlayerChrome, type TvChromeProps } from "../tv/TvPlayerChrome";
+import type { TvChromeProps } from "../tv/TvPlayerChrome";
+import { lazyNamed } from "../lib/lazy";
 import { api } from "../lib/api";
 import { ADAPTERS, embedUrl, parseMessage, READY_TIMEOUT_MS, sendCommand, sourceName, SOURCE_ORDER } from "../lib/player";
 import { nextEpisodeOf, prevEpisodeOf } from "../lib/watch";
 import { airsLater, pluralEps, runtime, titlePath, watchPath } from "../lib/format";
 import { PlayerPrompts, PlayerOptionsSheet } from "../components/PlayerPrompts";
 import { activeSkip, getIntro, learnIntro, nextCardDue, SLEEP_GRACE_S, SLEEP_OFF, sleepDue, sleepLeft, sleepPillLabel, speedLabel, startSleep, type Intro, type SleepMode, type SleepTimer } from "../lib/player2";
+/** TV-only chrome lives in its own chunk so phones never download it (v1.1.6, D-85). TV warms it at idle. */
+export const loadTvChrome = () => import("../tv/TvPlayerChrome");
+const TvPlayerChrome = lazyNamed(loadTvChrome, "TvPlayerChrome");
 import type { SkipSegments, MediaType, PlaybackPayload, PlaybackSource, SourceId, TitleDetails } from "../lib/types";
 
 const SHORT: Record<SourceId, string> = { cinesrc: sourceName("cinesrc"), vidy: sourceName("vidy") };
@@ -407,7 +411,7 @@ function Player({ type, id, season, episode, start }: { type: MediaType; id: num
         </div>
       )}
       <div className="player-hotzone" onMouseEnter={poke} aria-hidden="true" />
-      {tv && customChrome ? <TvPlayerChrome {...chromeProps()} /> : <>
+      {tv && customChrome ? <Suspense fallback={null}><TvPlayerChrome {...chromeProps()} /></Suspense> : <>
       <div className="player-top lrud-container">
         <button id="pl-back" className="pl-btn" onClick={exit} aria-label="Back" data-hover-focus><Icon name="back" /></button>
         <div className="pl-title"><strong>{title}</strong><span>{subtitle}</span></div>

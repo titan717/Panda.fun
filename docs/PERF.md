@@ -2,6 +2,18 @@
 
 Measured on every release. Never regress.
 
+## v1.1.6 (performance round 3)
+
+| Metric | Value |
+|---|---|
+| Mobile player chunk (gzip) | 8.1 KB, down from 11.2 KB: the TV player chrome (4.3 KB) is its own chunk that phones never download; TV warms it at idle right after the player chunk, so opening the player on TV has no extra wait. |
+| Entry chunk (gzip) | 34.4 KB (+0.9 KB): the shared prefetch module and the LRU cache are used by both layouts, so Rollup keeps them in the entry. CSS unchanged at 22.95 KB. |
+| Tap → Details (mobile) | The title request starts on `pointerdown`, typically 100–200 ms before the tap completes; repeat touches on the same title are de-duplicated (≤120 tracked). |
+| Details → Play | At idle, Details opens DNS + TLS to the preferred source (`cinesrc.st` or `vidy.st`) and fetches the resume episode's skip markers and season payload, so Play spends no time on those. |
+| Data Saver / 2G | Speculative work is off with browser Data Saver, 2G/slow-2G, Panda's "Data Saver" quality, or Settings › Data & storage › Preload titles = Off (Wi-Fi only skips mobile data). Image warm-up drops to 1 image. |
+| SWR memory cache | Bounded LRU: 240 entries on TV and devices with ≤2 GB RAM, 400 otherwise (was unbounded). Evicted entries stay in IndexedDB for the next cold start; SWR bookkeeping and in-flight keys are never evicted. |
+| TV memory soak | `scripts/memory-soak.mjs` (Chromium + CDP, forced GC, 1920×1080, 16 cycles of 8 × Right, Down, OK, Back): JS heap 5.1 MB on Home → 6.9 MB after first rows mount → 8.1 MB after 16 cycles; DOM nodes 2329–2332 and event listeners 2628 constant from cycle 4 to 16, so no DOM or listener leak. |
+
 ## v1.1.5
 
 | Metric | Value |

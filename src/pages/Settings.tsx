@@ -25,7 +25,7 @@ const SECTIONS: { id: SectionId; icon: IconName; title: string; sub: string }[] 
   { id: "languages", icon: "globe", title: "App Language & Content Languages", sub: "Top 10 language and content preferences" },
   { id: "parental", icon: "lock", title: "Parental Controls", sub: "PIN for leaving Kids profiles" },
   { id: "display", icon: "tv", title: "Display", sub: "Layout, screen size, text, motion and contrast" },
-  { id: "storage", icon: "file", title: "Data & Storage", sub: "Space used and clearing saved data" },
+  { id: "storage", icon: "file", title: "Data & Storage", sub: "Preloading, space used and clearing saved data" },
   { id: "whatsnew", icon: "sparkle", title: "What's New", sub: "Highlights of this version" },
   { id: "updates", icon: "download", title: "Check for Updates", sub: "Get the newest version of the app" },
   { id: "help", icon: "info", title: "About", sub: "Version, privacy and terms" }
@@ -49,6 +49,12 @@ function Row({ id, title, sub, right, onClick, href }: { id: string; title: stri
     ? <Link href={href} id={id} className="set-row" data-hover-focus>{inner}</Link>
     : <button id={id} className="set-row" onClick={onClick} data-hover-focus>{inner}</button>;
 }
+
+const PRELOAD_CHOICES: { id: "smart" | "wifi" | "off"; label: string; note: string }[] = [
+  { id: "smart", label: "Smart", note: "Load what you are about to open. Pauses on Data Saver and slow connections" },
+  { id: "wifi", label: "Wi-Fi only", note: "Never preload on mobile data" },
+  { id: "off", label: "Off", note: "Load only what you open" }
+];
 
 function Toggle({ id, title, sub, value, onChange }: { id: string; title: string; sub?: string; value: boolean; onChange: (v: boolean) => void }) {
   return (
@@ -212,6 +218,8 @@ function Panel({ id }: { id: SectionId }) {
     case "storage":
       return (
         <div className="set-panel">
+          <Choice id="preload" title="Preload titles" value={prefs.preloadMode} options={PRELOAD_CHOICES}
+            onChange={(v) => { set({ preloadMode: v }); toast(`Preload titles: ${PRELOAD_CHOICES.find((o) => o.id === v)!.label}`); }} />
           <Row id="sp-cache" title="Clear cached content" sub="Reload rows, artwork and details from the server" onClick={() => {
             void clearPersistentCache();
             void mutate(() => true, undefined, { revalidate: true });

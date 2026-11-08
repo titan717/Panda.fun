@@ -101,3 +101,9 @@ Reviewed each release. Ideas are only adopted when they fit the blueprints.
 - Netflix's post-play card offers the next episode as the credits roll. Panda's next-episode card appears when the credits start.
 - Prime Video and YouTube offer 0.5×–2× playback speed. Panda's TV Quality sheet and mobile options sheet now do too.
 - Netflix (mobile) and Plex have a sleep timer. Panda's player has one on TV and mobile, with "Are you still watching?" before it stops.
+
+## v1.1.6 round (2026-11-08)
+
+- Netflix and YouTube start loading a title as soon as you touch it. Panda's mobile posters now start the Details request on touch down.
+- Netflix lets you limit downloads to Wi-Fi. Panda's Settings › Data & storage now has "Preload titles": Smart, Wi-Fi only or Off.
+- Netflix's TV app keeps memory flat while browsing. Panda caps its in-memory cache on TV and checks for DOM and listener leaks with a scripted soak each release.
