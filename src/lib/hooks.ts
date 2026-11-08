@@ -1,7 +1,7 @@
 import useSWR, { type SWRConfiguration } from "swr";
 import { useEffect, useState } from "react";
 import { keys } from "./api";
-import type { CategoriesPayload, GenresPayload, ListPayload, MediaType, PagePayload, PageKind, SearchPayload, SeasonDetails, TitleDetails, Top10Payload } from "./types";
+import type { CategoriesPayload, GenresPayload, ListPayload, MediaType, PagePayload, PageKind, SearchPayload, SeasonDetails, TitleDetails, Top10Payload, WallPayload } from "./types";
 
 const slow: SWRConfiguration = { revalidateOnFocus: false, dedupingInterval: 60_000 };
 
@@ -11,6 +11,7 @@ export const useSeason = (id: number | null, season: number | null) => useSWR<Se
 export const useTop10 = (lang: string) => useSWR<Top10Payload>(keys.top10(lang), slow);
 export const useCategories = () => useSWR<CategoriesPayload>(keys.categories(), { ...slow, dedupingInterval: 3_600_000 });
 export const useGenres = () => useSWR<GenresPayload>(keys.genres(), { ...slow, dedupingInterval: 3_600_000 });
+export const useWall = () => useSWR<WallPayload>(keys.wall(), { ...slow, dedupingInterval: 3_600_000 });
 export const useTrending = (type: "all" | MediaType = "all", window: "day" | "week" = "day") => useSWR<ListPayload>(keys.trending(type, window), slow);
 export const useDiscover = (type: MediaType, o: Parameters<typeof keys.discover>[1]) => useSWR<ListPayload>(keys.discover(type, o), slow);
 export const useSearch = (q: string) => useSWR<SearchPayload>(q.trim().length >= 2 ? keys.search(q.trim()) : null, { ...slow, keepPreviousData: true });
@@ -54,3 +55,30 @@ export function useMediaQuery(q: string) {
 }
 
 export const useReducedMotion = () => useMediaQuery("(prefers-reduced-motion: reduce)");
+
+/**
+ * Trailer timing (MASTER §4.B): after `delayS` seconds of uninterrupted focus the trailer plays;
+ * from `preloadS` seconds before that it is created and buffering. Any focus change resets both.
+ */
+export function useTrailerStage(active: boolean, delayS: number, resetKey = "", preloadS = 3): "idle" | "preload" | "play" {
+  const [stage, setStage] = useState<"idle" | "preload" | "play">("idle");
+  useEffect(() => {
+    setStage("idle");
+    if (!active) return;
+    const pre = Math.max(0, delayS - preloadS) * 1000;
+    const t1 = setTimeout(() => setStage("preload"), pre);
+    const t2 = setTimeout(() => setStage("play"), delayS * 1000);
+    return () => { clearTimeout(t1); clearTimeout(t2); };
+  }, [active, delayS, resetKey, preloadS]);
+  return stage;
+}
+
+/** Devices that should not run video trailers (low memory or data saver); they get a slow backdrop zoom. */
+export function useLiteMotion() {
+  const [lite] = useState(() => {
+    if (typeof navigator === "undefined") return false;
+    const n = navigator as Navigator & { deviceMemory?: number; connection?: { saveData?: boolean } };
+    return (n.deviceMemory !== undefined && n.deviceMemory <= 1) || n.connection?.saveData === true;
+  });
+  return lite;
+}

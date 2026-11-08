@@ -1,11 +1,16 @@
 import { useEffect, useRef, useState } from "react";
 import { useParams } from "wouter";
 import { Icon } from "../components/Icon";
-import { Avatar, Img, toast } from "../components/ui";
+import { Avatar, toast } from "../components/ui";
 import { PageHeader } from "../components/PageHeader";
 import { Sheet } from "../components/Sheet";
 import { actions, getState, usePrefs, useProfile, useStore, type AvatarKind, type Profile } from "../lib/store";
-import { useReducedMotion, useTrending } from "../lib/hooks";
+import { useReducedMotion } from "../lib/hooks";
+import { preload } from "swr";
+import { api, fetcher, keys } from "../lib/api";
+import { unlockAudio } from "../lib/audio";
+import { loadYouTubeApi } from "../components/Trailer";
+import { PosterWall } from "../components/PosterWall";
 import { focusFirst, useBackHandler } from "../lib/focus";
 import { useNav } from "../lib/nav";
 import { useIsTv } from "../lib/layout";
@@ -39,7 +44,6 @@ export function PinDialog({ title, onSuccess, onClose }: { title: string; onSucc
 export function ProfileSelect() {
   const profiles = useStore((s) => s.profiles);
   const current = useProfile();
-  const trending = useTrending("all", "week");
   const [chosen, setChosen] = useState<string | null>(null);
   const [pinFor, setPinFor] = useState<Profile | null>(null);
   const reduce = useReducedMotion();
@@ -49,20 +53,28 @@ export function ProfileSelect() {
   useEffect(() => { if (root.current) focusFirst(root.current); }, []);
 
   const enter = (p: Profile) => {
+    // The press is the user gesture that unlocks trailer sound (§4.B).
+    unlockAudio();
     setChosen(p.id);
-    setTimeout(() => { actions.selectProfile(p.id); go("/", { replace: true }); }, reduce ? 0 : 650);
+    // Apply the profile's settings before Home renders, and warm Home (rows, hero details, the
+    // YouTube player API) during the ~0.5 s zoom so it appears already loaded (§4.D).
+    actions.selectProfile(p.id);
+    const kind = p.kids ? "kids" : "home";
+    void preload(keys.page(kind), fetcher).then((pg) => {
+      const h = (pg as Awaited<ReturnType<typeof api.page>>)?.hero?.[0];
+      if (h) void preload(keys.title(h.type, h.tmdbId), fetcher);
+    }).catch(() => undefined);
+    void loadYouTubeApi().catch(() => undefined);
+    setTimeout(() => go("/", { replace: true }), reduce ? 0 : 560);
   };
   const choose = (p: Profile) => {
     if (current?.kids && !p.kids && getState().prefs.kidsPin) { setPinFor(p); return; }
     enter(p);
   };
-  const wall = (trending.data?.results ?? []).filter((i) => i.poster).slice(0, tv ? 18 : 12);
 
   return (
     <div ref={root} className={`profiles ${chosen ? "is-choosing" : ""}`}>
-      <div className="profiles-wall" aria-hidden="true">
-        {wall.map((i) => <Img key={i.id} src={i.poster} alt="" title="" />)}
-      </div>
+      <PosterWall tv={tv} />
       <h1 className="profiles-title">Who's watching?</h1>
       <div className="profiles-arc" aria-hidden="true" />
       <ul className="profiles-list lrud-container">

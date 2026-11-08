@@ -8,8 +8,11 @@ import "./styles/mobile.css";
 import { App } from "./App";
 import { flushStore } from "./lib/store";
 import { hydrateCache } from "./lib/cache";
+import { installAudioUnlock, stopAllTrailers } from "./lib/audio";
 
 window.addEventListener("pagehide", flushStore);
+installAudioUnlock();
+document.addEventListener("visibilitychange", () => { if (document.hidden) stopAllTrailers(); });
 
 // Paint from the persisted API cache in the first frame (warm start), then revalidate.
 void hydrateCache().then(() => {

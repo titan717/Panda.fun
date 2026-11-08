@@ -1,6 +1,6 @@
 import type {
   CategoriesPayload, GenresPayload, ListPayload, MediaType, PagePayload, PageKind, PlaybackPayload,
-  SearchPayload, SeasonDetails, SourceHealthPayload, TitleDetails, Top10Payload
+  SearchPayload, SeasonDetails, SourceHealthPayload, TitleDetails, Top10Payload, WallPayload
 } from "./types";
 import { validatorFor } from "./validate";
 
@@ -105,6 +105,7 @@ export const keys = {
   categories: () => `/panda/categories`,
   play: (type: MediaType, id: number, o: { s?: number; e?: number; t?: number; quality?: string } = {}) => `/panda/play/${type}/${id}${qs({ ...o, color: "1f80e0" })}`,
   sourceHealth: () => `/panda/sources/health`,
+  wall: () => `/panda/wall`,
   health: () => `/health`
 };
 
@@ -119,6 +120,7 @@ export const api = {
   genres: () => apiGet<GenresPayload>(keys.genres()),
   categories: () => apiGet<CategoriesPayload>(keys.categories()),
   play: (type: MediaType, id: number, o: { s?: number; e?: number; t?: number; quality?: string } = {}) => apiGet<PlaybackPayload>(keys.play(type, id, o), { retries: 1, timeoutMs: 10_000 }),
+  wall: () => apiGet<WallPayload>(keys.wall()),
   sourceHealth: () => apiGet<SourceHealthPayload>(keys.sourceHealth(), { retries: 0, timeoutMs: 10_000 })
 };
 

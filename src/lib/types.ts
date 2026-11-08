@@ -172,3 +172,7 @@ export interface SourceHealth {
 export interface SourceHealthPayload {
   sources: SourceHealth[];
 }
+
+/** Poster wall behind "Who's watching?" (GET /panda/wall). */
+export interface WallPoster { id: string; title: string; poster: string }
+export interface WallPayload { posters: WallPoster[] }

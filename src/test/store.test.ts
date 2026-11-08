@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { actions, flushStore, getState, selectData } from "../lib/store";
+import { actions, flushStore, getPrefs, getState, selectData } from "../lib/store";
 import type { PandaItem } from "../lib/types";
 
 const item = { id: "tv-1396", tmdbId: 1396, type: "tv", title: "Breaking Bad" } as unknown as PandaItem;
@@ -17,9 +17,21 @@ describe("store persistence", () => {
 
     const saved = JSON.parse(localStorage.getItem("panda:v1:state") ?? "{}");
     expect(saved.activeProfileId).toBe(profile!.id);
-    expect(saved.prefs.preferredSource).toBe("vidy");
+    expect(saved.profilePrefs[profile!.id].preferredSource).toBe("vidy");
     const data = selectData(getState());
     expect(data.watchlist.some((i) => i.id === item.id)).toBe(true);
     expect(data.history[item.id]?.position).toBe(600);
+  });
+
+  it("keeps trailer sound and volume per profile, layout per device", () => {
+    const a = actions.addProfile("A", "star", false); const b = actions.addProfile("B", "wave", false);
+    actions.selectProfile(a.id); actions.setPrefs({ trailerSound: false, trailerVolume: 0.3, layout: "tv" });
+    actions.selectProfile(b.id);
+    expect(getPrefs().trailerSound).toBe(true);
+    expect(getPrefs().layout).toBe("tv");
+    actions.selectProfile(a.id);
+    expect(getPrefs().trailerVolume).toBe(0.3);
+    expect(getPrefs()).toBe(getPrefs());
+    actions.setPrefs({ layout: "auto" });
   });
 });

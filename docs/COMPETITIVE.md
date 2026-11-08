@@ -12,3 +12,11 @@ Reviewed each release. Ideas are only adopted when they fit the blueprints.
 | Streamyfin | Jellyfin client with downloads, skip intro and credits, and trickplay images ([Jellyfin clients](https://jellyfin.org/downloads/clients/all/)). | Skip intro uses CineSrc's `skipintro` event (v1.1.5); trickplay needs frames that embeds don't give (D-25). |
 | Nuvio | Open-source player that keeps library, profiles and watch progress in sync across phone, desktop and TV ([Nuvio FAQ](https://nuvio.tv/faq)). | Continue Watching stored per profile (v1.0.8). |
 | Plex | The redesigned app drew complaints for removed features on Apple TV and Android TV ([user report](https://unveroleone.com/blog/plex-new-app-rollback-alternatives)). | Never remove a working feature during a redesign; the mobile non-regression suite guards this. |
+
+## v1.0.3 round (2026-11-08)
+
+| App | What we checked | What we adopted |
+|---|---|---|
+| Netflix TV | Hero/row trailers start after a dwell, title logo shrinks, synopsis fades, sound on after first interaction. | Same staging: 5 s dwell (configurable), 3 s preload, logo scale 0.72, synopsis fade. |
+| Disney+ / Hotstar TV | Profile picker over a dark, slowly moving artwork wall. | Drifting tilted poster wall, mostly black under a vignette. |
+| Prime Video TV | Mute toggle on the hero, remembered between sessions. | Per-profile trailer sound toggle on the hero and mobile details. |

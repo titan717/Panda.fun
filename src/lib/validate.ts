@@ -1,6 +1,6 @@
 import type {
   CategoriesPayload, Episode, GenresPayload, ListPayload, PagePayload, PandaItem, PlaybackPayload, PlaybackSource, Rail,
-  SearchPayload, SeasonDetails, SourceHealthPayload, TitleDetails, Top10Payload, Video
+  SearchPayload, SeasonDetails, SourceHealthPayload, TitleDetails, Top10Payload, Video, WallPayload, WallPoster
 } from "./types";
 
 /**
@@ -157,6 +157,19 @@ export function sourceHealth(path: string, v: unknown): SourceHealthPayload {
   };
 }
 
+export function wall(path: string, v: unknown): WallPayload {
+  const o = need(path, v);
+  const seen = new Set<string>();
+  const posters: WallPoster[] = [];
+  for (const p of arr(o.posters).filter(isObj)) {
+    const id = str(p.id); const poster = str(p.poster);
+    if (!id || !poster || !poster.startsWith("https://") || seen.has(id) || seen.has(poster)) continue;
+    seen.add(id); seen.add(poster);
+    posters.push({ id, title: str(p.title) ?? "", poster });
+  }
+  return { posters };
+}
+
 /** Validator chosen from the API path, so the generic SWR fetcher validates too. */
 export function validatorFor(path: string): ((path: string, v: unknown) => unknown) | null {
   if (path.startsWith("/panda/page/")) return page;
@@ -169,5 +182,6 @@ export function validatorFor(path: string): ((path: string, v: unknown) => unkno
   if (path.startsWith("/panda/genres")) return genres;
   if (path.startsWith("/panda/play/")) return playback;
   if (path.startsWith("/panda/sources/health")) return sourceHealth;
+  if (path.startsWith("/panda/wall")) return wall;
   return null;
 }

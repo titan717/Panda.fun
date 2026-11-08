@@ -1,10 +1,10 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { Icon } from "../components/Icon";
 import { Img, Skeleton, TitleArt, ErrorState } from "../components/ui";
-import { Trailer, pickTrailer } from "../components/Trailer";
-import { useDwell, useTitle } from "../lib/hooks";
+import { Trailer, rankTrailers } from "../components/Trailer";
+import { useLiteMotion, useTitle, useTrailerStage } from "../lib/hooks";
 import { useHomeRows, type HomeRow } from "../lib/rows";
-import { usePrefs } from "../lib/store";
+import { actions, usePrefs } from "../lib/store";
 import { detailsMeta, isNew, titlePath } from "../lib/format";
 import { focusFirst } from "../lib/focus";
 import { useNav } from "../lib/nav";
@@ -18,21 +18,22 @@ function TvHero({ items, kind, onFocusHero }: { items: PandaItem[]; kind: PageKi
   const [trailerOn, setTrailerOn] = useState(false);
   const [trailerFailed, setTrailerFailed] = useState<string | null>(null);
   const prefs = usePrefs();
+  const lite = useLiteMotion();
   const { go } = useNav();
   const item = items[index % Math.max(1, items.length)];
   const details = useTitle(item?.type ?? null, item?.tmdbId ?? null).data;
-  const trailerKey = details && details.tmdbId === item?.tmdbId ? pickTrailer(details.videos) : null;
-  const canTrailer = Boolean(prefs.trailerAutoplay && trailerKey && trailerFailed !== trailerKey);
-  const showTrailer = useDwell(focused && canTrailer, 2500);
+  const trailerKeys = details && details.tmdbId === item?.tmdbId ? rankTrailers(details.videos) : [];
+  const canTrailer = Boolean(prefs.trailerAutoplay && !lite && trailerKeys.length && trailerFailed !== item?.id);
+  const stage = useTrailerStage(focused && canTrailer, prefs.trailerDelay, item?.id ?? "");
 
-  useEffect(() => { setTrailerOn(false); }, [index, showTrailer]);
+  useEffect(() => { setTrailerOn(false); }, [index, stage]);
 
-  // auto-advance every 8 s while no trailer plays (spec 5.10)
+  // auto-advance every 8 s while no trailer is loading or playing (spec 5.10)
   useEffect(() => {
-    if (items.length < 2 || (showTrailer && canTrailer)) return;
+    if (items.length < 2 || stage !== "idle") return;
     const t = setTimeout(() => setIndex((i) => (i + 1) % items.length), 8000);
     return () => clearTimeout(t);
-  }, [index, items.length, showTrailer, canTrailer]);
+  }, [index, items.length, stage]);
 
   if (!item) return null;
   const peeks = [1, 2].map((o) => items[(index + o) % items.length]).filter((p): p is PandaItem => Boolean(p) && p !== item);
@@ -47,7 +48,7 @@ function TvHero({ items, kind, onFocusHero }: { items: PandaItem[]; kind: PageKi
   };
 
   return (
-    <section className={`tv-hero ${focused ? "is-focused" : ""}`} data-row aria-roledescription="carousel" aria-label="Featured">
+    <section className={`tv-hero ${focused ? "is-focused" : ""} ${trailerOn ? "is-trailer" : ""}`} data-row aria-roledescription="carousel" aria-label="Featured">
       <div className="tv-hero-peeks" aria-hidden="true">
         {peeks.map((p, i) => <div key={p.id + i} className={`tv-hero-peek tv-hero-peek--${i + 1}`}><Img src={p.backdrop} alt="" title={p.title} /></div>)}
       </div>
@@ -55,11 +56,13 @@ function TvHero({ items, kind, onFocusHero }: { items: PandaItem[]; kind: PageKi
         onClick={(e) => { e.preventDefault(); go(titlePath(item)); }}
         onFocus={() => { setFocused(true); onFocusHero(); }} onBlur={() => setFocused(false)} onKeyDown={onKeyDown}
         aria-label={`${item.title}. ${index + 1} of ${items.length}`}>
-        <Img key={item.id} src={item.backdropLarge ?? item.backdrop} alt="" title={item.title} eager className={`tv-hero-bg ${trailerOn ? "is-hidden" : ""}`} />
-        {showTrailer && canTrailer && trailerKey && (
-          <Trailer key={trailerKey} videoKey={trailerKey} className="tv-hero-trailer" onPlaying={() => setTrailerOn(true)}
-            onEnd={() => { setTrailerOn(false); setIndex((i) => (i + 1) % items.length); }}
-            onError={() => { setTrailerOn(false); setTrailerFailed(trailerKey); }} />
+        <span className={`tv-hero-bgwrap ${lite && focused ? "is-kenburns" : ""}`}>
+          <Img key={item.id} src={item.backdropLarge ?? item.backdrop} alt="" title={item.title} eager className={`tv-hero-bg ${trailerOn ? "is-hidden" : ""}`} />
+        </span>
+        {stage !== "idle" && canTrailer && (
+          <Trailer key={item.id} keys={trailerKeys} play={stage === "play"} sound={prefs.trailerSound} volume={prefs.trailerVolume} className="tv-hero-trailer"
+            onPlaying={() => setTrailerOn(true)}
+            onFail={() => { setTrailerOn(false); setTrailerFailed(item.id); }} />
         )}
         <span className="tv-hero-scrim" />
         <span className="tv-hero-badges">
@@ -67,7 +70,12 @@ function TvHero({ items, kind, onFocusHero }: { items: PandaItem[]; kind: PageKi
           {isNew(item) && <span className="glass-badge"><Icon name="sparkle" /> Newly Added</span>}
           {kind !== "home" && item.rating ? <span className="glass-badge"><Icon name="star" /> {item.rating.toFixed(1)}</span> : null}
         </span>
-        {trailerOn && <span className="tv-hero-sound" aria-hidden="true"><Icon name="volume" /></span>}
+        {trailerOn && (
+          <span className="tv-hero-sound" role="button" aria-label={prefs.trailerSound ? "Mute trailers" : "Unmute trailers"}
+            onClick={(e) => { e.preventDefault(); e.stopPropagation(); actions.setPrefs({ trailerSound: !prefs.trailerSound }); }}>
+            <Icon name={prefs.trailerSound ? "volume" : "volumeOff"} />
+          </span>
+        )}
         <span className="tv-hero-info">
           <TitleArt logo={item.logo} title={item.title} className="tv-hero-logo" />
           <span className="tv-meta">
@@ -117,9 +125,23 @@ function TvRow({ row, index, active, onFocusRow }: { row: HomeRow; index: number
 export function TvHome({ kind }: { kind: PageKind }) {
   const { rows, hero, page } = useHomeRows(kind);
   const [active, setActive] = useState(-1);
-  const [backdrop, setBackdrop] = useState<PandaItem | null>(null);
+  const [layers, setLayers] = useState<PandaItem[]>([]);
+  const backdrop = layers[layers.length - 1] ?? null;
   const root = useRef<HTMLDivElement>(null);
-  const onFocusRow = useCallback((i: number, item: PandaItem) => { setActive(i); setBackdrop(item); }, []);
+  const prefs = usePrefs();
+  const lite = useLiteMotion();
+  const [rowTrailerOn, setRowTrailerOn] = useState(false);
+  const [rowFailed, setRowFailed] = useState<string | null>(null);
+  // keep the previous backdrop underneath so the new one crossfades over it (300 ms, §4.A)
+  const onFocusRow = useCallback((i: number, item: PandaItem) => {
+    setActive(i);
+    setLayers((l) => (l[l.length - 1]?.id === item.id ? l : [...l.slice(-1), item]));
+  }, []);
+  const rowsActive = active >= 0 && Boolean(backdrop);
+  const rowStage = useTrailerStage(rowsActive && prefs.trailerAutoplay && !lite && rowFailed !== backdrop?.id, prefs.trailerDelay, backdrop?.id ?? "");
+  const rowDetails = useTitle(rowStage !== "idle" && backdrop ? backdrop.type : null, rowStage !== "idle" && backdrop ? backdrop.tmdbId : null).data;
+  const rowKeys = rowDetails && backdrop && rowDetails.tmdbId === backdrop.tmdbId ? rankTrailers(rowDetails.videos) : [];
+  useEffect(() => { setRowTrailerOn(false); }, [backdrop?.id, rowStage]);
   const onFocusHero = useCallback(() => setActive(-1), []);
 
   // initial focus: hero, once content exists
@@ -133,9 +155,13 @@ export function TvHome({ kind }: { kind: PageKind }) {
   if (page.error && !page.data) return <div className="tv-page tv-page--center"><ErrorState message={page.error.message} onRetry={() => page.mutate()} /></div>;
 
   return (
-    <div ref={root} className={`tv-page tv-home ${active >= 0 ? "is-rows" : ""}`} data-scroll-y="row" data-scroll-offset="0.4">
-      <div className={`tv-backdrop ${active >= 0 && backdrop ? "is-visible" : ""}`} aria-hidden="true">
-        {backdrop && <Img key={backdrop.id} src={backdrop.backdropLarge ?? backdrop.backdrop} alt="" title="" />}
+    <div ref={root} className={`tv-page tv-home ${active >= 0 ? "is-rows" : ""} ${rowTrailerOn ? "is-row-trailer" : ""}`} data-scroll-y="row" data-scroll-offset="0.4">
+      <div className={`tv-backdrop ${rowsActive ? "is-visible" : ""} ${lite && rowsActive ? "is-kenburns" : ""}`} aria-hidden="true">
+        {layers.map((b) => <div key={b.id} className="tv-backdrop-layer"><Img src={b.backdropLarge ?? b.backdrop} alt="" title="" /></div>)}
+        {rowsActive && rowStage !== "idle" && rowKeys.length > 0 && backdrop && (
+          <Trailer key={backdrop.id} keys={rowKeys} play={rowStage === "play"} sound={prefs.trailerSound} volume={prefs.trailerVolume}
+            onPlaying={() => setRowTrailerOn(true)} onFail={() => { setRowTrailerOn(false); setRowFailed(backdrop.id); }} />
+        )}
       </div>
       {page.data ? <TvHero items={hero} kind={kind} onFocusHero={onFocusHero} /> : <TvHeroSkeleton />}
       <div className="tv-rows">

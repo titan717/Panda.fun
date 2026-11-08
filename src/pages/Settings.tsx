@@ -15,16 +15,23 @@ import { installedVersion } from "../lib/updates";
 import { languageName } from "../lib/format";
 import type { SourceId } from "../lib/types";
 
-type SectionId = "profiles" | "playback" | "languages" | "parental" | "display" | "storage" | "help" | "updates";
+type SectionId = "profiles" | "playback" | "trailers" | "languages" | "parental" | "display" | "storage" | "help" | "updates";
 const SECTIONS: { id: SectionId; icon: IconName; title: string; sub: string }[] = [
   { id: "profiles", icon: "user", title: "Profiles & Account", sub: "Add, edit or switch profiles" },
-  { id: "playback", icon: "play", title: "Playback", sub: "Video source, autoplay and trailers" },
+  { id: "playback", icon: "play", title: "Playback", sub: "Video source and autoplay" },
+  { id: "trailers", icon: "volume", title: "Trailers", sub: "Autoplay, sound, volume and delay" },
   { id: "languages", icon: "globe", title: "App Language & Content Languages", sub: "Top 10 language and content preferences" },
   { id: "parental", icon: "lock", title: "Parental Controls", sub: "PIN for leaving Kids profiles" },
   { id: "display", icon: "tv", title: "Display", sub: "TV or phone layout" },
   { id: "storage", icon: "file", title: "Storage & Data", sub: "Clear saved data on this device" },
   { id: "help", icon: "info", title: "Help & Support", sub: "About Panda.fun, privacy and terms" },
   { id: "updates", icon: "download", title: "Check for Updates", sub: "Get the newest version of the app" }
+];
+
+const TRAILER_VOLUMES = ["25", "50", "80", "100"].map((id) => ({ id, label: `${id}%` }));
+const TRAILER_DELAYS = [
+  { id: "3", label: "3 seconds" }, { id: "5", label: "5 seconds", note: "Recommended" },
+  { id: "8", label: "8 seconds" }, { id: "12", label: "12 seconds" }
 ];
 
 export const SOURCES: { id: SourceId; label: string; note: string }[] = [
@@ -99,7 +106,17 @@ function Panel({ id }: { id: SectionId }) {
         <div className="set-panel">
           <Choice id="src" title="Preferred video source" value={prefs.preferredSource} options={SOURCES} onChange={(v) => { set({ preferredSource: v }); toast(`Preferred source: ${SOURCES.find((s) => s.id === v)!.label}`); }} />
           <Toggle id="sp-autonext" title="Autoplay next episode" sub="Start the next episode after a 10 second countdown" value={prefs.autoplayNext} onChange={(v) => set({ autoplayNext: v })} />
-          <Toggle id="sp-trailers" title="Autoplay trailers" sub="Play trailers on Home and title pages" value={prefs.trailerAutoplay} onChange={(v) => set({ trailerAutoplay: v })} />
+        </div>
+      );
+    case "trailers":
+      return (
+        <div className="set-panel">
+          <Toggle id="sp-trailers" title="Autoplay trailers" sub="Play a trailer after you stay on a title" value={prefs.trailerAutoplay} onChange={(v) => set({ trailerAutoplay: v })} />
+          <Toggle id="sp-trailer-sound" title="Trailer sound" sub="Play trailers with sound for this profile" value={prefs.trailerSound} onChange={(v) => set({ trailerSound: v })} />
+          <Choice id="tvol" title="Trailer volume" value={String(Math.round(prefs.trailerVolume * 100))}
+            options={TRAILER_VOLUMES} onChange={(v) => { set({ trailerVolume: Number(v) / 100 }); toast(`Trailer volume ${v}%`); }} />
+          <Choice id="tdelay" title="Start trailers after" value={String(prefs.trailerDelay)}
+            options={TRAILER_DELAYS} onChange={(v) => set({ trailerDelay: Number(v) })} />
         </div>
       );
     case "languages": {

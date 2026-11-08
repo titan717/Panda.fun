@@ -6,7 +6,8 @@ import { ErrorState, Img, Spinner, toast } from "../components/ui";
 import { Sheet } from "../components/Sheet";
 import { keys } from "../lib/api";
 import { useSeason, useTitle } from "../lib/hooks";
-import { actions, getState, usePrefs } from "../lib/store";
+import { actions, getPrefs, usePrefs } from "../lib/store";
+import { stopAllTrailers } from "../lib/audio";
 import { useBackHandler, focusEl } from "../lib/focus";
 import { useNav } from "../lib/nav";
 import { useIsTv } from "../lib/layout";
@@ -74,6 +75,8 @@ function Player({ type, id, season, episode, start }: { type: MediaType; id: num
   detailsRef.current = details;
   function getDetails() { return detailsRef.current; }
 
+  // the player always wins: stop any trailer the moment it opens (§4.B)
+  useEffect(() => { stopAllTrailers(); }, []);
   useEffect(() => { const i = setInterval(save, 5000); return () => { clearInterval(i); save(); }; }, [save]);
   useEffect(() => { window.addEventListener("pagehide", save); return () => window.removeEventListener("pagehide", save); }, [save]);
 
@@ -117,7 +120,7 @@ function Player({ type, id, season, episode, start }: { type: MediaType; id: num
       switch (ev.kind) {
         case "ready":
           setReady(true);
-          if (source.events === "cinesrc") sendCommand(frame.current, source, { c: "volume", value: getState().prefs.volume });
+          if (source.events === "cinesrc") sendCommand(frame.current, source, { c: "volume", value: getPrefs().volume });
           break;
         case "play": setReady(true); setPaused(false); break;
         case "pause": setPaused(true); break;
@@ -180,7 +183,7 @@ function Player({ type, id, season, episode, start }: { type: MediaType; id: num
     toast(`Playing from ${SHORT[sid]}`);
   };
   const setVolume = (delta: number) => {
-    const v = Math.round(Math.max(0, Math.min(1, getState().prefs.volume + delta)) * 10) / 10;
+    const v = Math.round(Math.max(0, Math.min(1, getPrefs().volume + delta)) * 10) / 10;
     actions.setPrefs({ volume: v });
     if (source) sendCommand(frame.current, source, { c: "volume", value: v });
     toast(`Volume ${Math.round(v * 100)}%`, 1200);

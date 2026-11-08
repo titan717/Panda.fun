@@ -53,7 +53,9 @@ html[data-mode="tv"] .rate-opt:focus, html[data-mode="tv"] .sheet-item:focus, ht
 .tv-backdrop { position: fixed; z-index: 0; top: 0; right: 0; width: 82%; height: 62%; opacity: 0; transition: opacity var(--dur-crossfade) var(--ease-out); pointer-events: none; -webkit-mask-image: linear-gradient(90deg, transparent 0%, #000 30%), linear-gradient(0deg, transparent 0%, #000 40%); -webkit-mask-composite: source-in; mask-image: linear-gradient(90deg, transparent 0%, #000 30%), linear-gradient(0deg, transparent 0%, #000 40%); mask-composite: intersect; }
 .tv-backdrop.is-visible { opacity: 1; }
 .tv-backdrop::after { content: ""; position: absolute; inset: 0; background: radial-gradient(120% 100% at 75% 30%, transparent 45%, rgba(0, 0, 0, 0.75) 100%); pointer-events: none; }
-.tv-backdrop .img { animation: fade-in var(--dur-crossfade) var(--ease-out); }
+.tv-backdrop-layer { position: absolute; inset: 0; }
+.tv-backdrop-layer:last-of-type { animation: fade-in var(--dur-crossfade) var(--ease-out); }
+.tv-backdrop .trailer { z-index: 1; }
 
 .tv-hero { position: relative; z-index: 1; height: calc(var(--hero-y) + var(--hero-h) + 110 * var(--tu)); padding-top: var(--hero-y); transition: opacity var(--dur-expand) var(--ease-out); }
 .tv-home.is-rows .tv-hero { opacity: 0; }
@@ -67,7 +69,11 @@ html[data-mode="tv"] .rate-opt:focus, html[data-mode="tv"] .sheet-item:focus, ht
 .glass-badge .icon { width: calc(20 * var(--tu)); height: calc(20 * var(--tu)); color: var(--m-gold); }
 .tv-hero-sound { position: absolute; top: calc(26 * var(--tu)); right: calc(26 * var(--tu)); width: calc(48 * var(--tu)); height: calc(48 * var(--tu)); display: grid; place-items: center; border-radius: 50%; background: var(--tv-glass-badge); font-size: calc(24 * var(--tu)); }
 .tv-hero-info { position: absolute; left: calc(56 * var(--tu)); bottom: calc(44 * var(--tu)); right: calc(400 * var(--tu)); display: flex; flex-direction: column; align-items: flex-start; gap: calc(16 * var(--tu)); }
-.tv-hero-logo.title-logo { max-width: calc(480 * var(--tu)); max-height: calc(170 * var(--tu)); }
+.tv-hero-logo.title-logo { max-width: calc(480 * var(--tu)); max-height: calc(170 * var(--tu)); transform-origin: left bottom; transition: transform 600ms var(--ease-out); }
+.tv-hero-logo.title-text { transform-origin: left bottom; transition: transform 600ms var(--ease-out); }
+.tv-hero.is-trailer .tv-hero-logo { transform: scale(0.72); }
+.tv-hero-overview, .tv-hero .tv-meta { transition: opacity 500ms var(--ease-out); }
+.tv-hero.is-trailer .tv-hero-overview { opacity: 0; }
 .tv-hero-logo.title-text { font-size: var(--t-hero-title); max-width: calc(900 * var(--tu)); }
 .tv-meta { display: flex; flex-wrap: wrap; align-items: center; gap: 0 calc(12 * var(--tu)); color: var(--tv-meta); font-size: var(--t-meta); font-weight: var(--fw-semibold); }
 .tv-meta > span:not(.cert) + span:not(.cert)::before, .tv-meta > .cert + span::before { content: "•"; margin-right: calc(12 * var(--tu)); opacity: 0.8; }
@@ -142,6 +148,10 @@ html[data-mode="tv"] .tv-land:focus .tv-land-media, html[data-mode="tv"] .tv-vid
 .tv-det-main { height: calc(985 * var(--tu)); display: flex; align-items: center; padding-left: calc(156 * var(--tu)); }
 .tv-det-col { width: calc(820 * var(--tu)); display: flex; flex-direction: column; align-items: flex-start; gap: calc(14 * var(--tu)); }
 .tv-det-logo.title-logo { max-width: calc(440 * var(--tu)); max-height: calc(170 * var(--tu)); margin-bottom: calc(10 * var(--tu)); }
+.tv-det-logo { transform-origin: left bottom; transition: transform 600ms var(--ease-out); }
+.tv-det.is-trailer .tv-det-logo { transform: scale(0.72); }
+.tv-det-overview { transition: opacity 500ms var(--ease-out); }
+.tv-det.is-trailer .tv-det-overview { opacity: 0; }
 .tv-det-logo.title-text { font-size: calc(68 * var(--tu)); }
 .tv-det-rating { display: flex; align-items: center; gap: calc(6 * var(--tu)); color: var(--tv-ice); font-size: calc(22 * var(--tu)); font-weight: var(--fw-bold); }
 .tv-det-rating .icon { width: calc(20 * var(--tu)); height: calc(20 * var(--tu)); }
@@ -264,7 +274,6 @@ html[data-mode="tv"] .tv-ms-profile:focus { outline: none; }
 html[data-mode="tv"] .profiles-title { font-size: calc(56 * var(--tu)); }
 html[data-mode="tv"] .profiles { padding-top: calc(110 * var(--tu)); }
 html[data-mode="tv"] .profiles-list { gap: calc(56 * var(--tu)); top: calc(62% - 80 * var(--tu)); }
-html[data-mode="tv"] .profiles-wall { grid-template-columns: repeat(9, 1fr); inset: -6% 10% 34%; }
 
 /* player on TV: big targets, focus rings */
 .player--tv .pl-btn { width: calc(76 * var(--tu)); height: calc(76 * var(--tu)); font-size: calc(32 * var(--tu)); }
@@ -278,3 +287,4 @@ html[data-mode="tv"] .profiles-wall { grid-template-columns: repeat(9, 1fr); ins
 .player--tv .pl-vol-val { font-size: calc(22 * var(--tu)); min-width: calc(70 * var(--tu)); }
 .player--tv .upnext { right: var(--safe-x); bottom: calc(200 * var(--tu)); width: calc(520 * var(--tu)); padding: calc(26 * var(--tu)); }
 .player--tv .upnext-label { font-size: calc(26 * var(--tu)); }
+.tv-hero-bgwrap { position: absolute; inset: 0; overflow: hidden; }

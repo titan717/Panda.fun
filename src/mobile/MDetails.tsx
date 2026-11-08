@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from "react";
 import { Icon } from "../components/Icon";
 import { ErrorState, Img, Skeleton, TitleArt, toast } from "../components/ui";
-import { Trailer, pickTrailer } from "../components/Trailer";
+import { Trailer, pickTrailer, rankTrailers } from "../components/Trailer";
 import { RatePopover, rateLabel } from "../components/RatePopover";
 import { VideoOverlay } from "../components/VideoOverlay";
 import { useDwell, useSeason, useTitle } from "../lib/hooks";
@@ -110,7 +110,12 @@ function MDetailsView({ d }: { d: TitleDetails }) {
       </header>
       <div className="m-det-media">
         <Img src={d.backdropLarge ?? d.backdrop} alt="" title={d.title} eager className={trailerOn ? "is-hidden" : ""} />
-        {play && trailerKey && <Trailer videoKey={trailerKey} muted className="m-det-trailer" onPlaying={() => setTrailerOn(true)} onEnd={() => { setTrailerOn(false); setTrailerDone(true); }} onError={() => { setTrailerOn(false); setTrailerDone(true); }} />}
+        {play && trailerKey && <Trailer keys={rankTrailers(d.videos)} play sound={prefs.trailerSound} volume={prefs.trailerVolume} loop={false} className="m-det-trailer" onPlaying={() => setTrailerOn(true)} onEnd={() => { setTrailerOn(false); setTrailerDone(true); }} onFail={() => { setTrailerOn(false); setTrailerDone(true); }} />}
+        {trailerOn && (
+          <button className="m-det-mute" onClick={() => actions.setPrefs({ trailerSound: !prefs.trailerSound })} aria-label={prefs.trailerSound ? "Mute trailer" : "Unmute trailer"}>
+            <Icon name={prefs.trailerSound ? "volume" : "volumeOff"} size={20} />
+          </button>
+        )}
         {!trailerKey && <span className="m-trailer-na">TRAILER UNAVAILABLE</span>}
       </div>
       <div className="m-det-body">

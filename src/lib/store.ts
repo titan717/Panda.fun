@@ -40,7 +40,18 @@ export interface Prefs {
   layout: "auto" | "tv" | "mobile";
   notifications: boolean;
   notifiedTag: string | null;
+  /** Trailers play with sound once audio is unlocked by the first remote press or tap. */
+  trailerSound: boolean;
+  /** Trailer volume 0..1. */
+  trailerVolume: number;
+  /** Seconds a title must stay focused before its trailer starts. */
+  trailerDelay: number;
 }
+
+/** Preferences shared by every profile on the device; everything else is saved per profile. */
+export const DEVICE_PREFS = ["layout", "kidsPin", "notifiedTag", "notifications"] as const;
+type DeviceKey = (typeof DEVICE_PREFS)[number];
+const isDeviceKey = (k: string): k is DeviceKey => (DEVICE_PREFS as readonly string[]).includes(k);
 
 interface ProfileData {
   watchlist: PandaItem[];
@@ -54,6 +65,8 @@ interface State {
   activeProfileId: string | null;
   prefs: Prefs;
   data: Record<string, ProfileData>;
+  /** Per-profile overrides of `prefs` (all non-device keys). */
+  profilePrefs: Record<string, Partial<Prefs>>;
 }
 
 const defaultPrefs: Prefs = {
@@ -65,7 +78,10 @@ const defaultPrefs: Prefs = {
   kidsPin: null,
   layout: "auto",
   notifications: false,
-  notifiedTag: null
+  notifiedTag: null,
+  trailerSound: true,
+  trailerVolume: 0.8,
+  trailerDelay: 5
 };
 
 const emptyData = (): ProfileData => ({ watchlist: [], history: {}, ratings: {}, recentSearches: [] });
@@ -77,7 +93,7 @@ function uid() {
 function defaultState(): State {
   const me: Profile = { id: uid(), name: "You", avatar: "smile", kids: false, createdAt: Date.now() };
   const kids: Profile = { id: uid(), name: "Kids", avatar: "kids", kids: true, createdAt: Date.now() };
-  return { profiles: [kids, me], activeProfileId: null, prefs: defaultPrefs, data: { [me.id]: emptyData(), [kids.id]: emptyData() } };
+  return { profiles: [kids, me], activeProfileId: null, prefs: defaultPrefs, data: { [me.id]: emptyData(), [kids.id]: emptyData() }, profilePrefs: {} };
 }
 
 function safeStorage(): Storage | null {
@@ -104,7 +120,13 @@ function load(): State {
     const prefs = { ...defaultPrefs, ...(parsed.prefs ?? {}) };
     // v1.0.2: sources outside the registry (CineSrc, Vidy) fall back to CineSrc
     if (prefs.preferredSource !== "cinesrc" && prefs.preferredSource !== "vidy") prefs.preferredSource = "cinesrc";
-    return { profiles: parsed.profiles, activeProfileId: parsed.activeProfileId ?? null, prefs, data };
+    const profilePrefs: Record<string, Partial<Prefs>> = {};
+    for (const p of parsed.profiles) {
+      const own = { ...(parsed.profilePrefs?.[p.id] ?? {}) };
+      if (own.preferredSource && own.preferredSource !== "cinesrc" && own.preferredSource !== "vidy") delete own.preferredSource;
+      profilePrefs[p.id] = own;
+    }
+    return { profiles: parsed.profiles, activeProfileId: parsed.activeProfileId ?? null, prefs, data, profilePrefs };
   } catch {
     return defaultState();
   }
@@ -160,7 +182,21 @@ export const selectData = (s: State) => s.data[s.activeProfileId ?? ""] ?? s.dat
 const EMPTY = emptyData();
 
 export function useProfile() { return useStore(selectProfile); }
-export function usePrefs() { return useStore((s) => s.prefs); }
+/** Effective preferences for the active profile (device prefs + that profile's own choices). */
+const prefsMemo = new WeakMap<Prefs, WeakMap<Partial<Prefs>, Prefs>>();
+const NO_OVERRIDES: Partial<Prefs> = {};
+export function selectPrefs(s: State): Prefs {
+  const id = s.activeProfileId ?? s.profiles.find((p) => !p.kids)?.id ?? "";
+  const own = s.profilePrefs[id] ?? NO_OVERRIDES;
+  let inner = prefsMemo.get(s.prefs);
+  if (!inner) { inner = new WeakMap(); prefsMemo.set(s.prefs, inner); }
+  let merged = inner.get(own);
+  if (!merged) { merged = { ...s.prefs, ...own }; inner.set(own, merged); }
+  return merged;
+}
+export function usePrefs() { return useStore(selectPrefs); }
+/** Non-hook read of the active profile's effective preferences. */
+export const getPrefs = () => selectPrefs(state);
 export function useWatchlist() { return useStore((s) => selectData(s).watchlist); }
 export function useInWatchlist(id: string) { return useStore((s) => selectData(s).watchlist.some((i) => i.id === id)); }
 export function useRating(id: string) { return useStore((s) => selectData(s).ratings[id] ?? null); }
@@ -193,7 +229,9 @@ export const actions = {
     if (state.profiles.length <= 1) return;
     const data = { ...state.data };
     delete data[id];
-    set({ ...state, profiles: state.profiles.filter((p) => p.id !== id), data, activeProfileId: state.activeProfileId === id ? null : state.activeProfileId });
+    const profilePrefs = { ...state.profilePrefs };
+    delete profilePrefs[id];
+    set({ ...state, profiles: state.profiles.filter((p) => p.id !== id), data, profilePrefs, activeProfileId: state.activeProfileId === id ? null : state.activeProfileId });
   },
   toggleWatchlist(item: PandaItem) {
     const exists = activeData().watchlist.some((i) => i.id === item.id);
@@ -224,7 +262,17 @@ export const actions = {
   removeHistory(id: string) {
     patchActive((d) => { const history = { ...d.history }; delete history[id]; return { ...d, history }; });
   },
-  setPrefs(patch: Partial<Prefs>) { set({ ...state, prefs: { ...state.prefs, ...patch } }); }
+  /** Device keys are saved for everyone; the rest only for the active profile. */
+  setPrefs(patch: Partial<Prefs>) {
+    const device: Partial<Prefs> = {}; const own: Partial<Prefs> = {};
+    for (const [k, v] of Object.entries(patch)) (isDeviceKey(k) ? device : own)[k as keyof Prefs] = v as never;
+    const id = activeId();
+    set({
+      ...state,
+      prefs: Object.keys(device).length ? { ...state.prefs, ...device } : state.prefs,
+      profilePrefs: Object.keys(own).length ? { ...state.profilePrefs, [id]: { ...(state.profilePrefs[id] ?? {}), ...own } } : state.profilePrefs
+    });
+  }
 };
 
 /** Keep stored items small: drop nothing the UI needs but never store whole detail payloads. */

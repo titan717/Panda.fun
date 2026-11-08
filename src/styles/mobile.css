@@ -132,6 +132,7 @@ html[data-mode="mobile"] body { background: var(--m-bg); }
 .m-det-media { position: relative; width: 100%; aspect-ratio: 16 / 9; max-height: 56vh; background: var(--m-raised); overflow: hidden; }
 .m-det-media > .img { position: absolute; inset: 0; transition: opacity var(--dur-crossfade); }
 .m-det-media > .img.is-hidden { opacity: 0 !important; }
+.m-det-mute { position: absolute; right: 12px; bottom: 12px; z-index: 2; width: 36px; height: 36px; display: grid; place-items: center; border-radius: 50%; background: rgba(0, 0, 0, 0.55); border: 1px solid rgba(255, 255, 255, 0.35); color: #fff; }
 .m-det-media::after { content: ""; position: absolute; inset: 60% 0 0; background: linear-gradient(0deg, var(--m-bg), transparent); pointer-events: none; }
 .m-det-trailer { position: absolute; inset: 0; }
 .m-trailer-na { position: absolute; z-index: 1; top: calc(16px + env(safe-area-inset-top)); left: 14px; font-size: 10px; font-weight: var(--fw-semibold); letter-spacing: 0.14em; color: var(--text-2); }

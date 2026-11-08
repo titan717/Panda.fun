@@ -1,10 +1,10 @@
 import { useEffect, useRef, useState } from "react";
 import { Icon } from "../components/Icon";
 import { ErrorState, Img, Skeleton, TitleArt, toast } from "../components/ui";
-import { Trailer, pickTrailer } from "../components/Trailer";
+import { Trailer, rankTrailers } from "../components/Trailer";
 import { RatePopover } from "../components/RatePopover";
 import { VideoOverlay } from "../components/VideoOverlay";
-import { useDwell, useSeason, useTitle } from "../lib/hooks";
+import { useLiteMotion, useSeason, useTitle, useTrailerStage } from "../lib/hooks";
 import { actions, useHistoryEntry, useInWatchlist, usePrefs, useRating } from "../lib/store";
 import { detailsMeta, languageName, pluralEps, runtime, shortDate, watchPath } from "../lib/format";
 import { detailsCtas } from "../lib/watch";
@@ -51,8 +51,9 @@ function TvDetailsView({ d, initialTab }: { d: TitleDetails; initialTab?: Tab })
   const [video, setVideo] = useState<{ key: string; name: string } | null>(null);
   const [trailerOn, setTrailerOn] = useState(false);
   const [trailerDone, setTrailerDone] = useState(false);
-  const trailerKey = pickTrailer(d.videos);
-  const playTrailer = useDwell(!video && zone === "main" && prefs.trailerAutoplay && Boolean(trailerKey) && !trailerDone, 3000);
+  const lite = useLiteMotion();
+  const trailerKeys = rankTrailers(d.videos);
+  const stage = useTrailerStage(!video && zone === "main" && prefs.trailerAutoplay && !lite && trailerKeys.length > 0 && !trailerDone, prefs.trailerDelay, d.id);
   const root = useRef<HTMLDivElement>(null);
   const cta = useRef<HTMLAnchorElement>(null);
   const { primary, secondary } = detailsCtas(d, history);
@@ -63,7 +64,7 @@ function TvDetailsView({ d, initialTab }: { d: TitleDetails; initialTab?: Tab })
     // focus once on mount
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
-  useEffect(() => { if (!playTrailer) setTrailerOn(false); }, [playTrailer]);
+  useEffect(() => { if (stage === "idle") setTrailerOn(false); }, [stage]);
 
   useBackHandler(() => { setZone("main"); focusEl(cta.current); }, zone === "tabs");
 
@@ -76,12 +77,12 @@ function TvDetailsView({ d, initialTab }: { d: TitleDetails; initialTab?: Tab })
   };
 
   return (
-    <div ref={root} className={`tv-page tv-det ${zone === "tabs" ? "is-tabs" : ""}`}>
-      <div className="tv-det-bg" aria-hidden="true">
+    <div ref={root} className={`tv-page tv-det ${zone === "tabs" ? "is-tabs" : ""} ${trailerOn ? "is-trailer" : ""}`}>
+      <div className={`tv-det-bg ${lite ? "is-kenburns" : ""}`} aria-hidden="true">
         <Img src={d.backdropLarge ?? d.backdrop} alt="" title="" eager className={trailerOn ? "is-hidden" : ""} />
-        {playTrailer && trailerKey && (
-          <Trailer videoKey={trailerKey} className="tv-det-trailer" onPlaying={() => setTrailerOn(true)}
-            onEnd={() => { setTrailerOn(false); setTrailerDone(true); }} onError={() => { setTrailerOn(false); setTrailerDone(true); }} />
+        {stage !== "idle" && trailerKeys.length > 0 && (
+          <Trailer keys={trailerKeys} play={stage === "play"} sound={prefs.trailerSound} volume={prefs.trailerVolume} className="tv-det-trailer"
+            onPlaying={() => setTrailerOn(true)} onFail={() => { setTrailerOn(false); setTrailerDone(true); }} />
         )}
         <span className="tv-det-scrim" />
       </div>
