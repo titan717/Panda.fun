@@ -5,10 +5,11 @@ import { useBackHandler, useFocusScope, focusEl } from "../lib/focus";
 import { navKey } from "../lib/keys";
 import { useSeason } from "../lib/hooks";
 import { languageName, runtime } from "../lib/format";
-import { sourceName } from "../lib/player";
+import { capabilityLabels, sourceName } from "../lib/player";
+import { ISSUES, rankOf, reliabilityLabel, reliabilityTone } from "../lib/sources";
 import type { Prefs } from "../lib/store";
 import { SLEEP_OPTIONS, SPEEDS, speedLabel, type SleepMode } from "../lib/player2";
-import type { Episode, PandaItem, PlaybackSource, SourceId, TitleDetails } from "../lib/types";
+import type { Episode, PandaItem, PlaybackSource, SourceId, SourceRankingPayload, TitleDetails } from "../lib/types";
 
 /** Quality choices of the TV PLAYER blueprint (§20.9). `cap` is the CineSrc `quality` hint. */
 export const QUALITIES: { id: Prefs["quality"]; label: string; note?: string }[] = [
@@ -19,12 +20,19 @@ export const QUALITIES: { id: Prefs["quality"]; label: string; note?: string }[]
   { id: "480", label: "Data Saver" }
 ];
 
-export const ISSUES = [
-  { id: "noplay", label: "Video won't play or keeps buffering", switchSource: true },
-  { id: "wrong", label: "Wrong title or episode", switchSource: true },
-  { id: "sync", label: "Audio and video out of sync", switchSource: true },
-  { id: "subs", label: "Subtitles missing or wrong", switchSource: false }
-] as const;
+export { ISSUES };
+
+/** Capabilities and community reliability under a source name (v1.2.0). */
+export function SourceMeta({ id, ranking }: { id: SourceId; ranking?: SourceRankingPayload }) {
+  const r = rankOf(ranking, id);
+  const rel = reliabilityLabel(r);
+  return (
+    <small className="src-meta">
+      {rel && <span className={`src-rel src-rel--${reliabilityTone(r)}`}><span className="src-rel-dot" aria-hidden="true" />{rel}</span>}
+      <span className="src-caps">{capabilityLabels(id).join(" · ")}</span>
+    </small>
+  );
+}
 
 /** HH:MM:SS (blueprint shows the remaining time this way, §20.4). */
 export function clock(sec: number) {
@@ -64,6 +72,8 @@ export interface TvChromeProps {
   quality: Prefs["quality"];
   onQuality: (q: Prefs["quality"]) => void;
   sources: PlaybackSource[];
+  /** Community ranking (v1.2.0) for the reliability note on each source row. */
+  ranking?: SourceRankingPayload;
   sourceId: SourceId | undefined;
   onSource: (id: SourceId) => void;
   onReport: (issue: (typeof ISSUES)[number]) => void;
@@ -243,6 +253,7 @@ export function TvPlayerChrome(p: TvChromeProps) {
                     onClick={() => { p.onSource(s.id); setPanel(null); }} data-hover-focus>
                     <span className="tvp-check" aria-hidden="true">{p.sourceId === s.id && <Icon name="check" />}</span>
                     <strong>{sourceName(s.id)}</strong>
+                    <SourceMeta id={s.id} ranking={p.ranking} />
                   </button>
                 ))}
               </div>

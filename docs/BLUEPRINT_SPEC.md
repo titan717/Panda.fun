@@ -290,3 +290,14 @@ Drive folder re-checked for this release: no blueprint changed after 2026-11-08 
 | Compact cards | TV posters 250 × 333 tu, expanded 683 tu, landscape 340 × 191 tu; phone rows 4.25 posters across | Rows keep the blueprint spacing and type sizes |
 | Page fade, press feedback | Opacity only; disabled with Reduce motion | No layout shift |
 
+## 26. v1.2.0 sources, ranking and anime
+
+Drive folder re-checked for this release (2026-11-09): no blueprint changed after 2026-11-08 12:05 UTC.
+
+| Area | Check | Result |
+|---|---|---|
+| TV player source panel | Source rows keep the blueprint name size and pill; a reliability line and capabilities sit below in the panel's secondary text style | Blueprint geometry kept |
+| Phone player | Source pills gain a 6 px reliability dot; "Report" chip beside them; Report sheet uses the shared bottom sheet | `e2e/anime-ranking.spec.ts` |
+| Settings › Sources (TV 1920, phone 390) | Automatic first, then CineSrc and Vidy; Community ranking rows with rank badge, fixed name column, bar and label; Status list unchanged | Screenshots in `docs/screenshots/v1.2.0/` |
+| Anime page (TV 1280/1920, phone 360/390, landscape 844×390, tablet 820) | Hero text lines up with the rows' left edge; Down from the hero buttons goes to the first row; captions never wrap | Fixed during review: hero/row misalignment on TV, Down jumping to the sidebar |
+| Categories | TV Browse row gains Anime; phone gains an Explore section (Anime, Trending) after genres | Tiles use real artwork from the anime and Home payloads |

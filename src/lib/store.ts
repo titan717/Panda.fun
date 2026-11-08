@@ -1,5 +1,5 @@
 import { useSyncExternalStore } from "react";
-import type { MediaType, PandaItem, SourceId } from "./types";
+import type { MediaType, PandaItem, PreferredSource } from "./types";
 
 /**
  * Local-first persistence. Everything lives in localStorage under `panda:v1:*`, scoped per profile.
@@ -63,7 +63,9 @@ const aired = (date: string, now: number) => { const t = Date.parse(date); retur
 export type Rating = "love" | "like" | "dislike";
 
 export interface Prefs {
-  preferredSource: SourceId;
+  preferredSource: PreferredSource;
+  /** v1.2.0: the old CineSrc default moved to "auto" once (D-116). */
+  sourceAuto?: boolean;
   autoplayNext: boolean;
   trailerAutoplay: boolean;
   top10Lang: string;
@@ -144,8 +146,12 @@ interface State {
   profilePrefs: Record<string, Partial<Prefs>>;
 }
 
+/** v1.2.0: "auto" (community ranking) joins the fixed choices; anything else falls back to auto. */
+const VALID_SOURCES = new Set<string>(["auto", "cinesrc", "vidy", "vidyanime"]);
+
 const defaultPrefs: Prefs = {
-  preferredSource: "cinesrc",
+  preferredSource: "auto",
+  sourceAuto: true,
   autoplayNext: true,
   trailerAutoplay: true,
   top10Lang: "ml",
@@ -216,12 +222,13 @@ function load(): State {
       data[p.id] = d;
     }
     const prefs = { ...defaultPrefs, ...(parsed.prefs ?? {}) };
-    // v1.0.2: sources outside the registry (CineSrc, Vidy) fall back to CineSrc
-    if (prefs.preferredSource !== "cinesrc" && prefs.preferredSource !== "vidy") prefs.preferredSource = "cinesrc";
+    // sources outside the registry fall back to Automatic; v1.2.0 moves the old CineSrc default to Automatic once (D-116)
+    if (!VALID_SOURCES.has(prefs.preferredSource)) prefs.preferredSource = "auto";
+    if (!parsed.prefs?.sourceAuto) { if (prefs.preferredSource === "cinesrc") prefs.preferredSource = "auto"; prefs.sourceAuto = true; }
     const profilePrefs: Record<string, Partial<Prefs>> = {};
     for (const p of parsed.profiles) {
       const own = { ...(parsed.profilePrefs?.[p.id] ?? {}) };
-      if (own.preferredSource && own.preferredSource !== "cinesrc" && own.preferredSource !== "vidy") delete own.preferredSource;
+      if (own.preferredSource && !VALID_SOURCES.has(own.preferredSource)) delete own.preferredSource;
       profilePrefs[p.id] = own;
     }
     return { profiles: parsed.profiles, activeProfileId: parsed.activeProfileId ?? null, prefs, data, profilePrefs };

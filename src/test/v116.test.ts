@@ -83,12 +83,13 @@ describe("v1.1.6 network-aware prefetch", () => {
   it("Details warms the preferred source, the resume episode's markers and its season", () => {
     vi.spyOn(globalThis, "fetch").mockResolvedValue(new Response(JSON.stringify({ success: true, data: {} })));
     const r = warmPlayback({ type: "tv", tmdbId: 1396, imdbId: "tt0903747", season: 2, episode: 3 }, "vidy");
-    expect(r).toEqual({ source: true, segments: true, season: true });
+    expect(r).toEqual({ source: true, ranking: false, segments: true, season: true });
     expect(document.head.querySelector('link[rel=preconnect][href="https://vidy.st"]')).not.toBeNull();
     const movie = warmPlayback({ type: "movie", tmdbId: 550, imdbId: null }, "cinesrc");
-    expect(movie).toEqual({ source: true, segments: false, season: false });
+    expect(movie).toEqual({ source: true, ranking: false, segments: false, season: false });
+    expect(warmPlayback({ type: "movie", tmdbId: 551, imdbId: null }, "auto").ranking).toBe(true);
     setConnection({ saveData: true });
-    expect(warmPlayback({ type: "movie", tmdbId: 550, imdbId: "tt0137523" })).toEqual({ source: false, segments: false, season: false });
+    expect(warmPlayback({ type: "movie", tmdbId: 550, imdbId: "tt0137523" })).toEqual({ source: false, ranking: false, segments: false, season: false });
   });
 });
 

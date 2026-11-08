@@ -1,6 +1,6 @@
 import type {
-  CalendarEntry, Collection, CalendarEpisode, CalendarPayload, CalendarRef, CategoriesPayload, Episode, GenresPayload, ListPayload, PagePayload, PandaItem, PlaybackPayload, PlaybackSource, Rail,
-  CrewMember, PersonCredit, PersonDetails, SearchPayload, SeasonDetails, SourceHealthPayload, TitleDetails, Top10Payload, Video, WallPayload, WallPoster
+  Collection, CategoriesPayload, Episode, GenresPayload, ListPayload, PagePayload, PandaItem, PlaybackPayload, PlaybackSource, Rail,
+  CrewMember, SearchPayload, SeasonDetails, TitleDetails, Top10Payload, Video, WallPayload, WallPoster
 } from "./types";
 
 /**
@@ -17,10 +17,10 @@ export class ValidationError extends Error {
 }
 
 type Obj = Record<string, unknown>;
-const isObj = (v: unknown): v is Obj => typeof v === "object" && v !== null && !Array.isArray(v);
-const str = (v: unknown): string | null => (typeof v === "string" && v.length > 0 ? v : null);
-const num = (v: unknown): number | null => (typeof v === "number" && Number.isFinite(v) ? v : null);
-const arr = (v: unknown): unknown[] => (Array.isArray(v) ? v : []);
+export const isObj = (v: unknown): v is Obj => typeof v === "object" && v !== null && !Array.isArray(v);
+export const str = (v: unknown): string | null => (typeof v === "string" && v.length > 0 ? v : null);
+export const num = (v: unknown): number | null => (typeof v === "number" && Number.isFinite(v) ? v : null);
+export const arr = (v: unknown): unknown[] => (Array.isArray(v) ? v : []);
 const strs = (v: unknown): string[] => arr(v).filter((x): x is string => typeof x === "string" && x.length > 0);
 
 export function item(v: unknown): PandaItem | null {
@@ -66,7 +66,7 @@ function episode(v: unknown): Episode | null {
   };
 }
 
-function need(path: string, v: unknown): Obj {
+export function need(path: string, v: unknown): Obj {
   if (!isObj(v)) throw new ValidationError(path, "payload is not an object");
   return v;
 }
@@ -115,18 +115,6 @@ function collection(v: unknown) {
   return parts.length >= 2 ? { id: num(v.id)!, name: str(v.name)!, overview: str(v.overview), poster: str(v.poster), backdrop: str(v.backdrop), parts } : null;
 }
 
-export function person(path: string, v: unknown): PersonDetails {
-  const o = need(path, v);
-  const id = num(o.id), name = str(o.name);
-  if (id === null || !name) throw new ValidationError(path, "invalid person");
-  const knownFor = arr(o.knownFor).map((x): PersonCredit | null => { const it = item(x); return it ? { ...it, role: str((x as Obj).role) } : null; })
-    .filter((x): x is PersonCredit => x !== null);
-  return {
-    id, name, profile: str(o.profile), profileLarge: str(o.profileLarge), biography: str(o.biography), birthday: str(o.birthday),
-    deathday: str(o.deathday), placeOfBirth: str(o.placeOfBirth), department: str(o.department), imdbId: str(o.imdbId), knownFor
-  };
-}
-
 export function season(path: string, v: unknown): SeasonDetails {
   const o = need(path, v);
   const n = num(o.number), id = num(o.tmdbId);
@@ -168,7 +156,7 @@ export function genres(path: string, v: unknown): GenresPayload {
   return { movie: g(o.movie), tv: g(o.tv), languages: arr(o.languages).filter(isObj).filter((y) => str(y.code) && str(y.name)).map((y) => ({ code: str(y.code)!, name: str(y.name)! })) };
 }
 
-const SOURCE_IDS = new Set(["cinesrc", "vidy"]);
+export const SOURCE_IDS = new Set(["cinesrc", "vidy", "vidyanime"]);
 export function playback(path: string, v: unknown): PlaybackPayload {
   const o = need(path, v);
   const type = o.type === "tv" ? "tv" : "movie";
@@ -177,18 +165,7 @@ export function playback(path: string, v: unknown): PlaybackPayload {
     url: str(s.url)!, origin: str(s.origin)!, events: s.events === "cinesrc" ? "cinesrc" : s.events === "vidy" ? "vidy" : "none",
     supportsStart: s.supportsStart === true
   }));
-  return { type, tmdbId: num(o.tmdbId) ?? 0, season: num(o.season) ?? undefined, episode: num(o.episode) ?? undefined, sources };
-}
-
-export function sourceHealth(path: string, v: unknown): SourceHealthPayload {
-  const o = need(path, v);
-  return {
-    sources: arr(o.sources).filter(isObj).filter((s) => SOURCE_IDS.has(String(s.id))).map((s) => ({
-      id: s.id as PlaybackSource["id"], label: str(s.label) ?? String(s.id),
-      state: s.state === "healthy" || s.state === "degraded" ? s.state : "down",
-      status: num(s.status), latencyMs: num(s.latencyMs), checkedAt: str(s.checkedAt) ?? new Date().toISOString()
-    }))
-  };
+  return { type, tmdbId: num(o.tmdbId) ?? 0, season: num(o.season) ?? undefined, episode: num(o.episode) ?? undefined, anilistId: num(o.anilistId), sources };
 }
 
 export function wall(path: string, v: unknown): WallPayload {
@@ -204,33 +181,10 @@ export function wall(path: string, v: unknown): WallPayload {
   return { posters };
 }
 
+/** Payloads read only by lazy pages (person, anime, calendar, source health and ranking) validate in `validateLazy.ts`. */
+export const LAZY_VALIDATED = /^\/panda\/(person\/|anime$|calendar|sources\/(health|ranking))/;
+
 /** Validator chosen from the API path, so the generic SWR fetcher validates too. */
-const isDate = (v: unknown): v is string => typeof v === "string" && /^\d{4}-\d{2}-\d{2}$/.test(v);
-function calRef(v: unknown): CalendarRef | null {
-  if (!isObj(v)) return null;
-  const season = num(v.season), episode = num(v.episode);
-  if (season === null || episode === null) return null;
-  return { season, episode, name: str(v.name), airDate: isDate(v.airDate) ? v.airDate : null };
-}
-
-/** Release calendar (v1.1.7): entries with an unusable item are dropped, episodes need a real air date. */
-export function calendar(path: string, v: unknown): CalendarPayload {
-  const o = need(path, v);
-  const entries = arr(o.entries).map((x): CalendarEntry | null => {
-    if (!isObj(x)) return null;
-    const it = item(x.item);
-    if (!it) return null;
-    const episodes = arr(x.episodes).map((e): CalendarEpisode | null => {
-      if (!isObj(e) || !isDate(e.airDate)) return null;
-      const season = num(e.season), episode = num(e.episode);
-      if (season === null || episode === null || season < 1) return null;
-      return { season, episode, name: str(e.name), airDate: e.airDate, still: str(e.still), runtime: num(e.runtime) };
-    }).filter((e): e is CalendarEpisode => e !== null);
-    return { item: it, status: str(x.status), lastEpisode: calRef(x.lastEpisode), nextEpisode: calRef(x.nextEpisode), episodes };
-  }).filter((e): e is CalendarEntry => e !== null);
-  return { entries };
-}
-
 export function validatorFor(path: string): ((path: string, v: unknown) => unknown) | null {
   if (path.startsWith("/panda/page/")) return page;
   if (/^\/panda\/title\/tv\/\d+\/season\//.test(path)) return season;
@@ -241,10 +195,7 @@ export function validatorFor(path: string): ((path: string, v: unknown) => unkno
   if (path.startsWith("/panda/categories")) return categories;
   if (path.startsWith("/panda/genres")) return genres;
   if (path.startsWith("/panda/play/")) return playback;
-  if (path.startsWith("/panda/sources/health")) return sourceHealth;
   if (path.startsWith("/panda/wall")) return wall;
-  if (path.startsWith("/panda/person/")) return person;
   if (path.startsWith("/panda/collection/")) return collectionPage;
-  if (path.startsWith("/panda/calendar")) return calendar;
   return null;
 }

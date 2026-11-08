@@ -2,7 +2,7 @@ import type {
   CalendarPayload, CategoriesPayload, GenresPayload, ListPayload, MediaType, PagePayload, PageKind, PlaybackPayload,
   SearchPayload, SeasonDetails, SourceHealthPayload, TitleDetails, Top10Payload, WallPayload
 } from "./types";
-import { validatorFor } from "./validate";
+import { LAZY_VALIDATED, validatorFor } from "./validate";
 
 /** Production movieapi deployment on Vercel. VITE_API_BASE may point at another Vercel/local deployment. */
 export const DEFAULT_API_BASE = "https://apikinoma.vercel.app/api/v1";
@@ -52,7 +52,7 @@ async function request<T>(path: string, init: GetInit): Promise<T> {
         if (res.status >= 500 || res.status === 429) { lastError = err; throw err; }
         throw Object.assign(err, { fatal: true });
       }
-      const validate = validatorFor(path);
+      const validate = validatorFor(path) ?? (LAZY_VALIDATED.test(path) ? (await import("./validateLazy")).lazyValidatorFor(path) : null);
       try {
         return (validate ? validate(path, body.data) : body.data) as T;
       } catch (e) {
@@ -105,8 +105,10 @@ export const keys = {
   top10: (lang: string) => `/panda/top10/${lang}`,
   genres: () => `/panda/genres`,
   categories: () => `/panda/categories`,
-  play: (type: MediaType, id: number, o: { s?: number; e?: number; t?: number; quality?: string } = {}) => `/panda/play/${type}/${id}${qs({ ...o, color: "1f80e0" })}`,
+  play: (type: MediaType, id: number, o: { s?: number; e?: number; t?: number; quality?: string; anime?: 1 } = {}) => `/panda/play/${type}/${id}${qs({ ...o, color: "1f80e0" })}`,
   sourceHealth: () => `/panda/sources/health`,
+  sourceRanking: () => `/panda/sources/ranking`,
+  anime: () => `/panda/anime`,
   segments: (imdbId: string, s?: number, e?: number) => `/panda/segments/${imdbId}${qs({ s, e })}`,
   wall: () => `/panda/wall`,
   /** ids are sorted so the same followed set always shares one cache entry. */

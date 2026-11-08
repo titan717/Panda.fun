@@ -14,11 +14,12 @@ export interface SandboxProfile { id: "strict" | "none"; label: string; attr: st
 /** Strictest sandbox each provider still plays with, measured with tests/shield/probe (D-92). */
 export const SANDBOX: Record<SourceId, SandboxProfile> = {
   cinesrc: { id: "strict", label: "Strict sandbox", attr: "allow-scripts allow-same-origin allow-presentation", note: "No popups, new windows, top navigation, forms or dialogs" },
-  vidy: { id: "none", label: "Compatibility mode", attr: null, note: "The provider refuses to play in any sandbox, so its own controls are shown" }
+  vidy: { id: "none", label: "Compatibility mode", attr: null, note: "The provider refuses to play in any sandbox, so its own controls are shown" },
+  vidyanime: { id: "none", label: "Compatibility mode", attr: null, note: "Vidy's anime player, same rules as Vidy" }
 };
 
 /** Sources whose own interface must stay clickable (no command API). */
-export const COMPAT: Record<SourceId, boolean> = { cinesrc: false, vidy: true };
+export const COMPAT: Record<SourceId, boolean> = { cinesrc: false, vidy: true, vidyanime: true };
 
 /** The Android app blocks popups, redirects and app launches natively, so compatibility sources are safe there. */
 export const nativeShield = isAndroidApp;

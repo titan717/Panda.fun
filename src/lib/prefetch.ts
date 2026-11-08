@@ -47,7 +47,7 @@ export function prefetchSegments(imdbId: string | null | undefined, s?: number, 
   return true;
 }
 
-export const SOURCE_ORIGINS = { cinesrc: "https://cinesrc.st", vidy: "https://vidy.st" } as const;
+export const SOURCE_ORIGINS = { cinesrc: "https://cinesrc.st", vidy: "https://vidy.st", vidyanime: "https://www.vidy.st" } as const;
 const connected = new Set<string>();
 
 /** Opens DNS + TLS to the playback source so the embedded player's first request is faster. */
@@ -79,12 +79,14 @@ export interface PlayTarget { type: MediaType; tmdbId: number; imdbId: string | 
  * Play will start, and (TV shows) the season payload the player's episode picker needs.
  * Returns the work that was started, for tests and PERF logging.
  */
-export function warmPlayback(t: PlayTarget, source: keyof typeof SOURCE_ORIGINS = "cinesrc") {
-  if (!canPrefetch()) return { source: false, segments: false, season: false };
+export function warmPlayback(t: PlayTarget, source: keyof typeof SOURCE_ORIGINS | "auto" = "cinesrc") {
+  if (!canPrefetch()) return { source: false, ranking: false, segments: false, season: false };
   const s = t.type === "tv" ? t.season ?? 1 : undefined;
   const e = t.type === "tv" ? t.episode ?? 1 : undefined;
   return {
-    source: preconnectSource(source),
+    source: preconnectSource(source === "auto" ? "cinesrc" : source),
+    // Automatic starts in community order, so the ranking is warmed with the title (v1.2.0)
+    ranking: source === "auto" ? (void preload(keys.sourceRanking(), fetcher).catch(() => undefined), true) : false,
     segments: prefetchSegments(t.imdbId, s, e),
     season: t.type === "tv" && s ? prefetchSeason(t.tmdbId, s) : false
   };

@@ -2,6 +2,17 @@
 
 Every stable release of Panda.fun. The same notes ship in each GitHub Release and in Settings › What's New.
 
+## 1.2.0
+
+- **New Anime page**: Categories › Anime (and "See all" on the TV Shows page's Anime row on phones) opens a page built from AniList: what is trending, the current season, all-time favourites, anime films and what's coming next. Cards show when the next episode airs ("Ep 6 in 2d") or the AniList score and studio, and every card opens the normal Panda title page.
+- **Vidy Anime source**: Japanese animation can now also play from Vidy's anime player, which follows AniList's seasons and episode numbering. Panda matches each TMDB season to the right AniList entry, so season 2 episode 3 opens season 2 episode 3.
+- **Automatic source choice**: Settings › Sources has a new default, Automatic, which starts with the source that is working best for Panda viewers right now. Picking CineSrc or Vidy still works as before. Choosing a different source inside the player only changes that play.
+- **Community ranking**: every play that starts, and every problem you report, feeds a shared ranking (a Wilson score where older results fade over 72 hours). Settings › Sources shows the ranking with a bar per source, and the player's source lists show how reliable each one is ("97% reliable", "Reported 4× today", "Not responding") together with what it can do (Panda controls, quality, resume, anime catalogue).
+- **Report an Issue everywhere**: the Report button now also appears on phones and on sources with their own controls. Pick "Video won't play", "Wrong title or episode", "Audio and video out of sync" or "Subtitles"; the first three also switch to the next source for you. Only the source, the title id and the issue are sent.
+- **Faster first load**: validators for pages you open later (cast, anime, calendar, source status) moved out of the start-up code, so the entry JavaScript is smaller than in 1.1.9 (26.0 → 25.9 KB gzip) even with the new features.
+
+Ads that a provider draws inside its own video still cannot be removed from outside its player; Panda's ad shield keeps blocking popups, redirects and app launches as before.
+
 ## 1.1.9
 
 - **Personalize Home**: a new section in Help & Settings lets each profile reorder Home (Continue Watching, Top Picks, Top 10, Because You Watched, Shows You Watched and Panda's rows), hide whole sections or single rows such as Coming Soon, and reset everything in one step. On TV the up and down arrows keep focus, so a row can be pushed several places with repeated presses.

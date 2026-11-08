@@ -1,4 +1,5 @@
 import { useMemo } from "react";
+import "./validateLazy"; // the calendar payload validator, loaded with this module
 import useSWR from "swr";
 import { keys } from "./api";
 import { episodeProgress, selectData, useStore, type HistoryEntry } from "./store";

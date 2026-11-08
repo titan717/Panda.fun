@@ -1,4 +1,5 @@
 import "./player.css";
+import "../lib/validateLazy"; // validators for this page's payloads, loaded with the page
 import { Suspense, useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useParams, useSearch } from "wouter";
 import useSWR from "swr";
@@ -7,7 +8,8 @@ import { ErrorState, Img, Spinner, toast } from "../components/ui";
 import { Sheet } from "../components/Sheet";
 import { KidsGate } from "../components/KidsGate";
 import { keys } from "../lib/api";
-import { useSeason, useTitle } from "../lib/hooks";
+import { useSeason, useSourceRanking, useTitle } from "../lib/hooks";
+import { ISSUES, isAnimeTitle, rankOf, reliabilityLabel, reliabilityTone, sourceOrder } from "../lib/sources";
 import { actions, getPrefs, usePrefs } from "../lib/store";
 import { stopAllTrailers } from "../lib/audio";
 import { useBackHandler, focusEl } from "../lib/focus";
@@ -31,7 +33,7 @@ const PlayerPrompts = lazyNamed(loadPrompts, "PlayerPrompts");
 const PlayerOptionsSheet = lazyNamed(loadPrompts, "PlayerOptionsSheet");
 import type { SkipSegments, MediaType, PlaybackPayload, PlaybackSource, SourceId, TitleDetails } from "../lib/types";
 
-const SHORT: Record<SourceId, string> = { cinesrc: sourceName("cinesrc"), vidy: sourceName("vidy") };
+const SHORT: Record<SourceId, string> = { cinesrc: sourceName("cinesrc"), vidy: sourceName("vidy"), vidyanime: sourceName("vidyanime") };
 
 export function PlayerPage() {
   const params = useParams<{ type: string; id: string }>();
@@ -76,11 +78,28 @@ function Player({ type, id, season, episode, start }: { type: MediaType; id: num
   const seasonData = useSeason(isTv ? id : null, isTv ? ep.s : null).data;
   const play = useSWR<PlaybackPayload>(keys.play(type, id, isTv ? { s: season, e: episode, t: start || undefined } : { t: start || undefined }), { revalidateOnFocus: false, revalidateIfStale: false, dedupingInterval: 0 });
 
+  // v1.2.0: anime titles also ask the backend for Vidy's AniList-keyed anime player
+  const anime = isAnimeTitle(details);
+  const animePlay = useSWR<PlaybackPayload>(anime ? keys.play(type, id, isTv ? { s: season, e: episode, t: start || undefined, anime: 1 } : { t: start || undefined, anime: 1 }) : null, { revalidateOnFocus: false, revalidateIfStale: false, dedupingInterval: 0 });
+  // the start order is frozen when the sources arrive, so a late ranking never swaps a loading source
+  const rankingSwr = useSourceRanking();
+  const ranking = rankingSwr.data;
+  const rankingNow = useRef(ranking);
+  rankingNow.current = ranking;
+  // Automatic waits up to 1.5 s for the ranking (usually warmed on Details) before it picks a source
+  const [rankWait, setRankWait] = useState(() => getPrefs().preferredSource === "auto");
+  useEffect(() => { if (!rankWait) return; const t = setTimeout(() => setRankWait(false), 1500); return () => clearTimeout(t); }, [rankWait]);
+  useEffect(() => { if (ranking || rankingSwr.error) setRankWait(false); }, [ranking, rankingSwr.error]);
+  const playData = rankWait ? undefined : play.data;
+  const order = useMemo(() => (playData ? sourceOrder(getPrefs().preferredSource, rankingNow.current) : SOURCE_ORDER), [playData]);
   const sources = useMemo(() => {
-    const list = play.data?.sources ?? [];
-    return rankSources(list, SOURCE_ORDER, { tv });
-  }, [play.data, tv]);
-  const [sourceId, setSourceId] = useState<SourceId>(prefs.preferredSource);
+    const list = [...(playData?.sources ?? [])];
+    for (const s of animePlay.data?.sources ?? []) if (!list.some((x) => x.id === s.id)) list.push(s);
+    return rankSources(list, order, { tv });
+  }, [playData, animePlay.data, order, tv]);
+  const rankingFor = ranking;
+  // an explicit preference is honoured as before (the ad-shield rules still apply, D-94); Automatic picks the first ranked source
+  const [sourceId, setSourceId] = useState<SourceId | null>(() => { const p = getPrefs().preferredSource; return p === "auto" ? null : p; });
   const tried = useRef(new Set<SourceId>());
   // a compatibility source is never the first pick on a TV browser (ad shield §C.5)
   const source: PlaybackSource | undefined = sources.find((x) => x.id === sourceId && !(lastResortOnly(x.id, tv) && !tried.current.size && sources.length > 1)) ?? sources[0];
@@ -92,6 +111,7 @@ function Player({ type, id, season, episode, start }: { type: MediaType; id: num
   const [paused, setPaused] = useState(false);
   const [overlay, setOverlay] = useState(true);
   const [drawer, setDrawer] = useState(false);
+  const [reportSheet, setReportSheet] = useState(false);
   const [upNext, setUpNext] = useState<{ s: number; e: number } | null>(null);
   const [countdown, setCountdown] = useState(10);
   const [time, setTime] = useState({ p: start, d: 0 });
@@ -167,7 +187,17 @@ function Player({ type, id, season, episode, start }: { type: MediaType; id: num
     window.addEventListener("beforeunload", guard);
     return () => window.removeEventListener("beforeunload", guard);
   }, [source?.id]); // eslint-disable-line react-hooks/exhaustive-deps
+  // pin the first pick so a source added later (Vidy Anime) never replaces the one that is loading
+  useEffect(() => { if (source && !sourceId) setSourceId(source.id); }, [source?.id, sourceId]); // eslint-disable-line react-hooks/exhaustive-deps
   useEffect(() => { if (ready && source) recordPlay(source.id); }, [ready, source?.id]); // eslint-disable-line react-hooks/exhaustive-deps
+  /* ---- community ranking signal (v1.2.0): one "ok" per source per play once real playback starts ---- */
+  const okSent = useRef(new Set<SourceId>());
+  const reportOk = () => {
+    const s = source?.id;
+    if (!s || okSent.current.has(s)) return;
+    okSent.current.add(s);
+    void api.report({ type, tmdbId: id, season: isTv ? ep.s : undefined, episode: isTv ? ep.e : undefined, source: s, issue: "ok", position: Math.floor(pos.current.position) }).catch(() => undefined);
+  };
   useEffect(() => () => {
     // drain what the Android shield stopped; a noisy session becomes an automatic ranking signal
     const before = shieldStats();
@@ -188,6 +218,8 @@ function Player({ type, id, season, episode, start }: { type: MediaType; id: num
   const fallback = useCallback((reason: string) => {
     if (!source) return;
     tried.current.add(source.id);
+    // a source that never started is a "noplay" signal for the community ranking
+    void api.report({ type, tmdbId: id, season: isTv ? epRef.current.s : undefined, episode: isTv ? epRef.current.e : undefined, source: source.id, issue: "noplay", position: 0 }).catch(() => undefined);
     const nextSrc = sources.find((x) => !tried.current.has(x.id));
     if (nextSrc) {
       toast(`Switched to ${SHORT[nextSrc.id]}`);
@@ -197,7 +229,7 @@ function Player({ type, id, season, episode, start }: { type: MediaType; id: num
     } else {
       toast(reason);
     }
-  }, [source, sources]);
+  }, [source, sources, type, id, isTv]);
 
   useEffect(() => {
     if (!source || ready) return;
@@ -224,11 +256,12 @@ function Player({ type, id, season, episode, start }: { type: MediaType; id: num
           break;
         case "skipintro": setIntroSkipped(true); lastTime.current = ev.to; toast("Intro skipped", 1600); break;
         case "rate": break;
-        case "play": setReady(true); setPaused(false); break;
+        case "play": setReady(true); setPaused(false); reportOk(); break;
         case "pause": setPaused(true); break;
         case "volume": setMuted(ev.muted); break;
         case "time":
           setReady(true); setPaused(false);
+          if (ev.position > 1) reportOk();
           if (ev.duration > 0) {
             if (isTv && lastTime.current !== null) noteJump(lastTime.current, ev.position);
             lastTime.current = ev.position;
@@ -342,7 +375,8 @@ function Player({ type, id, season, episode, start }: { type: MediaType; id: num
     setReloadAt(pos.current.position);
     setReady(false);
     setSourceId(sid);
-    actions.setPrefs({ preferredSource: sid });
+    // a fixed preference follows the last pick; "Automatic" stays automatic (this play only)
+    if (getPrefs().preferredSource !== "auto") actions.setPrefs({ preferredSource: sid });
     toast(`Playing from ${SHORT[sid]}`);
   };
   const setVolume = (delta: number) => {
@@ -407,6 +441,16 @@ function Player({ type, id, season, episode, start }: { type: MediaType; id: num
     }
   };
 
+  /** Report an Issue (§20.9, phone and TV): counted by the community ranking, then the fix the issue calls for. */
+  function report(issue: (typeof ISSUES)[number]) {
+    void api.report({ type, tmdbId: id, season: isTv ? ep.s : undefined, episode: isTv ? ep.e : undefined, source: source?.id ?? null, issue: issue.id, position: Math.round(pos.current.position) }).catch(() => undefined);
+    const other = sources.find((x) => x.id !== source?.id && !tried.current.has(x.id)) ?? sources.find((x) => x.id !== source?.id);
+    if (issue.switchSource && other) { switchSource(other.id); toast(`Thanks for the report. Trying ${SHORT[other.id]}`); }
+    else if (issue.id === "subs" && customChrome) { reloadEmbed(); setNativeControls(true); toast("Thanks for the report. Pick subtitles in the source player"); }
+    else if (issue.id === "subs") toast("Thanks for the report. Pick subtitles in the source player");
+    else toast("Thanks for the report");
+  }
+
   function chromeProps(): TvChromeProps {
     return {
       d: details, isSeries: isTv, ep, episodeTitle: epInfo?.title,
@@ -418,14 +462,8 @@ function Player({ type, id, season, episode, start }: { type: MediaType; id: num
       onSeek: seekTo, onTogglePlay: togglePlay,
       quality: prefs.quality,
       onQuality: (q) => { if (q === prefs.quality) return; reloadEmbed(); actions.setPrefs({ quality: q }); toast(q === "auto" ? "Quality: Auto" : `Quality: ${q === "480" ? "Data Saver" : q === "2160" ? "4K" : `${q}p`}`); },
-      sources, sourceId: source?.id, onSource: switchSource,
-      onReport: (issue) => {
-        void api.report({ type, tmdbId: id, season: isTv ? ep.s : undefined, episode: isTv ? ep.e : undefined, source: source?.id ?? null, issue: issue.id, position: Math.round(pos.current.position) }).catch(() => undefined);
-        const other = sources.find((x) => x.id !== source?.id);
-        if (issue.switchSource && other) { switchSource(other.id); toast(`Thanks for the report. Trying ${SHORT[other.id]}`); }
-        else if (issue.id === "subs") { reloadEmbed(); setNativeControls(true); toast("Thanks for the report. Pick subtitles in the source player"); }
-        else toast("Thanks for the report");
-      },
+      sources, sourceId: source?.id, onSource: switchSource, ranking: rankingFor,
+      onReport: report,
       nativeControls, onNativeControls: (on) => {
         if (on === nativeControls) return;
         reloadEmbed(); setNativeControls(on);
@@ -466,7 +504,10 @@ function Player({ type, id, season, episode, start }: { type: MediaType; id: num
         <div className="pl-title"><strong>{title}</strong><span>{subtitle}</span></div>
         <div className="pl-sources" role="radiogroup" aria-label="Video source">
           {sources.map((x) => (
-            <button key={x.id} id={`pl-src-${x.id}`} role="radio" aria-checked={x.id === source?.id} className={`pl-pill ${x.id === source?.id ? "is-active" : ""}`} onClick={() => switchSource(x.id)} data-hover-focus>{SHORT[x.id]}</button>
+            <button key={x.id} id={`pl-src-${x.id}`} role="radio" aria-checked={x.id === source?.id} className={`pl-pill ${x.id === source?.id ? "is-active" : ""}`} onClick={() => switchSource(x.id)} data-hover-focus
+              title={reliabilityLabel(rankOf(ranking, x.id)) ?? undefined}>
+              <span className={`src-rel-dot src-rel--${reliabilityTone(rankOf(ranking, x.id))}`} aria-hidden="true" />{SHORT[x.id]}
+            </button>
           ))}
         </div>
       </div>
@@ -480,6 +521,7 @@ function Player({ type, id, season, episode, start }: { type: MediaType; id: num
         )}
         {isTv && <button id="pl-eps" className="pl-chip" onClick={() => setDrawer(true)} data-hover-focus><Icon name="episodes" /> Episodes</button>}
         {isTv && next && <button id="pl-next" className="pl-chip" onClick={() => playEpisode(next.season, next.episode)} data-hover-focus><Icon name="next" /> Next Episode</button>}
+        <button id="pl-report" className="pl-chip" onClick={() => setReportSheet(true)} data-hover-focus><Icon name="warning" /> Report</button>
         <button id="pl-options" className={`pl-chip pl-chip--icon ${sleep.mode !== "off" ? "is-active" : ""}`} onClick={() => setOptionsSheet("menu")} aria-label="Speed and sleep timer" data-hover-focus>
           <Icon name="settings" />{sleep.mode !== "off" ? <span>{sleep.mode === "end" ? "End" : `${sleepLeft(sleep)}m`}</span> : prefs.playbackSpeed !== 1 && controllable ? <span>{prefs.playbackSpeed}×</span> : null}
         </button>
@@ -511,6 +553,20 @@ function Player({ type, id, season, episode, start }: { type: MediaType; id: num
         stillWatching={stillWatching} onKeepWatching={() => { setStillWatching(null); if (source) sendCommand(frame.current, source, { c: "play" }); setPaused(false); }} onStop={endForTheNight} />
       {optionsSheet && <PlayerOptionsSheet kind={optionsSheet} controllable={controllable} onKind={setOptionsSheet} speed={prefs.playbackSpeed} sleep={sleep.mode} isSeries={isTv} onSpeed={(r) => { chooseSpeed(r); setOptionsSheet(null); }} onSleep={(m) => { chooseSleep(m); setOptionsSheet(null); }} onClose={() => setOptionsSheet(null)} />}
       </Suspense>
+      {reportSheet && (
+        <Sheet title="Report an Issue" onClose={() => setReportSheet(false)} className="sheet--report">
+          <p className="report-lead">Reports from every Panda viewer rank the sources, so the most reliable one plays first.{source ? ` Now playing from ${SHORT[source.id]}.` : ""}</p>
+          <div className="report-list lrud-container" role="list">
+            {ISSUES.map((i, n) => (
+              <button key={i.id} id={`pl-issue-${i.id}`} className="report-row" role="listitem" data-autofocus={n === 0 ? true : undefined} data-hover-focus
+                onClick={() => { setReportSheet(false); report(i); }}>
+                <Icon name="warning" /><span>{i.label}</span>
+                {i.switchSource && sources.length > 1 && <small>Tries another source</small>}
+              </button>
+            ))}
+          </div>
+        </Sheet>
+      )}
       {drawer && details && <EpisodesDrawer d={details} current={ep} onClose={() => setDrawer(false)} onPick={(sn, en) => { setDrawer(false); playEpisode(sn, en); }} />}
     </div>
   );

@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from "react";
 import { Link } from "wouter";
 import { ErrorState, Img, Skeleton } from "../components/ui";
-import { useCategories, usePage } from "../lib/hooks";
+import { useAnime, useCategories, usePage } from "../lib/hooks";
 import { focusFirst } from "../lib/focus";
 import { browseHref } from "../lib/format";
 
@@ -11,6 +11,7 @@ interface Tile { id: string; label: string; image: string | null; href: string; 
 export function TvCategories() {
   const { data, error, mutate } = useCategories();
   const home = usePage("home").data;
+  const anime = useAnime().data;
   const [art, setArt] = useState<string | null>(null);
   const root = useRef<HTMLDivElement>(null);
   useEffect(() => { if (data && root.current) focusFirst(root.current); }, [data]);
@@ -25,6 +26,7 @@ export function TvCategories() {
       { id: "b-tv", label: "TV Shows", image: heroImg(1), href: "/tv", tint: 1 },
       { id: "b-movies", label: "Movies", image: heroImg(2), href: "/movies", tint: 2 },
       { id: "b-new", label: "New & Hot", image: heroImg(3), href: "/new", tint: 4 },
+      { id: "b-anime", label: "Anime", image: anime?.hero?.backdrop ?? anime?.rows[0]?.items[0]?.backdrop ?? null, href: "/anime", tint: 0 },
       { id: "b-trending", label: "Trending", image: heroImg(4), href: browseHref("trending", { title: "Trending Now" }), tint: 5 }
     ] }
   ] : [];

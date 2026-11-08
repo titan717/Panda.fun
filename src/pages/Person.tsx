@@ -1,4 +1,5 @@
 import "./person.css";
+import "../lib/validateLazy"; // validators for this page's payloads, loaded with the page
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useParams } from "wouter";
 import { PageHeader } from "../components/PageHeader";

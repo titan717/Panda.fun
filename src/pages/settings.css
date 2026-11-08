@@ -15,3 +15,17 @@
 .set-home { --hm-move: calc(40 * var(--u)); }
 .set-home-move { width: var(--hm-move); height: var(--hm-move); }
 @media (max-width: 480px) { html:not([data-mode="tv"]) .set-home { --hm-move: 34px; } html:not([data-mode="tv"]) .set-home-item { gap: 4px; } html:not([data-mode="tv"]) .set-home-toggle { padding-right: 8px; } }
+
+/* v1.2.0 — community ranking */
+.src-rank { list-style: none; }
+.src-rank-row { flex-wrap: wrap; }
+.src-rank-row .src-health-name { flex: 0 0 calc(104 * var(--u)); min-width: 0; }
+.src-rank-n { display: inline-grid; place-items: center; width: calc(24 * var(--u)); height: calc(24 * var(--u)); border-radius: 50%; background: rgba(255, 255, 255, 0.12); font-size: calc(12 * var(--u)); font-weight: var(--fw-semibold); flex: none; }
+.src-rank-bar { flex: 1 1 calc(80 * var(--u)); max-width: calc(180 * var(--u)); height: calc(6 * var(--u)); border-radius: 99px; background: rgba(255, 255, 255, 0.1); overflow: hidden; }
+.src-rank-fill { display: block; height: 100%; border-radius: inherit; background: rgba(255, 255, 255, 0.5); transition: width 400ms ease; }
+.src-rank-fill.src-rel--good { background: var(--success); }
+.src-rank-fill.src-rel--warn { background: #f5b83d; }
+.src-rank-fill.src-rel--bad { background: #ff5a5f; }
+html[data-mode="tv"] .src-rank-n { width: calc(36 * var(--tu)); height: calc(36 * var(--tu)); font-size: calc(18 * var(--tu)); }
+html[data-mode="tv"] .src-rank-bar { max-width: calc(260 * var(--tu)); height: calc(8 * var(--tu)); flex-basis: calc(140 * var(--tu)); }
+html[data-mode="tv"] .src-rank-row .src-health-name { flex-basis: calc(170 * var(--tu)); }

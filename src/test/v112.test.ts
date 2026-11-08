@@ -1,7 +1,8 @@
 import { describe, expect, it } from "vitest";
 import { castAndCrew, voteLabel } from "../lib/format";
 import { personFacts } from "../pages/Person";
-import { person, title } from "../lib/validate";
+import { title } from "../lib/validate";
+import { person } from "../lib/validateLazy";
 
 describe("details enrichment", () => {
   it("lists cast then crew, once per person", () => {

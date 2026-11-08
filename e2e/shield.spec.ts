@@ -15,7 +15,7 @@ const ADAPTERS = [
 function state(source: string) {
   return JSON.stringify({
     profiles: [{ id: "p1", name: "You", avatar: "smile", kids: false, createdAt: 1 }],
-    activeProfileId: "p1", prefs: { preferredSource: source, autoplayTrailers: false }, data: {},
+    activeProfileId: "p1", prefs: { preferredSource: source, sourceAuto: true, autoplayTrailers: false }, data: {},
   });
 }
 

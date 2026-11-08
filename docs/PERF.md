@@ -2,6 +2,15 @@
 
 Measured on every release. Never regress.
 
+## v1.2.0 (sources, ranking, anime)
+
+| Metric | Value |
+|---|---|
+| Entry chunk (gzip) | 25.9 KB, down from 26.0 KB. The new ranking and anime validators first took the entry to 26.7 KB; validators for payloads only lazy pages read (person, anime, calendar, source health and ranking) moved into a 1.4 KB `validateLazy` chunk (D-118). |
+| Entry CSS (gzip) | 21.6 KB, unchanged: Anime page styles (1.25 KB) ship with its lazy chunk. |
+| Anime page | Own lazy chunk: 1.7 KB JS + 1.25 KB CSS gzip. `/panda/anime` is cached 6 h on the backend; cold build ~3–5 s, warm < 300 ms. |
+| Automatic source | Waits at most 1.5 s for `/panda/sources/ranking`, which Details warms at idle (60 s server cache), so in practice it adds no wait. |
+
 ## v1.1.9 (personalization, R8)
 
 | Metric | Value |

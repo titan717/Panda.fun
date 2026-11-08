@@ -2,7 +2,7 @@ import useSWR, { type SWRConfiguration } from "swr";
 import { useEffect, useState } from "react";
 import { keys } from "./api";
 import { usePrefs } from "./store";
-import type { CategoriesPayload, Collection, GenresPayload, ListPayload, MediaType, PagePayload, PageKind, PersonDetails, SearchPayload, SeasonDetails, SourceHealthPayload, TitleDetails, Top10Payload, WallPayload } from "./types";
+import type { AnimePayload, SourceRankingPayload, CategoriesPayload, Collection, GenresPayload, ListPayload, MediaType, PagePayload, PageKind, PersonDetails, SearchPayload, SeasonDetails, SourceHealthPayload, TitleDetails, Top10Payload, WallPayload } from "./types";
 
 const slow: SWRConfiguration = { revalidateOnFocus: false, dedupingInterval: 60_000 };
 
@@ -20,6 +20,9 @@ export const useDiscover = (type: MediaType, o: Parameters<typeof keys.discover>
 export const useSearch = (q: string) => useSWR<SearchPayload>(q.trim().length >= 2 ? keys.search(q.trim()) : null, { ...slow, keepPreviousData: true });
 
 /** Live source status from the backend, refreshed every minute while Settings › Sources is open. */
+/** Community source ranking (v1.2.0): refreshed every 5 minutes; the player reads the cached copy. */
+export const useSourceRanking = (refresh = false) => useSWR<SourceRankingPayload>(keys.sourceRanking(), { revalidateOnFocus: false, dedupingInterval: 300_000, refreshInterval: refresh ? 60_000 : 0 });
+export const useAnime = () => useSWR<AnimePayload>(keys.anime(), slow);
 export const useSourceHealth = () => useSWR<SourceHealthPayload>(keys.sourceHealth(), { refreshInterval: 60_000, revalidateOnMount: true, dedupingInterval: 10_000 });
 
 export function useDebounced<T>(value: T, ms = 350) {

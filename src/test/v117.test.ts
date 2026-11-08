@@ -6,7 +6,7 @@ import { getCalendarBadge, setCalendarBadges } from "../lib/badges";
 import { buildCalendar, calendarBadges, dayLabel, followedIds, groupByDay, localDay, unseen } from "../lib/calendar";
 import { actions, getState, selectData } from "../lib/store";
 import { detailsCtas } from "../lib/watch";
-import { validatorFor } from "../lib/validate";
+import { lazyValidatorFor as validatorFor } from "../lib/validateLazy";
 import type { CalendarEntry, PandaItem, TitleDetails } from "../lib/types";
 
 const NOW = new Date(2026, 10, 8, 12).getTime();

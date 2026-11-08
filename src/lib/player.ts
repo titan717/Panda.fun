@@ -14,14 +14,33 @@ export interface SourceAdapter {
   /** Preferred-quality URL parameter. */
   quality: boolean;
   hosts: string[];
+  /** Opens at a saved position. */
+  start: boolean;
+  /** Plays the next episode by itself. */
+  autonext: boolean;
+  /** Anime catalogue (AniList ids, Japanese audio with subtitles). */
+  anime: boolean;
 }
 
 export const ADAPTERS: Record<SourceId, SourceAdapter> = {
-  cinesrc: { id: "cinesrc", short: "CineSrc", commands: true, hideControls: true, quality: true, hosts: ["cinesrc.st"] },
-  vidy: { id: "vidy", short: "Vidy", commands: false, hideControls: false, quality: false, hosts: ["vidy.st", "www.vidy.st"] }
+  cinesrc: { id: "cinesrc", short: "CineSrc", commands: true, hideControls: true, quality: true, hosts: ["cinesrc.st"], start: true, autonext: true, anime: false },
+  vidy: { id: "vidy", short: "Vidy", commands: false, hideControls: false, quality: false, hosts: ["vidy.st", "www.vidy.st"], start: true, autonext: true, anime: false },
+  vidyanime: { id: "vidyanime", short: "Vidy Anime", commands: false, hideControls: false, quality: false, hosts: ["vidy.st", "www.vidy.st"], start: true, autonext: true, anime: true }
 };
 
-export const SOURCE_ORDER: SourceId[] = ["cinesrc", "vidy"];
+export const SOURCE_ORDER: SourceId[] = ["cinesrc", "vidy", "vidyanime"];
+
+/** What a source can do, as short labels for the source picker (v1.2.0). */
+export function capabilityLabels(id: SourceId): string[] {
+  const a = ADAPTERS[id];
+  if (!a) return [];
+  return [
+    a.anime ? "Anime catalogue" : null,
+    a.commands ? "Panda controls" : "Own controls",
+    a.quality ? "Quality" : null,
+    a.start ? "Resume" : null
+  ].filter((x): x is string => Boolean(x));
+}
 export const READY_TIMEOUT_MS = 15_000;
 export const sourceName = (id: SourceId) => ADAPTERS[id]?.short ?? id;
 

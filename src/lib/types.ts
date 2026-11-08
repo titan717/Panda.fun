@@ -186,7 +186,9 @@ export interface GenresPayload {
   languages: { code: string; name: string }[];
 }
 
-export type SourceId = "cinesrc" | "vidy";
+export type SourceId = "cinesrc" | "vidy" | "vidyanime";
+/** Settings › Sources: a fixed first source, or "auto" = the community ranking (v1.2.0). */
+export type PreferredSource = SourceId | "auto";
 
 export interface PlaybackSource {
   id: SourceId;
@@ -203,8 +205,36 @@ export interface PlaybackPayload {
   tmdbId: number;
   season?: number;
   episode?: number;
+  /** AniList id when the title is anime and matched (adds the "vidyanime" source). */
+  anilistId?: number | null;
   sources: PlaybackSource[];
 }
+
+/** GET /panda/sources/ranking (v1.2.0): Wilson lower bound over time-decayed play outcomes. */
+export interface SourceRank {
+  id: SourceId;
+  rank: number;
+  score: number;
+  reliability: number | null;
+  plays: number;
+  reports: number;
+  reports24h: number;
+  state: "healthy" | "degraded" | "down" | null;
+}
+export interface SourceRankingPayload { sources: SourceRank[]; halfLifeHours: number; shared: boolean; updatedAt: string }
+
+/** GET /panda/anime (v1.2.0): AniList rows resolved to TMDB titles. */
+export interface AnimeCard extends PandaItem {
+  anilistId: number;
+  color: string | null;
+  score: number | null;
+  format: string | null;
+  episodes: number | null;
+  airing: { episode: number; at: string } | null;
+  studio: string | null;
+}
+export interface AnimeRow { id: string; title: string; items: AnimeCard[] }
+export interface AnimePayload { hero: AnimeCard | null; rows: AnimeRow[]; season: { name: string; year: number } }
 
 export interface SourceHealth {
   id: SourceId;
