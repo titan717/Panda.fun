@@ -27,3 +27,9 @@ Reviewed each release. Ideas are only adopted when they fit the blueprints.
 - Prime Video and Disney+: the source/quality/audio settings live in right-side sheets that dim the video instead of stopping it. Panda's Quality and Audio & Subtitles sheets follow the blueprint gradient sheets.
 - YouTube TV / Apple TV: Back closes the innermost layer first (panel → scrub → chrome → exit). Panda uses the same order.
 - Netflix's "Report a problem" sends the playback context automatically. Panda's Report an Issue sends source and position, then fixes the problem right away by switching source.
+
+## v1.0.5 round (2026-11-08)
+
+- Netflix, Prime Video and YouTube on Android TV all show a branded full-bleed splash from the very first frame (window background), then hand over to the app with no colour jump. Panda now does the same: native window, boot HTML and React splash share one gradient.
+- Netflix and Disney+ show a one-time "What's new" card after an update and never on a fresh install. Panda copies this (D-39).
+- Lightweight TV apps such as Jellyfin's Android TV client and Kodi web remotes keep first-load bundles small to stay fast on cheap Amlogic boxes. Panda's first load is now ~54 KB gzip of JS.

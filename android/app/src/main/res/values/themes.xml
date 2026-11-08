@@ -1,6 +1,6 @@
 <resources xmlns:tools="http://schemas.android.com/tools">
     <style name="Theme.KinomaTV" parent="Theme.AppCompat.NoActionBar">
-        <item name="android:windowBackground">@color/tv_background</item>
+        <item name="android:windowBackground">@drawable/splash_window</item>
         <item name="colorPrimary">@color/tv_accent</item>
         <item name="colorAccent">@color/tv_accent</item>
         <item name="android:windowFullscreen">true</item>

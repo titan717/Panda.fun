@@ -2,6 +2,16 @@
 
 Measured on every release. Never regress.
 
+## v1.0.5
+
+| Metric | Value |
+|---|---|
+| First load (gzip JS) | **53.9 KB** on TV (index 26.6 + vendor 10.3 + runtime 9.7 + TV layout 7.5) and 53.7 KB on mobile, down from 131.0 KB in v1.0.4 (−59 %). |
+| How | The TV and mobile layouts are separate chunks and a device downloads only its own. Player, Settings, Updates, Info and What's New are lazy-loaded and prefetched when idle. The Preact compat runtime replaces react-dom (D-37). |
+| First paint | Inline boot splash in `index.html` paints before any JS: FCP 116 ms and the splash is visible 160 ms after navigation (local preview, 1920×1080). On Android the window background is the same gradient, so the screen never flashes from dark to blue. |
+| Profile → Home | Home visible 760 ms after pressing a profile (849 ms in v1.0.3). |
+| CSS | 18.6 KB gzip (unchanged). |
+
 ## v1.0.4
 
 | Metric | Value |

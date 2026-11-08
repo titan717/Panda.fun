@@ -25,9 +25,24 @@
     <link rel="preconnect" href="https://image.tmdb.org" crossorigin />
     <link rel="preconnect" href="https://apikinoma.vercel.app" crossorigin />
     <link rel="dns-prefetch" href="https://cinesrc.st" />
+    <style>
+      /* Boot splash (BLUEPRINT_SPEC §2): painted before any JavaScript; React replaces #root on first render. */
+      html, body { margin: 0; background: #000; }
+      .boot { position: fixed; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 2.2vmin; background: linear-gradient(160deg, #0b2a6b 0%, #13306e 48%, #3a1d5a 72%, #7a1430 100%); }
+      .boot svg { width: 16.6vmin; height: 16.6vmin; }
+      .boot b { font: 500 7.8vmin "Inter Variable", Inter, system-ui, -apple-system, "Segoe UI", Roboto, sans-serif; color: #cfe3f2; letter-spacing: -0.01em; }
+    </style>
   </head>
   <body>
-    <div id="root"></div>
+    <div id="root"><div class="boot" aria-hidden="true"><svg viewBox="0 0 64 64">
+<circle cx="16" cy="15" r="10" fill="#171820" stroke="#f7f5ff" stroke-width="2.5"/>
+<circle cx="48" cy="15" r="10" fill="#171820" stroke="#f7f5ff" stroke-width="2.5"/>
+<rect x="11" y="12" width="42" height="42" rx="20" fill="#f7f5ff"/>
+<ellipse cx="22" cy="30" rx="8" ry="11" transform="rotate(28 22 30)" fill="#171820"/>
+<ellipse cx="42" cy="30" rx="8" ry="11" transform="rotate(-28 42 30)" fill="#171820"/>
+<circle cx="24" cy="29" r="2.4" fill="#f7f5ff"/><circle cx="40" cy="29" r="2.4" fill="#f7f5ff"/>
+<path d="M29 39c1.8-2.2 4.2-2.2 6 0-1 3.4-5 4.1-6 0Z" fill="#171820"/>
+<circle cx="18" cy="40" r="3" fill="#d9ccff"/><circle cx="46" cy="40" r="3" fill="#d9ccff"/></svg><b>Panda</b></div></div>
     <noscript>Panda.fun needs JavaScript to run.</noscript>
     <script type="module" src="/src/main.tsx"></script>
   </body>

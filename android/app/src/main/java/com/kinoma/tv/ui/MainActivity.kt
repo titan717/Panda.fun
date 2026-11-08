@@ -76,7 +76,8 @@ class MainActivity : ComponentActivity() {
                 ViewGroup.LayoutParams.MATCH_PARENT,
                 ViewGroup.LayoutParams.MATCH_PARENT
             )
-            setBackgroundColor(Color.parseColor("#07080d"))
+            // Same blueprint gradient as the window and the web splash, so cold start never flashes.
+            setBackgroundResource(com.kinoma.tv.R.drawable.splash_window)
         }
 
         fullscreenContainer = FrameLayout(this).apply {
@@ -132,7 +133,8 @@ class MainActivity : ComponentActivity() {
                 ViewGroup.LayoutParams.MATCH_PARENT,
                 ViewGroup.LayoutParams.MATCH_PARENT
             )
-            setBackgroundColor(Color.parseColor("#07080d"))
+            // Transparent until the first page paints its own boot splash; opaque black afterwards (cheaper compositing).
+            setBackgroundColor(Color.TRANSPARENT)
             isFocusable = true
             isFocusableInTouchMode = true
         }
@@ -181,6 +183,7 @@ class MainActivity : ComponentActivity() {
             override fun onPageFinished(view: WebView, url: String) {
                 super.onPageFinished(view, url)
                 Log.i(TAG, "WebView page finished: $url")
+                view.setBackgroundColor(Color.BLACK)
                 // Reconcile frontend mode after document navigation.
                 view.evaluateJavascript(
                     """

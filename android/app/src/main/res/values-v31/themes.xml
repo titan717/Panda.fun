@@ -1,0 +1,12 @@
+<resources xmlns:tools="http://schemas.android.com/tools">
+    <!-- Android 12+ system splash: Panda mark on the splash blue, then the web splash continues the same gradient. -->
+    <style name="Theme.KinomaTV" parent="Theme.AppCompat.NoActionBar">
+        <item name="android:windowBackground">@drawable/splash_window</item>
+        <item name="android:windowSplashScreenBackground">#0B2A6B</item>
+        <item name="android:windowSplashScreenAnimatedIcon">@mipmap/ic_launcher_foreground</item>
+        <item name="colorPrimary">@color/tv_accent</item>
+        <item name="colorAccent">@color/tv_accent</item>
+        <item name="android:windowFullscreen">true</item>
+        <item name="android:windowContentOverlay">@null</item>
+    </style>
+</resources>
