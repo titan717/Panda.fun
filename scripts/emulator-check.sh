@@ -3,7 +3,8 @@
 set -uo pipefail
 NAME="$1"; PKG=com.kinoma.tv; mkdir -p shots
 # Every adb call is bounded: when the emulator itself dies ("error: closed") adb would otherwise block until the job timeout.
-adb() { timeout 90 command adb "$@"; local rc=$?; if [[ $rc == 124 ]]; then echo "adb timed out: $*"; command adb devices | tee -a shots/emulator.txt; fi; return $rc; }
+ADB_BIN="$(command -v adb)"
+adb() { timeout 90 "$ADB_BIN" "$@"; local rc=$?; if [[ $rc == 124 ]]; then echo "adb timed out: $*"; "$ADB_BIN" devices | tee -a shots/emulator.txt; fi; return $rc; }
 shot() { adb exec-out screencap -p > "shots/$NAME-$1.png"; echo "captured $1"; }
 # Update path (master mission §10: in-app update verified from the previous version)
 if compgen -G "prev/*.apk" >/dev/null; then
