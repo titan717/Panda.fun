@@ -3,7 +3,7 @@ import { Link } from "wouter";
 import { Icon } from "../components/Icon";
 import { Img, toast } from "../components/ui";
 import { Sheet, SheetItem } from "../components/Sheet";
-import { itemBadge, itemMeta, titlePath } from "../lib/format";
+import { isUpcoming, itemBadge, landMeta, titlePath } from "../lib/format";
 import { actions, getState, selectData, type HistoryEntry } from "../lib/store";
 import { useNav } from "../lib/nav";
 import { continueHref, continueSub } from "../tv/TvCards";
@@ -44,9 +44,9 @@ export const MLand = memo(function MLand({ item, sub }: { item: PandaItem; sub?:
   return (
     <div className="m-land">
       <Link href={titlePath(item)} className="m-land-link" aria-label={item.title}>
-        <span className="m-land-media"><Img src={item.backdrop} alt="" title={item.title} /><Icon name="play" className="m-land-play" /></span>
+        <span className="m-land-media"><Img src={item.backdrop} alt="" title={item.title} />{!isUpcoming(item) && <Icon name="play" className="m-land-play" />}</span>
         <span className="m-land-title">{item.title}</span>
-        <span className="m-land-sub">{sub ?? itemMeta(item, 1)}</span>
+        <span className="m-land-sub">{sub ?? landMeta(item)}</span>
       </Link>
       <button className="m-more" aria-label={`More options for ${item.title}`} onClick={() => setMenu(true)}><Icon name="more" strokeWidth={3} /></button>
       {menu && <ItemMenu item={item} onClose={() => setMenu(false)} />}

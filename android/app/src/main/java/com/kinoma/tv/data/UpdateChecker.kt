@@ -60,11 +60,32 @@ object UpdateChecker {
             latestVersionCode = 0,
             latestVersionName = version,
             apkUrl = apk.downloadUrl,
-            releaseNotes = release.body?.trim().orEmpty().ifEmpty { release.name ?: "Panda.fun $version" },
+            releaseNotes = readableNotes(release.body.orEmpty(), version).ifEmpty { "Panda.fun $version" },
             mandatory = false,
             sha256 = sha,
             apkSize = apk.size
         )
+    }
+
+    /**
+     * Plain-text notes for the update dialog: the bullets under "## What's new in X" when present,
+     * otherwise the notes with Markdown, build details and the changelog link removed.
+     */
+    fun readableNotes(body: String, version: String): String {
+        val lines = body.replace("\r", "").lines()
+        val start = lines.indexOfFirst { it.trim().equals("## What's new in $version", ignoreCase = true) }
+        val picked = if (start >= 0) {
+            lines.drop(start + 1).takeWhile { !it.trimStart().startsWith("#") && !it.contains("**Full Changelog**") }
+        } else {
+            lines.filterNot { l ->
+                val t = l.trim()
+                t.startsWith("#") || t.contains("Full Changelog") || t.startsWith("- Version code") || t.contains("SHA-256") || t.startsWith("- APK:")
+            }
+        }
+        return picked.map { l ->
+            l.trim().replace(Regex("^[-*]\\s+"), "• ").replace("**", "").replace(Regex("`([^`]*)`"), "$1")
+                .replace(Regex("\\[([^\\]]+)]\\([^)]*\\)"), "$1")
+        }.joinToString("\n").replace(Regex("\n{3,}"), "\n\n").trim()
     }
 
     /** Semantic version compare; stable releases rank above pre-releases of the same core version. */

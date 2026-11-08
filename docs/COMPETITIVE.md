@@ -62,3 +62,9 @@ Reviewed each release. Ideas are only adopted when they fit the blueprints.
 - Netflix and Prime Video on 4K TVs load sharper artwork than on 1080p. Panda now steps artwork up one size on 4K screens only.
 - Netflix resumes a stalled stream when the connection returns and YouTube shows a "Back online" notice. Panda does both now, and also retries every row that failed while offline.
 
+## v1.1.0 round (2026-11-08)
+
+- Netflix's "Because you watched" and Prime Video's "Top picks for you" are the rows people use most to find something new. Panda now builds both from the profile's own history, Watchlist and ratings, on the device.
+- Netflix and Disney+ show "Coming Soon" on the main Home screen, not only in a separate tab. Panda's Home now has a Coming Soon row.
+- Netflix's thumbs down removes a title from your rows. Panda's dislike now does the same everywhere on Home.
+

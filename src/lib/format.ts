@@ -54,6 +54,12 @@ export function isUpcoming(i: PandaItem) {
   return Date.parse(i.releaseDate) > Date.now();
 }
 
+/** Landscape card line: "Coming 14 Nov • Telugu" for titles not yet released, otherwise year, language and genre. */
+export function landMeta(i: PandaItem) {
+  if (isUpcoming(i)) return [`Coming ${shortDate(i.releaseDate, false)}`, languageName(i.language), i.genres[0]].filter(Boolean).join(" • ");
+  return itemMeta(i, 1);
+}
+
 /** Data-driven poster badge (BLUEPRINT_SPEC 12.5). */
 export function itemBadge(i: PandaItem): string | null {
   if (isUpcoming(i)) return `IN CINEMAS ${shortDate(i.releaseDate, false)?.toUpperCase()}`;

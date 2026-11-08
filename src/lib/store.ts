@@ -215,6 +215,7 @@ export function usePrefs() { return useStore(selectPrefs); }
 export const getPrefs = () => selectPrefs(state);
 export function useWatchlist() { return useStore((s) => selectData(s).watchlist); }
 export function useInWatchlist(id: string) { return useStore((s) => selectData(s).watchlist.some((i) => i.id === id)); }
+export function useRatings() { return useStore((s) => selectData(s).ratings); }
 export function useRating(id: string) { return useStore((s) => selectData(s).ratings[id] ?? null); }
 export function useRecentSearches() { return useStore((s) => selectData(s).recentSearches); }
 export function useHistoryMap() { return useStore((s) => selectData(s).history); }

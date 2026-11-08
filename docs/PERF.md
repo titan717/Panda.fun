@@ -2,6 +2,14 @@
 
 Measured on every release. Never regress.
 
+## v1.1.0
+
+| Metric | Value |
+|---|---|
+| Personal rows | Up to five title-detail requests, started only after the Home page payload has arrived and served from the persistent SWR cache on later visits, so first paint is unchanged. Ranking is a single pass over at most ~100 titles (well under 1 ms). |
+| Coming Soon | One extra rail inside the existing cached Home payload (server cache 15 min, upcoming list 1 h); no extra request from the app. |
+| First load (gzip JS) | Index +0.8 KB for the ranking code. |
+
 ## v1.0.9
 
 | Metric | Value |

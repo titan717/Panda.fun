@@ -3,7 +3,7 @@ import { Link } from "wouter";
 import { Icon } from "../components/Icon";
 import { Img, TitleArt } from "../components/ui";
 import { useDwell, useTitle } from "../lib/hooks";
-import { itemBadge, itemMeta, runtime, timeLeft, titlePath, watchPath } from "../lib/format";
+import { itemBadge, landMeta, runtime, timeLeft, titlePath, watchPath } from "../lib/format";
 import type { HistoryEntry } from "../lib/store";
 import type { PandaItem } from "../lib/types";
 
@@ -55,7 +55,7 @@ export const TvLandscape = memo(function TvLandscape({ item, id, sub, onFocusIte
     <Link href={titlePath(item)} id={id} className="tv-card tv-land" data-hover-focus onFocus={() => onFocusItem?.(item)} aria-label={cardLabel(item, pos, sub)}>
       <span className="tv-land-media"><Img src={item.backdrop} alt="" title={item.title} /></span>
       <span className="tv-land-title">{item.title}</span>
-      <span className="tv-land-sub">{sub ?? itemMeta(item, 1)}</span>
+      <span className="tv-land-sub">{sub ?? landMeta(item)}</span>
     </Link>
   );
 });
