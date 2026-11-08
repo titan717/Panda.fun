@@ -7,8 +7,9 @@ import { VideoOverlay } from "../components/VideoOverlay";
 import { useDwell, useSeason, useTitle } from "../lib/hooks";
 import { actions, useHasLists, useHistoryEntry, useInWatchlist, useListCount, usePrefs, useRating } from "../lib/store";
 import { SaveToSheet } from "../components/QuickActions";
-import { castAndCrew, detailsMeta, voteLabel, runtime, shortDate, watchPath, airsLater } from "../lib/format";
-import { detailsCtas } from "../lib/watch";
+import { Sheet, SheetItem } from "../components/Sheet";
+import { castAndCrew, detailsMeta, voteLabel, runtime, shortDate, airsLater } from "../lib/format";
+import { detailsCtas, episodeRow, nextEpisodeOf } from "../lib/watch";
 import { useNav } from "../lib/nav";
 import type { MediaType, TitleDetails } from "../lib/types";
 import { MPoster } from "./MCards";
@@ -37,6 +38,14 @@ export function EpisodeList({ d, limit, onSeason }: { d: TitleDetails; limit?: n
   const { go } = useNav();
   const eps = data?.number === season ? data.episodes : [];
   const shown = limit && !expanded ? eps.slice(0, limit) : eps;
+  const [menu, setMenu] = useState<{ season: number; number: number; title: string; done: boolean } | null>(null);
+  const mark = (upTo: number, done: boolean, only?: boolean) => {
+    if (!menu) return;
+    const list = only ? [{ season: menu.season, episode: menu.number }] : eps.filter((e) => e.number <= upTo && !airsLater(e.airDate)).map((e) => ({ season: e.season, episode: e.number }));
+    actions.markEpisodes(d, list, done, done ? nextEpisodeOf(d.seasons, menu.season, upTo) : null);
+    toast(done ? (only ? `Marked episode ${menu.number} as watched` : `Marked episodes 1–${upTo} as watched`) : `Marked episode ${menu.number} as unwatched`);
+    setMenu(null);
+  };
   return (
     <section className="m-eps" aria-label="Episodes">
       <div className="m-season-tabs" role="tablist">
@@ -49,23 +58,33 @@ export function EpisodeList({ d, limit, onSeason }: { d: TitleDetails; limit?: n
       {error && !data && <ErrorState compact message={error.message} onRetry={() => mutate()} />}
       {!data && !error && [0, 1, 2].map((i) => <div key={i} className="m-ep"><Skeleton className="m-ep-still" /><div className="m-ep-text"><Skeleton className="sk-line" /><Skeleton className="sk-line sk-line--short" /></div></div>)}
       {shown.map((ep) => {
-        const isCur = history?.season === ep.season && history.episode === ep.number;
-        const href = watchPath("tv", d.tmdbId, ep.season, ep.number) + (isCur && !history.completed ? `&t=${history.position}` : "");
-        const soon = airsLater(ep.airDate);
-          const pct = isCur && history.duration ? Math.min(100, (history.position / history.duration) * 100) : 0;
+        const row = episodeRow(history, d.tmdbId, ep.season, ep.number);
+          const href = row.href;
+          const soon = airsLater(ep.airDate);
+          const pct = row.pct;
         return (
-          <button key={ep.id} className={`m-ep ${soon ? "is-upcoming" : ""}`} aria-disabled={soon || undefined} onClick={() => { if (soon) toast(`Episode ${ep.number} arrives ${shortDate(ep.airDate)}`); else go(href); }}>
+          <button key={ep.id} className={`m-ep ${soon ? "is-upcoming" : ""} ${row.done ? "is-watched" : ""}`} aria-disabled={soon || undefined} onClick={() => { if (soon) toast(`Episode ${ep.number} arrives ${shortDate(ep.airDate)}`); else go(href); }}
+            onContextMenu={(e) => { e.preventDefault(); if (!soon) setMenu({ season: ep.season, number: ep.number, title: ep.title, done: row.done }); }}>
             <span className="m-ep-row">
               <span className="m-ep-still"><Img src={ep.still} alt="" title={`E${ep.number}`} />{!soon && <Icon name="play" className="m-ep-play" />}{pct > 0 && <span className="progress"><span style={{ width: `${pct}%` }} /></span>}</span>
               <span className="m-ep-text">
                 <span className="m-ep-title">{ep.number}. {ep.title}</span>
-                <span className="m-ep-meta">{soon ? `Coming ${shortDate(ep.airDate)}` : [`S${ep.season} E${ep.number}`, shortDate(ep.airDate), runtime(ep.runtime)].filter(Boolean).join(" • ")}</span>
+                <span className="m-ep-meta">{soon ? `Coming ${shortDate(ep.airDate)}` : [`S${ep.season} E${ep.number}`, row.done ? null : shortDate(ep.airDate), row.left ? `${row.left}m left` : runtime(ep.runtime)].filter(Boolean).join(" • ")}{row.done && <span className="ep-watched"><Icon name="check" /> Watched</span>}</span>
               </span>
             </span>
             {ep.overview && <span className="m-ep-overview">{ep.overview}</span>}
           </button>
         );
       })}
+      {menu && (
+        <Sheet title={`${menu.number}. ${menu.title}`} onClose={() => setMenu(null)}>
+          <SheetItem icon={<Icon name="play" />} label="Play" onClick={() => { const r = episodeRow(history, d.tmdbId, menu.season, menu.number); setMenu(null); go(r.href); }} />
+          {menu.done
+            ? <SheetItem icon={<Icon name="close" />} label="Mark as unwatched" onClick={() => mark(menu.number, false, true)} />
+            : <SheetItem icon={<Icon name="check" />} label="Mark as watched" onClick={() => mark(menu.number, true, true)} />}
+          {menu.number > 1 && <SheetItem icon={<Icon name="check" />} label={`Mark episodes 1–${menu.number} as watched`} onClick={() => mark(menu.number, true)} />}
+        </Sheet>
+      )}
       {limit && eps.length > limit && <button className="m-view-more" onClick={() => setExpanded((x) => !x)}>{expanded ? "View Less" : "View More"} <Icon name={expanded ? "chevronUp" : "chevronDown"} /></button>}
     </section>
   );

@@ -339,3 +339,7 @@ html[data-mode="tv"] .sheet-group { font-size: calc(18 * var(--tu)); margin: cal
 .list-count { display: block; color: var(--text-2); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .list-card.is-new .list-collage { background: transparent; border: 2px dashed rgba(255, 255, 255, 0.28); }
 .list-hint { color: var(--text-2); }
+
+/* Continue Watching 2.0: watched episodes */
+.ep-watched { display: inline-flex; align-items: center; gap: 0.3em; margin-left: 0.6em; padding: 0.1em 0.55em; border-radius: 999px; background: rgba(255, 255, 255, 0.12); color: var(--text-1); font-size: 0.85em; font-weight: var(--fw-semibold); vertical-align: 0.05em; }
+.ep-watched .icon { width: 1em; height: 1em; stroke-width: 3; }

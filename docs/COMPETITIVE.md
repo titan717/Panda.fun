@@ -87,3 +87,10 @@ Reviewed each release. Ideas are only adopted when they fit the blueprints.
 - Netflix and Prime Video open a quick menu when you long-press a title on a phone. Panda's long-press opens quick actions: play, save to lists, move to top, mark as watched and remove.
 - Google TV and Apple TV let you mark something as watched. Panda's "Mark as watched" takes it off the Watchlist and counts it for "Because you watched".
 - Plex shows list covers built from posters. Panda's list cards show a three-poster collage.
+
+## v1.1.4 round (2026-11-08)
+
+- Netflix shows a progress bar under every episode you have started and a full bar on finished ones. Panda's episode rows now have their own progress, time left and a Watched pill.
+- Apple TV's Up Next brings a show back when a new episode comes out. Panda's Continue Watching does the same with "New Episode • S3 E1".
+- Plex and Trakt let you mark episodes, or a run of episodes, as watched. Panda's mobile episode list does this with a long-press.
+- Prime Video's Continue Watching filters by Movies and TV. Panda's Continue Watching page gains the same chips.

@@ -2,6 +2,14 @@
 
 Measured on every release. Never regress.
 
+## v1.1.4
+
+| Metric | Value |
+|---|---|
+| Episode progress | Stored with the show's history entry (four numbers per episode, 200 episodes max), read synchronously from the store; episode rows render with no extra request. |
+| Next-up | Pending new episodes are resolved when Continue Watching is computed (no timers, no polling). |
+| First load (gzip JS) | Entry chunk +0.3 KB for the episode helpers. |
+
 ## v1.1.3
 
 | Metric | Value |

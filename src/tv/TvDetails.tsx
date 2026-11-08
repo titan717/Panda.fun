@@ -7,8 +7,8 @@ import { VideoOverlay } from "../components/VideoOverlay";
 import { useLiteMotion, useSeason, useTitle, useTrailerStage } from "../lib/hooks";
 import { actions, useHasLists, useHistoryEntry, useInWatchlist, useListCount, usePrefs, useRating } from "../lib/store";
 import { SaveToSheet } from "../components/QuickActions";
-import { castAndCrew, detailsMeta, languageName, voteLabel, pluralEps, runtime, shortDate, watchPath, airsLater } from "../lib/format";
-import { detailsCtas } from "../lib/watch";
+import { castAndCrew, detailsMeta, languageName, voteLabel, pluralEps, runtime, shortDate, airsLater } from "../lib/format";
+import { detailsCtas, episodeRow } from "../lib/watch";
 import { focusEl, focusFirst, useBackHandler } from "../lib/focus";
 import { useNav } from "../lib/nav";
 import type { MediaType, TitleDetails } from "../lib/types";
@@ -208,17 +208,17 @@ function EpisodesTab({ d }: { d: TitleDetails }) {
           <div key={i} className="tv-ep"><Skeleton className="tv-ep-still" /><div className="tv-ep-text"><Skeleton className="sk-line" /><Skeleton className="sk-line sk-line--short" /></div></div>
         ))}
         {data?.number === season && data.episodes.map((ep) => {
-          const isCur = history?.season === ep.season && history.episode === ep.number;
-          const href = watchPath("tv", d.tmdbId, ep.season, ep.number) + (isCur && !history.completed ? `&t=${history.position}` : "");
+          const row = episodeRow(history, d.tmdbId, ep.season, ep.number);
+          const href = row.href;
           const soon = airsLater(ep.airDate);
-          const pct = isCur && history.duration ? Math.min(100, (history.position / history.duration) * 100) : 0;
+          const pct = row.pct;
           return (
-            <a key={ep.id} id={`ep-${ep.season}-${ep.number}`} href={href} className={`tv-ep ${soon ? "is-upcoming" : ""}`} aria-disabled={soon || undefined} data-hover-focus
+            <a key={ep.id} id={`ep-${ep.season}-${ep.number}`} href={href} className={`tv-ep ${soon ? "is-upcoming" : ""} ${row.done ? "is-watched" : ""}`} aria-disabled={soon || undefined} data-hover-focus
               onClick={(e) => { e.preventDefault(); if (soon) toast(`Episode ${ep.number} arrives ${shortDate(ep.airDate)}`); else go(href); }}>
               <span className="tv-ep-still"><Img src={ep.still} alt="" title={`Episode ${ep.number}`} />{!soon && <Icon name="play" className="tv-ep-play" />}{pct > 0 && <span className="progress"><span style={{ width: `${pct}%` }} /></span>}</span>
               <span className="tv-ep-text">
                 <span className="tv-ep-title">{ep.number}. {ep.title}</span>
-                <span className="tv-ep-meta">{soon ? `Coming ${shortDate(ep.airDate)}` : [`S${ep.season} E${ep.number}`, shortDate(ep.airDate), runtime(ep.runtime)].filter(Boolean).join(" • ")}</span>
+                <span className="tv-ep-meta">{soon ? `Coming ${shortDate(ep.airDate)}` : [`S${ep.season} E${ep.number}`, row.done ? null : shortDate(ep.airDate), row.left ? `${row.left}m left` : runtime(ep.runtime)].filter(Boolean).join(" • ")}{row.done && <span className="ep-watched"><Icon name="check" /> Watched</span>}</span>
                 {ep.overview && <span className="tv-ep-overview">{ep.overview}</span>}
               </span>
             </a>

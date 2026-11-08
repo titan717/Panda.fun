@@ -38,6 +38,14 @@ export function PlayerPage() {
   );
 }
 
+/** The announced episode after s/e that has not aired yet (smart next-up, v1.1.4). */
+function upcomingNext(d: TitleDetails, s: number, e: number) {
+  const n = nextEpisodeOf(d.seasons, s, e);
+  const air = d.nextEpisode;
+  if (air?.airDate && airsLater(air.airDate) && (!n || (air.season === n.season && air.episode === n.episode))) return { season: air.season, episode: air.episode, airDate: air.airDate };
+  return null;
+}
+
 /** The episode after s/e, unless it hasn't aired yet. */
 function playableNext(d: TitleDetails, s: number, e: number) {
   const n = nextEpisodeOf(d.seasons, s, e);
@@ -91,7 +99,7 @@ function Player({ type, id, season, episode, start }: { type: MediaType; id: num
   const save = useCallback(() => {
     const d = getDetails();
     if (!d || !pos.current.dirty || pos.current.duration <= 0) return;
-    actions.saveProgress(d, { position: pos.current.position, duration: pos.current.duration, season: isTv ? ep.s : undefined, episode: isTv ? ep.e : undefined, episodeTitle: epInfo?.title ?? null, next: isTv ? playableNext(d, ep.s, ep.e) : null });
+    actions.saveProgress(d, { position: pos.current.position, duration: pos.current.duration, season: isTv ? ep.s : undefined, episode: isTv ? ep.e : undefined, episodeTitle: epInfo?.title ?? null, next: isTv ? playableNext(d, ep.s, ep.e) : null, upcoming: isTv ? upcomingNext(d, ep.s, ep.e) : null });
     pos.current.dirty = false;
   }, [ep.s, ep.e, epInfo?.title, isTv]);
   const detailsRef = useRef<TitleDetails | undefined>(details);

@@ -458,3 +458,4 @@ html[data-mode="tv"] .list-card.tv-card:focus .list-collage { outline: var(--foc
 .tv-card.is-editable:focus .remove-mark { background: #fff; color: #000; border-color: #fff; }
 .tv-browse .list-hint, .tv-ms-lists-hint { font-size: var(--t-body); margin: 0 0 calc(18 * var(--tu)) calc(6 * var(--tu)); }
 .tv-ms-lists-hint { margin-top: calc(24 * var(--tu)); }
+.tv-ep.is-watched .tv-ep-still img { filter: brightness(0.72); }

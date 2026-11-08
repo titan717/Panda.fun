@@ -1,4 +1,4 @@
-import type { HistoryEntry } from "./store";
+import { episodeProgress, type HistoryEntry } from "./store";
 import type { SeasonSummary, TitleDetails } from "./types";
 import { watchPath } from "./format";
 
@@ -20,6 +20,16 @@ export function prevEpisodeOf(seasons: SeasonSummary[], season: number, episode:
   const list = realSeasons(seasons);
   const prev = [...list].reverse().find((s) => s.number < season);
   return prev ? { season: prev.number, episode: prev.episodeCount } : null;
+}
+
+/** One episode row (Continue Watching 2.0): its own progress bar, "Watched" state and resume link. */
+export function episodeRow(h: HistoryEntry | null, tmdbId: number, season: number, episode: number) {
+  const ep = episodeProgress(h, season, episode);
+  const base = watchPath("tv", tmdbId, season, episode);
+  const resumable = !!ep && !ep.done && ep.p > 30;
+  const pct = ep?.done ? 100 : resumable && ep.d ? Math.min(100, (ep.p / ep.d) * 100) : 0;
+  const left = resumable && ep.d > ep.p ? Math.max(1, Math.round((ep.d - ep.p) / 60)) : 0;
+  return { href: resumable ? `${base}&t=${ep.p}` : base, pct, done: !!ep?.done, left };
 }
 
 /** Primary + optional secondary CTA for the details screens (spec 7.5, 14.4). */

@@ -67,6 +67,7 @@ export function continueHref(h: HistoryEntry) {
 }
 
 export function continueSub(h: HistoryEntry) {
+  if (h.newEpisode && h.season && h.episode) return `New Episode • S${h.season} E${h.episode}`;
   if (h.upNext && h.season && h.episode) return `Next Episode • S${h.season} E${h.episode}`;
   if (h.item.type === "tv" && h.season && h.episode) {
     const left = timeLeft(h.position, h.duration);

@@ -28,7 +28,37 @@ export interface HistoryEntry {
   completed: boolean;
   /** The previous episode was finished and this one is queued (blueprint 10.3 "Next Episode"). */
   upNext?: boolean;
+  /** Continue Watching 2.0: progress of every episode watched, keyed "season:episode". */
+  episodes?: Record<string, EpisodeProgress>;
+  /** The finished episode's successor had not aired yet; it joins Continue Watching on its air date. */
+  pending?: { season: number; episode: number; airDate: string } | null;
+  /** Derived (never stored): a pending episode that has now aired. */
+  newEpisode?: boolean;
 }
+
+export interface EpisodeProgress { p: number; d: number; done: boolean; at: number }
+export const epKey = (season: number, episode: number) => `${season}:${episode}`;
+const MAX_EPISODES = 200;
+
+function withEpisode(prev: Record<string, EpisodeProgress> | undefined, s: number | undefined, e: number | undefined, ep: EpisodeProgress) {
+  if (!s || !e) return prev;
+  const next = { ...(prev ?? {}), [epKey(s, e)]: ep };
+  const keys = Object.keys(next);
+  if (keys.length <= MAX_EPISODES) return next;
+  // keep the most recently touched episodes
+  return Object.fromEntries(keys.map((k) => [k, next[k]!] as const).sort((a, b) => b[1].at - a[1].at).slice(0, MAX_EPISODES));
+}
+
+/** Episode progress for a title, falling back to the entry's own episode for data saved before v1.1.4. */
+export function episodeProgress(h: HistoryEntry | null | undefined, s: number, e: number): EpisodeProgress | null {
+  if (!h) return null;
+  const own = h.episodes?.[epKey(s, e)];
+  if (own) return own;
+  if (h.season === s && h.episode === e && !h.upNext) return { p: h.position, d: h.duration, done: h.completed, at: h.updatedAt };
+  return null;
+}
+
+const aired = (date: string, now: number) => { const t = Date.parse(date); return Number.isFinite(t) && t <= now; };
 
 export type Rating = "love" | "like" | "dislike";
 
@@ -148,6 +178,7 @@ function load(): State {
     for (const p of parsed.profiles) {
       const d = { ...emptyData(), ...(parsed.data?.[p.id] ?? {}) };
       d.lists = Array.isArray(d.lists) ? d.lists.filter((l) => l && typeof l.id === "string" && typeof l.name === "string" && Array.isArray(l.items)) : [];
+      for (const [k, h] of Object.entries(d.history ?? {})) if (h && h.episodes && typeof h.episodes !== "object") d.history[k] = { ...h, episodes: undefined };
       data[p.id] = d;
     }
     const prefs = { ...defaultPrefs, ...(parsed.prefs ?? {}) };
@@ -244,8 +275,16 @@ export function useHistoryMap() { return useStore((s) => selectData(s).history);
 export function useHistoryEntry(id: string) { return useStore((s) => selectData(s).history[id] ?? null); }
 
 /** Continue Watching: unfinished entries, newest first. */
-export function continueWatching(history: Record<string, HistoryEntry>) {
-  return Object.values(history).filter((h) => !h.completed && (h.position > 30 || h.upNext)).sort((a, b) => b.updatedAt - a.updatedAt);
+export function continueWatching(history: Record<string, HistoryEntry>, now = Date.now()) {
+  const out: HistoryEntry[] = [];
+  for (const h of Object.values(history)) {
+    if (!h.completed && (h.position > 30 || h.upNext)) out.push(h);
+    // smart next-up: a finished show comes back when its next episode airs
+    else if (h.completed && h.pending && aired(h.pending.airDate, now)) {
+      out.push({ ...h, season: h.pending.season, episode: h.pending.episode, episodeTitle: null, position: 0, duration: 0, completed: false, upNext: true, newEpisode: true, pending: null, updatedAt: Math.max(h.updatedAt, Date.parse(h.pending.airDate)) });
+    }
+  }
+  return out.sort((a, b) => b.updatedAt - a.updatedAt);
 }
 /** Shows/movies the profile has watched (any progress), newest first. */
 export function watchedTitles(history: Record<string, HistoryEntry>) {
@@ -331,21 +370,46 @@ export const actions = {
   },
   clearRecentSearches() { patchActive((d) => ({ ...d, recentSearches: [] })); },
   clearHistory() { patchActive((d) => ({ ...d, history: {} })); },
-  saveProgress(item: PandaItem, p: { position: number; duration: number; season?: number; episode?: number; episodeTitle?: string | null; next?: { season: number; episode: number } | null }) {
+  saveProgress(item: PandaItem, p: { position: number; duration: number; season?: number; episode?: number; episodeTitle?: string | null; next?: { season: number; episode: number } | null; upcoming?: { season: number; episode: number; airDate: string } | null }) {
     if (!Number.isFinite(p.position) || p.position < 0) return;
     const completed = p.duration > 0 && p.position / p.duration > 0.94;
-    if (completed && p.next && item.type === "tv") {
-      const next = p.next;
-      patchActive((d) => ({
-        ...d,
-        history: { ...d.history, [item.id]: { item: slim(item), season: next.season, episode: next.episode, episodeTitle: null, position: 0, duration: 0, completed: false, upNext: true, updatedAt: Date.now() } }
-      }));
-      return;
-    }
-    patchActive((d) => ({
-      ...d,
-      history: { ...d.history, [item.id]: { item: slim(item), season: p.season, episode: p.episode, episodeTitle: p.episodeTitle ?? null, position: Math.round(p.position), duration: Math.round(p.duration), completed, updatedAt: Date.now() } }
-    }));
+    const now = Date.now();
+    patchActive((d) => {
+      const prev = d.history[item.id];
+      const episodes = withEpisode(prev?.episodes, p.season, p.episode, { p: Math.round(p.position), d: Math.round(p.duration), done: completed || (prev?.episodes?.[epKey(p.season ?? 0, p.episode ?? 0)]?.done ?? false) && p.position < 30, at: now });
+      let entry: HistoryEntry;
+      if (completed && p.next && item.type === "tv") {
+        entry = { item: slim(item), season: p.next.season, episode: p.next.episode, episodeTitle: null, position: 0, duration: 0, completed: false, upNext: true, updatedAt: now, episodes, pending: null };
+      } else {
+        entry = { item: slim(item), season: p.season, episode: p.episode, episodeTitle: p.episodeTitle ?? null, position: Math.round(p.position), duration: Math.round(p.duration), completed, updatedAt: now, episodes,
+          pending: completed && item.type === "tv" && p.upcoming ? p.upcoming : null };
+      }
+      return { ...d, history: { ...d.history, [item.id]: entry } };
+    });
+  },
+  /**
+   * Mark episodes watched or unwatched from an episode list. When the episode in Continue Watching
+   * becomes watched, the entry moves on to `next` (or finishes).
+   */
+  markEpisodes(item: PandaItem, eps: { season: number; episode: number }[], done: boolean, next?: { season: number; episode: number } | null) {
+    if (!eps.length) return;
+    const now = Date.now();
+    patchActive((d) => {
+      const prev = d.history[item.id];
+      let episodes = prev?.episodes;
+      for (const e of eps) episodes = withEpisode(episodes, e.season, e.episode, { p: 0, d: episodeProgress(prev, e.season, e.episode)?.d ?? 0, done, at: now });
+      const last = eps[eps.length - 1]!;
+      const touchesCurrent = !prev || eps.some((e) => e.season === prev.season && e.episode === prev.episode);
+      let entry: HistoryEntry;
+      if (done && touchesCurrent) {
+        entry = next
+          ? { item: slim(item), season: next.season, episode: next.episode, episodeTitle: null, position: 0, duration: 0, completed: false, upNext: true, updatedAt: now, episodes }
+          : { item: slim(item), season: last.season, episode: last.episode, episodeTitle: null, position: 0, duration: 0, completed: true, updatedAt: now, episodes };
+      } else {
+        entry = prev ? { ...prev, episodes } : { item: slim(item), season: last.season, episode: last.episode, episodeTitle: null, position: 0, duration: 0, completed: true, updatedAt: now, episodes };
+      }
+      return { ...d, history: { ...d.history, [item.id]: entry } };
+    });
   },
   removeHistory(id: string) {
     patchActive((d) => { const history = { ...d.history }; delete history[id]; return { ...d, history }; });

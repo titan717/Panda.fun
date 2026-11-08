@@ -171,13 +171,25 @@ export function MyListPage() {
 export function ContinueWatchingPage() {
   const tv = useIsTv();
   const history = useHistoryMap();
-  const entries = continueWatching(history);
+  const all = continueWatching(history);
+  const [filter, setFilter] = useState<ListFilter>("all");
+  const entries = filter === "all" ? all : all.filter((h) => h.item.type === filter);
+  const mixed = all.some((h) => h.item.type === "movie") && all.some((h) => h.item.type === "tv");
   const { go } = useNav();
   const ref = useAutoFocus(true);
   return (
     <div ref={ref} className={tv ? "tv-page tv-browse" : "m-page"} data-scroll-y={tv ? "item" : undefined}>
       <PageHeader title="Continue Watching" fallback="/my-space" />
-      {entries.length === 0
+      {mixed && (
+        <section className={tv ? "tv-chips" : "m-chips"} aria-label="Filters">
+          {(["all", "movie", "tv"] as const).map((f) => (
+            <button key={f} id={`cwf-${f}`} className={`${tv ? "tv-chip" : "m-chip"} ${filter === f ? "is-selected" : ""}`} aria-pressed={filter === f} onClick={() => setFilter(f)} data-hover-focus>
+              {f === "all" ? `All ${all.length}` : f === "movie" ? "Movies" : "Shows"}
+            </button>
+          ))}
+        </section>
+      )}
+      {all.length === 0
         ? <EmptyState icon="play" title="Start watching to see it here" sub="Anything you don't finish shows up here so you can pick up where you left off." action={<button className="btn btn--primary" data-autofocus onClick={() => go("/")}>Go to Home</button>} />
         : <div className={tv ? "tv-land-grid" : "m-land-grid"}>{entries.map((h, i) => tv ? <TvContinue key={h.item.id} entry={h} id={`cw-${i}`} /> : <MContinue key={h.item.id} entry={h} />)}</div>}
     </div>
