@@ -26,5 +26,6 @@ sleep 0.8; shot splash-0.8s
 sleep 1.5; shot splash-2.3s
 sleep 8; shot first-screen
 adb shell input keyevent KEYCODE_DPAD_CENTER; sleep 4; shot after-ok
+sleep 8; shot after-ok-12s
 adb shell pidof "$PKG" >/dev/null && echo "app running" | tee -a shots/package.txt || { echo "app not running"; { adb logcat -d -b crash; echo ----; adb logcat -d | grep -iE "kinoma|AndroidRuntime|chromium|ActivityTaskManager|am_" | tail -400; } > shots/logcat.txt; exit 1; }
-adb logcat -d | grep -iE "kinoma|panda|chromium|AndroidRuntime" | tail -300 > shots/logcat.txt || true
+adb logcat -d | grep -iE "kinoma|panda|chromium|AndroidRuntime|KinomaTVWeb" | tail -300 > shots/logcat.txt || true

@@ -38,6 +38,15 @@ export function PlayerPage() {
   );
 }
 
+/** The episode after s/e, unless it hasn't aired yet. */
+function playableNext(d: TitleDetails, s: number, e: number) {
+  const n = nextEpisodeOf(d.seasons, s, e);
+  if (!n) return null;
+  const air = d.nextEpisode;
+  if (air && air.season === n.season && air.episode === n.episode && airsLater(air.airDate)) return null;
+  return n;
+}
+
 function Player({ type, id, season, episode, start }: { type: MediaType; id: number; season: number; episode: number; start: number }) {
   const prefs = usePrefs();
   const tv = useIsTv();
@@ -82,18 +91,9 @@ function Player({ type, id, season, episode, start }: { type: MediaType; id: num
   const save = useCallback(() => {
     const d = getDetails();
     if (!d || !pos.current.dirty || pos.current.duration <= 0) return;
-    actions.saveProgress(d, { position: pos.current.position, duration: pos.current.duration, season: isTv ? ep.s : undefined, episode: isTv ? ep.e : undefined, episodeTitle: epInfo?.title ?? null, next: playableNext(d) });
+    actions.saveProgress(d, { position: pos.current.position, duration: pos.current.duration, season: isTv ? ep.s : undefined, episode: isTv ? ep.e : undefined, episodeTitle: epInfo?.title ?? null, next: isTv ? playableNext(d, ep.s, ep.e) : null });
     pos.current.dirty = false;
   }, [ep.s, ep.e, epInfo?.title, isTv]);
-  /** The episode after this one, unless it hasn't aired yet. */
-  function playableNext(d: TitleDetails) {
-    if (!isTv) return null;
-    const n = nextEpisodeOf(d.seasons, ep.s, ep.e);
-    if (!n) return null;
-    const air = d.nextEpisode;
-    if (air && air.season === n.season && air.episode === n.episode && airsLater(air.airDate)) return null;
-    return n;
-  }  
   const detailsRef = useRef<TitleDetails | undefined>(details);
   detailsRef.current = details;
   function getDetails() { return detailsRef.current; }
