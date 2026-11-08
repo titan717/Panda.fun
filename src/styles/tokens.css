@@ -244,3 +244,12 @@ html[data-contrast="high"] {
 html[data-mode="tv"][data-scale="95"] #root, html[data-mode="tv"][data-scale="90"] #root { transform-origin: 50% 50%; height: 100vh; overflow: hidden; }
 html[data-mode="tv"][data-scale="95"] #root { transform: scale(0.95); }
 html[data-mode="tv"][data-scale="90"] #root { transform: scale(0.9); }
+
+/* Settings › Display › Card size (v1.1.9, D-111): "compact" fits more titles per row; "standard" is the blueprint. */
+html[data-mode="tv"][data-density="compact"] {
+  --poster-w: calc(250 * var(--tu));
+  --poster-h: calc(333 * var(--tu));
+  --expand-w: calc(683 * var(--tu));
+  --land-w: calc(340 * var(--tu));
+  --land-h: calc(191 * var(--tu));
+}

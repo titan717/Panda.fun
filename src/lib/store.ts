@@ -93,6 +93,13 @@ export interface Prefs {
   autoSkipIntro: boolean;
   /** Settings › Data & storage › Preload titles (v1.1.6, D-83). */
   preloadMode: "smart" | "wifi" | "off";
+  /** Settings › Personalize Home (v1.1.9): section order and hidden sections or rows ("rail:<id>"). */
+  homeOrder: string[];
+  homeHidden: string[];
+  /** Card size: the blueprint's "standard", or "compact" for more titles per row. */
+  density: "standard" | "compact";
+  /** Play trailers behind rows as well as on the hero and Details. */
+  rowTrailers: boolean;
 }
 
 /** Preferences shared by every profile on the device; everything else is saved per profile. */
@@ -157,7 +164,11 @@ const defaultPrefs: Prefs = {
   textSize: "default",
   playbackSpeed: 1,
   autoSkipIntro: false,
-  preloadMode: "smart"
+  preloadMode: "smart",
+  homeOrder: [],
+  homeHidden: [],
+  density: "standard",
+  rowTrailers: true
 };
 
 const emptyData = (): ProfileData => ({ watchlist: [], lists: [], history: {}, ratings: {}, recentSearches: [], recentTitles: [], reminders: [], alertsSeenAt: 0, alerted: [] });

@@ -56,6 +56,8 @@ jobs:
       - uses: gradle/actions/setup-gradle@v4
         with:
           gradle-version: "8.5"
-      - name: Compile Kotlin and resources
+      - name: Compile Kotlin and resources, and shrink the release build with R8
         working-directory: android
-        run: gradle assembleDebug --no-daemon --stacktrace
+        run: |
+          gradle assembleDebug assembleRelease --no-daemon --stacktrace
+          ls -l app/build/outputs/apk/*/ ; du -h app/build/outputs/apk/release/*.apk

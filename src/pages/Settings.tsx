@@ -1,3 +1,4 @@
+import "./settings.css";
 import { forgetIntros, SPEEDS, speedLabel } from "../lib/player2";
 import { useEffect, useRef, useState, type ReactNode } from "react";
 import { Link, useParams } from "wouter";
@@ -8,7 +9,8 @@ import { PageHeader } from "../components/PageHeader";
 import { toast } from "../components/ui";
 import { Sheet } from "../components/Sheet";
 import { actions, usePrefs, useProfile, useReminders, type Prefs } from "../lib/store";
-import { useGenres, useSourceHealth } from "../lib/hooks";
+import { useGenres, usePage, useSourceHealth } from "../lib/hooks";
+import { HOME_SECTIONS, isCustomHome, moveSection, normalizeOrder, railKey, type HomeSection } from "../lib/homeLayout";
 import { focusFirst } from "../lib/focus";
 import { useNav } from "../lib/nav";
 import { useIsTv } from "../lib/layout";
@@ -18,9 +20,10 @@ import { notifyPermission, requestNotify } from "../lib/notify";
 import type { SourceId } from "../lib/types";
 import { clearShield, COMPAT, nativeShield, SANDBOX, shieldStats, syncNative } from "../lib/shield";
 
-type SectionId = "profiles" | "playback" | "trailers" | "sources" | "languages" | "parental" | "display" | "storage" | "notifications" | "whatsnew" | "updates" | "help";
+type SectionId = "profiles" | "home" | "playback" | "trailers" | "sources" | "languages" | "parental" | "display" | "storage" | "notifications" | "whatsnew" | "updates" | "help";
 const SECTIONS: { id: SectionId; icon: IconName; title: string; sub: string }[] = [
   { id: "profiles", icon: "user", title: "Profiles & Account", sub: "Add, edit or switch profiles" },
+  { id: "home", icon: "home", title: "Personalize Home", sub: "Reorder or hide rows on Home" },
   { id: "playback", icon: "play", title: "Playback", sub: "Quality and autoplay" },
   { id: "trailers", icon: "volume", title: "Trailers", sub: "Autoplay, sound, volume and delay" },
   { id: "sources", icon: "globe", title: "Sources", sub: "Preferred source and live status" },
@@ -179,6 +182,67 @@ function PinSetup({ onClose }: { onClose: () => void }) {
   );
 }
 
+/** Settings › Personalize Home (v1.1.9, D-110): move sections up or down, hide sections or single rows. */
+function HomePanel() {
+  const prefs = usePrefs();
+  const profile = useProfile();
+  const page = usePage("home");
+  const order = normalizeOrder(prefs.homeOrder);
+  const hidden = new Set(prefs.homeHidden);
+  const byId = new Map(HOME_SECTIONS.map((s) => [s.id, s]));
+  const [moved, setMoved] = useState<{ id: HomeSection; n: number } | null>(null);
+  const setHidden = (key: string, off: boolean) => actions.setPrefs({ homeHidden: off ? [...hidden, key] : [...hidden].filter((k) => k !== key) });
+  const move = (id: HomeSection, dir: -1 | 1) => {
+    actions.setPrefs({ homeOrder: moveSection(prefs.homeOrder, id, dir) });
+    setMoved((m) => ({ id, n: (m?.n ?? 0) + 1 }));
+    const name = byId.get(id)!.title;
+    requestAnimationFrame(() => {
+      // keep focus on the same arrow so a section can be pushed several places in a row; at the end, hop to the other arrow
+      const el = document.getElementById(`hp-${id}-${dir < 0 ? "up" : "down"}`) as HTMLButtonElement | null;
+      if (el && !el.disabled) el.focus(); else document.getElementById(`hp-${id}-${dir < 0 ? "down" : "up"}`)?.focus();
+    });
+    toast(`${name} moved ${dir < 0 ? "up" : "down"}`);
+  };
+  if (profile?.kids) return <div className="set-panel"><p className="set-note">Kids profiles get a Home made for kids. Switch to a grown-up profile to personalize Home.</p></div>;
+  return (
+    <div className="set-panel set-home">
+      <p className="set-group-title">Sections, top to bottom</p>
+      <ol className="set-home-list">
+        {order.map((id, i) => {
+          const s = byId.get(id)!;
+          const on = !hidden.has(id);
+          return (
+            <li key={moved?.id === id ? `${id}-${moved.n}` : id} className={`set-home-item lrud-container ${on ? "" : "is-off"} ${moved?.id === id ? "is-moved" : ""}`} data-home-section={id}>
+              <span className="set-home-pos" aria-hidden="true">{i + 1}</span>
+              <button id={`hp-${id}`} role="switch" aria-checked={on} className="set-row set-home-toggle" onClick={() => setHidden(id, on)} data-hover-focus>
+                <span className="set-row-text"><span className="set-row-title">{s.title}</span><span className="set-row-sub">{on ? s.sub : "Hidden from Home"}</span></span>
+                <span className={`toggle ${on ? "is-on" : ""}`} aria-hidden="true" />
+              </button>
+              <button id={`hp-${id}-up`} className="icon-btn set-home-move" aria-label={`Move ${s.title} up`} disabled={i === 0} onClick={() => move(id, -1)} data-hover-focus><Icon name="chevronUp" /></button>
+              <button id={`hp-${id}-down`} className="icon-btn set-home-move" aria-label={`Move ${s.title} down`} disabled={i === order.length - 1} onClick={() => move(id, 1)} data-hover-focus><Icon name="chevronDown" /></button>
+            </li>
+          );
+        })}
+      </ol>
+      {!hidden.has("rails") && (page.data?.rails.length ?? 0) > 0 && (
+        <>
+          <p className="set-group-title">Panda's rows</p>
+          <div className="lrud-container set-choice-list set-home-rails">
+            {page.data!.rails.map((r) => (
+              <Toggle key={r.id} id={`hp-rail-${r.id}`} title={r.title} value={!hidden.has(railKey(r.id))} onChange={(v) => setHidden(railKey(r.id), !v)} />
+            ))}
+          </div>
+        </>
+      )}
+      {isCustomHome(prefs.homeOrder, prefs.homeHidden) && (
+        <Row id="hp-reset" title="Reset Home" sub="Bring back every row in the original order" right={<Icon name="refresh" />}
+          onClick={() => { actions.setPrefs({ homeOrder: [], homeHidden: [] }); toast("Home reset"); }} />
+      )}
+      <p className="set-note">Changes apply to {profile?.name ?? "this profile"} only. Titles in hidden rows can still be found in Search. Hiding Continue Watching hides it on Movies and TV Shows too.</p>
+    </div>
+  );
+}
+
 function NotificationsPanel() {
   const prefs = usePrefs();
   const reminders = useReminders();
@@ -217,6 +281,8 @@ function Panel({ id }: { id: SectionId }) {
           <Row id="sp-switch" title="Switch Profile" sub="Go back to Who's watching?" onClick={() => { actions.signOut(); go("/profiles", { replace: true }); }} />
         </div>
       );
+    case "home":
+      return <HomePanel />;
     case "playback":
       return (
         <div className="set-panel">
@@ -232,6 +298,7 @@ function Panel({ id }: { id: SectionId }) {
         <div className="set-panel">
           <Toggle id="sp-trailers" title="Autoplay trailers" sub="Play a trailer after you stay on a title" value={prefs.trailerAutoplay} onChange={(v) => set({ trailerAutoplay: v })} />
           <Toggle id="sp-trailer-sound" title="Trailer sound" sub="Play trailers with sound for this profile" value={prefs.trailerSound} onChange={(v) => set({ trailerSound: v })} />
+          {tv && <Toggle id="sp-row-trailers" title="Trailers behind rows" sub="Also play a trailer behind the rows on Home, not only on the hero and Details" value={prefs.rowTrailers} onChange={(v) => set({ rowTrailers: v })} />}
           <Choice id="tvol" title="Trailer volume" value={String(Math.round(prefs.trailerVolume * 100))}
             options={TRAILER_VOLUMES} onChange={(v) => { set({ trailerVolume: Number(v) / 100 }); toast(`Trailer volume ${v}%`); }} />
           <Choice id="tdelay" title="Start trailers after" value={String(prefs.trailerDelay)}
@@ -266,6 +333,8 @@ function Panel({ id }: { id: SectionId }) {
             onChange={(v) => { set({ uiScale: Number(v) as Prefs["uiScale"] }); toast(v === "100" ? "Full screen" : `Screen size ${v}%`); }} />}
           <Choice id="text" title="Text size" value={prefs.textSize} options={[{ id: "default", label: "Default" }, { id: "large", label: "Large", note: "15% bigger" }, { id: "larger", label: "Larger", note: "30% bigger" }]}
             onChange={(v) => set({ textSize: v })} />
+          <Choice id="density" title="Card size" value={prefs.density} options={[{ id: "standard", label: "Standard", note: "Large artwork" }, { id: "compact", label: "Compact", note: "More titles in every row" }]}
+            onChange={(v) => { set({ density: v }); toast(v === "compact" ? "Compact cards" : "Standard cards"); }} />
           <Toggle id="sp-motion" title="Reduce motion" sub="Turn off animations, zooms and fades" value={prefs.reduceMotion} onChange={(v) => set({ reduceMotion: v })} />
           <Toggle id="sp-contrast" title="High contrast" sub="Brighter text, solid panels and a stronger focus ring" value={prefs.highContrast} onChange={(v) => set({ highContrast: v })} />
         </div>

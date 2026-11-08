@@ -1,0 +1,17 @@
+/* Personalize Home (v1.1.9): numbered sections with a visibility switch and up/down arrows */
+.set-home-list { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: calc(4 * var(--u)); }
+.set-home-item { display: flex; align-items: center; gap: calc(6 * var(--u)); border-radius: var(--r-glass-m); transition: opacity var(--dur-focus); }
+.set-home-pos { flex: none; width: calc(26 * var(--u)); height: calc(26 * var(--u)); border-radius: 50%; display: grid; place-items: center; margin-left: calc(6 * var(--u)); background: var(--m-raised); color: var(--text-2); font-size: calc(12 * var(--u)); font-weight: var(--fw-bold); font-variant-numeric: tabular-nums; }
+.set-home-toggle { flex: 1; min-width: 0; }
+.set-home-item.is-off .set-row-title, .set-home-item.is-off .set-home-pos { color: var(--text-3); }
+.set-home-move { flex: none; width: calc(40 * var(--u)); height: calc(40 * var(--u)); border-radius: 50%; display: grid; place-items: center; background: var(--m-raised); color: var(--text-1); transition: background var(--dur-focus), opacity var(--dur-focus), transform var(--dur-focus) var(--ease-out); }
+.set-home-move svg { width: calc(20 * var(--u)); height: calc(20 * var(--u)); }
+.set-home-move:disabled { opacity: 0.3; }
+.set-home-move:not(:disabled):active { transform: scale(0.92); }
+.set-home-item.is-moved { animation: set-home-moved 520ms var(--ease-out); }
+@keyframes set-home-moved { from { background: rgba(255, 255, 255, 0.14); } to { background: transparent; } }
+/* rail switches line up with the section switches above (two arrows + gaps to their right) */
+.set-home-rails .set-row { padding-right: calc(2 * var(--hm-move) + 2 * 6 * var(--u) + 14 * var(--u)); }
+.set-home { --hm-move: calc(40 * var(--u)); }
+.set-home-move { width: var(--hm-move); height: var(--hm-move); }
+@media (max-width: 480px) { html:not([data-mode="tv"]) .set-home { --hm-move: 34px; } html:not([data-mode="tv"]) .set-home-item { gap: 4px; } html:not([data-mode="tv"]) .set-home-toggle { padding-right: 8px; } }

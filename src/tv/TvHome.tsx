@@ -159,7 +159,7 @@ export function TvHome({ kind }: { kind: PageKind }) {
     setLayers((l) => (l[l.length - 1]?.id === item.id ? l : [...l.slice(-1), item]));
   }, []);
   const rowsActive = active >= 0 && Boolean(backdrop);
-  const rowStage = useTrailerStage(rowsActive && prefs.trailerAutoplay && !lite && rowFailed !== backdrop?.id, prefs.trailerDelay, backdrop?.id ?? "");
+  const rowStage = useTrailerStage(rowsActive && prefs.trailerAutoplay && prefs.rowTrailers && !lite && rowFailed !== backdrop?.id, prefs.trailerDelay, backdrop?.id ?? "");
   const rowDetails = useTitle(rowStage !== "idle" && backdrop ? backdrop.type : null, rowStage !== "idle" && backdrop ? backdrop.tmdbId : null).data;
   const rowKeys = rowDetails && backdrop && rowDetails.tmdbId === backdrop.tmdbId ? rankTrailers(rowDetails.videos) : [];
   useEffect(() => { setRowTrailerOn(false); }, [backdrop?.id, rowStage]);

@@ -254,7 +254,10 @@ html[data-mode="mobile"] .set-panel, html[data-mode="mobile"] .upd-card, html[da
 
 /* touch feedback */
 @media (hover: none) {
+  .m-poster-media, .m-land-media, .m-tile { transition: transform 160ms var(--ease-out), filter 160ms var(--ease-out); }
   .m-poster:active .m-poster-media, .m-land-link:active .m-land-media, .m-tile:active, .m-hero-media:active { filter: brightness(0.85); }
+  .m-poster:active .m-poster-media, .m-land-link:active .m-land-media, .m-tile:active { transform: scale(0.965); }
+  .btn:active, .m-chip:active, .icon-btn:active { transform: scale(0.96); }
 }
 
 /* small phones */
@@ -327,3 +330,13 @@ a.m-cast { color: inherit; text-decoration: none; }
 .m-row-link .icon { width: 18px; height: 18px; color: var(--text-2); }
 /* v1.1.8: scrollable chip rows fade out at the right edge on phones so a cut chip reads as "scroll for more" */
 @media (max-width: 480px) { .m-chips:not(.m-chips--wrap) { -webkit-mask-image: linear-gradient(90deg, #000 calc(100% - 32px), transparent); mask-image: linear-gradient(90deg, #000 calc(100% - 32px), transparent); padding-right: 32px; } }
+
+/* Card size "compact" (D-111): four posters across instead of three */
+@media (max-width: 699px) and (min-height: 501px) {
+  html[data-density="compact"] .m-row-track > .m-poster { width: calc((100vw - 2 * var(--m-gutter) - 3 * var(--m-row-gap)) / 4.25); }
+  html[data-density="compact"] .m-grid { grid-template-columns: repeat(4, 1fr); }
+}
+@media (min-width: 700px) {
+  html[data-density="compact"] .m-row-track > .m-poster { width: calc((min(100vw, 1180px) - 2 * var(--m-gutter)) / 7.3); }
+  html[data-density="compact"] .m-grid, html[data-density="compact"] .m-mosaic { grid-template-columns: repeat(7, 1fr); }
+}

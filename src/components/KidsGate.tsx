@@ -3,7 +3,7 @@ import { Icon } from "./Icon";
 import { Spinner } from "./ui";
 import { useTitle } from "../lib/hooks";
 import { useProfile } from "../lib/store";
-import { isKidsSafeTitle } from "../lib/rows";
+import { isKidsSafeTitle } from "../lib/kids";
 import { useNav } from "../lib/nav";
 import type { MediaType } from "../lib/types";
 

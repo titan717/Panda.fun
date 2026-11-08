@@ -76,7 +76,7 @@ export const TEXT_SCALE = { default: 1, large: 1.15, larger: 1.3 } as const;
 
 /** Settings › Display: mirror the profile's display prefs onto <html> so CSS can react (D-44). */
 function useDisplayPrefs(mode: LayoutMode) {
-  const { uiScale, reduceMotion, highContrast, textSize, quality, preloadMode } = usePrefs();
+  const { uiScale, reduceMotion, highContrast, textSize, quality, preloadMode, density } = usePrefs();
   useEffect(() => { setPrefetchDataSaver(quality === "480"); setPreloadMode(preloadMode); }, [quality, preloadMode]);
   useEffect(() => {
     const html = document.documentElement;
@@ -84,7 +84,8 @@ function useDisplayPrefs(mode: LayoutMode) {
     html.dataset.motion = reduceMotion ? "reduce" : "auto";
     html.dataset.contrast = highContrast ? "high" : "normal";
     html.style.setProperty("--fs", String(TEXT_SCALE[textSize] ?? 1));
-  }, [mode, uiScale, reduceMotion, highContrast, textSize]);
+    html.dataset.density = density === "compact" ? "compact" : "standard";
+  }, [mode, uiScale, reduceMotion, highContrast, textSize, density]);
 }
 
 function useLayoutMode(): LayoutMode {
