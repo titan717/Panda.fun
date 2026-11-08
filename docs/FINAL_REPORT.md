@@ -8,8 +8,8 @@ Date: 2026-11-07 · `main` of [titan717/Panda.fun](https://github.com/titan717/P
 |---|---|
 | Blueprint spec and tokens | `docs/BLUEPRINT_SPEC.md` (§1–18 from 99 photos, §19 calibrated TV geometry), `src/styles/tokens.css` |
 | Frontend rebuild | All pages in README "Features", TV and mobile layouts, every state (loading skeletons, empty, offline, error, no results) |
-| Backend | movieapi `panda` module merged to `main` (`aa6e4bd`, `c235b18`), live on Render |
-| Player | CineSrc / VidSrc / mirror, switcher, auto fallback, resume, next episode, countdown, remote keys |
+| Backend | movieapi `panda` module merged to `main` (`aa6e4bd`, `c235b18`), live on Vercel (`apikinoma.vercel.app`) |
+| Player | CineSrc / Vidy source registry, switcher, auto fallback, resume, next episode, countdown, remote keys |
 | Android | WebView shell, leanback launcher + banner, D-pad and Back, GitHub-Releases updater with SHA-256 check and progress |
 | Releases | Signed (v1 + v2 scheme, verified by `apksigner` in CI) stable releases [v1.0.0](https://github.com/titan717/Panda.fun/releases/tag/v1.0.0) and [v1.0.1](https://github.com/titan717/Panda.fun/releases/tag/v1.0.1) (latest), each with APK + `.sha256` |
 | CI | `ci.yml` green: typecheck, lint, unit tests, web + Android builds, Playwright 5 viewports × 19 tests |
@@ -37,6 +37,6 @@ Date: 2026-11-07 · `main` of [titan717/Panda.fun](https://github.com/titan717/P
 ## Known limitations
 
 - Video playback depends on third-party embed hosts; their ads/popups and availability are outside the app's control.
-- VidSrc mirror has no progress events, so resume does not apply to it.
+- Vidy accepts no postMessage commands, so Panda cannot drive its transport (it shows its own controls).
 - GitHub's anonymous API allows 60 requests per hour per IP; update checks are cached for 15 minutes and fall back to the cached release when limited.
 - Old workflows from deleted branches still appear in the Actions list (no runs are triggered by them).

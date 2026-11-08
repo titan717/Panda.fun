@@ -12,12 +12,12 @@ describe("store persistence", () => {
     actions.selectProfile(profile!.id);
     actions.toggleWatchlist(item);
     actions.saveProgress(item, { position: 600, duration: 2700, season: 1, episode: 2 });
-    actions.setPrefs({ preferredSource: "vidsrc" });
+    actions.setPrefs({ preferredSource: "vidy" });
     flushStore();
 
     const saved = JSON.parse(localStorage.getItem("panda:v1:state") ?? "{}");
     expect(saved.activeProfileId).toBe(profile!.id);
-    expect(saved.prefs.preferredSource).toBe("vidsrc");
+    expect(saved.prefs.preferredSource).toBe("vidy");
     const data = selectData(getState());
     expect(data.watchlist.some((i) => i.id === item.id)).toBe(true);
     expect(data.history[item.id]?.position).toBe(600);

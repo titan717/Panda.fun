@@ -7,7 +7,7 @@ const STATE = JSON.stringify({
   ],
   activeProfileId: "p1", prefs: {}, data: {},
 });
-const THIRD_PARTY = /youtube|ytimg|googlevideo|doubleclick|cinesrc|vidsrc|google/;
+const THIRD_PARTY = /youtube|ytimg|googlevideo|doubleclick|cinesrc|vidy|google/;
 
 async function open(page: Page, path: string, tv: boolean) {
   const issues: string[] = [];
@@ -59,6 +59,9 @@ test("TV D-pad moves focus and Back returns", async ({ page }, info) => {
   expect(second).not.toBe(first);
   await page.goto("/settings?layout=tv");
   await page.goto("/about?layout=tv");
+  // The app renders after the persistent cache hydrates; wait for it before pressing Back.
+  await page.locator("#root *").first().waitFor();
+  await page.waitForTimeout(400);
   await page.keyboard.press("Escape");
   await expect(page).toHaveURL(/settings/);
 });

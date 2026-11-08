@@ -62,7 +62,7 @@ export function PrivacyPage() {
       <h2>What we don't do</h2>
       <p>No accounts, no analytics, no advertising identifiers, no cookies for tracking, and no selling of data.</p>
       <h2>Third parties</h2>
-      <p>To show the catalogue the app requests data from the Panda catalogue server, which fetches it from TMDB. Images load from TMDB's image service, trailers from YouTube (privacy-enhanced mode) and playback from the video source you pick (CineSrc or VidSrc). Those services receive your IP address and standard request headers, and their own privacy policies apply.</p>
+      <p>To show the catalogue the app requests data from the Panda catalogue server, which fetches it from TMDB. Images load from TMDB's image service, trailers from YouTube (privacy-enhanced mode) and playback from the video source you pick (CineSrc or Vidy). Those services receive your IP address and standard request headers, and their own privacy policies apply.</p>
       <h2>Updates</h2>
       <p>Check for Updates contacts the GitHub Releases API to compare versions. The Android app downloads updates from GitHub.</p>
       <h2>Deleting your data</h2>

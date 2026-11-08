@@ -14,7 +14,7 @@ Where the blueprint was ambiguous, impossible to reproduce literally, or referre
 | D-8 | TV rail shows 7 icons including New & Hot. | Required page needs a rail entry. |
 | D-9 | Android bundle uses hash routing and relative asset base. | WebViewAssetLoader serves files, not an SPA server. |
 | D-10 | Provider auto-next disabled; our own 10 s countdown handles next episode on all sources. | Consistent behaviour; works on the mirror too. |
-| D-11 | Volume control only on CineSrc; VidSrc gets mute/unmute; mirror has no progress sync. | Provider protocol limits (PLAYER_COMPARISON.md). |
+| D-11 | Volume and transport commands only on CineSrc (postMessage API); Vidy reports progress events but takes no commands. | Provider protocol limits (PLAYER_COMPARISON.md). |
 | D-12 | Trailers open in an in-app overlay (YouTube privacy-enhanced). CineSrc's internal episode navigation does not change our URL; we follow it via `nextepisode` events. | Keep Back behaviour predictable. |
 | D-13 | Recent searches render as a text list (blueprint shows chips on mobile, list on TV — kept per platform). | Matches photos per platform. |
 | D-14 | Notifications = "new release available" on launch only (opt-in). | No push backend; no tracking. |
@@ -24,3 +24,8 @@ Where the blueprint was ambiguous, impossible to reproduce literally, or referre
 | D-18 | Vercel production deploys through the existing Git integration (project `mypanda`, team `titan717s-projects`) on every push to `main`. The CLI token in the build sandbox is not authorised for that team scope, so CLI deploys are not used. | Same result (production from `main`), no extra credentials. |
 | D-19 | One APK serves phones, tablets and Android TV (`leanback` optional, touchscreen not required). | Single release asset for the updater. |
 | D-20 | Release versioning: stable `MAJOR.MINOR.PATCH`, `versionCode = 1236 + run number` so it is always above the old beta builds. | Lets existing beta installs upgrade in place. |
+| D-21 | The API base accepts only `*.vercel.app` hosts or localhost; anything else falls back to `https://apikinoma.vercel.app/api/v1`. | Guarantees no stale Render URL can come back through env vars. |
+| D-22 | The mission names `vidsty.st`, which does not resolve (NXDOMAIN). The second source is `vidy.st`, the same `.st` embed family already used by movieapi. No `vidsrc.*` lookalikes are used. | Closest working match to the brief. |
+| D-23 | Drive files `1KaWgZ8…` and `1yOYmIgd…` (tvnewblueprint.pdf) are byte-identical (same md5) — treated as one blueprint. | Avoids duplicate checklist entries. |
+| D-24 | The only remaining "render" match in Android code is the platform API `onRenderProcessGone`; the diagnostic string is renamed "WebView renderer crash". | Render hosting is fully removed; the platform API name cannot change. |
+| D-25 | Iframe embeds expose no video frames or audio/subtitle track lists, so the seek strip shows timestamps over the backdrop and Audio & Subtitles shows only what the source reports. | Show controls only where the source exposes them (§6). |

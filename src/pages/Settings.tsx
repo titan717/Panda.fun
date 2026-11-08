@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState, type ReactNode } from "react";
 import { Link, useParams } from "wouter";
 import { useSWRConfig } from "swr";
+import { clearPersistentCache } from "../lib/cache";
 import { Icon, PandaMark, type IconName } from "../components/Icon";
 import { PageHeader } from "../components/PageHeader";
 import { toast } from "../components/ui";
@@ -28,8 +29,7 @@ const SECTIONS: { id: SectionId; icon: IconName; title: string; sub: string }[] 
 
 export const SOURCES: { id: SourceId; label: string; note: string }[] = [
   { id: "cinesrc", label: "CineSrc", note: "Resume, progress sync and volume control" },
-  { id: "vidsrc", label: "VidSrc", note: "Resume and progress sync" },
-  { id: "vidsrc-mirror", label: "Mirror", note: "Backup source, no progress sync" }
+  { id: "vidy", label: "Vidy", note: "Backup source with resume and progress sync" }
 ];
 
 function Row({ id, title, sub, right, onClick, href }: { id: string; title: string; sub?: string; right?: ReactNode; onClick?: () => void; href?: string }) {
@@ -130,7 +130,7 @@ function Panel({ id }: { id: SectionId }) {
       return (
         <div className="set-panel">
           <Row id="sp-cache" title="Clear cached content" sub="Reload rows, artwork and details from the server" onClick={() => {
-            try { localStorage.removeItem("panda:v1:swr"); } catch { /* storage blocked */ }
+            void clearPersistentCache();
             void mutate(() => true, undefined, { revalidate: true });
             toast("Cache cleared");
           }} />

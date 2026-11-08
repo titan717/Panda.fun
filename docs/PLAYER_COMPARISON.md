@@ -1,32 +1,47 @@
-# Player comparison — CineSrc vs VidSrc
+# Player comparison — CineSrc vs Vidy
 
-Both providers are iframe embeds keyed by TMDB id. movieapi's `/api/v1/panda/play/{type}/{id}?s=&e=&t=` returns every source with its URL, origin and event protocol, and the web `Player` page (`src/pages/Player.tsx`, `src/lib/player.ts`) drives all of them through one interface.
+The mission names `cinesrc.st` and `vidsty.st`. `vidsty.st` does not resolve (NXDOMAIN, checked 2026-11-08), so the second source is **Vidy** (`vidy.st` → `www.vidy.st`), the same `.st` embed family movieapi already used (D-22). No `vidsrc.*` lookalikes are used.
 
-Docs: [CineSrc](https://cinesrc.st/docs) · [VidSrc](https://vidsrc.sh/vidsrc/docs/)
+Docs: [CineSrc](https://cinesrc.st/docs) · [Vidy](https://vidy.st)
 
-| | CineSrc (`cinesrc.st`) | VidSrc (`vidsrc.sh`) | VidSrc mirror (`vidsrc.to`) |
-|---|---|---|---|
-| URL | `/embed/movie/{id}`, `/embed/tv/{id}?s=&e=` | `/embed/movie/{id}`, `/embed/tv/{id}/{s}/{e}` | `/embed/movie/{id}`, `/embed/tv/{id}/{s}/{e}` |
-| Start position | `t=` seconds | `startAt=` seconds | not supported |
-| Autoplay | `autoplay=true` | `autoplay=1` | default |
-| Theme colour | `color=` (we pass `#1f80e0`) | — | — |
-| Auto next | `autonext=` (we force `false`) | `autonext=` (we force `0`) | — |
-| Events to parent | `postMessage` `{type:"cinesrc:*"}`: ready, play, pause, timeupdate, seeked, ended, nextepisode, close, error | `postMessage` `{type:"PLAYER_EVENT", data:{player_status, player_progress, player_duration}}` | none |
-| Commands from parent | `{type:"cinesrc:command", command, args}`: play, pause, seek, setVolume | `{player:true, action}`: play, pause, seek±N, mute/unmute | none |
-| Volume control | yes (absolute) | mute/unmute only | no |
-| Progress sync / resume | yes | yes | no (resume position cannot be read or set) |
-| Remote friendliness | Good — `back=close` emits `cinesrc:close` which we map to Back | Good | Usable; only our overlay controls work |
-| Response | 200 directly, no redirects | 200 directly | 200 directly |
+## Live test (2026-11-08)
 
-## How the unified player uses them
+Headless Chromium, autoplay allowed, iframe 1280×720, 25 s per run. Titles: movie **Fight Club** (TMDB 550) and episode **Game of Thrones S1E1** (TMDB 1399). Screenshots are in `docs/screenshots/sources/`.
 
-- **Order and preference:** `cinesrc → vidsrc → vidsrc-mirror` (`SOURCE_ORDER`). The last source the user picked manually is remembered (Settings › Playback) and tried first.
-- **Automatic fallback:** if a source does not report ready within 15 s (`READY_TIMEOUT_MS`) or emits an error, the next source loads at the same position and a toast names the switch. Sources without events (mirror) are treated as ready on iframe load.
-- **Switcher:** the "Source" menu in the player lists all three with the active one marked.
-- **Resume:** progress events are saved to Continue Watching every few seconds; reopening passes `t` / `startAt`.
-- **Next episode:** provider auto-next is disabled so our own 10-second "Next episode" countdown (cancellable, Enter to skip) works the same on every source; previous/next episode buttons in the overlay.
-- **Remote keys:** play/pause, fast-forward/rewind (±10 s), Enter, Back (Backspace, Escape, Android Back, webOS 461, Tizen 10009) are mapped to the commands above; Back exits the player.
+| Run | First event | Ready | Playing | Duration reported | Time updates / 25 s |
+|---|---|---|---|---|---|
+| CineSrc movie 550 | 2.25 s `sourceused` | 2.46 s | 2.48 s | 7984 s | 85 |
+| CineSrc TV 1399 S1E1 | 2.55 s | 2.77 s | 2.89 s | 3156 s | 83 |
+| Vidy movie 550 | 1.33 s `MEDIA_DATA` | — (no ready event) | 2.54 s | 8349 s | 173 |
+| Vidy TV 1399 S1E1 | 1.36 s | — | 1.39 s | 3695 s | 179 |
+
+Both play the real title. Vidy starts slightly faster; CineSrc is the only one that can be controlled from our own UI.
+
+## Capabilities
+
+| | CineSrc | Vidy |
+|---|---|---|
+| URL | `/embed/movie/{id}`, `/embed/tv/{id}?s=&e=` | `/movie/{id}`, `/tv/{id}/{s}/{e}` |
+| Start position | `t=` seconds | `progress=` seconds |
+| Autoplay with sound | `autoplay=true` (+`muted`) | `autoplay=true` |
+| Theme colour | `color=%23hex` | `color=hex` |
+| Hide native controls | `controls=false` | no |
+| Quality hint | `quality=1080/720/480` | no |
+| Provider auto-next | `autonext=false` (we run our own) | `autoplayNextEpisode` off by default |
+| Events | `cinesrc:ready/play/pause/timeupdate/seeked/ended/volumechange/loadedmetadata/nextepisode/close/error` | JSON string `{type:"PLAYER_EVENT", data:{event, timestamp, duration}}` + `MEDIA_DATA` |
+| Commands | `{type:"cinesrc:command", command, args}`: play, pause, seek, setVolume, setMuted, setPlaybackRate, getters | none |
+| Audio / subtitle switching | inside the embed only | inside the embed only |
+| Embeddable | yes | yes (CSP is only `upgrade-insecure-requests`) |
+
+## How the player uses them
+
+- **Registry:** movieapi `SOURCE_ADAPTERS` (`/api/v1/panda/play`) and `src/lib/player.ts` `ADAPTERS` hold the URL builder, event protocol and capabilities of each source. Order: CineSrc, then Vidy.
+- **Health:** `/api/v1/panda/sources/health` probes each source (6 s timeout, cached 5 min). Unhealthy sources drop to the end of the list.
+- **Fallback:** if a source does not report ready or play within 15 s, or emits an error, the next one loads at the same position and a toast says "Switched to Vidy".
+- **Preference:** the last source picked by hand is remembered and tried first.
+- **Controls:** with CineSrc our overlay drives play, pause, seek, volume and speed. With Vidy only the embed's own controls work, so our overlay shows just Back, the source switcher and episodes.
+- **Sandbox:** iframes get `allow="autoplay; fullscreen; encrypted-media"` and `referrerpolicy="origin"`. Popups opened by embeds are blocked by the Android WebView (`setSupportMultipleWindows(false)`).
 
 ## Choice
 
-CineSrc is the default: it has the richest event protocol (absolute volume, close event, episode events) and accepts our theme colour. VidSrc is the first fallback with near-equal resume support. The mirror is a last resort and documented as having no progress sync.
+CineSrc is the primary source: it reports events, takes commands, can hide its own controls (needed for the TV PLAYER blueprint chrome) and accepts a quality hint. Vidy is the automatic fallback.

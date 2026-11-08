@@ -11,12 +11,12 @@ import { useBackHandler, focusEl } from "../lib/focus";
 import { useNav } from "../lib/nav";
 import { useIsTv } from "../lib/layout";
 import { navKey } from "../lib/keys";
-import { embedUrl, parseMessage, READY_TIMEOUT_MS, sendCommand, SOURCE_ORDER } from "../lib/player";
+import { ADAPTERS, embedUrl, parseMessage, READY_TIMEOUT_MS, sendCommand, sourceName, SOURCE_ORDER } from "../lib/player";
 import { nextEpisodeOf, prevEpisodeOf } from "../lib/watch";
 import { pluralEps, runtime, titlePath, watchPath } from "../lib/format";
 import type { MediaType, PlaybackPayload, PlaybackSource, SourceId, TitleDetails } from "../lib/types";
 
-const SHORT: Record<SourceId, string> = { cinesrc: "CineSrc", vidsrc: "VidSrc", "vidsrc-mirror": "Mirror" };
+const SHORT: Record<SourceId, string> = { cinesrc: sourceName("cinesrc"), vidy: sourceName("vidy") };
 
 export function PlayerPage() {
   const params = useParams<{ type: string; id: string }>();
@@ -190,7 +190,7 @@ function Player({ type, id, season, episode, start }: { type: MediaType; id: num
     sendCommand(frame.current, source, { c: paused ? "play" : "pause" });
     setPaused((p) => !p);
   };
-  const seekBy = (by: number) => { if (source) sendCommand(frame.current, source, { c: "seekBy", by, from: pos.current.position }); };
+  const seekBy = (by: number) => { if (source) sendCommand(frame.current, source, { c: "seek", to: pos.current.position + by }); };
 
   /* ---- remote keys while the overlay is hidden ---- */
   const onKeyDown = (k: React.KeyboardEvent) => {
@@ -213,7 +213,7 @@ function Player({ type, id, season, episode, start }: { type: MediaType; id: num
 
   const title = details?.title ?? "";
   const subtitle = isTv ? `S${ep.s} E${ep.e}${epInfo?.title ? ` · ${epInfo.title}` : ""}` : [details?.year, runtime(details?.runtime)].filter(Boolean).join(" · ");
-  const src = source ? embedUrl(source) : null;
+  const src = source ? embedUrl(source, { customChrome: false }) : null;
 
   return (
     <div ref={root} className={`player ${overlay ? "is-overlay" : ""} ${tv ? "player--tv" : "player--touch"}`} onKeyDown={onKeyDown} onMouseMove={poke} role="application" aria-label={`Playing ${title}`}>
@@ -240,7 +240,7 @@ function Player({ type, id, season, episode, start }: { type: MediaType; id: num
         </div>
       </div>
       <div className="player-bottom lrud-container">
-        {tv && source?.events !== "none" && (
+        {tv && source && ADAPTERS[source.id]?.commands && (
           <>
             <button id="pl-rw" className="pl-btn" onClick={() => seekBy(-10)} aria-label="Back 10 seconds" data-hover-focus><Icon name="prev" /></button>
             <button id="pl-play" className="pl-btn pl-btn--main" onClick={togglePlay} aria-label={paused ? "Play" : "Pause"} data-hover-focus>{paused ? <Icon name="play" /> : <span className="pause-glyph" aria-hidden="true" />}</button>

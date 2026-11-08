@@ -140,7 +140,7 @@ export interface GenresPayload {
   languages: { code: string; name: string }[];
 }
 
-export type SourceId = "cinesrc" | "vidsrc" | "vidsrc-mirror";
+export type SourceId = "cinesrc" | "vidy";
 
 export interface PlaybackSource {
   id: SourceId;
@@ -148,7 +148,7 @@ export interface PlaybackSource {
   label: string;
   url: string;
   origin: string;
-  events: "cinesrc" | "vidsrc" | "none";
+  events: "cinesrc" | "vidy" | "none";
   supportsStart: boolean;
 }
 
@@ -158,4 +158,17 @@ export interface PlaybackPayload {
   season?: number;
   episode?: number;
   sources: PlaybackSource[];
+}
+
+export interface SourceHealth {
+  id: SourceId;
+  label: string;
+  state: "healthy" | "degraded" | "down";
+  status: number | null;
+  latencyMs: number | null;
+  checkedAt: string;
+}
+
+export interface SourceHealthPayload {
+  sources: SourceHealth[];
 }

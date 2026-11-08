@@ -236,8 +236,8 @@ class MainActivity : ComponentActivity() {
                 view: WebView,
                 detail: android.webkit.RenderProcessGoneDetail
             ): Boolean {
-                Log.e(TAG, "WebView render process gone! didCrash=${detail.didCrash()}")
-                showDiagnosticScreen("Render Process Crash", WEB_ENTRY_URL, null, "WebView render process crashed. didCrash=${detail.didCrash()}")
+                Log.e(TAG, "WebView renderer process gone didCrash=${detail.didCrash()}")
+                showDiagnosticScreen("WebView renderer crash", WEB_ENTRY_URL, null, "WebView renderer process crashed. didCrash=${detail.didCrash()}")
                 return true
             }
         }
@@ -383,10 +383,13 @@ class MainActivity : ComponentActivity() {
             displayZoomControls = false
             builtInZoomControls = false
             setSupportZoom(false)
+            // Embeds may try to open popups or new windows; never allow that.
+            setSupportMultipleWindows(false)
+            javaScriptCanOpenWindowsAutomatically = false
 
             // Identify as Android TV Leanback environment for automatic TV layout
             val defaultUa = userAgentString
-            userAgentString = "$defaultUa KinomaTV/1.0.0 (Android TV; Leanback; SmartTV)"
+            userAgentString = "$defaultUa KinomaTV/${BuildConfig.VERSION_NAME} (Android TV; Leanback; SmartTV)"
             mixedContentMode = WebSettings.MIXED_CONTENT_NEVER_ALLOW
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
                 safeBrowsingEnabled = true

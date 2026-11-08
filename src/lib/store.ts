@@ -101,7 +101,10 @@ function load(): State {
     if (!parsed.profiles?.length) return defaultState();
     const data: Record<string, ProfileData> = {};
     for (const p of parsed.profiles) data[p.id] = { ...emptyData(), ...(parsed.data?.[p.id] ?? {}) };
-    return { profiles: parsed.profiles, activeProfileId: parsed.activeProfileId ?? null, prefs: { ...defaultPrefs, ...(parsed.prefs ?? {}) }, data };
+    const prefs = { ...defaultPrefs, ...(parsed.prefs ?? {}) };
+    // v1.0.2: sources outside the registry (CineSrc, Vidy) fall back to CineSrc
+    if (prefs.preferredSource !== "cinesrc" && prefs.preferredSource !== "vidy") prefs.preferredSource = "cinesrc";
+    return { profiles: parsed.profiles, activeProfileId: parsed.activeProfileId ?? null, prefs, data };
   } catch {
     return defaultState();
   }

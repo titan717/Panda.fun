@@ -157,9 +157,9 @@ Image references use `tv1#12` = `tv1.pdf` image 12 (0-based), `m#5` = `mobile.pd
 ## 16. Player
 
 16.1 Full-screen black; iframe fills the viewport.
-16.2 Overlay (auto-hides after 4 s of inactivity): top gradient with ← back, title, `S1 E2 · Episode name`; right: source switcher pills (CineSrc / VidSrc / Mirror) with the active one filled.
+16.2 Overlay (auto-hides after 4 s of inactivity): top gradient with ← back, title, `S1 E2 · Episode name`; right: source switcher pills (CineSrc / Vidy) with the active one filled.
 16.3 Bottom: Episodes drawer button (TV shows), Next Episode button, volume − / + (CineSrc only).
-16.4 Loading state over the backdrop with spinner and source label; auto-fallback to the next source if the active one doesn't report ready within 15 s or errors; toast "Switched to VidSrc".
+16.4 Loading state over the backdrop with spinner and source label; auto-fallback to the next source if the active one doesn't report ready within 15 s or errors; toast "Switched to Vidy".
 16.5 Next-episode countdown card (bottom-right, 10 s ring) on episode end: "Up Next · S1 E3 · Title" with "Play Now" / "Cancel".
 16.6 Back (any back key) closes the player and returns to details, saving progress.
 
@@ -193,3 +193,32 @@ The first pass of sections 5–9 was estimated from contact sheets. Measuring th
 | Primary CTA ("Watch Now") | 620 × 76, square secondary buttons 74 × 74 |
 | Episode still | 380 × 214 |
 | Search grid | 6 columns |
+
+## 20. TV Player (tvplayerblueprint.pdf — wins for every player decision)
+
+20.1 Background true black; video full-bleed. Chrome fades in on any remote key and hides after 4 s idle.
+20.2 Top-left: title in white, 28 px weight 700 at 1080p; episode line below in 18 px `rgba(255,255,255,.7)`.
+20.3 Top-right: two buttons "Quality Auto" and "Audio & Subtitles". Unfocused = text with icon, no fill. Focused = glossy pill (white 18 % fill, 2 px white border, 999 px radius).
+20.4 Bottom: thin full-width progress track (4 px, white 30 %), played part white, round white knob (16 px; 22 px when focused). Remaining time `HH:MM:SS` right-aligned above the track.
+20.5 Below-left of the track: "Watch Next" button (same pill focus as 20.3).
+20.6 Start-of-playback advisory, top-left for ~6 s: 4 px vertical cyan bar (`#20C4E8`) + "Rated U/A 16+" (22 px bold) + descriptors line (16 px, 70 % white).
+20.7 Language chips bottom-centre at start: active "✓ English Original" outlined pill, others plain text.
+20.8 Watch Next overlay: bottom 45 % of the screen, dark gradient; header "Watch Next", 1 px divider, row of 16:9 cards (radius 8 px). Focused card: 3 px white rounded border, centred play triangle, title + genres below.
+20.9 Quality panel: right sheet ~45 % width, deep-blue vertical gradient (`#0B1E4A` → `#050B1E`), options "Auto", "4K · up to 2160p", "Full HD · up to 1080p", "HD · up to 720p", "Data Saver"; selected has a check; "Report an Issue" pinned at the bottom.
+20.10 Audio & Subtitles panel: right sheet ~60 % width, two columns (Audio | Subtitles), same gradient.
+20.11 Seek preview: strip of 3 thumbnails above the track with timestamps (10 s steps); the centre one larger with a white border. Iframe embeds cannot supply frames — see D-25 / BLUEPRINT_GAPS.
+20.12 Back: closes an open panel first, then hides chrome, then exits the player saving progress.
+
+## 21. TV Home (blueprinttvpanda.pdf)
+
+21.1 Background `#000`. Left rail: star logo, "UPGRADE" pill, icons (connect phone, search, home, categories), avatar at the bottom.
+21.2 Hero: large rounded card (radius 16 px) with a "Blockbuster" badge, backdrop, title logo, meta line "Year • Runtime • Cert • Genres • N Languages" + quality chips (4K / VISION / 5.1), synopsis (2 lines), pagination dots below.
+21.3 Second row title: "Continue Watching for <profile name>".
+21.4 Row focus: the focused item's backdrop fills the top of the screen (300 ms crossfade, vignette to black on left and bottom). The focused card expands to a wide 16:9 card with 3 px white border showing IMDb badge, title logo, meta and synopsis; neighbouring posters sit to its right.
+
+## 22. TV Details (tvnewblueprint.pdf)
+
+22.1 Tabs "Episodes | More Like This | Trailers & More" with the glossy pill focus.
+22.2 Season pill "Season 2  7 Eps". Episode cards: play icon, blue progress bar, "S2 E1 • 13 Apr 2025 • 58m" + synopsis.
+22.3 Rate popover: Love / Like / Not for me.
+22.4 CTA "Watch Now" with blue→magenta gradient (`#1F80E0` → `#C2187A`), square "+" and "♡" buttons; language chips; genres separated by "|"; "IMDb 8.4" line; meta "2025 • A • 2 Seasons • 5 Languages • 4K • 5.1".

@@ -1,7 +1,7 @@
 # Phase 2 — Plan
 
 1. **Spec** — turn the 99 blueprint photos (tv1, tv2, mobile) into `docs/BLUEPRINT_SPEC.md` and design tokens (`src/styles/tokens.css`).
-2. **Backend** — add the Panda aggregation routes to movieapi so every screen needs one request (page, title, season, search, play). Merge to `main`, let Render redeploy, verify.
+2. **Backend** — add the Panda aggregation routes to movieapi so every screen needs one request (page, title, season, search, play). Merge to `main`, let Vercel redeploy, verify.
 3. **Foundation** — Vite + React 19 + TS strict; `lib/` for API (SWR, retry, cache), store (profiles, My List, progress, prefs in `localStorage`), device/input detection, key mapping (incl. webOS 461 / Tizen 10009), spatial navigation (`@bbc/tv-lrud-spatial`).
 4. **TV views** — rail, hero with trailer, rows with focus expansion, details (tabs, seasons, cast, similar, trailers), search, categories, My Space.
 5. **Mobile views** — bottom nav, hero carousel, rows, Top 10, search (recent, popular, results, filters), details, categories, My Space.

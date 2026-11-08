@@ -1,9 +1,25 @@
 import type {
   CategoriesPayload, GenresPayload, ListPayload, MediaType, PagePayload, PageKind, PlaybackPayload,
-  SearchPayload, SeasonDetails, TitleDetails, Top10Payload
+  SearchPayload, SeasonDetails, SourceHealthPayload, TitleDetails, Top10Payload
 } from "./types";
+import { validatorFor } from "./validate";
 
-export const API_BASE = (import.meta.env.VITE_API_BASE as string | undefined)?.replace(/\/$/, "") ?? "https://movieapi-3d0v.onrender.com/api/v1";
+/** Production movieapi deployment on Vercel. VITE_API_BASE may point at another Vercel/local deployment. */
+export const DEFAULT_API_BASE = "https://apikinoma.vercel.app/api/v1";
+
+export function resolveApiBase(env: string | undefined): string {
+  const v = env?.trim().replace(/\/$/, "");
+  if (!v) return DEFAULT_API_BASE;
+  try {
+    const u = new URL(v);
+    // Only accept Vercel deployments or local development servers (DECISIONS D-21).
+    if (u.protocol === "https:" && u.hostname.endsWith(".vercel.app")) return v;
+    if (u.hostname === "localhost" || u.hostname === "127.0.0.1") return v;
+  } catch { /* malformed → default */ }
+  return DEFAULT_API_BASE;
+}
+
+export const API_BASE = resolveApiBase(import.meta.env.VITE_API_BASE as string | undefined);
 
 export class ApiError extends Error {
   constructor(message: string, readonly status: number, readonly code?: string) {
@@ -12,33 +28,40 @@ export class ApiError extends Error {
   }
 }
 
-const sleep = (ms: number) => new Promise((r) => setTimeout(r, ms));
+const sleep = (ms: number, signal?: AbortSignal) => new Promise<void>((resolve) => {
+  const t = setTimeout(resolve, ms);
+  signal?.addEventListener("abort", () => { clearTimeout(t); resolve(); }, { once: true });
+});
 
-/**
- * GET a movieapi path with timeout and retry (network errors and 5xx/429 are retried with backoff).
- * The Render free tier cold-starts in ~30 s, so the first attempt gets a generous timeout.
- */
-export async function apiGet<T>(path: string, init: { signal?: AbortSignal; retries?: number; timeoutMs?: number } = {}): Promise<T> {
+type GetInit = { signal?: AbortSignal; retries?: number; timeoutMs?: number };
+const inflight = new Map<string, Promise<unknown>>();
+
+async function request<T>(path: string, init: GetInit): Promise<T> {
   const retries = init.retries ?? 2;
   let lastError: unknown;
   for (let attempt = 0; attempt <= retries; attempt++) {
     const controller = new AbortController();
-    const timeout = setTimeout(() => controller.abort(), init.timeoutMs ?? (attempt === 0 ? 45_000 : 20_000));
+    const timeout = setTimeout(() => controller.abort(), init.timeoutMs ?? (attempt === 0 ? 12_000 : 15_000));
     const onAbort = () => controller.abort();
     init.signal?.addEventListener("abort", onAbort);
     try {
       const res = await fetch(`${API_BASE}${path}`, { signal: controller.signal, headers: { Accept: "application/json" } });
-      const body = (await res.json().catch(() => null)) as { success?: boolean; data?: T; error?: { code?: string; message?: string } } | null;
+      const body = (await res.json().catch(() => null)) as { success?: boolean; data?: unknown; error?: { code?: string; message?: string } } | null;
       if (!res.ok || !body?.success) {
         const err = new ApiError(body?.error?.message ?? `Request failed (${res.status})`, res.status, body?.error?.code);
         if (res.status >= 500 || res.status === 429) { lastError = err; throw err; }
         throw Object.assign(err, { fatal: true });
       }
-      return body.data as T;
+      const validate = validatorFor(path);
+      try {
+        return (validate ? validate(path, body.data) : body.data) as T;
+      } catch (e) {
+        throw Object.assign(e as Error, { fatal: true });
+      }
     } catch (e) {
       lastError = e;
       if ((e as { fatal?: boolean }).fatal || init.signal?.aborted) throw e;
-      if (attempt < retries) await sleep(800 * 2 ** attempt);
+      if (attempt < retries) await sleep(500 * 2 ** attempt + Math.random() * 250, init.signal);
     } finally {
       clearTimeout(timeout);
       init.signal?.removeEventListener("abort", onAbort);
@@ -46,6 +69,20 @@ export async function apiGet<T>(path: string, init: { signal?: AbortSignal; retr
   }
   if (lastError instanceof ApiError) throw lastError;
   throw new ApiError(typeof navigator !== "undefined" && !navigator.onLine ? "You're offline." : "Couldn't reach Panda servers.", 0, "NETWORK");
+}
+
+/**
+ * GET a movieapi path: validated payload, timeout, retry with jittered backoff (network, 5xx, 429),
+ * caller abort, and in-flight de-duplication (identical concurrent GETs share one request
+ * unless the caller passes its own AbortSignal).
+ */
+export function apiGet<T>(path: string, init: GetInit = {}): Promise<T> {
+  if (init.signal) return request<T>(path, init);
+  const existing = inflight.get(path);
+  if (existing) return existing as Promise<T>;
+  const p = request<T>(path, init).finally(() => inflight.delete(path));
+  inflight.set(path, p);
+  return p;
 }
 
 const qs = (o: Record<string, string | number | undefined | null>) => {
@@ -66,7 +103,8 @@ export const keys = {
   top10: (lang: string) => `/panda/top10/${lang}`,
   genres: () => `/panda/genres`,
   categories: () => `/panda/categories`,
-  play: (type: MediaType, id: number, o: { s?: number; e?: number; t?: number } = {}) => `/panda/play/${type}/${id}${qs({ ...o, color: "#1f80e0" })}`,
+  play: (type: MediaType, id: number, o: { s?: number; e?: number; t?: number; quality?: string } = {}) => `/panda/play/${type}/${id}${qs({ ...o, color: "1f80e0" })}`,
+  sourceHealth: () => `/panda/sources/health`,
   health: () => `/health`
 };
 
@@ -76,10 +114,12 @@ export const api = {
   season: (id: number, s: number) => apiGet<SeasonDetails>(keys.season(id, s)),
   search: (q: string, page = 1, signal?: AbortSignal) => apiGet<SearchPayload>(keys.search(q, page), { signal, retries: 1 }),
   discover: (type: MediaType, o: Parameters<typeof keys.discover>[1]) => apiGet<ListPayload>(keys.discover(type, o)),
+  trending: (type: "all" | MediaType = "all", window: "day" | "week" = "day", page = 1) => apiGet<ListPayload>(keys.trending(type, window, page)),
   top10: (lang: string) => apiGet<Top10Payload>(keys.top10(lang)),
   genres: () => apiGet<GenresPayload>(keys.genres()),
   categories: () => apiGet<CategoriesPayload>(keys.categories()),
-  play: (type: MediaType, id: number, o: { s?: number; e?: number; t?: number } = {}) => apiGet<PlaybackPayload>(keys.play(type, id, o), { retries: 1, timeoutMs: 20_000 })
+  play: (type: MediaType, id: number, o: { s?: number; e?: number; t?: number; quality?: string } = {}) => apiGet<PlaybackPayload>(keys.play(type, id, o), { retries: 1, timeoutMs: 10_000 }),
+  sourceHealth: () => apiGet<SourceHealthPayload>(keys.sourceHealth(), { retries: 0, timeoutMs: 10_000 })
 };
 
 /** Generic SWR fetcher: the key is the API path. */

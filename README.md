@@ -3,7 +3,7 @@
 A streaming catalogue app for **Android TV, phones, tablets and the web**, built as a faithful replica of the Panda blueprint (TV + mobile). One React codebase renders a remote-driven 10-foot TV interface and a touch mobile interface; an Android wrapper ships both in a single signed APK with in-app updates from GitHub Releases.
 
 - Live web app: deployed to Vercel production from `main` (project `mypanda`)
-- Backend: [titan717/movieapi](https://github.com/titan717/movieapi) — `https://movieapi-3d0v.onrender.com/api/v1/panda/*`
+- Backend: [titan717/movieapi](https://github.com/titan717/movieapi) — `https://apikinoma.vercel.app/api/v1/panda/*`
 - Android releases: [GitHub Releases](https://github.com/titan717/Panda.fun/releases/latest)
 
 ## Screenshots
@@ -28,7 +28,7 @@ Mobile (390 × 844, touch)
 - **Hero:** auto-advancing carousel; after focus rests on the hero its YouTube trailer fades in (muted toggle), and is destroyed when focus leaves.
 - **TV:** spatial navigation (`@bbc/tv-lrud-spatial`), visible focus everywhere, rail navigation, row focus expansion, Back on Backspace / Escape / Android Back / webOS 461 / Tizen 10009, media keys, overscan-safe margins, scaling for 720p / 1080p / 4K.
 - **Mobile:** bottom navigation, swipeable carousels, sheets, safe-area insets, landscape layouts.
-- **Player:** CineSrc, VidSrc and a VidSrc mirror behind one component with a source switcher, automatic fallback, remembered source and volume, resume from the last position, previous / next episode and a 10-second next-episode countdown. See [docs/PLAYER_COMPARISON.md](docs/PLAYER_COMPARISON.md).
+- **Player:** CineSrc and Vidy behind one source registry with a source switcher, automatic fallback, remembered source and volume, resume from the last position, previous / next episode and a 10-second next-episode countdown. See [docs/PLAYER_COMPARISON.md](docs/PLAYER_COMPARISON.md).
 - **Data:** SWR caching with retry, skeleton states that match final layout, offline and error states with retry, error boundaries.
 - **Privacy:** no analytics or tracking, no client secrets; profiles, My List and progress live in `localStorage`.
 - **Accessibility:** semantic buttons and landmarks, labels on icon buttons, focus rings, `prefers-reduced-motion` respected.
@@ -43,7 +43,7 @@ Mobile (390 × 844, touch)
                 │  lib/store (localStorage) · lib/focus · lib/keys · lib/player         │
                 └──────────────┬───────────────────────────────┼──────────────────────────┘
                                │ iframe embeds                 │ HTTPS JSON
-                     CineSrc / VidSrc            titan717/movieapi (/api/v1/panda/*) ── TMDB
+                     CineSrc / Vidy              titan717/movieapi (/api/v1/panda/*) ── TMDB
 ```
 
 The Android app (`android/`) is a thin Kotlin WebView shell: it serves the bundled build through `WebViewAssetLoader` (`https://appassets.androidplatform.net/assets/web/`), exposes a small `KinomaNative` bridge (version, TV detection, update check / download / install, exit) and forwards the remote Back key to the web app.
@@ -77,7 +77,7 @@ Copy `.env.example` to `.env.local` if you need to override the defaults. Nothin
 
 | Variable | Default | Purpose |
 |---|---|---|
-| `VITE_API_BASE` | `https://movieapi-3d0v.onrender.com/api/v1` | movieapi base URL |
+| `VITE_API_BASE` | `https://apikinoma.vercel.app/api/v1` | movieapi base URL (Vercel deployments or localhost only) |
 | `VITE_RELEASES_REPO` | `titan717/Panda.fun` | Repository whose GitHub Releases provide app updates |
 
 ### Scripts
@@ -110,7 +110,7 @@ One APK installs on phones, tablets and Android TV (leanback launcher entry and 
 ## Deployment
 
 - **Web:** Vercel's Git integration builds every push to `main` as a production deployment (`vercel.json`: Vite framework, SPA rewrites, security headers and a strict Content-Security-Policy limited to movieapi, TMDB images, YouTube, GitHub API and the player hosts).
-- **Backend:** movieapi auto-deploys on Render from its `main` branch.
+- **Backend:** movieapi auto-deploys to Vercel (`apikinoma.vercel.app`) from its `main` branch.
 - **CI:** `.github/workflows/ci.yml` runs typecheck, lint, unit tests, web and Android builds and the Playwright smoke suite on every push and pull request.
 
 ## Folder structure

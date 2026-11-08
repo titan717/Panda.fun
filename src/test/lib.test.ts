@@ -51,18 +51,21 @@ describe("navKey", () => {
 
 describe("player protocol", () => {
   const cine: PlaybackSource = { id: "cinesrc", provider: "cinesrc", label: "CineSrc", url: "https://cinesrc.st/embed/tv/1399?s=1&e=2", origin: "https://cinesrc.st", events: "cinesrc", supportsStart: true };
-  const vid: PlaybackSource = { id: "vidsrc", provider: "vidsrc", label: "VidSrc", url: "https://vidsrc.sh/embed/tv/1399/1/2", origin: "https://vidsrc.sh", events: "vidsrc", supportsStart: true };
+  const vid: PlaybackSource = { id: "vidy", provider: "vidy", label: "Vidy", url: "https://www.vidy.st/tv/1399/1/2", origin: "https://www.vidy.st", events: "vidy", supportsStart: true };
   it("parses CineSrc events and ignores other origins", () => {
     expect(parseMessage(cine, "https://cinesrc.st", { type: "cinesrc:timeupdate", data: { currentTime: 12, duration: 100 } })).toEqual({ kind: "time", position: 12, duration: 100 });
     expect(parseMessage(cine, "https://evil.example", { type: "cinesrc:ended" })).toBeNull();
     expect(parseMessage(cine, "https://cinesrc.st", { type: "cinesrc:ended" })).toEqual({ kind: "ended" });
   });
-  it("parses VidSrc events", () => {
-    expect(parseMessage(vid, "https://vidsrc.sh", { type: "PLAYER_EVENT", data: { player_status: "completed" } })).toEqual({ kind: "ended" });
-    expect(parseMessage(vid, "https://vidsrc.sh", { type: "PLAYER_EVENT", data: { player_status: "playing", player_progress: 5, player_duration: 50 } })).toEqual({ kind: "time", position: 5, duration: 50 });
+  it("parses Vidy events, including JSON strings", () => {
+    expect(parseMessage(vid, "https://www.vidy.st", JSON.stringify({ type: "PLAYER_EVENT", data: { event: "ended" } }))).toEqual({ kind: "ended" });
+    expect(parseMessage(vid, "https://www.vidy.st", { type: "PLAYER_EVENT", data: { event: "timeupdate", currentTime: 5, duration: 50 } })).toEqual({ kind: "time", position: 5, duration: 50 });
+    expect(parseMessage(vid, "https://vidsrc.sh", { type: "PLAYER_EVENT", data: { event: "ended" } })).toBeNull();
   });
-  it("disables provider auto-next", () => {
-    expect(embedUrl(cine)).toContain("autonext=false");
-    expect(embedUrl(vid)).toContain("autonext=0");
+  it("disables provider auto-next and hides CineSrc chrome only for the custom transport", () => {
+    expect(embedUrl(cine, { customChrome: false })).toContain("autonext=false");
+    expect(embedUrl(cine, { customChrome: true })).toContain("controls=false");
+    expect(embedUrl(cine, { customChrome: false })).not.toContain("controls=false");
+    expect(embedUrl(vid, { customChrome: true })).toBe(vid.url);
   });
 });

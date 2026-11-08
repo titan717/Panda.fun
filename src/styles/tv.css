@@ -1,5 +1,5 @@
 /* Panda.fun TV / desktop layout (BLUEPRINT_SPEC 2-10, 16-17). All geometry in tv units (1tu = 1px at 1920x1080). */
-html[data-mode="tv"] body { background: var(--tv-bg-gradient); background-attachment: fixed; }
+html[data-mode="tv"] body { background: #000; }
 html[data-mode="tv"] .app { height: 100vh; overflow: hidden; }
 
 /* focus language (1.5): ice border + glow, scale 1.06 */
@@ -52,6 +52,7 @@ html[data-mode="tv"] .rate-opt:focus, html[data-mode="tv"] .sheet-item:focus, ht
 .tv-home { padding: 0 0 calc(620 * var(--tu)) 0; }
 .tv-backdrop { position: fixed; z-index: 0; top: 0; right: 0; width: 82%; height: 62%; opacity: 0; transition: opacity var(--dur-crossfade) var(--ease-out); pointer-events: none; -webkit-mask-image: linear-gradient(90deg, transparent 0%, #000 30%), linear-gradient(0deg, transparent 0%, #000 40%); -webkit-mask-composite: source-in; mask-image: linear-gradient(90deg, transparent 0%, #000 30%), linear-gradient(0deg, transparent 0%, #000 40%); mask-composite: intersect; }
 .tv-backdrop.is-visible { opacity: 1; }
+.tv-backdrop::after { content: ""; position: absolute; inset: 0; background: radial-gradient(120% 100% at 75% 30%, transparent 45%, rgba(0, 0, 0, 0.75) 100%); pointer-events: none; }
 .tv-backdrop .img { animation: fade-in var(--dur-crossfade) var(--ease-out); }
 
 .tv-hero { position: relative; z-index: 1; height: calc(var(--hero-y) + var(--hero-h) + 110 * var(--tu)); padding-top: var(--hero-y); transition: opacity var(--dur-expand) var(--ease-out); }

@@ -7,11 +7,15 @@ import "./styles/tv.css";
 import "./styles/mobile.css";
 import { App } from "./App";
 import { flushStore } from "./lib/store";
+import { hydrateCache } from "./lib/cache";
 
 window.addEventListener("pagehide", flushStore);
 
-createRoot(document.getElementById("root")!).render(
-  <StrictMode>
-    <App />
-  </StrictMode>
-);
+// Paint from the persisted API cache in the first frame (warm start), then revalidate.
+void hydrateCache().then(() => {
+  createRoot(document.getElementById("root")!).render(
+    <StrictMode>
+      <App />
+    </StrictMode>
+  );
+});

@@ -9,7 +9,7 @@ const page = await ctx.newPage();
 const errs = [];
 page.on("console", (m) => { if (m.type() === "error" || m.type() === "warning") errs.push(`[${m.type()}] ${m.text()}`); });
 page.on("pageerror", (e) => errs.push(`[pageerror] ${e.message}`));
-page.on("requestfailed", (r) => { const u = r.url(); if (!/youtube|ytimg|cinesrc|vidsrc|google/.test(u)) errs.push(`[reqfail] ${u} ${r.failure()?.errorText}`); });
+page.on("requestfailed", (r) => { const u = r.url(); if (!/youtube|ytimg|cinesrc|vidy|google/.test(u)) errs.push(`[reqfail] ${u} ${r.failure()?.errorText}`); });
 page.on("response", (r) => { if (r.status() >= 400) errs.push(`[http ${r.status()}] ${r.url()}`); });
 for (const r of routes) {
   const [path, keys] = r.split("|");
