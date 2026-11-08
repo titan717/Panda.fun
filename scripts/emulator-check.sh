@@ -9,13 +9,15 @@ adb shell cmd package resolve-activity --brief -c android.intent.category.LEANBA
 adb shell input keyevent KEYCODE_HOME; sleep 6; shot launcher
 # App list, where the launcher icon (phone) or the TV banner (Leanback "Apps" tab) is drawn.
 if [[ "$NAME" == *tv* ]]; then
+  # The launcher's tabs switch on focus: Up reaches "Home", Right moves to "Apps". No OK, which would open Notifications.
   adb shell input keyevent KEYCODE_DPAD_UP; sleep 0.5
-  adb shell input keyevent KEYCODE_DPAD_RIGHT; sleep 0.5
-  adb shell input keyevent KEYCODE_DPAD_RIGHT; sleep 0.5
-  adb shell input keyevent KEYCODE_DPAD_CENTER; sleep 4; shot apps
+  adb shell input keyevent KEYCODE_DPAD_RIGHT; sleep 4; shot apps
 else
   adb shell input swipe 540 2000 540 500 300; sleep 3; shot apps
 fi
+# Close any panel left open, then return to Home before launching.
+adb shell input keyevent KEYCODE_BACK; sleep 0.5
+adb shell input keyevent KEYCODE_BACK; sleep 0.5
 adb shell input keyevent KEYCODE_HOME; sleep 2
 adb shell monkey -p "$PKG" -c android.intent.category.LEANBACK_LAUNCHER 1 >/dev/null 2>&1 || adb shell monkey -p "$PKG" 1 >/dev/null 2>&1
 sleep 0.8; shot splash-0.8s
