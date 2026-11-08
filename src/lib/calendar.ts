@@ -157,10 +157,6 @@ export function useCalendar(enabled = true) {
 
 /* ---------- card badges driven by the calendar (v1.1.7) ---------- */
 
-type BadgeMap = ReadonlyMap<string, string>;
-let badgeMap: BadgeMap = new Map();
-const badgeSubs = new Set<() => void>();
-
 /** Card badge per title id: "NEW EPISODE" / "2 NEW EPISODES" for shows with fresh episodes, "OUT NOW" for reminded films that just came out. */
 export function calendarBadges(fresh: Alert[]): Map<string, string> {
   const counts = new Map<string, { n: number; kind: Alert["kind"] }>();
@@ -174,12 +170,8 @@ export function calendarBadges(fresh: Alert[]): Map<string, string> {
   return out;
 }
 
-export function setCalendarBadges(next: Map<string, string>) {
-  const same = next.size === badgeMap.size && [...next].every(([k, v]) => badgeMap.get(k) === v);
-  if (same) return;
-  badgeMap = next;
-  for (const f of badgeSubs) f();
+/** One item per title, in calendar order (newest fresh episode / soonest date first). */
+export function uniqueItems(list: Alert[], max = 20): PandaItem[] {
+  const seen = new Set<string>();
+  return list.filter((a) => !seen.has(a.item.id) && seen.add(a.item.id)).map((a) => a.item).slice(0, max);
 }
-
-export function subscribeCalendarBadges(f: () => void) { badgeSubs.add(f); return () => { badgeSubs.delete(f); }; }
-export function getCalendarBadge(id: string) { return badgeMap.get(id) ?? null; }

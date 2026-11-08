@@ -6,7 +6,7 @@ import { QuickActions, type ActionContext } from "../components/QuickActions";
 import { prefetchItem } from "../lib/prefetch";
 import { isUpcoming, itemBadge, landMeta, titlePath } from "../lib/format";
 import { useHasReminder, type HistoryEntry } from "../lib/store";
-import { useCalendarBadge } from "../components/CalendarBadges";
+import { useCalendarBadge } from "../lib/badges";
 import { continueHref, continueSub } from "../tv/TvCards";
 import type { PandaItem } from "../lib/types";
 

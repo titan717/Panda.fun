@@ -1,0 +1,28 @@
+/* Page-only styles, loaded with the lazy page chunk (v1.1.7 perf, docs/PERF.md). Moved from styles/*.css. */
+
+.tv-person .person-head { display: flex; gap: calc(48 * var(--tu)); align-items: flex-start; margin-bottom: calc(56 * var(--tu)); padding-right: var(--safe-x); }
+.tv-person .person-photo { flex: none; width: calc(300 * var(--tu)) !important; height: calc(450 * var(--tu)) !important; border-radius: var(--r-card); object-fit: cover; }
+.tv-person .person-text { display: flex; flex-direction: column; align-items: flex-start; gap: calc(16 * var(--tu)); max-width: calc(1180 * var(--tu)); }
+.tv-person .person-name { font-size: var(--t-page-title); font-weight: var(--fw-bold); line-height: 1.1; }
+.person-facts { display: flex; flex-wrap: wrap; color: var(--text-2); font-weight: var(--fw-medium); }
+.tv-person .person-facts { font-size: calc(22 * var(--tu)); gap: calc(6 * var(--tu)) calc(20 * var(--tu)); }
+.person-facts span + span::before { content: "•"; margin-right: calc(20 * var(--tu)); opacity: .7; }
+.tv-person .person-bio { font-size: calc(22 * var(--tu)); line-height: 1.5; color: var(--tv-body); white-space: pre-line; }
+.person-bio.is-clamped { display: -webkit-box; -webkit-line-clamp: 6; -webkit-box-orient: vertical; overflow: hidden; }
+.person-credit { display: flex; flex-direction: column; gap: calc(8 * var(--tu)); min-width: 0; }
+.tv-person .person-role { font-size: calc(18 * var(--tu)); color: var(--text-2); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: var(--poster-w); }
+.tv-person .person-head .sk-line { width: calc(600 * var(--tu)); height: calc(26 * var(--tu)); }
+.tv-person .person-head .sk-line--title { width: calc(420 * var(--tu)); height: calc(60 * var(--tu)); }
+.m-person .person-head { display: flex; gap: 14px; padding: 8px var(--m-gutter) 18px; align-items: flex-start; flex-wrap: wrap; }
+.m-person .person-photo { flex: none; width: 112px !important; height: 168px !important; border-radius: 10px; object-fit: cover; }
+.m-person .person-text { flex: 1 1 180px; min-width: 0; display: flex; flex-direction: column; align-items: flex-start; gap: 8px; }
+.m-person .person-name { font-size: 22px; font-weight: var(--fw-bold); line-height: 1.2; }
+.m-person .person-facts { font-size: 12.5px; flex-direction: column; gap: 2px; line-height: 1.4; }
+.m-person .person-facts span + span::before { content: none; }
+.m-person .person-bio { font-size: 13.5px; line-height: 1.5; color: var(--text-2); white-space: pre-line; }
+.m-person .person-bio.is-clamped { -webkit-line-clamp: 5; }
+.m-person .person-bio { flex-basis: 100%; }
+.m-person .person-credit > :first-child { width: 100%; }
+.m-person .person-role { font-size: var(--m-tiny); color: var(--text-2); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.m-person .person-head .sk-line { width: 180px; height: 14px; }
+.m-person .person-head .sk-line--title { height: 24px; }

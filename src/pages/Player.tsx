@@ -1,3 +1,4 @@
+import "./player.css";
 import { Suspense, useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useParams, useSearch } from "wouter";
 import useSWR from "swr";
@@ -20,11 +21,14 @@ import { ADAPTERS, embedUrl, parseMessage, READY_TIMEOUT_MS, sendCommand, source
 import { COMPAT, lastResortOnly, nativeShield, rankSources, recordPlay, SANDBOX, setShieldSource, shieldStats, syncNative } from "../lib/shield";
 import { nextEpisodeOf, prevEpisodeOf } from "../lib/watch";
 import { airsLater, pluralEps, runtime, titlePath, watchPath } from "../lib/format";
-import { PlayerPrompts, PlayerOptionsSheet } from "../components/PlayerPrompts";
 import { activeSkip, getIntro, learnIntro, nextCardDue, SLEEP_GRACE_S, SLEEP_OFF, sleepDue, sleepLeft, sleepPillLabel, speedLabel, startSleep, type Intro, type SleepMode, type SleepTimer } from "../lib/player2";
 /** TV-only chrome lives in its own chunk so phones never download it (v1.1.6, D-85). TV warms it at idle. */
 export const loadTvChrome = () => import("../tv/TvPlayerChrome");
 const TvPlayerChrome = lazyNamed(loadTvChrome, "TvPlayerChrome");
+// skip / next-episode / still-watching prompts and the options sheet appear only after playback starts: own chunk
+const loadPrompts = () => import("../components/PlayerPrompts");
+const PlayerPrompts = lazyNamed(loadPrompts, "PlayerPrompts");
+const PlayerOptionsSheet = lazyNamed(loadPrompts, "PlayerOptionsSheet");
 import type { SkipSegments, MediaType, PlaybackPayload, PlaybackSource, SourceId, TitleDetails } from "../lib/types";
 
 const SHORT: Record<SourceId, string> = { cinesrc: sourceName("cinesrc"), vidy: sourceName("vidy") };
@@ -500,11 +504,13 @@ function Player({ type, id, season, episode, start }: { type: MediaType; id: num
         </div>
       )}
       </>}
+      <Suspense fallback={null}>
       <PlayerPrompts tv={tv} skip={showSkip} skipLabel={skip?.kind === "recap" ? "Skip Recap" : "Skip Intro"} onSkip={skipIntro}
         nextCard={showNextCard && next ? { s: next.season, e: next.episode, title: nextEp?.title ?? null, still: nextEp?.still ?? details?.backdrop ?? null, left: Math.max(0, Math.ceil(time.d - time.p)) } : null}
         onPlayNext={() => next && playEpisode(next.season, next.episode)} onDismissNext={() => setNextDismissed(true)}
         stillWatching={stillWatching} onKeepWatching={() => { setStillWatching(null); if (source) sendCommand(frame.current, source, { c: "play" }); setPaused(false); }} onStop={endForTheNight} />
       {optionsSheet && <PlayerOptionsSheet kind={optionsSheet} controllable={controllable} onKind={setOptionsSheet} speed={prefs.playbackSpeed} sleep={sleep.mode} isSeries={isTv} onSpeed={(r) => { chooseSpeed(r); setOptionsSheet(null); }} onSleep={(m) => { chooseSleep(m); setOptionsSheet(null); }} onClose={() => setOptionsSheet(null)} />}
+      </Suspense>
       {drawer && details && <EpisodesDrawer d={details} current={ep} onClose={() => setDrawer(false)} onPick={(sn, en) => { setDrawer(false); playEpisode(sn, en); }} />}
     </div>
   );

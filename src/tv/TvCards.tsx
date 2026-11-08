@@ -5,7 +5,7 @@ import { Img, TitleArt } from "../components/ui";
 import { useDwell, useTitle } from "../lib/hooks";
 import { itemBadge, landMeta, runtime, timeLeft, titlePath, watchPath } from "../lib/format";
 import { useHasReminder, type HistoryEntry } from "../lib/store";
-import { useCalendarBadge } from "../components/CalendarBadges";
+import { useCalendarBadge } from "../lib/badges";
 import type { PandaItem } from "../lib/types";
 
 export interface CardFocus { onFocusItem?: (item: PandaItem) => void; pos?: [number, number]; onRemove?: () => void; onOptions?: () => void }

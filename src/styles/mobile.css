@@ -256,15 +256,18 @@ html[data-mode="mobile"] body { background: var(--m-bg); }
 
 /* settings (15.6) */
 .m-settings { padding-bottom: 24px; }
-.m-set-list { display: flex; flex-direction: column; margin: 0 var(--m-gutter); border-radius: var(--r-glass-m); background: var(--m-card); overflow: hidden; }
-.m-set-list > li + li { border-top: 1px solid var(--m-hairline); }
-.m-set-item { display: flex; align-items: center; gap: 14px; min-height: 60px; padding: 10px 14px; }
+/* m#31: plain rows on the page background, hairline inset to the text column, 72 px pitch */
+.m-set-list { display: flex; flex-direction: column; margin: 0 var(--m-gutter); }
+.m-set-list > li { position: relative; }
+.m-set-list > li + li::before { content: ""; position: absolute; top: 0; left: 50px; right: 0; border-top: 1px solid var(--m-hairline); }
+.m-set-item { display: flex; align-items: center; gap: 14px; min-height: 72px; padding: 12px 4px; }
 .m-set-item > .icon:first-child { width: 22px; height: 22px; color: var(--text-2); flex: none; }
 .m-set-item > .icon:last-child { width: 18px; height: 18px; color: var(--text-2); margin-left: auto; flex: none; }
 .m-set-item .set-row-text { flex: 1; min-width: 0; }
 .m-switch { display: block; margin: 24px auto 0; padding: 10px 20px; color: var(--m-link); font-size: 15px; font-weight: var(--fw-semibold); }
 .m-set-foot { display: flex; flex-direction: column; align-items: center; gap: 6px; margin-top: 18px; font-size: var(--m-small); color: var(--text-2); }
-.m-set-foot a { color: var(--text-2); text-decoration: underline; text-underline-offset: 2px; }
+.m-set-foot a { color: var(--text-2); }
+.m-set-legal { display: flex; gap: 22px; }
 html[data-mode="mobile"] .set-panel, html[data-mode="mobile"] .upd-card, html[data-mode="mobile"] .info-body, html[data-mode="mobile"] .manage-list, html[data-mode="mobile"] .profile-form { margin-left: var(--m-gutter); margin-right: var(--m-gutter); }
 
 /* empty / error states inside sections */
@@ -328,20 +331,7 @@ a.m-cast { color: inherit; text-decoration: none; }
 .m-part > :first-child { width: 100%; }
 .m-part-label { font-size: var(--m-tiny); color: var(--text-2); }
 .m-part.is-current .m-part-label { color: var(--text-1); font-weight: var(--fw-semibold); }
-.m-person .person-head { display: flex; gap: 14px; padding: 8px var(--m-gutter) 18px; align-items: flex-start; flex-wrap: wrap; }
-.m-person .person-photo { flex: none; width: 112px !important; height: 168px !important; border-radius: 10px; object-fit: cover; }
-.m-person .person-text { flex: 1 1 180px; min-width: 0; display: flex; flex-direction: column; align-items: flex-start; gap: 8px; }
-.m-person .person-name { font-size: 22px; font-weight: var(--fw-bold); line-height: 1.2; }
-.m-person .person-facts { font-size: 12.5px; flex-direction: column; gap: 2px; line-height: 1.4; }
-.m-person .person-facts span + span::before { content: none; }
-.m-person .person-bio { font-size: 13.5px; line-height: 1.5; color: var(--text-2); white-space: pre-line; }
-.m-person .person-bio.is-clamped { -webkit-line-clamp: 5; }
-.m-person .person-bio { flex-basis: 100%; }
 .m-person > section > .m-row-title { padding: 0 var(--m-gutter); }
-.m-person .person-credit > :first-child { width: 100%; }
-.m-person .person-role { font-size: var(--m-tiny); color: var(--text-2); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-.m-person .person-head .sk-line { width: 180px; height: 14px; }
-.m-person .person-head .sk-line--title { height: 24px; }
 
 /* Watchlist 2.0 */
 .m-list-track { gap: 10px; }
@@ -359,8 +349,6 @@ a.m-cast { color: inherit; text-decoration: none; }
 .m-ep { -webkit-touch-callout: none; }
 
 /* v1.1.7 Coming Up */
-.cal-page .cal-group { margin-top: 18px; }
-.cal-page .cal-group > .m-row-title { padding: 0 var(--m-gutter); }
-.cal-page .m-land-grid > .cal-card { width: auto; max-width: none; }
 .m-notif-card.has-new .m-notif-title { color: var(--m-link); }
 .m-cta.is-reminded { background: rgba(255, 255, 255, 0.16); color: var(--text-1); }
+.m-set-item .set-row-title { font-weight: var(--fw-medium, 500); }

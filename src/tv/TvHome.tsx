@@ -74,7 +74,7 @@ function TvHero({ items, kind, onFocusHero }: { items: PandaItem[]; kind: PageKi
         <span className="tv-hero-badges">
           {kind === "home" && <span className="glass-badge"><Icon name="trend" /> #{index + 1} in Trending Today</span>}
           {isNew(item) && <span className="glass-badge"><Icon name="sparkle" /> Newly Added</span>}
-          {kind !== "home" && item.rating ? <span className="glass-badge"><Icon name="star" /> {item.rating.toFixed(1)}</span> : null}
+          {item.rating ? <span className="glass-badge"><Icon name="star" /> {item.rating.toFixed(1)}</span> : null}
         </span>
         {trailerOn && (
           <span className="tv-hero-sound" role="button" aria-label={prefs.trailerSound ? "Mute trailers" : "Unmute trailers"}

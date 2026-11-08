@@ -151,6 +151,9 @@ html[data-mode="tv"] {
   --u: calc(1.5 * var(--tu));
 
   /* 4 rail */
+  /* TV player side panels (tvplayer p9/p10, re-measured v1.1.7: vivid royal blue, glossy focus pill) */
+  --tvp-panel-bg: linear-gradient(180deg, #0C2C9E 0%, #081C78 45%, #040C3A 100%);
+  --tvp-row-focus: linear-gradient(90deg, rgba(255, 255, 255, 0.2) 0%, rgba(160, 200, 255, 0.5) 100%);
   --rail-w: calc(140 * var(--tu));
   --rail-w-open: calc(400 * var(--tu));
   --rail-row: calc(94 * var(--tu));

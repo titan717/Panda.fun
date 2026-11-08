@@ -193,10 +193,10 @@ export function TvPlayerChrome(p: TvChromeProps) {
         </div>
         <div className="tvp-actions lrud-container">
           <button id="tvp-quality" className="tvp-pill" onClick={() => setPanel("quality")} data-hover-focus>
-            <Icon name="play" /> Quality <span className="tvp-pill-val">{QUALITIES.find((q) => q.id === p.quality)?.label ?? "Auto"}</span>
+            <Icon name="videoBox" /> Quality <span className="tvp-pill-val">{QUALITIES.find((q) => q.id === p.quality)?.label ?? "Auto"}</span>
           </button>
           <button id="tvp-audio" className="tvp-pill" onClick={() => setPanel("audio")} data-hover-focus>
-            <Icon name="list" /> Audio &amp; Subtitles
+            <Icon name="captions" /> Audio &amp; Subtitles
           </button>
         </div>
       </header>
@@ -224,7 +224,7 @@ export function TvPlayerChrome(p: TvChromeProps) {
 
       {panel === "quality" && (
         <SidePanel className="tvp-panel--quality" title="Quality" onClose={() => setPanel(null)}
-          footer={<button id="tvp-report" className="tvp-row tvp-row--report" onClick={() => setPanel("report")} data-hover-focus><Icon name="info" /> Report an Issue</button>}>
+          footer={<button id="tvp-report" className="tvp-row tvp-row--report" onClick={() => setPanel("report")} data-hover-focus><Icon name="warning" /> Report an Issue</button>}>
           <div className="tvp-list lrud-container" role="radiogroup" aria-label="Quality">
             {QUALITIES.map((q) => (
               <button key={q.id} id={`tvp-q-${q.id}`} role="radio" aria-checked={p.quality === q.id} className={`tvp-row ${p.quality === q.id ? "is-selected" : ""}`}

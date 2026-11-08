@@ -1,3 +1,4 @@
+import "./updates.css";
 import { useEffect, useRef, useState } from "react";
 import { Icon } from "../components/Icon";
 import { PageHeader } from "../components/PageHeader";

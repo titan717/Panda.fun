@@ -371,7 +371,7 @@ export function SettingsPage() {
       <button className="m-switch" onClick={() => { actions.signOut(); go("/profiles", { replace: true }); }}>Switch Profile</button>
       <footer className="m-set-foot">
         <PandaMark size={28} />
-        <p><Link href="/privacy">Privacy Policy</Link> · <Link href="/terms">Terms of Use</Link></p>
+        <p className="m-set-legal"><Link href="/privacy">Privacy Policy</Link><Link href="/terms">Terms of Use</Link></p>
         <p>App Version {installedVersion()}</p>
       </footer>
     </div>

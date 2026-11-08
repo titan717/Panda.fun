@@ -1,3 +1,4 @@
+import "./updates.css";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { Icon } from "../components/Icon";
 import { ReleaseNotes as Notes } from "../components/ReleaseNotes";

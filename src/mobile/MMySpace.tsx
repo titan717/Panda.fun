@@ -69,6 +69,7 @@ export function MMySpace() {
         </div>
       </section>
 
+      <div className="m-row-head"><h2 className="m-row-title">Notifications</h2><Link href="/calendar" className="m-row-more" aria-label="Open the release calendar"><Icon name="chevronRight" /></Link></div>
       <section className={`m-notif-card ${newCount ? "has-new" : ""}`} aria-live="polite">
         <Icon name="bell" size={28} />
         <span className="m-notif-text">
@@ -85,7 +86,7 @@ export function MMySpace() {
       </section>
 
       <section className="m-section">
-        <div className="m-row-head"><h2 className="m-row-title">Continue Watching</h2>{cw.length > 0 && <Link href="/continue-watching" className="m-row-more" aria-label="See all Continue Watching"><Icon name="chevronRight" /></Link>}</div>
+        <div className="m-row-head"><h2 className="m-row-title">{profile ? `Continue Watching for ${profile.name}` : "Continue Watching"}</h2>{cw.length > 0 && <Link href="/continue-watching" className="m-row-more" aria-label="See all Continue Watching"><Icon name="chevronRight" /></Link>}</div>
         {cw.length ? <div className="m-row-track">{cw.slice(0, 20).map((h) => <MContinue key={h.item.id} entry={h} />)}</div>
           : <EmptyState icon="play" title="Nothing in progress" sub="Titles you start watching show up here." />}
       </section>

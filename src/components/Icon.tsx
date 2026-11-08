@@ -50,7 +50,11 @@ const PATHS = {
   signal: "M5 19v-3M10 19v-7M15 19V9M20 19V5",
   file: "M7 3h7l5 5v13H7zM14 3v5h5",
   episodes: "M4 6h11v12H4zM18 8v8M21 9v6",
-  sparkle: "M12 4l1.6 4.4L18 10l-4.4 1.6L12 16l-1.6-4.4L6 10l4.4-1.6L12 4Zm6 10 .8 2.2L21 17l-2.2.8L18 20l-.8-2.2L15 17l2.2-.8L18 14Z"
+  sparkle: "M12 4l1.6 4.4L18 10l-4.4 1.6L12 16l-1.6-4.4L6 10l4.4-1.6L12 4Zm6 10 .8 2.2L21 17l-2.2.8L18 20l-.8-2.2L15 17l2.2-.8L18 14Z",
+  // TV PLAYER blueprint top-bar glyphs (§20.3) and the Report an Issue warning (§20.9)
+  videoBox: "M5 5h14a2 2 0 0 1 2 2v10a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V7a2 2 0 0 1 2-2Zm5 4v6l5-3-5-3Z",
+  captions: "M5 5h14a2 2 0 0 1 2 2v10a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V7a2 2 0 0 1 2-2Zm2 5h6M7 14h10",
+  warning: "M12 4 2.8 19.5h18.4L12 4Zm0 6v4.5m0 2.6h.01",
 } as const;
 
 export type IconName = keyof typeof PATHS;

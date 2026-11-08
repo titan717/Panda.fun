@@ -1,3 +1,4 @@
+import "./person.css";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useParams } from "wouter";
 import { PageHeader } from "../components/PageHeader";

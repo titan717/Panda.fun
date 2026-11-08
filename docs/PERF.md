@@ -2,6 +2,15 @@
 
 Measured on every release. Never regress.
 
+## v1.1.7 (ad shield, calendar, TV sidebar; performance round 4)
+
+| Metric | Value |
+|---|---|
+| Entry chunk (gzip) | 29.6 KB, down from 34.4 KB, even with the ad shield, reminders and calendar badges added. The calendar logic (~8.7 KB source) first landed in the entry; it now loads on demand: card badges and the New & Hot "for you" rows read a 1.6 KB store (`lib/badges.ts`) that a lazy `CalendarSync` fills 2.5 s after launch, and new-episode notifications import `lib/alerts.ts` only when a check runs. My List, Continue Watching, Browse and Not found moved to their own `Lists` chunk (4.4 KB), warmed at idle. |
+| Entry CSS (gzip) | 22.58 KB, down from 22.95 KB. Page-only styles for Player (1.18 KB), Person (0.76 KB), Updates/What's New (0.83 KB) and Calendar (0.43 KB) now ship with their lazy page chunks; Vite waits for that CSS before the page renders, so there is no unstyled flash. |
+| Player chunk (gzip) | 7.7 KB, down from 8.1 KB: the skip / next-episode / still-watching prompts and the options sheet are their own 1.55 KB chunk, rendered after the player shell; the ad-shield logic adds no time before the iframe loads. |
+| TV sidebar | Opening and closing animates only `transform` and `opacity` (240 ms, 0 with reduced motion), checked by `e2e/tv-sidebar.spec.ts`. |
+
 ## v1.1.6 (performance round 3)
 
 | Metric | Value |

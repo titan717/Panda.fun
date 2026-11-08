@@ -3,7 +3,7 @@ import { usePage, useTitle, useTop10 } from "./hooks";
 import { buildPersonalRows, pickSeeds, type Seed } from "./personal";
 import { continueWatching, useHistoryMap, usePrefs, useProfile, useRatings, useWatchlist, watchedTitles, type HistoryEntry } from "./store";
 import { languageName } from "./format";
-import { useCalendar } from "./calendar";
+import { useCalendarItems } from "./badges";
 import type { PageKind, PandaItem, TitleDetails } from "./types";
 
 export type HomeRow =
@@ -30,7 +30,7 @@ export function useHomeRows(kind: PageKind) {
   const history = useHistoryMap();
   const watchlist = useWatchlist();
   const ratings = useRatings();
-  const calendar = useCalendarRows(kind === "new");
+  const calendar = useCalendarItems();
 
   // Personal rows only on Home for grown-up profiles; seed details load after the page so they never delay it.
   const personal = kind === "home" && !kids;
@@ -87,12 +87,3 @@ function useSeedTitle(seed: Seed | undefined, ready: boolean) {
   return useTitle(ready && seed ? seed.item.type : null, ready && seed ? seed.item.tmdbId : null).data;
 }
 
-/** One card per title from the calendar (newest episode / soonest date first), for New & Hot. */
-function useCalendarRows(on: boolean) {
-  const cal = useCalendar(on);
-  return useMemo(() => {
-    if (!on) return { fresh: [] as PandaItem[], upcoming: [] as PandaItem[] };
-    const uniq = (list: { item: PandaItem }[]) => { const seen = new Set<string>(); return list.filter((a) => !seen.has(a.item.id) && seen.add(a.item.id)).map((a) => a.item); };
-    return { fresh: uniq(cal.fresh).slice(0, 20), upcoming: uniq(cal.upcoming).slice(0, 20) };
-  }, [on, cal.fresh, cal.upcoming]);
-}

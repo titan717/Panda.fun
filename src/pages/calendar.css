@@ -1,0 +1,11 @@
+/* Page-only styles, loaded with the lazy page chunk (v1.1.7 perf, docs/PERF.md). Moved from styles/*.css. */
+
+.cal-badge { position: absolute; top: 8px; left: 8px; padding: 2px 8px; border-radius: 4px; background: var(--badge-gradient); color: #fff; font-size: 11px; font-weight: var(--fw-bold); letter-spacing: 0.04em; }
+.app--tv .cal-badge { top: calc(12 * var(--tu)); left: calc(12 * var(--tu)); padding: calc(3 * var(--tu)) calc(10 * var(--tu)); font-size: calc(15 * var(--tu)); }
+.cal-notify { display: flex; align-items: center; gap: 12px; margin: 0 var(--m-gutter, 16px) 14px; padding: 12px 14px; border-radius: 12px; background: var(--m-glass); border: 1px solid var(--m-glass-border); font-size: 14px; }
+.cal-notify > span { flex: 1; }
+.cal-notify.is-tv { margin: 0 0 calc(24 * var(--tu)); padding: calc(18 * var(--tu)) calc(24 * var(--tu)); font-size: calc(22 * var(--tu)); gap: calc(18 * var(--tu)); }
+.cal-page .cal-group { margin-top: calc(30 * var(--tu)); }
+.cal-page .cal-group { margin-top: 18px; }
+.cal-page .cal-group > .m-row-title { padding: 0 var(--m-gutter); }
+.cal-page .m-land-grid > .cal-card { width: auto; max-width: none; }

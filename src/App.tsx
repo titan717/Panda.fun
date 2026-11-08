@@ -4,22 +4,20 @@ import { KidsGate } from "./components/KidsGate";
 import { SWRConfig, useSWRConfig } from "swr";
 import { Route, Router, Switch, useLocation, useParams } from "wouter";
 import { useHashLocation } from "wouter/use-hash-location";
-import { api, fetcher } from "./lib/api";
+import { fetcher } from "./lib/api";
 import { persistentCache } from "./lib/cache";
 import { setPrefetchDataSaver, setPreloadMode } from "./lib/network";
 import { detectLayout, type LayoutMode } from "./lib/device";
 import { LayoutContext, useLayout } from "./lib/layout";
 import { installKeyHandling, setRootBackHandler, setTvNavigation } from "./lib/focus";
 import { BUILD_TARGET } from "./lib/nav";
-import { actions, getActiveData, getState, usePrefs, useProfile, useStore } from "./lib/store";
+import { actions, getState, usePrefs, useProfile, useStore } from "./lib/store";
 import { notifyPermission, setNotifyNavigator, showNotification, takeLaunchPath } from "./lib/notify";
-import { alertSub, buildCalendar, dayStart, followedIds, localDay } from "./lib/calendar";
 import { exitApp, isAndroidApp, native } from "./lib/native";
 import { useOnline, useReducedMotion } from "./lib/hooks";
 import { compareVersions, fetchLatestRelease, installedVersion, takeUpdateNotice } from "./lib/updates";
 import { ErrorBoundary, OfflineBanner, Toasts, toast } from "./components/ui";
 import { PandaMark, Wordmark } from "./components/Icon";
-import { BrowsePage, ContinueWatchingPage, MyListPage, NotFoundPage } from "./pages/Lists";
 import { ProfileEdit, ProfileManage, ProfileSelect } from "./pages/Profiles";
 import { lazyNamed, whenIdle } from "./lib/lazy";
 import type { MediaType, PageKind } from "./lib/types";
@@ -33,6 +31,7 @@ const loadInfo = () => import("./pages/Info");
 const loadWhatsNew = () => import("./pages/WhatsNew");
 const loadPerson = () => import("./pages/Person");
 const loadCalendar = () => import("./pages/Calendar");
+const loadLists = () => import("./pages/Lists");
 
 const lz = lazyNamed;
 const TvShell = lz(loadTv, "TvShell");
@@ -58,11 +57,15 @@ const WhatsNewPage = lz(loadWhatsNew, "WhatsNewPage");
 const WhatsNewSheet = lz(loadWhatsNew, "WhatsNewSheet");
 const PersonPage = lz(loadPerson, "PersonPage");
 const CalendarPage = lz(loadCalendar, "CalendarPage");
+const BrowsePage = lz(loadLists, "BrowsePage");
+const ContinueWatchingPage = lz(loadLists, "ContinueWatchingPage");
+const MyListPage = lz(loadLists, "MyListPage");
+const NotFoundPage = lz(loadLists, "NotFoundPage");
 
 /** Start downloading the active layout at once, and the rest of the app when the device is idle. */
 export function prefetchRoutes(mode: LayoutMode) {
   void (mode === "tv" ? loadTv() : loadMobile());
-  whenIdle(() => { void loadPlayer().then((m) => { if (mode === "tv") void m.loadTvChrome(); }); void loadSettings(); void loadUpdates(); void loadInfo(); void loadWhatsNew(); void loadPerson(); });
+  whenIdle(() => { void loadPlayer().then((m) => { if (mode === "tv") void m.loadTvChrome(); }); void loadSettings(); void loadUpdates(); void loadInfo(); void loadWhatsNew(); void loadPerson(); void loadLists(); void loadCalendar(); });
 }
 
 const PUBLIC_PATHS = ["/about", "/privacy", "/terms"];
@@ -150,24 +153,10 @@ function useEpisodeAlerts() {
     let ctrl: AbortController | null = null;
     const run = async () => {
       if (notifyPermission() !== "granted" || (document.visibilityState === "hidden" && !native)) return;
-      const data = getActiveData();
-      if (!data) return;
-      const ids = followedIds(data);
-      if (!ids.length) return;
       ctrl?.abort(); ctrl = new AbortController();
-      try {
-        const res = await api.calendar(ids, ctrl.signal);
-        const { fresh } = buildCalendar(res.entries, data);
-        const minDay = dayStart(localDay(Date.now() - 2 * 86_400_000));
-        const sent = new Set(data.alerted);
-        const due = fresh.filter((a) => !sent.has(a.key) && dayStart(a.airDate) >= minDay);
-        if (due.length > 3) {
-          showNotification({ tag: "panda-new", title: `${due.length} new episodes and releases`, body: [...new Set(due.map((a) => a.item.title))].slice(0, 4).join(", "), path: "/calendar" });
-        } else {
-          for (const a of due) showNotification({ tag: a.key, title: a.kind === "episode" ? `New episode of ${a.item.title}` : `${a.item.title} is out now`, body: alertSub(a), path: a.href });
-        }
-        if (fresh.length) actions.markAlerted(fresh.map((a) => a.key));
-      } catch { /* offline: next tick */ }
+      // the calendar logic loads on demand, keeping it out of the entry chunk
+      const { runEpisodeAlerts } = await import("./lib/alerts");
+      await runEpisodeAlerts(ctrl.signal);
     };
     const first = setTimeout(run, 8000);
     const every = setInterval(run, ALERT_EVERY);
