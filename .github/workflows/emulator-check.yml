@@ -17,7 +17,7 @@ jobs:
   emulator:
     name: ${{ matrix.name }}
     runs-on: ubuntu-latest
-    timeout-minutes: 45
+    timeout-minutes: 70
     strategy:
       fail-fast: false
       matrix:
@@ -46,13 +46,37 @@ jobs:
           if [[ -n "$PREV" ]]; then gh release download "$PREV" -R "${{ github.repository }}" -p "*.apk" -D prev; echo "$PREV" > prev/TAG; fi
           ls -l apk prev || true
 
+      # The headless emulator itself sometimes dies a few seconds after a WebView app starts ("error: closed",
+      # seen on v1.1.5–v1.1.8 alike while earlier runs of the same APKs passed). Attempt 1 uses ANGLE on SwiftShader;
+      # if the emulator or the check fails, attempt 2 starts a fresh emulator with the other GPU mode. An app problem
+      # fails both attempts, so the job still fails.
       - name: Run on emulator and capture screenshots
+        id: try1
+        continue-on-error: true
         uses: reactivecircus/android-emulator-runner@v2
         with:
           api-level: ${{ matrix.api }}
           target: ${{ matrix.target }}
           arch: ${{ matrix.arch }}
           profile: ${{ matrix.profile }}
+          ram-size: 4096M
+          disable-animations: false
+          emulator-options: -no-window -gpu swangle_indirect -noaudio -no-boot-anim -camera-back none
+          script: bash scripts/emulator-check.sh ${{ matrix.name }}
+
+      - name: Keep attempt 1 output
+        if: steps.try1.outcome == 'failure'
+        run: mkdir -p shots && [ -d shots ] && mkdir -p try1 && cp -r shots/. try1/ && rm -rf shots/* && mv try1 shots/attempt1 || true
+
+      - name: Run on emulator (attempt 2, fresh emulator)
+        if: steps.try1.outcome == 'failure'
+        uses: reactivecircus/android-emulator-runner@v2
+        with:
+          api-level: ${{ matrix.api }}
+          target: ${{ matrix.target }}
+          arch: ${{ matrix.arch }}
+          profile: ${{ matrix.profile }}
+          ram-size: 4096M
           disable-animations: false
           emulator-options: -no-window -gpu swiftshader_indirect -noaudio -no-boot-anim -camera-back none
           script: bash scripts/emulator-check.sh ${{ matrix.name }}

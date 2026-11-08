@@ -60,6 +60,12 @@ sleep 8; shot after-ok-12s
 adb shell pidof "$PKG" >/dev/null && echo "app running" | tee -a shots/package.txt || { echo "app not running"; { adb logcat -d -b crash; echo ----; adb logcat -d | grep -iE "kinoma|AndroidRuntime|chromium|ActivityTaskManager|am_" | tail -400; } > shots/logcat.txt; exit 1; }
 adb logcat -d | grep -iE "kinoma|panda|chromium|AndroidRuntime|KinomaTVWeb" | tail -300 > shots/logcat.txt || true
 
+# The new build's own updater (R8-shrunk release since v1.1.9: Gson models and the JS bridge must survive shrinking)
+adb shell am start -W -n "$PKG/.ui.MainActivity" --es panda_path /settings/updates >/dev/null
+sleep 12; shot updater-new
+adb shell uiautomator dump /sdcard/upd2.xml >/dev/null 2>&1 && adb shell cat /sdcard/upd2.xml | grep -oE 'text="[^"]*(pdate|ersion|atest)[^"]*"' | head -8 | tee -a shots/upgrade.txt || true
+adb shell pidof "$PKG" >/dev/null || { echo "app crashed on the updates screen"; adb logcat -d -b crash > shots/logcat-updates.txt; exit 1; }
+
 # Ad shield release gate (docs/AD_SHIELD.md, layer 7): play a title, press and tap around the player for a
 # minute, and fail if any other activity (browser, Play Store, another app) ever comes to the front.
 resumed() { adb shell dumpsys activity activities | grep -E "mResumedActivity|topResumedActivity" | head -1; }

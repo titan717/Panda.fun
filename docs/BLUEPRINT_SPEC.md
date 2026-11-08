@@ -278,3 +278,15 @@ Same method as section 23: `scripts/qa-shots.mjs` side by side with the Drive bl
 | Browse and genre pages | Phone chip row cut "Top Rated" at the edge | Right-edge fade on scrollable chip rows ≤480 px so the cut chip reads as scrollable. |
 | Updates and What's New | Rate-limited GitHub requests showed "GitHub returned 403."; bullets were one undifferentiated block; TV text at phone size; long notes could not be scrolled with the remote | Notes ship with the build, API mirror fallback (D-108); headed items (bold title + body); 10-foot sizes; Up/Down scroll the notes card. |
 | Empty, loading and error states | TV states used phone sizes (fixed in this release before the pass); phone states were small | TV: 36 tu title, 24 tu body, 64 tu pill button, glass disc; phone: 18 px title, 44 px pill, centred. |
+
+## 25. v1.1.9 personalization and visual sweep 1
+
+Drive folder re-checked for this release: no blueprint changed after 2026-11-08 12:05 UTC, the copies used since v1.1.7.
+
+| Area | Check | Result |
+|---|---|---|
+| Home default order | With no personalization, rows are byte-for-byte the v1.1.8 order (unit test `v119.test.ts`) | Blueprint order kept |
+| Personalize Home (TV 1280/1920, phone 360/390, tablet 820) | Numbered sections, switch, up/down arrows; rail switches line up with section switches; nothing clipped | `e2e/personalize.spec.ts` + screenshots |
+| Compact cards | TV posters 250 × 333 tu, expanded 683 tu, landscape 340 × 191 tu; phone rows 4.25 posters across | Rows keep the blueprint spacing and type sizes |
+| Page fade, press feedback | Opacity only; disabled with Reduce motion | No layout shift |
+

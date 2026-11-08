@@ -2,6 +2,14 @@
 
 Measured on every release. Never regress.
 
+## v1.1.9 (personalization, R8)
+
+| Metric | Value |
+|---|---|
+| Entry chunk (gzip) | 26.0 KB, down from 28.9 KB. The Kids gate imported `isKidsSafeTitle` from `lib/rows.ts`, which pulled the whole Home row builder (and the personal-rows logic) into the entry; the Kids filters now live in `lib/kids.ts`. |
+| Entry CSS (gzip) | 21.6 KB, down from 22.1 KB: the Player 2.0 prompt styles moved into the player chunk's CSS and the Personalize Home styles ship with Settings (0.5 KB). |
+| Android | Release APK is shrunk with R8 (code and resources); see the release asset size. |
+
 ## v1.1.8 (Release 2 pages; performance round 5)
 
 | Metric | Value |
