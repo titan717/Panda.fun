@@ -73,3 +73,10 @@ Reviewed each release. Ideas are only adopted when they fit the blueprints.
 - Netflix and Prime Video both forgive typos and match actor names in search. Panda now corrects misspellings and puts an actor's best-known titles first.
 - Google TV understands phrases like "90s action movies". Panda's search now turns language, decade, genre and type words into a filtered list.
 - Disney+ and Netflix show genre shortcuts on the empty search screen. Panda shows Browse by Genre chips there, and they respect Kids profiles.
+
+## v1.1.2 round (2026-11-08)
+
+- Prime Video (X-Ray) and Apple TV let you open an actor and see what else they are in. Panda's Cast now opens a person page with their best-known titles.
+- Apple TV and Plex show directors and writers next to the cast. Panda lists key crew after the actors.
+- Plex and Apple TV group film series. Panda shows a movie's collection in order, with the one you are viewing marked.
+- Google TV shows a rating with its source. Panda shows the TMDB rating with its vote count.

@@ -29,7 +29,7 @@ async function open(page: Page, path: string, tv: boolean) {
   return issues;
 }
 
-const ROUTES = ["/", "/movies", "/tv", "/new", "/search", "/categories", "/my-space", "/my-list", "/continue-watching", "/settings", "/settings/updates", "/about", "/profiles", "/title/movie/550", "/title/tv/1396"];
+const ROUTES = ["/", "/movies", "/tv", "/new", "/search", "/categories", "/my-space", "/my-list", "/continue-watching", "/settings", "/settings/updates", "/about", "/profiles", "/title/movie/550", "/title/tv/1396", "/person/31"];
 
 for (const route of ROUTES) {
   test(`renders ${route} without errors`, async ({ page }, info) => {

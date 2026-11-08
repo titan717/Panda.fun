@@ -27,6 +27,7 @@ const loadSettings = () => import("./pages/Settings");
 const loadUpdates = () => import("./pages/Updates");
 const loadInfo = () => import("./pages/Info");
 const loadWhatsNew = () => import("./pages/WhatsNew");
+const loadPerson = () => import("./pages/Person");
 
 const lz = lazyNamed;
 const TvShell = lz(loadTv, "TvShell");
@@ -50,11 +51,12 @@ const PrivacyPage = lz(loadInfo, "PrivacyPage");
 const TermsPage = lz(loadInfo, "TermsPage");
 const WhatsNewPage = lz(loadWhatsNew, "WhatsNewPage");
 const WhatsNewSheet = lz(loadWhatsNew, "WhatsNewSheet");
+const PersonPage = lz(loadPerson, "PersonPage");
 
 /** Start downloading the active layout at once, and the rest of the app when the device is idle. */
 export function prefetchRoutes(mode: LayoutMode) {
   void (mode === "tv" ? loadTv() : loadMobile());
-  whenIdle(() => { void loadPlayer(); void loadSettings(); void loadUpdates(); void loadInfo(); void loadWhatsNew(); });
+  whenIdle(() => { void loadPlayer(); void loadSettings(); void loadUpdates(); void loadInfo(); void loadWhatsNew(); void loadPerson(); });
 }
 
 const PUBLIC_PATHS = ["/about", "/privacy", "/terms"];
@@ -232,6 +234,7 @@ function Routes({ mode }: { mode: LayoutMode }) {
             <Route path="/search">{tv ? <TvSearch /> : <MSearch />}</Route>
             <Route path="/title/tv/:id/episodes"><AllEpisodes /></Route>
             <Route path="/title/:type/:id"><Details /></Route>
+            <Route path="/person/:id"><PersonPage /></Route>
             <Route path="/my-space">{tv ? <TvMySpace /> : <MMySpace />}</Route>
             <Route path="/my-list"><MyListPage /></Route>
             <Route path="/continue-watching"><ContinueWatchingPage /></Route>

@@ -87,6 +87,46 @@ export interface TitleDetails extends PandaItem {
   nextEpisode: EpisodeRef | null;
   videos: Video[];
   moreLikeThis: PandaItem[];
+  /** TMDB vote count behind `rating` (v1.1.2). */
+  voteCount: number | null;
+  /** Key crew with ids, most important job first (v1.1.2). */
+  crew: CrewMember[];
+  /** The movie's collection, parts in release order (v1.1.2). */
+  collection: Collection | null;
+}
+
+export interface CrewMember {
+  id: number;
+  name: string;
+  job: string;
+  profile: string | null;
+}
+
+export interface Collection {
+  id: number;
+  name: string;
+  overview: string | null;
+  poster: string | null;
+  backdrop: string | null;
+  parts: PandaItem[];
+}
+
+export interface PersonCredit extends PandaItem {
+  role: string | null;
+}
+
+export interface PersonDetails {
+  id: number;
+  name: string;
+  profile: string | null;
+  profileLarge: string | null;
+  biography: string | null;
+  birthday: string | null;
+  deathday: string | null;
+  placeOfBirth: string | null;
+  department: string | null;
+  imdbId: string | null;
+  knownFor: PersonCredit[];
 }
 
 export interface Episode {

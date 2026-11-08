@@ -6,14 +6,14 @@ import { RatePopover } from "../components/RatePopover";
 import { VideoOverlay } from "../components/VideoOverlay";
 import { useLiteMotion, useSeason, useTitle, useTrailerStage } from "../lib/hooks";
 import { actions, useHistoryEntry, useInWatchlist, usePrefs, useRating } from "../lib/store";
-import { detailsMeta, languageName, pluralEps, runtime, shortDate, watchPath, airsLater } from "../lib/format";
+import { castAndCrew, detailsMeta, languageName, voteLabel, pluralEps, runtime, shortDate, watchPath, airsLater } from "../lib/format";
 import { detailsCtas } from "../lib/watch";
 import { focusEl, focusFirst, useBackHandler } from "../lib/focus";
 import { useNav } from "../lib/nav";
 import type { MediaType, TitleDetails } from "../lib/types";
 import { TvPoster } from "./TvCards";
 
-type Tab = "episodes" | "more" | "trailers" | "cast";
+type Tab = "episodes" | "more" | "collection" | "trailers" | "cast";
 
 export function TvDetails({ type, id, initialTab }: { type: MediaType; id: number; initialTab?: Tab }) {
   const { data, error, mutate } = useTitle(type, id);
@@ -40,11 +40,13 @@ function TvDetailsView({ d, initialTab }: { d: TitleDetails; initialTab?: Tab })
   const rating = useRating(d.id);
   const { go } = useNav();
   const [zone, setZone] = useState<"main" | "tabs">(initialTab ? "tabs" : "main");
+  const people = castAndCrew(d);
   const tabs: { id: Tab; label: string }[] = [
     ...(d.type === "tv" && d.seasons.some((s) => s.number > 0) ? [{ id: "episodes" as Tab, label: "Episodes" }] : []),
     ...(d.moreLikeThis.length ? [{ id: "more" as Tab, label: "More Like This" }] : []),
+    ...(d.collection ? [{ id: "collection" as Tab, label: "Collection" }] : []),
     ...(d.videos.length ? [{ id: "trailers" as Tab, label: "Trailers & More" }] : []),
-    ...(d.cast.length ? [{ id: "cast" as Tab, label: "Cast" }] : [])
+    ...(people.length ? [{ id: "cast" as Tab, label: "Cast" }] : [])
   ];
   const [tab, setTab] = useState<Tab | null>(tabs.find((t) => t.id === initialTab)?.id ?? tabs[0]?.id ?? null);
   const [rateOpen, setRateOpen] = useState(false);
@@ -90,7 +92,7 @@ function TvDetailsView({ d, initialTab }: { d: TitleDetails; initialTab?: Tab })
         <section className="tv-det-main" onFocus={() => setZone("main")}>
           <div className="tv-det-col">
             <TitleArt logo={d.logo} title={d.title} className="tv-det-logo" />
-            {d.rating ? <p className="tv-det-rating"><Icon name="star" /> {d.rating.toFixed(1)} <span>TMDB</span></p> : null}
+            {d.rating ? <p className="tv-det-rating"><Icon name="star" /> {d.rating.toFixed(1)} <span>TMDB</span>{voteLabel(d.voteCount) && <span className="tv-det-votes">{voteLabel(d.voteCount)}</span>}</p> : null}
             <p className="tv-meta">
               {meta.slice(0, 1).map((m) => <span key={m}>{m}</span>)}
               {d.certification && <span className="cert">{d.certification}</span>}
@@ -149,14 +151,24 @@ function TvDetailsView({ d, initialTab }: { d: TitleDetails; initialTab?: Tab })
               ))}
             </div>
           )}
+          {tab === "collection" && d.collection && (
+            <div className="tv-grid-row" data-scroll-x aria-label={d.collection.name}>
+              {d.collection.parts.map((it, i) => (
+                <div key={it.id} className={`tv-part ${it.id === d.id ? "is-current" : ""}`}>
+                  <TvPoster item={it} id={`part-${i}`} expand={false} />
+                  <span className="tv-part-label">{it.id === d.id ? "Now viewing" : `Part ${i + 1}${it.year ? ` • ${it.year}` : ""}`}</span>
+                </div>
+              ))}
+            </div>
+          )}
           {tab === "cast" && (
             <div className="tv-grid-row" data-scroll-x>
-              {d.cast.map((c, i) => (
-                <div key={c.id} id={`cast-${i}`} tabIndex={0} className="tv-cast" data-hover-focus>
+              {people.map((c, i) => (
+                <a key={c.id} id={`cast-${i}`} href={`/person/${c.id}`} className="tv-cast" data-hover-focus onClick={(e) => { e.preventDefault(); go(`/person/${c.id}`); }}>
                   <Img src={c.profile} alt="" title={c.name} className="tv-cast-img" />
                   <span className="tv-cast-name">{c.name}</span>
-                  {c.character && <span className="tv-cast-role">{c.character}</span>}
-                </div>
+                  {c.role && <span className="tv-cast-role">{c.role}</span>}
+                </a>
               ))}
             </div>
           )}

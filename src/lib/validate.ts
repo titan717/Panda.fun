@@ -1,6 +1,6 @@
 import type {
   CategoriesPayload, Episode, GenresPayload, ListPayload, PagePayload, PandaItem, PlaybackPayload, PlaybackSource, Rail,
-  SearchPayload, SeasonDetails, SourceHealthPayload, TitleDetails, Top10Payload, Video, WallPayload, WallPoster
+  CrewMember, PersonCredit, PersonDetails, SearchPayload, SeasonDetails, SourceHealthPayload, TitleDetails, Top10Payload, Video, WallPayload, WallPoster
 } from "./types";
 
 /**
@@ -94,7 +94,29 @@ export function title(path: string, v: unknown): TitleDetails {
     seasons: arr(o.seasons).filter(isObj).filter((s) => num(s.number) !== null).map((s) => ({ number: num(s.number)!, name: str(s.name) ?? `Season ${num(s.number)}`, episodeCount: num(s.episodeCount) ?? 0, airDate: str(s.airDate), poster: str(s.poster) })),
     lastEpisode: ep(o.lastEpisode), nextEpisode: ep(o.nextEpisode),
     videos: arr(o.videos).map(video).filter((x): x is Video => x !== null),
-    moreLikeThis: items(o.moreLikeThis)
+    moreLikeThis: items(o.moreLikeThis),
+    voteCount: num(o.voteCount),
+    crew: arr(o.crew).filter(isObj).filter((c) => num(c.id) !== null && str(c.name) && str(c.job))
+      .map((c): CrewMember => ({ id: num(c.id)!, name: str(c.name)!, job: str(c.job)!, profile: str(c.profile) })),
+    collection: collection(o.collection)
+  };
+}
+
+function collection(v: unknown) {
+  if (!isObj(v) || num(v.id) === null || !str(v.name)) return null;
+  const parts = items(v.parts);
+  return parts.length >= 2 ? { id: num(v.id)!, name: str(v.name)!, overview: str(v.overview), poster: str(v.poster), backdrop: str(v.backdrop), parts } : null;
+}
+
+export function person(path: string, v: unknown): PersonDetails {
+  const o = need(path, v);
+  const id = num(o.id), name = str(o.name);
+  if (id === null || !name) throw new ValidationError(path, "invalid person");
+  const knownFor = arr(o.knownFor).map((x): PersonCredit | null => { const it = item(x); return it ? { ...it, role: str((x as Obj).role) } : null; })
+    .filter((x): x is PersonCredit => x !== null);
+  return {
+    id, name, profile: str(o.profile), profileLarge: str(o.profileLarge), biography: str(o.biography), birthday: str(o.birthday),
+    deathday: str(o.deathday), placeOfBirth: str(o.placeOfBirth), department: str(o.department), imdbId: str(o.imdbId), knownFor
   };
 }
 
@@ -188,5 +210,6 @@ export function validatorFor(path: string): ((path: string, v: unknown) => unkno
   if (path.startsWith("/panda/play/")) return playback;
   if (path.startsWith("/panda/sources/health")) return sourceHealth;
   if (path.startsWith("/panda/wall")) return wall;
+  if (path.startsWith("/panda/person/")) return person;
   return null;
 }

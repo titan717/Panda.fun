@@ -307,3 +307,28 @@ html[data-mode="mobile"] .set-panel, html[data-mode="mobile"] .upd-card, html[da
 /* Rows far below the fold skip layout and paint until they approach the viewport (D-55, perf round 2).
    `auto` remembers each row's real height once rendered, so scrolling back never jumps. */
 section.m-row:nth-of-type(n+4) { content-visibility: auto; contain-intrinsic-block-size: auto 230px; }
+
+/* v1.1.2 details enrichment */
+.m-det-rating { display: flex; align-items: center; justify-content: center; gap: 4px; font-size: 13px; font-weight: var(--fw-bold); color: var(--text-1); }
+.m-det-rating .icon { color: #f5c518; }
+.m-det-rating span { font-weight: var(--fw-medium); color: var(--m-meta); }
+.m-det-votes::before { content: "•"; margin: 0 6px; }
+a.m-cast { color: inherit; text-decoration: none; }
+.m-part { flex: none; width: 108px; display: flex; flex-direction: column; gap: 4px; }
+.m-part > :first-child { width: 100%; }
+.m-part-label { font-size: var(--m-tiny); color: var(--text-2); }
+.m-part.is-current .m-part-label { color: var(--text-1); font-weight: var(--fw-semibold); }
+.m-person .person-head { display: flex; gap: 14px; padding: 8px var(--m-gutter) 18px; align-items: flex-start; flex-wrap: wrap; }
+.m-person .person-photo { flex: none; width: 112px !important; height: 168px !important; border-radius: 10px; object-fit: cover; }
+.m-person .person-text { flex: 1 1 180px; min-width: 0; display: flex; flex-direction: column; align-items: flex-start; gap: 8px; }
+.m-person .person-name { font-size: 22px; font-weight: var(--fw-bold); line-height: 1.2; }
+.m-person .person-facts { font-size: 12.5px; flex-direction: column; gap: 2px; line-height: 1.4; }
+.m-person .person-facts span + span::before { content: none; }
+.m-person .person-bio { font-size: 13.5px; line-height: 1.5; color: var(--text-2); white-space: pre-line; }
+.m-person .person-bio.is-clamped { -webkit-line-clamp: 5; }
+.m-person .person-bio { flex-basis: 100%; }
+.m-person > section > .m-row-title { padding: 0 var(--m-gutter); }
+.m-person .person-credit > :first-child { width: 100%; }
+.m-person .person-role { font-size: var(--m-tiny); color: var(--text-2); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.m-person .person-head .sk-line { width: 180px; height: 14px; }
+.m-person .person-head .sk-line--title { height: 24px; }

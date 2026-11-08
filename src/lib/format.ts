@@ -104,3 +104,19 @@ export function browseTitle(kind: string, p: URLSearchParams) {
   if (p.get("sort") === "vote_average.desc") return `Top Rated ${what}`;
   return `Popular ${what}`;
 }
+
+/** Cast then key crew for the Cast section (v1.1.2); someone who both acts and directs appears once, as cast. */
+export function castAndCrew(d: Pick<TitleDetails, "cast" | "crew">) {
+  const seen = new Set<number>();
+  const out: { id: number; name: string; role: string | null; profile: string | null }[] = [];
+  for (const c of d.cast) if (!seen.has(c.id)) { seen.add(c.id); out.push({ id: c.id, name: c.name, role: c.character, profile: c.profile }); }
+  for (const c of d.crew ?? []) if (!seen.has(c.id)) { seen.add(c.id); out.push({ id: c.id, name: c.name, role: c.job, profile: c.profile }); }
+  return out;
+}
+
+/** "34K ratings", "1.2M ratings", "870 ratings"; null when TMDB has too few votes to mean anything. */
+export function voteLabel(n: number | null | undefined) {
+  if (!n || n < 10) return null;
+  const v = n >= 1e6 ? `${(n / 1e6).toFixed(n >= 1e7 ? 0 : 1).replace(/\.0$/, "")}M` : n >= 1e3 ? `${(n / 1e3).toFixed(n >= 1e4 ? 0 : 1).replace(/\.0$/, "")}K` : String(n);
+  return `${v} ratings`;
+}

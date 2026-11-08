@@ -6,7 +6,7 @@ import { RatePopover, rateLabel } from "../components/RatePopover";
 import { VideoOverlay } from "../components/VideoOverlay";
 import { useDwell, useSeason, useTitle } from "../lib/hooks";
 import { actions, useHistoryEntry, useInWatchlist, usePrefs, useRating } from "../lib/store";
-import { detailsMeta, runtime, shortDate, watchPath, airsLater } from "../lib/format";
+import { castAndCrew, detailsMeta, voteLabel, runtime, shortDate, watchPath, airsLater } from "../lib/format";
 import { detailsCtas } from "../lib/watch";
 import { useNav } from "../lib/nav";
 import type { MediaType, TitleDetails } from "../lib/types";
@@ -87,6 +87,7 @@ function MDetailsView({ d }: { d: TitleDetails }) {
   const trailersRef = useRef<HTMLDivElement>(null);
   const { primary } = detailsCtas(d, history);
   const meta = detailsMeta(d);
+  const people = castAndCrew(d);
 
   useEffect(() => { window.scrollTo(0, 0); }, []);
   useEffect(() => {
@@ -126,6 +127,7 @@ function MDetailsView({ d }: { d: TitleDetails }) {
           {d.certification && <span className="cert">{d.certification}</span>}
           {meta.slice(1).map((m) => <span key={m}>{m}</span>)}
         </p>
+        {d.rating ? <p className="m-det-rating"><Icon name="star" size={14} /> {d.rating.toFixed(1)} <span>TMDB</span>{voteLabel(d.voteCount) && <span className="m-det-votes">{voteLabel(d.voteCount)}</span>}</p> : null}
         <button className="m-cta" onClick={() => go(primary.href)}><Icon name="play" /> {primary.label}{primary.sub ? ` ${primary.sub}` : ""}</button>
         {d.genres.length > 0 && <p className="m-det-genres">{d.genres.map((g) => <span key={g}>{g}</span>)}</p>}
         {d.overview && <p className="m-det-overview">{d.overview}</p>}
@@ -157,6 +159,19 @@ function MDetailsView({ d }: { d: TitleDetails }) {
             <div className="m-grid">{d.moreLikeThis.slice(0, 12).map((it) => <MPoster key={it.id} item={it} />)}</div>
           </div>
         )}
+        {d.collection && (
+          <div className="m-det-section">
+            <h2 className="m-row-title">{d.collection.name}</h2>
+            <div className="m-row-track">
+              {d.collection.parts.map((it, i) => (
+                <div key={it.id} className={`m-part ${it.id === d.id ? "is-current" : ""}`}>
+                  <MPoster item={it} />
+                  <span className="m-part-label">{it.id === d.id ? "Now viewing" : `Part ${i + 1}${it.year ? ` • ${it.year}` : ""}`}</span>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
         {d.videos.length > 0 && (
           <div ref={trailersRef} className="m-det-section">
             <h2 className="m-row-title">Trailers & More</h2>
@@ -170,12 +185,14 @@ function MDetailsView({ d }: { d: TitleDetails }) {
             </div>
           </div>
         )}
-        {d.cast.length > 0 && (
+        {people.length > 0 && (
           <div className="m-det-section">
             <h2 className="m-row-title">Cast</h2>
             <div className="m-row-track">
-              {d.cast.map((c) => (
-                <div key={c.id} className="m-cast"><Img src={c.profile} alt="" title={c.name} /><span className="m-cast-name">{c.name}</span>{c.character && <span className="m-cast-role">{c.character}</span>}</div>
+              {people.map((c) => (
+                <a key={c.id} href={`/person/${c.id}`} className="m-cast" onClick={(e) => { e.preventDefault(); go(`/person/${c.id}`); }}>
+                  <Img src={c.profile} alt="" title={c.name} /><span className="m-cast-name">{c.name}</span>{c.role && <span className="m-cast-role">{c.role}</span>}
+                </a>
               ))}
             </div>
           </div>

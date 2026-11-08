@@ -2,6 +2,14 @@
 
 Measured on every release. Never regress.
 
+## v1.1.2
+
+| Metric | Value |
+|---|---|
+| Details | Crew and vote count ride in the existing title payload. The collection is fetched on the server only for movies in a collection and cached for an hour, so a title page is still one request from the app. |
+| Person page | One request (server cache 1 h, CDN 1 h); its code is a separate 1.5 KB (gzip) chunk, downloaded when the device is idle after start-up. |
+| First load (gzip JS) | Unchanged entry chunk; Details chunks +0.5 KB. |
+
 ## v1.1.1
 
 | Metric | Value |
