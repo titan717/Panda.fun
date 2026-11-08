@@ -2,6 +2,15 @@
 
 Measured on every release. Never regress.
 
+## v1.1.5
+
+| Metric | Value |
+|---|---|
+| Skip markers | One small request per episode (`/panda/segments`, ~0.2 KB), fired after the title loads and never blocking playback; edge-cached 24 h when markers exist, 1 h otherwise; server cache 6 h. |
+| Learned intros | Stored in localStorage (≤150 shows, ~40 bytes each), read once when the player opens. |
+| Player chunk (gzip) | 11.2 KB, lazy-loaded with the player; entry chunk unchanged (33.5 KB). |
+| Timers | The sleep timer ticks once a second only while armed; no timers run when it is off. |
+
 ## v1.1.4
 
 | Metric | Value |

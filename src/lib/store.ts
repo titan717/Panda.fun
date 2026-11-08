@@ -87,6 +87,10 @@ export interface Prefs {
   /** Brighter secondary text, opaque panels and a thicker focus ring. */
   highContrast: boolean;
   textSize: "default" | "large" | "larger";
+  /** Playback speed (Player 2.0); applied to sources that accept commands. */
+  playbackSpeed: number;
+  /** Ask the source to skip intros and recaps it detects (CineSrc `autoskip`). */
+  autoSkipIntro: boolean;
 }
 
 /** Preferences shared by every profile on the device; everything else is saved per profile. */
@@ -140,7 +144,9 @@ const defaultPrefs: Prefs = {
   uiScale: 100,
   reduceMotion: false,
   highContrast: false,
-  textSize: "default"
+  textSize: "default",
+  playbackSpeed: 1,
+  autoSkipIntro: false
 };
 
 const emptyData = (): ProfileData => ({ watchlist: [], lists: [], history: {}, ratings: {}, recentSearches: [] });

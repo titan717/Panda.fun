@@ -94,3 +94,10 @@ Reviewed each release. Ideas are only adopted when they fit the blueprints.
 - Apple TV's Up Next brings a show back when a new episode comes out. Panda's Continue Watching does the same with "New Episode • S3 E1".
 - Plex and Trakt let you mark episodes, or a run of episodes, as watched. Panda's mobile episode list does this with a long-press.
 - Prime Video's Continue Watching filters by Movies and TV. Panda's Continue Watching page gains the same chips.
+
+## v1.1.5 round (2026-11-08)
+
+- Netflix and Prime Video show Skip Intro and Skip Recap buttons. Panda now shows them from published IntroDB markers, and learns a show's intro when you skip it yourself.
+- Netflix's post-play card offers the next episode as the credits roll. Panda's next-episode card appears when the credits start.
+- Prime Video and YouTube offer 0.5×–2× playback speed. Panda's TV Quality sheet and mobile options sheet now do too.
+- Netflix (mobile) and Plex have a sleep timer. Panda's player has one on TV and mobile, with "Are you still watching?" before it stops.

@@ -35,6 +35,8 @@ export type PlayerEvent =
   | { kind: "episode"; season: number; episode: number; internal: boolean }
   | { kind: "volume"; volume: number; muted: boolean }
   | { kind: "close" }
+  | { kind: "skipintro"; to: number }
+  | { kind: "rate"; rate: number }
   | { kind: "error"; message: string };
 
 function originMatches(source: PlaybackSource, origin: string) {
@@ -62,6 +64,8 @@ export function parseMessage(source: PlaybackSource, origin: string, raw: unknow
       case "cinesrc:nextepisode": return { kind: "episode", season: Number(p.season) || 1, episode: Number(p.episode) || 1, internal: p.internalNavigation === true };
       case "cinesrc:volumechange": return { kind: "volume", volume: Number(p.volume) || 0, muted: p.muted === true };
       case "cinesrc:close": return { kind: "close" };
+      case "cinesrc:skipintro": return { kind: "skipintro", to: Number(p.time) || 0 };
+      case "cinesrc:ratechange": return { kind: "rate", rate: Number(p.playbackRate) || 1 };
       case "cinesrc:error": return { kind: "error", message: String(p.error ?? "Playback error") };
     }
     return null;
@@ -100,7 +104,7 @@ export function sendCommand(frame: HTMLIFrameElement | null, source: PlaybackSou
  * `start` re-opens at a position (quality / controls changes reload the embed); `quality` is the
  * CineSrc preferred-quality hint ("auto" leaves the choice to the source).
  */
-export function embedUrl(source: PlaybackSource, o: { customChrome: boolean; start?: number; quality?: string }) {
+export function embedUrl(source: PlaybackSource, o: { customChrome: boolean; start?: number; quality?: string; autoskip?: boolean }) {
   try {
     const u = new URL(source.url);
     const start = o.start && o.start > 1 ? String(Math.floor(o.start)) : null;
@@ -108,6 +112,7 @@ export function embedUrl(source: PlaybackSource, o: { customChrome: boolean; sta
       u.searchParams.set("autonext", "false");
       u.searchParams.set("back", "close");
       if (o.customChrome) u.searchParams.set("controls", "false");
+      if (o.autoskip) u.searchParams.set("autoskip", "true");
       if (o.quality && o.quality !== "auto") u.searchParams.set("quality", o.quality);
       if (start) { u.searchParams.set("t", start); u.searchParams.set("continueprompt", "false"); }
     } else if (source.events === "vidy" && start) {

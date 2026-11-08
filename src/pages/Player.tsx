@@ -18,7 +18,9 @@ import { api } from "../lib/api";
 import { ADAPTERS, embedUrl, parseMessage, READY_TIMEOUT_MS, sendCommand, sourceName, SOURCE_ORDER } from "../lib/player";
 import { nextEpisodeOf, prevEpisodeOf } from "../lib/watch";
 import { airsLater, pluralEps, runtime, titlePath, watchPath } from "../lib/format";
-import type { MediaType, PlaybackPayload, PlaybackSource, SourceId, TitleDetails } from "../lib/types";
+import { PlayerPrompts, PlayerOptionsSheet } from "../components/PlayerPrompts";
+import { activeSkip, getIntro, learnIntro, nextCardDue, SLEEP_GRACE_S, SLEEP_OFF, sleepDue, sleepLeft, sleepPillLabel, speedLabel, startSleep, type Intro, type SleepMode, type SleepTimer } from "../lib/player2";
+import type { SkipSegments, MediaType, PlaybackPayload, PlaybackSource, SourceId, TitleDetails } from "../lib/types";
 
 const SHORT: Record<SourceId, string> = { cinesrc: sourceName("cinesrc"), vidy: sourceName("vidy") };
 
@@ -90,6 +92,17 @@ function Player({ type, id, season, episode, start }: { type: MediaType; id: num
   const hideTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const root = useRef<HTMLDivElement>(null);
   const loadedAt = useRef(0);
+  /* ---- Player 2.0 (v1.1.5) ---- */
+  const [sleep, setSleep] = useState<SleepTimer>(SLEEP_OFF);
+  const [stillWatching, setStillWatching] = useState<number | null>(null);
+  const [intro, setIntro] = useState<Intro | null>(() => (type === "tv" ? getIntro(id) : null));
+  const [introSkipped, setIntroSkipped] = useState(false);
+  const [nextDismissed, setNextDismissed] = useState(false);
+  const [optionsSheet, setOptionsSheet] = useState<null | "menu" | "speed" | "sleep">(null);
+  const [, setTick] = useState(0);
+  const lastTime = useRef<number | null>(null);
+  // published intro / recap / credits markers for this episode (IntroDB through the Panda API)
+  const segments = useSWR<SkipSegments>(details?.imdbId ? keys.segments(details.imdbId, isTv ? ep.s : undefined, isTv ? ep.e : undefined) : null, { revalidateOnFocus: false, shouldRetryOnError: false }).data;
 
   const next = details && isTv ? nextEpisodeOf(details.seasons, ep.s, ep.e) : null;
   const prev = details && isTv ? prevEpisodeOf(details.seasons, ep.s, ep.e) : null;
@@ -152,14 +165,22 @@ function Player({ type, id, season, episode, start }: { type: MediaType; id: num
       switch (ev.kind) {
         case "ready":
           setReady(true);
-          if (source.events === "cinesrc") sendCommand(frame.current, source, { c: "volume", value: getPrefs().volume });
+          lastTime.current = null;
+          if (source.events === "cinesrc") {
+            sendCommand(frame.current, source, { c: "volume", value: getPrefs().volume });
+            if (getPrefs().playbackSpeed !== 1) sendCommand(frame.current, source, { c: "rate", value: getPrefs().playbackSpeed });
+          }
           break;
+        case "skipintro": setIntroSkipped(true); lastTime.current = ev.to; toast("Intro skipped", 1600); break;
+        case "rate": break;
         case "play": setReady(true); setPaused(false); break;
         case "pause": setPaused(true); break;
         case "volume": setMuted(ev.muted); break;
         case "time":
           setReady(true); setPaused(false);
           if (ev.duration > 0) {
+            if (isTv && lastTime.current !== null) noteJump(lastTime.current, ev.position);
+            lastTime.current = ev.position;
             pos.current = { position: ev.position, duration: ev.duration, dirty: true };
             setTime((t) => (Math.abs(t.p - ev.position) >= 0.25 || t.d !== ev.duration ? { p: ev.position, d: ev.duration } : t));
             if (isTv && next && ev.duration - ev.position < 1.5 && !upNext) setUpNext({ s: next.season, e: next.episode });
@@ -168,10 +189,11 @@ function Player({ type, id, season, episode, start }: { type: MediaType; id: num
         case "ended":
           pos.current = { ...pos.current, position: pos.current.duration || pos.current.position, dirty: true };
           save();
+          if (sleep.mode === "end") { endForTheNight(); break; }
           if (isTv && next) setUpNext({ s: next.season, e: next.episode });
           break;
         case "episode":
-          if (ev.internal) { save(); setEp({ s: ev.season, e: ev.episode }); pos.current = { position: 0, duration: 0, dirty: false }; }
+          if (ev.internal) { save(); setEp({ s: ev.season, e: ev.episode }); setIntroSkipped(false); setNextDismissed(false); lastTime.current = null; pos.current = { position: 0, duration: 0, dirty: false }; }
           break;
         case "close": exit(); break;
         case "error": if (!ready) fallback(`${SHORT[source.id]} couldn't play this title.`); break;
@@ -192,6 +214,59 @@ function Player({ type, id, season, episode, start }: { type: MediaType; id: num
   }, [upNext, prefs.autoplayNext, poke]);
   useEffect(() => { if (upNext && prefs.autoplayNext && countdown <= 0) playEpisode(upNext.s, upNext.e); });  
 
+  /* ---- Player 2.0 helpers ---- */
+  const controllable = Boolean(source && ADAPTERS[source.id]?.commands);
+  function noteJump(from: number, to: number) {
+    const learned = learnIntro(id, from, to);
+    if (learned) setIntro(learned);
+  }
+  function endForTheNight() {
+    setStillWatching(null);
+    setSleep(SLEEP_OFF);
+    if (source && controllable) sendCommand(frame.current, source, { c: "pause" });
+    toast("Sleep timer ended playback", 3200);
+    exit();
+  }
+  // sleep timer: tick once a second while armed; on time, pause and ask "Still watching?" (or stop when the source can't pause)
+  useEffect(() => {
+    if (sleep.at === null) return;
+    const i = setInterval(() => {
+      setTick((n) => n + 1);
+      if (sleepDue(sleep)) {
+        setSleep({ mode: "off", at: null });
+        if (source && controllable) { sendCommand(frame.current, source, { c: "pause" }); setPaused(true); setStillWatching(SLEEP_GRACE_S); }
+        else endForTheNight();
+      }
+    }, 1000);
+    return () => clearInterval(i);
+  }); // re-armed every render so it sees the current source
+  useEffect(() => {
+    if (stillWatching === null) return;
+    if (stillWatching <= 0) { endForTheNight(); return; }
+    const t = setTimeout(() => setStillWatching((n) => (n === null ? null : n - 1)), 1000);
+    return () => clearTimeout(t);
+  }); 
+  const chooseSleep = (mode: SleepMode) => {
+    const t = startSleep(mode);
+    setSleep(t);
+    toast(mode === "off" ? "Sleep timer off" : mode === "end" ? `Playback stops at the end of this ${isTv ? "episode" : "movie"}` : `Sleep timer: ${mode} minutes`, 2200);
+  };
+  const chooseSpeed = (r: number) => {
+    actions.setPrefs({ playbackSpeed: r });
+    if (source) sendCommand(frame.current, source, { c: "rate", value: r });
+    toast(`Speed: ${speedLabel(r)}`, 1400);
+  };
+  const skip = controllable && ready ? activeSkip(time.p, { recap: segments?.recap, intro: segments?.intro, learned: isTv ? intro : null }) : null;
+  const skipIntro = () => {
+    if (!skip) return;
+    if (skip.kind === "intro") setIntroSkipped(true);
+    lastTime.current = skip.end;
+    seekTo(skip.end);
+  };
+  const showSkip = Boolean(skip && !(skip.kind === "intro" && introSkipped));
+  const showNextCard = isTv && !upNext && !nextDismissed && stillWatching === null && Boolean(next) && nextCardDue(time.p, time.d, Boolean(next), segments?.credits?.start);
+  const nextEp = next && seasonData?.number === next.season ? seasonData.episodes.find((x) => x.number === next.episode) : undefined;
+
   function playEpisode(sn: number, en: number) {
     save();
     setUpNext(null);
@@ -204,6 +279,7 @@ function Player({ type, id, season, episode, start }: { type: MediaType; id: num
 
   // On TV the blueprint chrome owns Back (panel → chrome → exit, §20.12).
   useBackHandler(() => {
+    if (optionsSheet) { setOptionsSheet(null); return; }
     if (upNext) { setUpNext(null); return; }
     exit();
   }, !(tv && customChrome));
@@ -232,6 +308,8 @@ function Player({ type, id, season, episode, start }: { type: MediaType; id: num
   const seekTo = (to: number) => {
     if (!source) return;
     const t = Math.max(0, to);
+    if (isTv && lastTime.current !== null && t > lastTime.current) noteJump(lastTime.current, t);
+    lastTime.current = t;
     sendCommand(frame.current, source, { c: "seek", to: t });
     pos.current = { ...pos.current, position: t, dirty: true };
     setTime((x) => ({ ...x, p: t }));
@@ -283,7 +361,9 @@ function Player({ type, id, season, episode, start }: { type: MediaType; id: num
       d: details, isSeries: isTv, ep, episodeTitle: epInfo?.title,
       visible: overlay, poke, hide: () => { if (hideTimer.current) clearTimeout(hideTimer.current); setOverlay(false); },
       paused, ready, position: time.p, duration: time.d,
-      controllable: Boolean(source && ADAPTERS[source.id]?.commands),
+      controllable,
+      speed: prefs.playbackSpeed, onSpeed: chooseSpeed,
+      sleepMode: sleep.mode, sleepLabel: sleepPillLabel(sleep, isTv), onSleep: chooseSleep,
       onSeek: seekTo, onTogglePlay: togglePlay,
       quality: prefs.quality,
       onQuality: (q) => { if (q === prefs.quality) return; reloadEmbed(); actions.setPrefs({ quality: q }); toast(q === "auto" ? "Quality: Auto" : `Quality: ${q === "480" ? "Data Saver" : q === "2160" ? "4K" : `${q}p`}`); },
@@ -310,7 +390,7 @@ function Player({ type, id, season, episode, start }: { type: MediaType; id: num
 
   const title = details?.title ?? "";
   const subtitle = isTv ? `S${ep.s} E${ep.e}${epInfo?.title ? ` · ${epInfo.title}` : ""}` : [details?.year, runtime(details?.runtime)].filter(Boolean).join(" · ");
-  const src = source ? embedUrl(source, { customChrome, start: reloadAt ?? undefined, quality: prefs.quality }) : null;
+  const src = source ? embedUrl(source, { customChrome, start: reloadAt ?? undefined, quality: prefs.quality, autoskip: prefs.autoSkipIntro }) : null;
 
   return (
     <div ref={root} className={`player ${overlay ? "is-overlay" : ""} ${tv ? "player--tv" : "player--touch"}`} onKeyDown={onKeyDown} onMouseMove={poke} role="application" aria-label={`Playing ${title}`}>
@@ -347,6 +427,9 @@ function Player({ type, id, season, episode, start }: { type: MediaType; id: num
         )}
         {isTv && <button id="pl-eps" className="pl-chip" onClick={() => setDrawer(true)} data-hover-focus><Icon name="episodes" /> Episodes</button>}
         {isTv && next && <button id="pl-next" className="pl-chip" onClick={() => playEpisode(next.season, next.episode)} data-hover-focus><Icon name="next" /> Next Episode</button>}
+        <button id="pl-options" className={`pl-chip pl-chip--icon ${sleep.mode !== "off" ? "is-active" : ""}`} onClick={() => setOptionsSheet("menu")} aria-label="Speed and sleep timer" data-hover-focus>
+          <Icon name="settings" />{sleep.mode !== "off" ? <span>{sleep.mode === "end" ? "End" : `${sleepLeft(sleep)}m`}</span> : prefs.playbackSpeed !== 1 && controllable ? <span>{prefs.playbackSpeed}×</span> : null}
+        </button>
         {source?.events === "cinesrc" && (
           <span className="pl-volume">
             <button id="pl-voldown" className="pl-btn" onClick={() => setVolume(-0.1)} aria-label="Volume down" data-hover-focus><Icon name="volumeDown" /></button>
@@ -368,6 +451,11 @@ function Player({ type, id, season, episode, start }: { type: MediaType; id: num
         </div>
       )}
       </>}
+      <PlayerPrompts tv={tv} skip={showSkip} skipLabel={skip?.kind === "recap" ? "Skip Recap" : "Skip Intro"} onSkip={skipIntro}
+        nextCard={showNextCard && next ? { s: next.season, e: next.episode, title: nextEp?.title ?? null, still: nextEp?.still ?? details?.backdrop ?? null, left: Math.max(0, Math.ceil(time.d - time.p)) } : null}
+        onPlayNext={() => next && playEpisode(next.season, next.episode)} onDismissNext={() => setNextDismissed(true)}
+        stillWatching={stillWatching} onKeepWatching={() => { setStillWatching(null); if (source) sendCommand(frame.current, source, { c: "play" }); setPaused(false); }} onStop={endForTheNight} />
+      {optionsSheet && <PlayerOptionsSheet kind={optionsSheet} controllable={controllable} onKind={setOptionsSheet} speed={prefs.playbackSpeed} sleep={sleep.mode} isSeries={isTv} onSpeed={(r) => { chooseSpeed(r); setOptionsSheet(null); }} onSleep={(m) => { chooseSleep(m); setOptionsSheet(null); }} onClose={() => setOptionsSheet(null)} />}
       {drawer && details && <EpisodesDrawer d={details} current={ep} onClose={() => setDrawer(false)} onPick={(sn, en) => { setDrawer(false); playEpisode(sn, en); }} />}
     </div>
   );

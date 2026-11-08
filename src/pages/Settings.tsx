@@ -1,3 +1,4 @@
+import { forgetIntros, SPEEDS, speedLabel } from "../lib/player2";
 import { useEffect, useRef, useState, type ReactNode } from "react";
 import { Link, useParams } from "wouter";
 import { useSWRConfig } from "swr";
@@ -30,6 +31,7 @@ const SECTIONS: { id: SectionId; icon: IconName; title: string; sub: string }[] 
   { id: "help", icon: "info", title: "About", sub: "Version, privacy and terms" }
 ];
 
+const SPEED_CHOICES = SPEEDS.map((r) => ({ id: String(r), label: speedLabel(r), note: r === 1 ? "Default" : undefined }));
 const TRAILER_VOLUMES = ["25", "50", "80", "100"].map((id) => ({ id, label: `${id}%` }));
 const TRAILER_DELAYS = [
   { id: "3", label: "3 seconds" }, { id: "5", label: "5 seconds", note: "Recommended" },
@@ -159,6 +161,9 @@ function Panel({ id }: { id: SectionId }) {
         <div className="set-panel">
           <Choice id="quality" title="Preferred quality" value={prefs.quality} options={QUALITIES} onChange={(v) => { set({ quality: v }); toast(`Preferred quality: ${QUALITIES.find((q) => q.id === v)!.label}`); }} />
           <Toggle id="sp-autonext" title="Autoplay next episode" sub="Start the next episode after a 10 second countdown" value={prefs.autoplayNext} onChange={(v) => set({ autoplayNext: v })} />
+          <Toggle id="sp-autoskip" title="Skip intros and recaps" sub="Let CineSrc jump past openings and recaps it detects. Otherwise Panda shows a Skip Intro button" value={prefs.autoSkipIntro} onChange={(v) => set({ autoSkipIntro: v })} />
+          <Choice id="speed" title="Playback speed" value={String(prefs.playbackSpeed)} options={SPEED_CHOICES} onChange={(v) => { set({ playbackSpeed: Number(v) }); toast(`Playback speed: ${speedLabel(Number(v))}`); }} />
+          <Row id="sp-intros" title="Forget learned intros" sub="Panda learns where each show's opening ends when you skip it" onClick={() => { forgetIntros(); toast("Learned intros cleared"); }} />
         </div>
       );
     case "trailers":

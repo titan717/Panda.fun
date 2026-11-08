@@ -222,3 +222,7 @@ export interface SourceHealthPayload {
 /** Poster wall behind "Who's watching?" (GET /panda/wall). */
 export interface WallPoster { id: string; title: string; poster: string }
 export interface WallPayload { posters: WallPoster[] }
+
+/** Intro / recap / credits markers for an episode or movie (IntroDB via /panda/segments, v1.1.5). */
+export interface Segment { start: number; end: number }
+export interface SkipSegments { imdbId: string; season: number | null; episode: number | null; intro: Segment | null; recap: Segment | null; credits: Segment | null; source: string }

@@ -106,6 +106,7 @@ export const keys = {
   categories: () => `/panda/categories`,
   play: (type: MediaType, id: number, o: { s?: number; e?: number; t?: number; quality?: string } = {}) => `/panda/play/${type}/${id}${qs({ ...o, color: "1f80e0" })}`,
   sourceHealth: () => `/panda/sources/health`,
+  segments: (imdbId: string, s?: number, e?: number) => `/panda/segments/${imdbId}${qs({ s, e })}`,
   wall: () => `/panda/wall`,
   health: () => `/health`
 };

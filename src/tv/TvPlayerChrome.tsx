@@ -7,6 +7,7 @@ import { useSeason } from "../lib/hooks";
 import { languageName, runtime } from "../lib/format";
 import { sourceName } from "../lib/player";
 import type { Prefs } from "../lib/store";
+import { SLEEP_OPTIONS, SPEEDS, speedLabel, type SleepMode } from "../lib/player2";
 import type { Episode, PandaItem, PlaybackSource, SourceId, TitleDetails } from "../lib/types";
 
 /** Quality choices of the TV PLAYER blueprint (§20.9). `cap` is the CineSrc `quality` hint. */
@@ -52,6 +53,12 @@ export interface TvChromeProps {
   position: number;
   duration: number;
   controllable: boolean;
+  /** Player 2.0 (v1.1.5): speed lives in the Quality sheet; the sleep timer is a bottom-row pill. */
+  speed: number;
+  onSpeed: (r: number) => void;
+  sleepMode: SleepMode;
+  sleepLabel: string;
+  onSleep: (m: SleepMode) => void;
   onSeek: (to: number) => void;
   onTogglePlay: () => void;
   quality: Prefs["quality"];
@@ -73,7 +80,7 @@ export interface TvChromeProps {
   onExit: () => void;
 }
 
-type Panel = null | "quality" | "audio" | "next" | "report";
+type Panel = null | "quality" | "audio" | "next" | "report" | "sleep";
 
 export function TvPlayerChrome(p: TvChromeProps) {
   const [panel, setPanel] = useState<Panel>(null);
@@ -199,6 +206,7 @@ export function TvPlayerChrome(p: TvChromeProps) {
         </div>
         <div className="tvp-bottom-row lrud-container">
           <button id="tvp-next" className="tvp-pill" onClick={() => setPanel("next")} data-hover-focus><Icon name="episodes" /> Watch Next</button>
+          <button id="tvp-sleep" className={`tvp-pill ${p.sleepMode !== "off" ? "is-on" : ""}`} onClick={() => setPanel("sleep")} data-hover-focus><Icon name="clock" /> {p.sleepLabel}</button>
           {!p.controllable && <span className="tvp-hint">{p.nativeControls ? "Using the source player's controls" : `${p.sourceId ? sourceName(p.sourceId) : "This source"} uses its own controls`}</span>}
         </div>
       </div>
@@ -229,6 +237,32 @@ export function TvPlayerChrome(p: TvChromeProps) {
               </div>
             </>
           )}
+          {p.controllable && (
+            <>
+              <p className="tvp-group">Speed</p>
+              <div className="tvp-speeds lrud-container" role="radiogroup" aria-label="Playback speed">
+                {SPEEDS.map((r) => (
+                  <button key={r} id={`tvp-sp-${String(r).replace(".", "_")}`} role="radio" aria-checked={p.speed === r} className={`tvp-speed ${p.speed === r ? "is-selected" : ""}`}
+                    onClick={() => p.onSpeed(r)} data-hover-focus>{r === 1 ? "1×" : speedLabel(r)}</button>
+                ))}
+              </div>
+            </>
+          )}
+        </SidePanel>
+      )}
+
+      {panel === "sleep" && (
+        <SidePanel className="tvp-panel--quality" title="Sleep Timer" onClose={() => setPanel(null)}>
+          <div className="tvp-list lrud-container" role="radiogroup" aria-label="Sleep timer">
+            {SLEEP_OPTIONS.map((o) => (
+              <button key={o.id} id={`tvp-sl-${o.id}`} role="radio" aria-checked={p.sleepMode === o.id} className={`tvp-row ${p.sleepMode === o.id ? "is-selected" : ""}`}
+                data-autofocus={p.sleepMode === o.id ? true : undefined} onClick={() => { p.onSleep(o.id); setPanel(null); }} data-hover-focus>
+                <span className="tvp-check" aria-hidden="true">{p.sleepMode === o.id && <Icon name="check" />}</span>
+                <strong>{o.id === "end" && !isSeries ? "End of movie" : o.label}</strong>
+              </button>
+            ))}
+          </div>
+          <p className="tvp-panel-note">Playback pauses when the timer runs out. If nobody answers within a minute, Panda stops and saves your spot.</p>
         </SidePanel>
       )}
 
