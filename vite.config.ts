@@ -8,6 +8,10 @@ export default defineConfig(({ mode }) => ({
   // The Android WebView loads the bundle from appassets.androidplatform.net/assets/web/, so it needs relative URLs.
   base: mode === "android" ? "./" : "/",
   plugins: [react()],
+  // Preact's compat layer replaces react-dom in production builds (~41 KB gzip less on first load). Tests keep real React. See DECISIONS D-37.
+  resolve: mode === "test" ? {} : {
+    alias: { "react-dom/test-utils": "preact/test-utils", "react-dom/client": "preact/compat/client", "react-dom": "preact/compat", "react/jsx-runtime": "preact/jsx-runtime", "react/jsx-dev-runtime": "preact/jsx-dev-runtime", react: "preact/compat" }
+  },
   define: {
     __APP_VERSION__: JSON.stringify(pkg.version),
     __BUILD_TARGET__: JSON.stringify(mode === "android" ? "android" : "web")
@@ -17,7 +21,7 @@ export default defineConfig(({ mode }) => ({
     sourcemap: false,
     cssCodeSplit: true,
     chunkSizeWarningLimit: 400,
-    rollupOptions: { output: { manualChunks: { react: ["react", "react-dom"], vendor: ["swr", "wouter", "@bbc/tv-lrud-spatial"] } } }
+    rollupOptions: { output: { manualChunks: { react: ["preact", "preact/compat", "preact/hooks"], vendor: ["swr", "wouter", "@bbc/tv-lrud-spatial"] } } }
   },
   server: { port: 5173, host: true },
   test: { environment: "happy-dom", include: ["src/**/*.test.{ts,tsx}"], globals: false }

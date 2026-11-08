@@ -15,7 +15,7 @@ import { installedVersion } from "../lib/updates";
 import { languageName } from "../lib/format";
 import type { SourceId } from "../lib/types";
 
-type SectionId = "profiles" | "playback" | "trailers" | "languages" | "parental" | "display" | "storage" | "help" | "updates";
+type SectionId = "profiles" | "playback" | "trailers" | "languages" | "parental" | "display" | "storage" | "help" | "whatsnew" | "updates";
 const SECTIONS: { id: SectionId; icon: IconName; title: string; sub: string }[] = [
   { id: "profiles", icon: "user", title: "Profiles & Account", sub: "Add, edit or switch profiles" },
   { id: "playback", icon: "play", title: "Playback", sub: "Video source and autoplay" },
@@ -25,6 +25,7 @@ const SECTIONS: { id: SectionId; icon: IconName; title: string; sub: string }[] 
   { id: "display", icon: "tv", title: "Display", sub: "TV or phone layout" },
   { id: "storage", icon: "file", title: "Storage & Data", sub: "Clear saved data on this device" },
   { id: "help", icon: "info", title: "Help & Support", sub: "About Panda.fun, privacy and terms" },
+  { id: "whatsnew", icon: "sparkle", title: "What's New", sub: "Highlights of this version" },
   { id: "updates", icon: "download", title: "Check for Updates", sub: "Get the newest version of the app" }
 ];
 
@@ -162,6 +163,12 @@ function Panel({ id }: { id: SectionId }) {
           <Row id="sp-terms" title="Terms of Use" href="/terms" />
         </div>
       );
+    case "whatsnew":
+      return (
+        <div className="set-panel">
+          <Row id="sp-whatsnew" title={`What's new in ${installedVersion()}`} sub="See everything that changed in this version" href="/settings/whats-new" />
+        </div>
+      );
     case "updates":
       return (
         <div className="set-panel">
@@ -199,7 +206,7 @@ export function SettingsPage() {
           <nav className="tv-settings-list" aria-label="Settings sections">
             {SECTIONS.map((s) => (
               <button key={s.id} id={`set-${s.id}`} className={`set-row set-row--section ${focused === s.id ? "is-selected" : ""}`} onFocus={() => setFocused(s.id)}
-                onClick={() => { if (s.id === "updates") go("/settings/updates"); else { const p = document.getElementById("set-panel"); if (p) focusFirst(p); } }} data-hover-focus>
+                onClick={() => { if (s.id === "updates") go("/settings/updates"); else if (s.id === "whatsnew") go("/settings/whats-new"); else { const p = document.getElementById("set-panel"); if (p) focusFirst(p); } }} data-hover-focus>
                 <Icon name={s.icon} className="set-row-icon" />
                 <span className="set-row-text"><span className="set-row-title">{s.title}</span><span className="set-row-sub">{s.sub}</span></span>
                 <Icon name="chevronRight" />
@@ -220,7 +227,7 @@ export function SettingsPage() {
       <ul className="m-set-list">
         {SECTIONS.map((s) => (
           <li key={s.id}>
-            <Link href={s.id === "updates" ? "/settings/updates" : `/settings/${s.id}`} className="m-set-item">
+            <Link href={s.id === "updates" ? "/settings/updates" : s.id === "whatsnew" ? "/settings/whats-new" : `/settings/${s.id}`} className="m-set-item">
               <Icon name={s.icon} className="set-row-icon" />
               <span className="set-row-text"><span className="set-row-title">{s.title}</span><span className="set-row-sub">{s.sub}</span></span>
               <Icon name="chevronRight" />

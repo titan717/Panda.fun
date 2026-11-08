@@ -1,0 +1,57 @@
+name: Emulator check (icon, banner, splash, launch)
+
+# Installs a published release APK on Android TV and phone emulators and captures
+# launcher, splash and first-screen screenshots as artifacts (Mission §7 "verified on emulators").
+on:
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: "Release tag to verify, e.g. v1.0.5"
+        required: true
+        type: string
+
+permissions:
+  contents: read
+
+jobs:
+  emulator:
+    name: ${{ matrix.name }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - { name: android-tv-34, api: 34, target: android-tv, arch: x86, profile: tv_1080p }
+          - { name: phone-34, api: 34, target: google_apis, arch: x86_64, profile: pixel_6 }
+    steps:
+      - name: Enable KVM
+        run: |
+          echo 'KERNEL=="kvm", GROUP="kvm", MODE="0666", OPTIONS+="static_node=kvm"' | sudo tee /etc/udev/rules.d/99-kvm4all.rules
+          sudo udevadm control --reload-rules
+          sudo udevadm trigger --name-match=kvm
+
+      - name: Download release APK
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          gh release download "${{ inputs.tag }}" -R "${{ github.repository }}" -p "*.apk" -D apk
+          ls -l apk
+
+      - name: Run on emulator and capture screenshots
+        uses: reactivecircus/android-emulator-runner@v2
+        with:
+          api-level: ${{ matrix.api }}
+          target: ${{ matrix.target }}
+          arch: ${{ matrix.arch }}
+          profile: ${{ matrix.profile }}
+          disable-animations: false
+          emulator-options: -no-window -gpu swiftshader_indirect -noaudio -no-boot-anim -camera-back none
+          script: bash scripts/emulator-check.sh ${{ matrix.name }}
+
+      - name: Upload screenshots
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: emulator-${{ matrix.name }}-${{ inputs.tag }}
+          path: shots/

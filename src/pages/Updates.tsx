@@ -1,10 +1,11 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { Icon } from "../components/Icon";
+import { ReleaseNotes as Notes } from "../components/ReleaseNotes";
 import { PageHeader } from "../components/PageHeader";
 import { Spinner } from "../components/ui";
 import { useIsTv } from "../lib/layout";
 import { useOnline } from "../lib/hooks";
-import { compareVersions, fetchLatestRelease, installedVersion, nativeUpdates, onNativeUpdateStatus, WEB_VERSION, type ReleaseInfo } from "../lib/updates";
+import { compareVersions, fetchLatestRelease, whatsNewSection, installedVersion, nativeUpdates, onNativeUpdateStatus, WEB_VERSION, type ReleaseInfo } from "../lib/updates";
 import { isAndroidApp } from "../lib/native";
 import { focusFirst } from "../lib/focus";
 import { shortDate } from "../lib/format";
@@ -17,18 +18,6 @@ type State =
   | { s: "available"; release: ReleaseInfo }
   | { s: "downloading"; release: ReleaseInfo; progress: number | null }
   | { s: "ready"; release: ReleaseInfo };
-
-/** Minimal Markdown → paragraphs/bullets for release notes (no HTML injection). */
-function Notes({ text }: { text: string }) {
-  const lines = text.split(/\r?\n/).map((l) => l.trim()).filter(Boolean).slice(0, 40);
-  return (
-    <div className="upd-notes">
-      {lines.map((l, i) => /^[-*] /.test(l)
-        ? <p key={i} className="upd-bullet">• {l.replace(/^[-*] /, "").replace(/\*\*/g, "")}</p>
-        : /^#+ /.test(l) ? <p key={i} className="upd-h">{l.replace(/^#+ /, "")}</p> : <p key={i}>{l.replace(/\*\*/g, "")}</p>)}
-    </div>
-  );
-}
 
 /** Check for Updates (spec 17.2): compares the installed version with the latest GitHub Release. */
 export function UpdatesPage() {
@@ -119,8 +108,8 @@ export function UpdatesPage() {
             {state.s === "ready" && <p className="upd-sub">Download complete. Follow the prompt to install.</p>}
           </>
         )}
-        {release && (state.s !== "uptodate") && release.notes && <><p className="upd-notes-title">What's new</p><Notes text={release.notes} /></>}
-        {release && state.s === "uptodate" && release.notes && <><p className="upd-notes-title">Release notes</p><Notes text={release.notes} /></>}
+        {release && (state.s !== "uptodate") && release.notes && <><p className="upd-notes-title">What's new</p><Notes text={whatsNewSection(release.notes, release.version) || release.notes} /></>}
+        {release && state.s === "uptodate" && release.notes && <><p className="upd-notes-title">Release notes</p><Notes text={whatsNewSection(release.notes, release.version) || release.notes} /></>}
         {!isAndroidApp && release?.apkUrl && state.s === "uptodate" && <a className="upd-link" href={release.apkUrl} rel="noreferrer"><Icon name="download" /> Get the Android app ({release.tag})</a>}
       </div>
     </div>

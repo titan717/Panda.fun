@@ -270,3 +270,23 @@ html[data-mode="tv"] .profiles-manage:focus { box-shadow: var(--focus-glow); out
 .drawer-ep strong { font-size: calc(14 * var(--u)); font-weight: var(--fw-semibold); }
 .drawer-ep.is-current { background: var(--tv-translucent); }
 .sentinel { height: 1px; }
+.route-loading { position: fixed; inset: 0; background: var(--bg, #000); }
+.route-loading--inner { position: static; min-height: 60vh; background: transparent; }
+
+/* What's New after an update (G-6: TV right sheet with the player-panel gradient) */
+.whatsnew .wn-kicker { display: flex; align-items: center; gap: 8px; color: var(--text-2); font-size: 13px; margin-bottom: 10px; }
+.whatsnew .wn-kicker .icon { width: 18px; height: 18px; color: #FFB547; }
+.whatsnew .wn-body { margin-bottom: 18px; }
+.whatsnew .upd-notes { font-size: 14px; }
+.wn-done { width: 100%; }
+.wn-loading { display: grid; place-items: center; min-height: 120px; }
+.wn-page { outline: none; }
+html[data-mode="tv"] .sheet-root--side { justify-content: flex-end; align-items: stretch; }
+html[data-mode="tv"] .sheet.whatsnew--tv { width: 45%; max-width: none; max-height: none; height: 100%; border-radius: 0; border: 0; backdrop-filter: none; background: linear-gradient(180deg, #0B1E4A 0%, #050B1E 100%); padding: calc(64 * var(--tu)) calc(56 * var(--tu)) calc(40 * var(--tu)); display: flex; flex-direction: column; animation: tvp-slide 260ms var(--ease-out); }
+html[data-mode="tv"] .whatsnew--tv .sheet-title { font-size: calc(30 * var(--tu)); margin-bottom: calc(10 * var(--tu)); }
+html[data-mode="tv"] .whatsnew--tv .wn-kicker { font-size: calc(18 * var(--tu)); gap: calc(10 * var(--tu)); margin-bottom: calc(24 * var(--tu)); }
+html[data-mode="tv"] .whatsnew--tv .wn-kicker .icon { width: calc(24 * var(--tu)); height: calc(24 * var(--tu)); }
+html[data-mode="tv"] .whatsnew--tv .wn-body { flex: 1; min-height: 0; overflow-y: auto; scrollbar-width: none; }
+html[data-mode="tv"] .whatsnew--tv .upd-notes { font-size: calc(20 * var(--tu)); gap: calc(10 * var(--tu)); color: rgba(255, 255, 255, 0.82); }
+html[data-mode="tv"] .whatsnew--tv .upd-h { font-size: calc(22 * var(--tu)); }
+html[data-mode="tv"] .whatsnew--tv .wn-done { align-self: flex-start; width: auto; min-width: calc(220 * var(--tu)); margin-top: calc(20 * var(--tu)); }

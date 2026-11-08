@@ -1,4 +1,4 @@
-import { useEffect, useState, type ReactNode } from "react";
+import { Suspense, useEffect, useState, type ReactNode } from "react";
 import { SWRConfig } from "swr";
 import { Route, Router, Switch, useLocation, useParams } from "wouter";
 import { useHashLocation } from "wouter/use-hash-location";
@@ -11,28 +11,50 @@ import { BUILD_TARGET } from "./lib/nav";
 import { actions, getState, usePrefs, useProfile } from "./lib/store";
 import { exitApp, isAndroidApp } from "./lib/native";
 import { useOnline, useReducedMotion } from "./lib/hooks";
-import { compareVersions, fetchLatestRelease, installedVersion } from "./lib/updates";
+import { compareVersions, fetchLatestRelease, installedVersion, takeUpdateNotice } from "./lib/updates";
 import { ErrorBoundary, OfflineBanner, Toasts } from "./components/ui";
 import { PandaMark, Wordmark } from "./components/Icon";
-import { TvShell } from "./tv/TvShell";
-import { TvHome } from "./tv/TvHome";
-import { TvDetails } from "./tv/TvDetails";
-import { TvSearch } from "./tv/TvSearch";
-import { TvCategories } from "./tv/TvCategories";
-import { TvMySpace } from "./tv/TvMySpace";
-import { MobileShell } from "./mobile/MobileShell";
-import { MHome } from "./mobile/MHome";
-import { MAllEpisodes, MDetails } from "./mobile/MDetails";
-import { MSearch } from "./mobile/MSearch";
-import { MMySpace } from "./mobile/MMySpace";
-import { MCategories } from "./mobile/MCategories";
 import { BrowsePage, ContinueWatchingPage, MyListPage, NotFoundPage } from "./pages/Lists";
 import { ProfileEdit, ProfileManage, ProfileSelect } from "./pages/Profiles";
-import { SettingsPage } from "./pages/Settings";
-import { UpdatesPage } from "./pages/Updates";
-import { AboutPage, PrivacyPage, TermsPage } from "./pages/Info";
-import { PlayerPage } from "./pages/Player";
+import { lazyNamed, whenIdle } from "./lib/lazy";
 import type { MediaType, PageKind } from "./lib/types";
+
+const loadTv = () => import("./tv");
+const loadMobile = () => import("./mobile");
+const loadPlayer = () => import("./pages/Player");
+const loadSettings = () => import("./pages/Settings");
+const loadUpdates = () => import("./pages/Updates");
+const loadInfo = () => import("./pages/Info");
+const loadWhatsNew = () => import("./pages/WhatsNew");
+
+const lz = lazyNamed;
+const TvShell = lz(loadTv, "TvShell");
+const TvHome = lz(loadTv, "TvHome");
+const TvDetails = lz(loadTv, "TvDetails");
+const TvSearch = lz(loadTv, "TvSearch");
+const TvCategories = lz(loadTv, "TvCategories");
+const TvMySpace = lz(loadTv, "TvMySpace");
+const MobileShell = lz(loadMobile, "MobileShell");
+const MHome = lz(loadMobile, "MHome");
+const MDetails = lz(loadMobile, "MDetails");
+const MAllEpisodes = lz(loadMobile, "MAllEpisodes");
+const MSearch = lz(loadMobile, "MSearch");
+const MMySpace = lz(loadMobile, "MMySpace");
+const MCategories = lz(loadMobile, "MCategories");
+const PlayerPage = lz(loadPlayer, "PlayerPage");
+const SettingsPage = lz(loadSettings, "SettingsPage");
+const UpdatesPage = lz(loadUpdates, "UpdatesPage");
+const AboutPage = lz(loadInfo, "AboutPage");
+const PrivacyPage = lz(loadInfo, "PrivacyPage");
+const TermsPage = lz(loadInfo, "TermsPage");
+const WhatsNewPage = lz(loadWhatsNew, "WhatsNewPage");
+const WhatsNewSheet = lz(loadWhatsNew, "WhatsNewSheet");
+
+/** Start downloading the active layout at once, and the rest of the app when the device is idle. */
+export function prefetchRoutes(mode: LayoutMode) {
+  void (mode === "tv" ? loadTv() : loadMobile());
+  whenIdle(() => { void loadPlayer(); void loadSettings(); void loadUpdates(); void loadInfo(); void loadWhatsNew(); });
+}
 
 const PUBLIC_PATHS = ["/about", "/privacy", "/terms"];
 
@@ -49,6 +71,7 @@ function useLayoutMode(): LayoutMode {
   }, [layout]);
   useEffect(() => {
     document.documentElement.dataset.mode = mode;
+    prefetchRoutes(mode);
     installKeyHandling(mode === "tv");
     setTvNavigation(mode === "tv");
   }, [mode]);
@@ -138,13 +161,16 @@ function Routes({ mode }: { mode: LayoutMode }) {
     if (t) document.title = t;
   }, [location]);
 
+  const [notice, setNotice] = useState<string | null>(takeUpdateNotice);
   const needsProfile = !profile && !PUBLIC_PATHS.includes(location) && !location.startsWith("/profiles");
   if (needsProfile) return <ProfileSelect />;
 
   if (location.startsWith("/watch/")) {
     return (
       <ErrorBoundary resetKey={location}>
-        <Route path="/watch/:type/:id"><PlayerPage /></Route>
+        <Suspense fallback={<div className="route-loading" />}>
+          <Route path="/watch/:type/:id"><PlayerPage /></Route>
+        </Suspense>
       </ErrorBoundary>
     );
   }
@@ -153,8 +179,10 @@ function Routes({ mode }: { mode: LayoutMode }) {
   return (
     <>
       {!online && <OfflineBanner />}
+      <Suspense fallback={<div className="route-loading" />}>
       <Shell mode={mode}>
         <ErrorBoundary resetKey={location}>
+          <Suspense fallback={<div className="route-loading route-loading--inner" />}>
           <Switch>
             <Route path="/"><Home kind="home" /></Route>
             <Route path="/movies"><Home kind="movies" /></Route>
@@ -172,6 +200,7 @@ function Routes({ mode }: { mode: LayoutMode }) {
             <Route path="/profiles/new"><ProfileEdit isNew /></Route>
             <Route path="/profiles/edit/:id"><ProfileEdit /></Route>
             <Route path="/settings/updates"><UpdatesPage /></Route>
+            <Route path="/settings/whats-new"><WhatsNewPage /></Route>
             <Route path="/settings/:section"><SettingsPage /></Route>
             <Route path="/settings"><SettingsPage /></Route>
             <Route path="/about"><AboutPage /></Route>
@@ -179,8 +208,11 @@ function Routes({ mode }: { mode: LayoutMode }) {
             <Route path="/terms"><TermsPage /></Route>
             <Route><NotFoundPage /></Route>
           </Switch>
+          </Suspense>
         </ErrorBoundary>
       </Shell>
+      {notice && <WhatsNewSheet version={notice} onClose={() => setNotice(null)} />}
+      </Suspense>
     </>
   );
 }
