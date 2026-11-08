@@ -6,6 +6,7 @@ Measured on every release. Never regress.
 
 | Metric | Value |
 |---|---|
+| Backend | `/panda/sources/health`: CineSrc 315 ms, Vidy 64 ms (2026-11-08). |
 | Warm start | Cached rows hydrate from IndexedDB before first render (300 ms budget), so Home paints without a network wait. |
 | API | `apikinoma.vercel.app` home payload ~190 KB, ~0.3 s server time. In-flight requests are deduplicated; retries use jittered backoff. |
 | Source start | CineSrc playing after ~2.5 s, Vidy after ~1.4–2.5 s (see PLAYER_COMPARISON). |
