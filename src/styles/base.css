@@ -312,3 +312,30 @@ html[data-mode="tv"] .kids-gate-icon { width: calc(140 * var(--tu)); height: cal
 html[data-mode="tv"] .kids-gate .state-title { font-size: calc(44 * var(--tu)); }
 html[data-mode="tv"] .kids-gate .state-sub { font-size: calc(26 * var(--tu)); max-width: calc(900 * var(--tu)); }
 html[data-mode="tv"] .kids-gate .btn { height: calc(68 * var(--tu)); padding: 0 calc(30 * var(--tu)); font-size: calc(26 * var(--tu)); }
+
+/* ---------- Watchlist 2.0: quick actions, list cards ---------- */
+.sheet-note { color: var(--text-2); font-size: 14px; line-height: 1.45; margin-bottom: 10px; }
+.qa-check .qa-box { display: grid; place-items: center; flex: none; width: 22px; height: 22px; border-radius: 6px; border: 2px solid var(--text-3, rgba(255, 255, 255, 0.45)); color: #000; transition: background 150ms, border-color 150ms; }
+.qa-check .qa-box .icon { width: 16px; height: 16px; color: #000; stroke-width: 3; }
+.qa-check.is-on .qa-box { background: var(--text-1); border-color: var(--text-1); }
+.qa-form { display: flex; gap: 10px; align-items: center; margin-bottom: 14px; }
+.qa-input { flex: 1; min-width: 0; color: var(--text-1); }
+.qa-form .btn { flex: none; }
+.qa-suggest { display: flex; flex-wrap: wrap; gap: 8px; padding-bottom: 4px; }
+html[data-mode="tv"] .qa-check .qa-box { width: calc(32 * var(--tu)); height: calc(32 * var(--tu)); border-radius: calc(8 * var(--tu)); }
+html[data-mode="tv"] .qa-check .qa-box .icon { width: calc(22 * var(--tu)); height: calc(22 * var(--tu)); }
+html[data-mode="tv"] .sheet-note { font-size: var(--t-body); margin-bottom: calc(16 * var(--tu)); }
+html[data-mode="tv"] .qa-form { gap: calc(16 * var(--tu)); margin-bottom: calc(20 * var(--tu)); }
+html[data-mode="tv"] .qa-input { height: calc(64 * var(--tu)); font-size: calc(24 * var(--tu)); padding: 0 calc(22 * var(--tu)); }
+html[data-mode="tv"] .qa-suggest { gap: calc(12 * var(--tu)); }
+html[data-mode="tv"] .sheet-group { font-size: calc(18 * var(--tu)); margin: calc(18 * var(--tu)) 0 calc(8 * var(--tu)); }
+
+.list-card { display: block; text-align: left; color: inherit; }
+.list-collage { position: relative; display: grid; grid-template-columns: repeat(3, 1fr); gap: 2px; width: 100%; aspect-ratio: 2 / 1; overflow: hidden; background: var(--m-raised); }
+.list-collage-cell { position: relative; overflow: hidden; background: var(--m-raised-2, #222); }
+.list-collage-cell .img, .list-collage-cell img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; }
+.list-collage-empty { grid-column: 1 / -1; display: grid; place-items: center; color: var(--text-2); }
+.list-name { display: block; font-weight: var(--fw-semibold); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.list-count { display: block; color: var(--text-2); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.list-card.is-new .list-collage { background: transparent; border: 2px dashed rgba(255, 255, 255, 0.28); }
+.list-hint { color: var(--text-2); }

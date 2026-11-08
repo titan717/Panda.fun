@@ -1,19 +1,22 @@
 import { memo, useState } from "react";
 import { Link } from "wouter";
 import { Icon } from "../components/Icon";
-import { Img, toast } from "../components/ui";
-import { Sheet, SheetItem } from "../components/Sheet";
+import { Img } from "../components/ui";
+import { QuickActions, type ActionContext } from "../components/QuickActions";
 import { isUpcoming, itemBadge, landMeta, titlePath } from "../lib/format";
-import { actions, getState, selectData, type HistoryEntry } from "../lib/store";
-import { useNav } from "../lib/nav";
+import type { HistoryEntry } from "../lib/store";
 import { continueHref, continueSub } from "../tv/TvCards";
 import type { PandaItem } from "../lib/types";
 
 /** Mobile poster (spec 12.3–12.5). */
-export const MPoster = memo(function MPoster({ item, rank, top10, className }: { item: PandaItem; rank?: number; top10?: boolean; className?: string }) {
+export const MPoster = memo(function MPoster({ item, rank, top10, className, context }: { item: PandaItem; rank?: number; top10?: boolean; className?: string; context?: ActionContext }) {
   const badge = itemBadge(item);
+  const [menu, setMenu] = useState(false);
   return (
-    <Link href={titlePath(item)} className={`m-poster ${rank ? "has-rank" : ""} ${className ?? ""}`} aria-label={item.title}>
+    <>
+    {/* press and hold opens quick actions (Watchlist 2.0) */}
+    <Link href={titlePath(item)} className={`m-poster ${rank ? "has-rank" : ""} ${className ?? ""}`} aria-label={item.title}
+      onContextMenu={(e) => { e.preventDefault(); setMenu(true); }}>
       {rank !== undefined && <span className="m-rank" aria-hidden="true">{rank}</span>}
       <span className="m-poster-media">
         <Img src={item.poster} alt="" title={item.title} />
@@ -21,22 +24,10 @@ export const MPoster = memo(function MPoster({ item, rank, top10, className }: {
         {badge && <span className="m-poster-badge">{badge}</span>}
       </span>
     </Link>
+    {menu && <QuickActions item={item} context={context} onClose={() => setMenu(false)} />}
+    </>
   );
 });
-
-function ItemMenu({ item, entry, onClose }: { item: PandaItem; entry?: HistoryEntry; onClose: () => void }) {
-  const { go } = useNav();
-  const inList = selectData(getState()).watchlist.some((i) => i.id === item.id);
-  return (
-    <Sheet title={item.title} onClose={onClose}>
-      <SheetItem icon={<Icon name="info" />} label="Details & More" onClick={() => { onClose(); go(titlePath(item)); }} />
-      <SheetItem icon={<Icon name={inList ? "check" : "plus"} />} label={inList ? "Remove from Watchlist" : "Add to Watchlist"} onClick={() => {
-        const added = actions.toggleWatchlist(item); toast(added ? "Added to Watchlist" : "Removed from Watchlist"); onClose();
-      }} />
-      {entry && <SheetItem icon={<Icon name="trash" />} label="Remove from Continue Watching" danger onClick={() => { actions.removeHistory(item.id); toast("Removed from Continue Watching"); onClose(); }} />}
-    </Sheet>
-  );
-}
 
 /** Landscape card with title below and ⋮ menu (spec 12.3). */
 export const MLand = memo(function MLand({ item, sub }: { item: PandaItem; sub?: string | null }) {
@@ -49,7 +40,7 @@ export const MLand = memo(function MLand({ item, sub }: { item: PandaItem; sub?:
         <span className="m-land-sub">{sub ?? landMeta(item)}</span>
       </Link>
       <button className="m-more" aria-label={`More options for ${item.title}`} onClick={() => setMenu(true)}><Icon name="more" strokeWidth={3} /></button>
-      {menu && <ItemMenu item={item} onClose={() => setMenu(false)} />}
+      {menu && <QuickActions item={item} onClose={() => setMenu(false)} />}
     </div>
   );
 });
@@ -69,7 +60,7 @@ export const MContinue = memo(function MContinue({ entry }: { entry: HistoryEntr
         <span className="m-land-sub">{continueSub(entry)}</span>
       </Link>
       <button className="m-more" aria-label={`More options for ${entry.item.title}`} onClick={() => setMenu(true)}><Icon name="more" strokeWidth={3} /></button>
-      {menu && <ItemMenu item={entry.item} entry={entry} onClose={() => setMenu(false)} />}
+      {menu && <QuickActions item={entry.item} context={{ kind: "continue", entry }} onClose={() => setMenu(false)} />}
     </div>
   );
 });

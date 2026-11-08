@@ -444,3 +444,17 @@ html[data-mode="tv"] .tv-cast:focus .tv-cast-img { outline: var(--focus-border);
 .tv-person .person-role { font-size: calc(18 * var(--tu)); color: var(--text-2); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: var(--poster-w); }
 .tv-person .person-head .sk-line { width: calc(600 * var(--tu)); height: calc(26 * var(--tu)); }
 .tv-person .person-head .sk-line--title { width: calc(420 * var(--tu)); height: calc(60 * var(--tu)); }
+
+/* Watchlist 2.0 */
+.tv-list-grid { display: grid; grid-template-columns: repeat(auto-fill, var(--land-w)); gap: calc(30 * var(--tu)) calc(22 * var(--tu)); padding: calc(6 * var(--tu)); }
+.list-card.tv-card { width: var(--land-w); }
+.tv-card.list-card .list-collage { height: var(--land-h); aspect-ratio: auto; border-radius: var(--r-poster); }
+.tv-card.list-card .list-collage-empty .icon { width: calc(48 * var(--tu)); height: calc(48 * var(--tu)); }
+.tv-card.list-card .list-name { margin-top: calc(12 * var(--tu)); font-size: calc(22 * var(--tu)); }
+.tv-card.list-card .list-count { margin-top: calc(4 * var(--tu)); color: var(--tv-ice); font-size: calc(19 * var(--tu)); font-weight: var(--fw-medium); }
+html[data-mode="tv"] .list-card.tv-card:focus { outline: none; box-shadow: none; }
+html[data-mode="tv"] .list-card.tv-card:focus .list-collage { outline: var(--focus-border); box-shadow: var(--focus-glow); }
+.tv-card.is-editable .tv-poster-img, .tv-card.is-editable .tv-land-media img { filter: brightness(0.7); }
+.tv-card.is-editable:focus .remove-mark { background: #fff; color: #000; border-color: #fff; }
+.tv-browse .list-hint, .tv-ms-lists-hint { font-size: var(--t-body); margin: 0 0 calc(18 * var(--tu)) calc(6 * var(--tu)); }
+.tv-ms-lists-hint { margin-top: calc(24 * var(--tu)); }

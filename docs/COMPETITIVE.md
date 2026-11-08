@@ -80,3 +80,10 @@ Reviewed each release. Ideas are only adopted when they fit the blueprints.
 - Apple TV and Plex show directors and writers next to the cast. Panda lists key crew after the actors.
 - Plex and Apple TV group film series. Panda shows a movie's collection in order, with the one you are viewing marked.
 - Google TV shows a rating with its source. Panda shows the TMDB rating with its vote count.
+
+## v1.1.3 round (2026-11-08)
+
+- Letterboxd and Plex let you keep many named lists. Panda now has up to 12 lists per profile next to the Watchlist, with one-press name suggestions for the TV remote.
+- Netflix and Prime Video open a quick menu when you long-press a title on a phone. Panda's long-press opens quick actions: play, save to lists, move to top, mark as watched and remove.
+- Google TV and Apple TV let you mark something as watched. Panda's "Mark as watched" takes it off the Watchlist and counts it for "Because you watched".
+- Plex shows list covers built from posters. Panda's list cards show a three-poster collage.

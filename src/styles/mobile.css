@@ -332,3 +332,16 @@ a.m-cast { color: inherit; text-decoration: none; }
 .m-person .person-role { font-size: var(--m-tiny); color: var(--text-2); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .m-person .person-head .sk-line { width: 180px; height: 14px; }
 .m-person .person-head .sk-line--title { height: 24px; }
+
+/* Watchlist 2.0 */
+.m-list-track { gap: 10px; }
+.m-list-card { flex: none; width: calc((100vw - 2 * var(--m-gutter)) / 2.15); max-width: 320px; }
+.m-list-card .list-collage { border-radius: var(--r-poster-m); }
+.m-list-card .list-collage-empty .icon { width: 28px; height: 28px; }
+.m-list-card .list-name { margin-top: 8px; font-size: 14px; }
+.m-list-card .list-count { margin-top: 2px; font-size: 12px; }
+.m-row-count { color: var(--text-2); font-size: 14px; font-weight: var(--fw-semibold); }
+.m-page .list-hint { padding: 0 var(--m-gutter); margin: 0 0 10px; font-size: 12px; }
+.m-poster { -webkit-touch-callout: none; }
+@media (min-width: 600px) { .m-list-card { width: calc((100vw - 2 * var(--m-gutter)) / 3.3); } }
+@media (min-width: 1024px) { .m-list-card { width: calc((min(100vw, 1180px) - 2 * var(--m-gutter)) / 3.3); max-width: 340px; } }

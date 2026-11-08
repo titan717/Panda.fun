@@ -2,6 +2,14 @@
 
 Measured on every release. Never regress.
 
+## v1.1.3
+
+| Metric | Value |
+|---|---|
+| Lists | Stored with the profile in localStorage (titles slimmed to card fields, 12 lists × 200 titles max), so My Lists, Save to and quick actions need no network request. |
+| Quick actions | The sheet is rendered only when opened; posters add one boolean of state and a `contextmenu` listener. |
+| First load (gzip JS) | Entry chunk unchanged at 32.7 KB; list and quick-action code ride in the TV/mobile and Lists chunks. |
+
 ## v1.1.2
 
 | Metric | Value |

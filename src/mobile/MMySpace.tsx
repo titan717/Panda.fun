@@ -3,7 +3,9 @@ import useSWR from "swr";
 import { Link } from "wouter";
 import { Icon, PandaMark } from "../components/Icon";
 import { Avatar, EmptyState, toast } from "../components/ui";
-import { actions, continueWatching, useHistoryMap, usePrefs, useProfile, useStore, useWatchlist } from "../lib/store";
+import { actions, continueWatching, MAX_LISTS, useHistoryMap, useLists, usePrefs, useProfile, useStore, useWatchlist } from "../lib/store";
+import { ListCard, NewListCard } from "../components/ListCard";
+import { NewListSheet } from "../components/QuickActions";
 import { compareVersions, fetchLatestRelease, installedVersion } from "../lib/updates";
 import { isAndroidApp } from "../lib/native";
 import { useNav } from "../lib/nav";
@@ -16,6 +18,8 @@ export function MMySpace() {
   const profile = useProfile();
   const profiles = useStore((s) => s.profiles);
   const list = useWatchlist();
+  const lists = useLists();
+  const [naming, setNaming] = useState(false);
   const cw = continueWatching(useHistoryMap());
   const prefs = usePrefs();
   const { go } = useNav();
@@ -80,9 +84,18 @@ export function MMySpace() {
 
       <section className="m-section">
         <div className="m-row-head"><h2 className="m-row-title">Watchlist</h2>{list.length > 0 && <Link href="/my-list" className="m-row-more" aria-label="See all Watchlist"><Icon name="chevronRight" /></Link>}</div>
-        {list.length ? <div className="m-row-track">{list.slice(0, 20).map((it) => <MPoster key={it.id} item={it} />)}</div>
+        {list.length ? <div className="m-row-track">{list.slice(0, 20).map((it) => <MPoster key={it.id} item={it} context={{ kind: "watchlist" }} />)}</div>
           : <EmptyState icon="plus" title="Your watchlist is empty" sub="Tap + on any title to save it here." />}
       </section>
+
+      <section className="m-section">
+        <div className="m-row-head"><h2 className="m-row-title">My Lists</h2>{lists.length > 0 && <span className="m-row-count">{lists.length}</span>}</div>
+        <div className="m-row-track m-list-track">
+          {lists.map((l) => <ListCard key={l.id} list={l} tv={false} />)}
+          {lists.length < MAX_LISTS && <NewListCard id="ml-new" tv={false} onClick={() => setNaming(true)} />}
+        </div>
+      </section>
+      {naming && <NewListSheet onClose={() => setNaming(false)} onDone={(id) => go(`/my-list?list=${encodeURIComponent(id)}`)} />}
     </div>
   );
 }

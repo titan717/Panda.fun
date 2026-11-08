@@ -1,11 +1,15 @@
-import { useEffect, useRef } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { useParams, useSearch } from "wouter";
 import { PageHeader } from "../components/PageHeader";
-import { EmptyState, ErrorState, Skeleton } from "../components/ui";
+import { EmptyState, ErrorState, Skeleton, toast } from "../components/ui";
+import { Icon } from "../components/Icon";
+import { Sheet, SheetItem } from "../components/Sheet";
+import { NewListSheet, QuickActions, type ActionContext } from "../components/QuickActions";
+import { LIST_SORTS, sortList, type ListFilter, type ListSort } from "../lib/lists";
 import { useIsTv } from "../lib/layout";
 import { useBrowse, type BrowseParams } from "../lib/useBrowse";
 import { browseHref, browseTitle } from "../lib/format";
-import { continueWatching, useHistoryMap, useProfile, useWatchlist } from "../lib/store";
+import { actions, continueWatching, useHistoryMap, useList, useProfile, useWatchlist } from "../lib/store";
 import { isKidsSafe } from "../lib/rows";
 import { focusFirst } from "../lib/focus";
 import { useNav } from "../lib/nav";
@@ -84,17 +88,82 @@ export function BrowsePage() {
   );
 }
 
+/** Watchlist, or a custom list with `?list=<id>` (Watchlist 2.0): filter, sort, edit, rename and delete. */
 export function MyListPage() {
   const tv = useIsTv();
-  const list = useWatchlist();
+  const qs = new URLSearchParams(useSearch());
+  const listId = qs.get("list");
+  const custom = useList(listId);
+  const watchlist = useWatchlist();
+  const items = custom ? custom.items : watchlist;
   const { go } = useNav();
   const ref = useAutoFocus(true);
+  const [filter, setFilter] = useState<ListFilter>("all");
+  const [sort, setSort] = useState<ListSort>("recent");
+  const [editing, setEditing] = useState(false);
+  const [sheet, setSheet] = useState<PandaItem | null>(null);
+  const [dialog, setDialog] = useState<"rename" | "delete" | null>(null);
+  const shown = useMemo(() => sortList(items, filter, sort), [items, filter, sort]);
+  const missing = !!listId && !custom;
+  const context: ActionContext = custom ? { kind: "list", listId: custom.id } : { kind: "watchlist" };
+  const chip = tv ? "tv-chip" : "m-chip";
+  const sortLabel = LIST_SORTS.find((x) => x.id === sort)!.label;
+  useEffect(() => { if (!items.length) setEditing(false); }, [items.length]);
+
+  if (missing) {
+    return (
+      <div ref={ref} className={tv ? "tv-page tv-browse" : "m-page"}>
+        <PageHeader title="List not found" fallback="/my-space" />
+        <EmptyState icon="list" title="This list no longer exists" sub="It may have been deleted, or it belongs to another profile." action={<button className="btn btn--primary" data-autofocus onClick={() => go("/my-space", { replace: true })}>Go to My Space</button>} />
+      </div>
+    );
+  }
+
   return (
     <div ref={ref} className={tv ? "tv-page tv-browse" : "m-page"} data-scroll-y={tv ? "item" : undefined}>
-      <PageHeader title="Watchlist" fallback="/my-space" />
-      {list.length === 0
-        ? <EmptyState icon="plus" title="Your watchlist is empty" sub="Add movies and shows to watch them later." action={<button className="btn btn--primary" data-autofocus onClick={() => go("/movies")}>Browse Movies</button>} />
-        : <PosterGrid items={list} prefix="list" />}
+      <PageHeader title={custom ? custom.name : "Watchlist"} fallback="/my-space" />
+      <section className={`${tv ? "tv-chips" : "m-chips"} list-tools`} aria-label="List options">
+        {items.length > 0 && (["all", "movie", "tv"] as const).map((f) => (
+          <button key={f} id={`lf-${f}`} className={`${chip} ${filter === f ? "is-selected" : ""}`} aria-pressed={filter === f} onClick={() => setFilter(f)} data-hover-focus>
+            {f === "all" ? `All ${items.length}` : f === "movie" ? "Movies" : "Shows"}
+          </button>
+        ))}
+        {items.length > 1 && (
+          <button id="l-sort" className={chip} onClick={() => setSort(LIST_SORTS[(LIST_SORTS.findIndex((x) => x.id === sort) + 1) % LIST_SORTS.length]!.id)} data-hover-focus aria-label={`Sort: ${sortLabel}. Press to change.`}>
+            <Icon name="sort" /> {sortLabel}
+          </button>
+        )}
+        {tv && items.length > 0 && (
+          <button id="l-edit" className={`${chip} ${editing ? "is-selected" : ""}`} aria-pressed={editing} onClick={() => setEditing((e) => !e)} data-hover-focus>
+            {editing ? <><Icon name="check" /> Done</> : <><Icon name="more" /> Edit</>}
+          </button>
+        )}
+        {custom && <button id="l-rename" className={chip} onClick={() => setDialog("rename")} data-hover-focus><Icon name="edit" /> Rename</button>}
+        {custom && <button id="l-delete" className={chip} onClick={() => setDialog("delete")} data-hover-focus><Icon name="trash" /> Delete list</button>}
+      </section>
+      {items.length > 0 && (!tv || editing) && <p className="list-hint">{tv ? "Press OK on a title for lists, move to top and more" : "Press and hold a title for quick actions"}</p>}
+      {items.length === 0
+        ? custom
+          ? <EmptyState icon="list" title={`${custom.name} is empty`} sub={tv ? "Open any title and press + to save it to this list." : "Open any title and tap + to save it to this list."} action={<button className="btn btn--primary" data-autofocus onClick={() => go("/movies")}>Browse Movies</button>} />
+          : <EmptyState icon="plus" title="Your watchlist is empty" sub="Add movies and shows to watch them later." action={<button className="btn btn--primary" data-autofocus onClick={() => go("/movies")}>Browse Movies</button>} />
+        : shown.length === 0
+          ? <EmptyState icon="list" title={filter === "movie" ? "No movies here" : "No shows here"} sub="Switch the filter to see everything." />
+          : (
+            <div className={tv ? "tv-grid" : "m-grid"}>
+              {shown.map((it, i) => tv
+                ? <TvPoster key={it.id} item={it} id={`list-${i}`} expand={false} onOptions={editing ? () => setSheet(it) : undefined} />
+                : <MPoster key={it.id} item={it} context={context} />)}
+            </div>
+          )}
+      {sheet && <QuickActions item={sheet} context={context} onClose={() => setSheet(null)} />}
+      {custom && dialog === "rename" && <NewListSheet rename={{ id: custom.id, name: custom.name }} onClose={() => setDialog(null)} />}
+      {custom && dialog === "delete" && (
+        <Sheet title={`Delete ${custom.name}?`} onClose={() => setDialog(null)} className="qa-sheet">
+          <p className="sheet-note">The list is removed from this profile. The titles stay in your Watchlist and history.</p>
+          <SheetItem icon={<Icon name="trash" />} label="Delete list" danger onClick={() => { actions.deleteList(custom.id); toast(`Deleted ${custom.name}`); setDialog(null); go("/my-space", { replace: true }); }} />
+          <SheetItem icon={<Icon name="close" />} label="Keep list" onClick={() => setDialog(null)} />
+        </Sheet>
+      )}
     </div>
   );
 }

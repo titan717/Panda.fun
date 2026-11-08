@@ -7,7 +7,7 @@ import { itemBadge, landMeta, runtime, timeLeft, titlePath, watchPath } from "..
 import type { HistoryEntry } from "../lib/store";
 import type { PandaItem } from "../lib/types";
 
-export interface CardFocus { onFocusItem?: (item: PandaItem) => void; pos?: [number, number]; onRemove?: () => void }
+export interface CardFocus { onFocusItem?: (item: PandaItem) => void; pos?: [number, number]; onRemove?: () => void; onOptions?: () => void }
 
 /** Spoken label for a card: title, year, kind, rating and position in its row. */
 export function cardLabel(item: PandaItem, pos?: [number, number], extra?: string | null) {
@@ -16,7 +16,7 @@ export function cardLabel(item: PandaItem, pos?: [number, number], extra?: strin
 }
 
 /** Poster card that expands into the wide info card when focused (spec 6.3). */
-export const TvPoster = memo(function TvPoster({ item, id, rank, expand = true, onFocusItem, pos, onRemove }: { item: PandaItem; id: string; rank?: number; expand?: boolean } & CardFocus) {
+export const TvPoster = memo(function TvPoster({ item, id, rank, expand = true, onFocusItem, pos, onRemove, onOptions }: { item: PandaItem; id: string; rank?: number; expand?: boolean } & CardFocus) {
   const [focused, setFocused] = useState(false);
   const settled = useDwell(focused && expand, 350);
   const details = useTitle(settled ? item.type : null, settled ? item.tmdbId : null).data;
@@ -25,13 +25,14 @@ export const TvPoster = memo(function TvPoster({ item, id, rank, expand = true, 
   return (
     <div className={`tv-card-wrap ${rank ? "has-rank" : ""}`}>
       {rank !== undefined && <span className="top10-num" aria-hidden="true">{rank}</span>}
-      <Link href={titlePath(item)} id={id} className={`tv-card tv-poster ${focused && expand ? "is-expanded" : ""} ${onRemove ? "is-removable" : ""}`} data-hover-focus
-        aria-label={onRemove ? `Remove ${item.title}` : cardLabel(item, pos, rank ? `Number ${rank}` : null)}
-        onClick={onRemove ? (e) => { e.preventDefault(); onRemove(); } : undefined}
+      <Link href={titlePath(item)} id={id} className={`tv-card tv-poster ${focused && expand ? "is-expanded" : ""} ${onRemove ? "is-removable" : onOptions ? "is-editable" : ""}`} data-hover-focus
+        aria-label={onRemove ? `Remove ${item.title}` : onOptions ? `Options for ${item.title}` : cardLabel(item, pos, rank ? `Number ${rank}` : null)}
+        onClick={onRemove ? (e) => { e.preventDefault(); onRemove(); } : onOptions ? (e) => { e.preventDefault(); onOptions(); } : undefined}
         onFocus={() => { setFocused(true); onFocusItem?.(item); }} onBlur={() => setFocused(false)}>
         <Img src={item.poster} alt="" title={item.title} className="tv-poster-img" />
-        {badge && !onRemove && <span className="poster-badge">{badge}</span>}
+        {badge && !onRemove && !onOptions && <span className="poster-badge">{badge}</span>}
         {onRemove && <span className="remove-mark" aria-hidden="true"><Icon name="trash" /></span>}
+        {onOptions && <span className="remove-mark is-options" aria-hidden="true"><Icon name="more" /></span>}
         {focused && expand && settled && item.backdrop && <Img src={item.backdrop} alt="" title={item.title} className="expand-bg" eager />}
         {focused && expand && (
           <span className="expand-info">
@@ -74,16 +75,16 @@ export function continueSub(h: HistoryEntry) {
   return timeLeft(h.position, h.duration);
 }
 
-export const TvContinue = memo(function TvContinue({ entry, id, onFocusItem, onRemove }: { entry: HistoryEntry; id: string } & CardFocus) {
+export const TvContinue = memo(function TvContinue({ entry, id, onFocusItem, onRemove, onOptions }: { entry: HistoryEntry; id: string } & CardFocus) {
   const pct = entry.duration ? Math.min(100, (entry.position / entry.duration) * 100) : 0;
   return (
-    <Link href={continueHref(entry)} id={id} className={`tv-card tv-land ${onRemove ? "is-removable" : ""}`} data-hover-focus onFocus={() => onFocusItem?.(entry.item)}
-      onClick={onRemove ? (e) => { e.preventDefault(); onRemove(); } : undefined}
-      aria-label={onRemove ? `Remove ${entry.item.title} from Continue Watching` : `${entry.upNext ? "Play" : "Resume"} ${entry.item.title}${continueSub(entry) ? `, ${continueSub(entry)}` : ""}`}>
+    <Link href={continueHref(entry)} id={id} className={`tv-card tv-land ${onRemove ? "is-removable" : onOptions ? "is-editable" : ""}`} data-hover-focus onFocus={() => onFocusItem?.(entry.item)}
+      onClick={onRemove ? (e) => { e.preventDefault(); onRemove(); } : onOptions ? (e) => { e.preventDefault(); onOptions(); } : undefined}
+      aria-label={onRemove ? `Remove ${entry.item.title} from Continue Watching` : onOptions ? `Options for ${entry.item.title}` : `${entry.upNext ? "Play" : "Resume"} ${entry.item.title}${continueSub(entry) ? `, ${continueSub(entry)}` : ""}`}>
       <span className="tv-land-media">
         <Img src={entry.item.backdrop} alt="" title={entry.item.title} />
         <span className="progress"><span style={{ width: `${pct}%` }} /></span>
-        {onRemove ? <span className="remove-mark" aria-hidden="true"><Icon name="trash" /></span> : <Icon name="play" className="tv-land-play" />}
+        {onRemove ? <span className="remove-mark" aria-hidden="true"><Icon name="trash" /></span> : onOptions ? <span className="remove-mark is-options" aria-hidden="true"><Icon name="more" /></span> : <Icon name="play" className="tv-land-play" />}
       </span>
       <span className="tv-land-title">{entry.item.title}</span>
       <span className="tv-land-sub">{continueSub(entry)}</span>

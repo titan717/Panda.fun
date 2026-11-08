@@ -5,7 +5,8 @@ import { Trailer, rankTrailers } from "../components/Trailer";
 import { RatePopover } from "../components/RatePopover";
 import { VideoOverlay } from "../components/VideoOverlay";
 import { useLiteMotion, useSeason, useTitle, useTrailerStage } from "../lib/hooks";
-import { actions, useHistoryEntry, useInWatchlist, usePrefs, useRating } from "../lib/store";
+import { actions, useHasLists, useHistoryEntry, useInWatchlist, useListCount, usePrefs, useRating } from "../lib/store";
+import { SaveToSheet } from "../components/QuickActions";
 import { castAndCrew, detailsMeta, languageName, voteLabel, pluralEps, runtime, shortDate, watchPath, airsLater } from "../lib/format";
 import { detailsCtas } from "../lib/watch";
 import { focusEl, focusFirst, useBackHandler } from "../lib/focus";
@@ -36,7 +37,11 @@ function TvDetailsSkeleton() {
 function TvDetailsView({ d, initialTab }: { d: TitleDetails; initialTab?: Tab }) {
   const prefs = usePrefs();
   const history = useHistoryEntry(d.id);
-  const inList = useInWatchlist(d.id);
+  const hasLists = useHasLists();
+  const [saveTo, setSaveTo] = useState(false);
+  const inWatchlist = useInWatchlist(d.id);
+  const listCount = useListCount(d.id);
+  const inList = inWatchlist || listCount > 0;
   const rating = useRating(d.id);
   const { go } = useNav();
   const [zone, setZone] = useState<"main" | "tabs">(initialTab ? "tabs" : "main");
@@ -74,6 +79,8 @@ function TvDetailsView({ d, initialTab }: { d: TitleDetails; initialTab?: Tab })
   const langs = d.languages.length ? d.languages : [d.originalLanguage ?? languageName(d.language) ?? "English"];
 
   const toggleList = () => {
+    // with custom lists the + opens "Save to" (Watchlist 2.0); otherwise it stays a one-press Watchlist toggle
+    if (hasLists) { setSaveTo(true); return; }
     const added = actions.toggleWatchlist(d);
     toast(added ? "Added to Watchlist" : "Removed from Watchlist");
   };
@@ -114,7 +121,7 @@ function TvDetailsView({ d, initialTab }: { d: TitleDetails; initialTab?: Tab })
                   <Icon name="play" /> {primary.label} {primary.sub && <span className="tv-cta-sub">{primary.sub}</span>}
                 </a>
               </div>
-              <button id="det-list" className={`tv-square ${inList ? "is-on" : ""}`} onClick={toggleList} aria-pressed={inList} aria-label={inList ? "Remove from Watchlist" : "Add to Watchlist"} data-hover-focus>
+              <button id="det-list" className={`tv-square ${inList ? "is-on" : ""}`} onClick={toggleList} aria-pressed={inList} aria-label={hasLists ? `Save to a list${inList ? ", saved" : ""}` : inList ? "Remove from Watchlist" : "Add to Watchlist"} data-hover-focus>
                 <Icon name={inList ? "check" : "plus"} />
               </button>
               <div className="tv-rate-wrap">
@@ -175,6 +182,7 @@ function TvDetailsView({ d, initialTab }: { d: TitleDetails; initialTab?: Tab })
         </section>
       </div>
       {video && <VideoOverlay videoKey={video.key} title={video.name} onClose={() => setVideo(null)} />}
+      {saveTo && <SaveToSheet item={d} onClose={() => setSaveTo(false)} />}
     </div>
   );
 }

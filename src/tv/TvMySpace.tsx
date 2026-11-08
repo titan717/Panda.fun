@@ -3,26 +3,36 @@ import { Link } from "wouter";
 import { Icon } from "../components/Icon";
 import { Avatar, EmptyState, toast } from "../components/ui";
 import { sortList, LIST_SORTS, type ListFilter, type ListSort } from "../lib/lists";
-import { actions, continueWatching, useHistoryMap, useProfile, useStore, useWatchlist } from "../lib/store";
+import { ListCard, NewListCard } from "../components/ListCard";
+import { NewListSheet, QuickActions, type ActionContext } from "../components/QuickActions";
+import type { PandaItem } from "../lib/types";
+import { actions, continueWatching, MAX_LISTS, useHistoryMap, useLists, useProfile, useStore, useWatchlist } from "../lib/store";
 import { focusFirst } from "../lib/focus";
 import { useNav } from "../lib/nav";
 import { installedVersion } from "../lib/updates";
 import { TvContinue, TvPoster } from "./TvCards";
 
 /** TV My Space (spec 10). */
-export function TvMySpace({ initialTab = "watchlist" }: { initialTab?: "watchlist" | "continue" }) {
+type Tab = "watchlist" | "lists" | "continue";
+
+export function TvMySpace({ initialTab = "watchlist" }: { initialTab?: Tab }) {
   const profile = useProfile();
   const profiles = useStore((s) => s.profiles);
   const list = useWatchlist();
   const cw = continueWatching(useHistoryMap());
-  const [tab, setTab] = useState(initialTab);
+  const lists = useLists();
+  const [tab, setTab] = useState<Tab>(initialTab);
+  const [mode, setMode] = useState<"remove" | "edit" | null>(null);
+  const [sheet, setSheet] = useState<{ item: PandaItem; context: ActionContext } | null>(null);
+  const [naming, setNaming] = useState(false);
   const [filter, setFilter] = useState<ListFilter>("all");
   const [sort, setSort] = useState<ListSort>("recent");
-  const [removing, setRemoving] = useState(false);
   const shown = useMemo(() => sortList(list, filter, sort), [list, filter, sort]);
-  const count = tab === "watchlist" ? list.length : cw.length;
-  useEffect(() => { if (!count) setRemoving(false); }, [count]);
-  useEffect(() => { setRemoving(false); }, [tab]);
+  const count = tab === "watchlist" ? list.length : tab === "continue" ? cw.length : 0;
+  const removing = mode === "remove";
+  const editing = mode === "edit";
+  useEffect(() => { if (!count) setMode(null); }, [count]);
+  useEffect(() => { setMode(null); }, [tab]);
   const { go } = useNav();
   const root = useRef<HTMLDivElement>(null);
   useEffect(() => { if (root.current) focusFirst(root.current); }, []);
@@ -62,6 +72,7 @@ export function TvMySpace({ initialTab = "watchlist" }: { initialTab?: "watchlis
       <section className="tv-ms-tabs" data-row aria-label="Your lists">
         <div role="tablist" className="tv-tabs">
           <button id="mst-watchlist" role="tab" aria-selected={tab === "watchlist"} className={`tv-tab ${tab === "watchlist" ? "is-selected" : ""}`} onFocus={() => setTab("watchlist")} onClick={() => setTab("watchlist")} data-hover-focus>Watchlist</button>
+          <button id="mst-lists" role="tab" aria-selected={tab === "lists"} className={`tv-tab ${tab === "lists" ? "is-selected" : ""}`} onFocus={() => setTab("lists")} onClick={() => setTab("lists")} data-hover-focus>My Lists</button>
           <button id="mst-continue" role="tab" aria-selected={tab === "continue"} className={`tv-tab ${tab === "continue" ? "is-selected" : ""}`} onFocus={() => setTab("continue")} onClick={() => setTab("continue")} data-hover-focus>Continue Watching</button>
         </div>
       </section>
@@ -77,24 +88,39 @@ export function TvMySpace({ initialTab = "watchlist" }: { initialTab?: "watchlis
               <Icon name="sort" /> {LIST_SORTS.find((x) => x.id === sort)!.label}
             </button>
           )}
-          <button id="ms-remove" className={`tv-chip ${removing ? "is-danger" : ""}`} aria-pressed={removing} onClick={() => setRemoving((r) => !r)} data-hover-focus>
+          <button id="ms-edit" className={`tv-chip ${editing ? "is-selected" : ""}`} aria-pressed={editing} onClick={() => setMode((m) => (m === "edit" ? null : "edit"))} data-hover-focus>
+            {editing ? <><Icon name="check" /> Done</> : <><Icon name="more" /> Edit</>}
+          </button>
+          <button id="ms-remove" className={`tv-chip ${removing ? "is-danger" : ""}`} aria-pressed={removing} onClick={() => setMode((m) => (m === "remove" ? null : "remove"))} data-hover-focus>
             {removing ? <><Icon name="check" /> Done</> : <><Icon name="trash" /> Remove items</>}
           </button>
           {removing && <span className="tv-ms-hint">Press OK on a title to remove it</span>}
+          {editing && <span className="tv-ms-hint">Press OK on a title for lists, move to top and more</span>}
         </section>
       )}
       <section className="tv-ms-panel" data-row role="tabpanel">
         {tab === "watchlist" && (list.length
           ? shown.length
             ? <div className="tv-grid">{shown.map((it, i) => <TvPoster key={it.id} item={it} id={`msw-${i}`} expand={false}
-                onRemove={removing ? () => { actions.toggleWatchlist(it); toast(`Removed ${it.title} from your Watchlist`); } : undefined} />)}</div>
+                onRemove={removing ? () => { actions.toggleWatchlist(it); toast(`Removed ${it.title} from your Watchlist`); } : undefined}
+                onOptions={editing ? () => setSheet({ item: it, context: { kind: "watchlist" } }) : undefined} />)}</div>
             : <EmptyState icon="plus" title={filter === "movie" ? "No movies in your watchlist" : "No shows in your watchlist"} sub="Switch the filter to see everything." />
           : <EmptyState icon="plus" title="Your watchlist is empty" sub="Press + on any title to save it here." />)}
         {tab === "continue" && (cw.length
           ? <div className="tv-land-grid">{cw.map((h, i) => <TvContinue key={h.item.id} entry={h} id={`msc-${i}`}
-            onRemove={removing ? () => { actions.removeHistory(h.item.id); toast(`Removed ${h.item.title} from Continue Watching`); } : undefined} />)}</div>
+            onRemove={removing ? () => { actions.removeHistory(h.item.id); toast(`Removed ${h.item.title} from Continue Watching`); } : undefined}
+            onOptions={editing ? () => setSheet({ item: h.item, context: { kind: "continue", entry: h } }) : undefined} />)}</div>
           : <EmptyState icon="play" title="Start watching to see it here" />)}
+        {tab === "lists" && (
+          <div className="tv-list-grid">
+            {lists.map((l, i) => <ListCard key={l.id} list={l} id={`msl-${i}`} tv />)}
+            {lists.length < MAX_LISTS && <NewListCard id="msl-new" tv onClick={() => setNaming(true)} />}
+          </div>
+        )}
+        {tab === "lists" && !lists.length && <p className="tv-ms-hint tv-ms-lists-hint">Make lists like Weekend or Date Night, then save titles to them from any details page.</p>}
       </section>
+      {sheet && <QuickActions item={sheet.item} context={sheet.context} onClose={() => setSheet(null)} />}
+      {naming && <NewListSheet onClose={() => setNaming(false)} onDone={(id) => go(`/my-list?list=${encodeURIComponent(id)}`)} />}
     </div>
   );
 }

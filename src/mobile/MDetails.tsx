@@ -5,7 +5,8 @@ import { Trailer, pickTrailer, rankTrailers } from "../components/Trailer";
 import { RatePopover, rateLabel } from "../components/RatePopover";
 import { VideoOverlay } from "../components/VideoOverlay";
 import { useDwell, useSeason, useTitle } from "../lib/hooks";
-import { actions, useHistoryEntry, useInWatchlist, usePrefs, useRating } from "../lib/store";
+import { actions, useHasLists, useHistoryEntry, useInWatchlist, useListCount, usePrefs, useRating } from "../lib/store";
+import { SaveToSheet } from "../components/QuickActions";
 import { castAndCrew, detailsMeta, voteLabel, runtime, shortDate, watchPath, airsLater } from "../lib/format";
 import { detailsCtas } from "../lib/watch";
 import { useNav } from "../lib/nav";
@@ -73,7 +74,11 @@ export function EpisodeList({ d, limit, onSeason }: { d: TitleDetails; limit?: n
 function MDetailsView({ d }: { d: TitleDetails }) {
   const prefs = usePrefs();
   const history = useHistoryEntry(d.id);
-  const inList = useInWatchlist(d.id);
+  const hasLists = useHasLists();
+  const [saveTo, setSaveTo] = useState(false);
+  const inWatchlist = useInWatchlist(d.id);
+  const listCount = useListCount(d.id);
+  const inList = inWatchlist || listCount > 0;
   const rating = useRating(d.id);
   const { go, back } = useNav();
   const [rateOpen, setRateOpen] = useState(false);
@@ -132,8 +137,8 @@ function MDetailsView({ d }: { d: TitleDetails }) {
         {d.genres.length > 0 && <p className="m-det-genres">{d.genres.map((g) => <span key={g}>{g}</span>)}</p>}
         {d.overview && <p className="m-det-overview">{d.overview}</p>}
         <div className="m-det-actions">
-          <button className={inList ? "is-on" : ""} aria-pressed={inList} onClick={() => { const added = actions.toggleWatchlist(d); toast(added ? "Added to Watchlist" : "Removed from Watchlist"); }}>
-            <Icon name={inList ? "check" : "plus"} size={22} /><span>{inList ? "Added" : "Watchlist"}</span>
+          <button className={inList ? "is-on" : ""} aria-pressed={inList} onClick={() => { if (hasLists) { setSaveTo(true); return; } const added = actions.toggleWatchlist(d); toast(added ? "Added to Watchlist" : "Removed from Watchlist"); }}>
+            <Icon name={inList ? "check" : "plus"} size={22} /><span>{inList ? (hasLists ? "Saved" : "Added") : hasLists ? "Save" : "Watchlist"}</span>
           </button>
           <button onClick={() => void share()}><Icon name="share" size={22} /><span>Share</span></button>
           {d.type === "tv"
@@ -199,6 +204,7 @@ function MDetailsView({ d }: { d: TitleDetails }) {
         )}
       </div>
       {video && <VideoOverlay videoKey={video.key} title={video.name} onClose={() => setVideo(null)} />}
+      {saveTo && <SaveToSheet item={d} onClose={() => setSaveTo(false)} />}
     </div>
   );
 }

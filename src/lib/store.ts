@@ -64,8 +64,21 @@ export const DEVICE_PREFS = ["layout", "kidsPin", "notifiedTag", "notifications"
 type DeviceKey = (typeof DEVICE_PREFS)[number];
 const isDeviceKey = (k: string): k is DeviceKey => (DEVICE_PREFS as readonly string[]).includes(k);
 
+/** A profile's own named list (Watchlist 2.0, v1.1.3). Items are stored newest-first, like the Watchlist. */
+export interface UserList {
+  id: string;
+  name: string;
+  items: PandaItem[];
+  createdAt: number;
+  updatedAt: number;
+}
+
+export const MAX_LISTS = 12;
+const MAX_LIST_ITEMS = 200;
+
 interface ProfileData {
   watchlist: PandaItem[];
+  lists: UserList[];
   history: Record<string, HistoryEntry>;
   ratings: Record<string, Rating>;
   recentSearches: string[];
@@ -100,7 +113,7 @@ const defaultPrefs: Prefs = {
   textSize: "default"
 };
 
-const emptyData = (): ProfileData => ({ watchlist: [], history: {}, ratings: {}, recentSearches: [] });
+const emptyData = (): ProfileData => ({ watchlist: [], lists: [], history: {}, ratings: {}, recentSearches: [] });
 
 function uid() {
   return Math.random().toString(36).slice(2, 10) + Date.now().toString(36).slice(-4);
@@ -132,7 +145,11 @@ function load(): State {
     const parsed = JSON.parse(raw) as Partial<State>;
     if (!parsed.profiles?.length) return defaultState();
     const data: Record<string, ProfileData> = {};
-    for (const p of parsed.profiles) data[p.id] = { ...emptyData(), ...(parsed.data?.[p.id] ?? {}) };
+    for (const p of parsed.profiles) {
+      const d = { ...emptyData(), ...(parsed.data?.[p.id] ?? {}) };
+      d.lists = Array.isArray(d.lists) ? d.lists.filter((l) => l && typeof l.id === "string" && typeof l.name === "string" && Array.isArray(l.items)) : [];
+      data[p.id] = d;
+    }
     const prefs = { ...defaultPrefs, ...(parsed.prefs ?? {}) };
     // v1.0.2: sources outside the registry (CineSrc, Vidy) fall back to CineSrc
     if (prefs.preferredSource !== "cinesrc" && prefs.preferredSource !== "vidy") prefs.preferredSource = "cinesrc";
@@ -215,6 +232,11 @@ export function usePrefs() { return useStore(selectPrefs); }
 export const getPrefs = () => selectPrefs(state);
 export function useWatchlist() { return useStore((s) => selectData(s).watchlist); }
 export function useInWatchlist(id: string) { return useStore((s) => selectData(s).watchlist.some((i) => i.id === id)); }
+export function useLists() { return useStore((s) => selectData(s).lists); }
+export function useList(id: string | null) { return useStore((s) => (id ? selectData(s).lists.find((l) => l.id === id) ?? null : null)); }
+export function useHasLists() { return useStore((s) => selectData(s).lists.length > 0); }
+/** How many custom lists hold this title (the details + button shows it as saved). */
+export function useListCount(id: string) { return useStore((s) => selectData(s).lists.reduce((n, l) => n + (l.items.some((i) => i.id === id) ? 1 : 0), 0)); }
 export function useRatings() { return useStore((s) => selectData(s).ratings); }
 export function useRating(id: string) { return useStore((s) => selectData(s).ratings[id] ?? null); }
 export function useRecentSearches() { return useStore((s) => selectData(s).recentSearches); }
@@ -254,6 +276,46 @@ export const actions = {
     const exists = activeData().watchlist.some((i) => i.id === item.id);
     patchActive((d) => ({ ...d, watchlist: exists ? d.watchlist.filter((i) => i.id !== item.id) : [slim(item), ...d.watchlist].slice(0, 200) }));
     return !exists;
+  },
+  /** Move a Watchlist title to the front (the top of "Recently added"). */
+  bumpWatchlist(id: string) {
+    patchActive((d) => { const it = d.watchlist.find((i) => i.id === id); return it ? { ...d, watchlist: [it, ...d.watchlist.filter((i) => i.id !== id)] } : d; });
+  },
+  /** Create a list (optionally with a first title). Returns the new list, or null at the limit. */
+  createList(name: string, first?: PandaItem) {
+    const d = activeData();
+    if (d.lists.length >= MAX_LISTS) return null;
+    const clean = uniqueListName(name.trim().replace(/\s+/g, " ").slice(0, 32) || "My List", d.lists);
+    const list: UserList = { id: uid(), name: clean, items: first ? [slim(first)] : [], createdAt: Date.now(), updatedAt: Date.now() };
+    patchActive((x) => ({ ...x, lists: [...x.lists, list] }));
+    return list;
+  },
+  renameList(id: string, name: string) {
+    patchActive((d) => {
+      const others = d.lists.filter((l) => l.id !== id);
+      const clean = name.trim().replace(/\s+/g, " ").slice(0, 32);
+      return clean ? { ...d, lists: d.lists.map((l) => (l.id === id ? { ...l, name: uniqueListName(clean, others), updatedAt: Date.now() } : l)) } : d;
+    });
+  },
+  deleteList(id: string) { patchActive((d) => ({ ...d, lists: d.lists.filter((l) => l.id !== id) })); },
+  /** Add the title to the list, or take it out. Returns true when it was added. */
+  toggleInList(listId: string, item: PandaItem) {
+    const list = activeData().lists.find((l) => l.id === listId);
+    if (!list) return false;
+    const exists = list.items.some((i) => i.id === item.id);
+    patchActive((d) => ({
+      ...d,
+      lists: d.lists.map((l) => (l.id === listId ? { ...l, updatedAt: Date.now(), items: exists ? l.items.filter((i) => i.id !== item.id) : [slim(item), ...l.items].slice(0, MAX_LIST_ITEMS) } : l))
+    }));
+    return !exists;
+  },
+  /** "Mark as watched": recorded as finished (so it seeds "Because you watched"), and taken off the Watchlist. */
+  markWatched(item: PandaItem) {
+    patchActive((d) => ({
+      ...d,
+      watchlist: d.watchlist.filter((i) => i.id !== item.id),
+      history: { ...d.history, [item.id]: { ...(d.history[item.id] ?? {}), item: slim(item), position: 0, duration: 0, completed: true, upNext: false, updatedAt: Date.now() } }
+    }));
   },
   rate(id: string, rating: Rating | null) {
     patchActive((d) => {
@@ -300,6 +362,13 @@ export const actions = {
     });
   }
 };
+
+/** "Weekend", "Weekend 2", … so two lists never share a name. */
+export function uniqueListName(name: string, lists: Pick<UserList, "name">[]) {
+  const taken = new Set(lists.map((l) => l.name.toLowerCase()));
+  if (!taken.has(name.toLowerCase())) return name;
+  for (let n = 2; ; n++) if (!taken.has(`${name} ${n}`.toLowerCase())) return `${name} ${n}`;
+}
 
 /** Keep stored items small: drop nothing the UI needs but never store whole detail payloads. */
 function slim(i: PandaItem): PandaItem {
