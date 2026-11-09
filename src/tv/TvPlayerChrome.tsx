@@ -10,7 +10,7 @@ import { languageName, runtime } from "../lib/format";
 import { capabilityLabels, sourceName } from "../lib/player";
 import { ISSUES, rankOf, reliabilityLabel, reliabilityTone, tierLabel } from "../lib/sources";
 import type { Prefs } from "../lib/store";
-import { BRIGHT_MIN, classifyDrag, dragLevel, dragSeek, HOLD_MS, SLEEP_OPTIONS, SPEEDS, speedLabel, type DragKind, type SleepMode } from "../lib/player2";
+import { BRIGHT_MIN, chapterAt, FIT_OPTIONS, type FitMode, episodeLine, MARKER_LABEL, type SeekMarker, classifyDrag, dragLevel, dragSeek, HOLD_MS, SLEEP_OPTIONS, SPEEDS, speedLabel, type DragKind, type SleepMode } from "../lib/player2";
 import type { Episode, PandaItem, PlaybackSource, SourceId, SourceRankingPayload, SubtitleTrack, TitleDetails } from "../lib/types";
 import { offsetLabel, subLangName } from "../lib/captions";
 
@@ -80,6 +80,9 @@ export interface TvChromeProps {
   ep: { s: number; e: number };
   episodeTitle?: string | null;
   visible: boolean;
+  /** the remote's Menu key was pressed: open the quick (Quality) panel, then call onMenuHandled */
+  menuRequest?: boolean;
+  onMenuHandled?: () => void;
   poke: () => void;
   hide: () => void;
   paused: boolean;
@@ -129,6 +132,11 @@ export interface TvChromeProps {
   onHold?: (on: boolean) => void;
   /** v1.2.2: set only where the Android app can open a picture-in-picture window. */
   onPip?: () => void;
+  /** v1.2.6: recap / intro / credits spans drawn on the seek bar and named in the seek preview. */
+  markers?: SeekMarker[];
+  /** v1.2.6 picture fit; offered only where Panda draws the controls. */
+  fit?: FitMode;
+  onFit?: (m: FitMode) => void;
 }
 
 type Panel = null | "quality" | "audio" | "next" | "report" | "sleep";
@@ -176,6 +184,23 @@ export function TvPlayerChrome(p: TvChromeProps) {
     p.onExit();
   });
 
+  // v1.2.6 lock (phones): hides every control so pocket or toddler taps do nothing; Back unlocks
+  const [locked, setLocked] = useState(false);
+  const [unlockShown, setUnlockShown] = useState(false);
+  const unlockTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  useEffect(() => () => { if (unlockTimer.current) clearTimeout(unlockTimer.current); }, []);
+  useBackHandler(() => { setLocked(false); p.poke(); }, locked);
+  const { menuRequest } = p;
+  const menuHandled = useRef(p.onMenuHandled);
+  menuHandled.current = p.onMenuHandled;
+  useEffect(() => {
+    if (!menuRequest) return;
+    menuHandled.current?.();
+    // idempotent (open, never toggle): the effect can run again before the parent clears the request
+    if (!locked) setPanel("quality");
+  }, [menuRequest, locked]);
+  const showUnlock = () => { setUnlockShown(true); if (unlockTimer.current) clearTimeout(unlockTimer.current); unlockTimer.current = setTimeout(() => setUnlockShown(false), 2600); };
+
   const commit = (to: number) => {
     if (commitTimer.current) clearTimeout(commitTimer.current);
     commitTimer.current = null;
@@ -217,6 +242,15 @@ export function TvPlayerChrome(p: TvChromeProps) {
   const showIntro = intro && p.ready && !panel;
   const cls = `tvp ${p.touch ? "is-touch" : ""} ${p.visible || panel || pending !== null ? "is-visible" : ""} ${panel ? "has-panel" : ""} ${pending !== null ? "is-seeking" : ""}`;
 
+  if (locked) return (
+    <div className="tvp is-touch is-locked">
+      <div className="tvp-touch" onPointerUp={showUnlock} aria-hidden="true" />
+      <button id="tvp-unlock" className={`tvp-unlock ${unlockShown ? "is-shown" : ""}`} onClick={() => { setLocked(false); setUnlockShown(false); p.poke(); }} aria-label="Unlock controls">
+        <Icon name="lock" /> <span>Tap to unlock</span>
+      </button>
+    </div>
+  );
+
   return (
     <div className={cls} onKeyDown={(e) => { if (!panel && track.current && document.activeElement === track.current) onTrackKey(e); }}>
       <div className="tvp-scrim" aria-hidden="true" />
@@ -249,9 +283,10 @@ export function TvPlayerChrome(p: TvChromeProps) {
         {p.touch && <button className="tvp-back" onClick={p.onExit} aria-label="Back"><Icon name="back" /></button>}
         <div className="tvp-title">
           <strong>{d?.title ?? ""}</strong>
-          {isSeries && <span>S{ep.s} E{ep.e}{p.episodeTitle ? ` · ${p.episodeTitle}` : ""}</span>}
+          {isSeries && <span>{episodeLine(ep.s, ep.e, p.episodeTitle)}</span>}
         </div>
         <div className="tvp-actions lrud-container">
+          {p.touch && <button id="tvp-lock" className="tvp-pill tvp-pill--icon" onClick={() => { setLocked(true); setPanel(null); showUnlock(); }} aria-label="Lock controls" title="Lock controls"><Icon name="lock" /></button>}
           {p.onPip && <button id="tvp-pip" className="tvp-pill tvp-pill--icon" onClick={p.onPip} aria-label="Picture in picture" title="Picture in picture" data-hover-focus><ExtraIcon name="pip" /></button>}
           <button id="tvp-quality" className="tvp-pill" onClick={() => setPanel("quality")} data-hover-focus>
             <ExtraIcon name="videoBox" /> Quality <span className="tvp-pill-val">{QUALITIES.find((q) => q.id === p.quality)?.label ?? "Auto"}</span>
@@ -262,7 +297,7 @@ export function TvPlayerChrome(p: TvChromeProps) {
         </div>
       </header>
 
-      {pending !== null && <SeekStrip d={d} to={pending} duration={dur} delta={pending - seekFrom.current} />}
+      {pending !== null && <SeekStrip d={d} to={pending} duration={dur} delta={pending - seekFrom.current} chapter={chapterAt(pending, p.markers ?? [])} />}
 
       <div className="tvp-bottom">
         <span className="tvp-remaining" aria-hidden="true">{dur > 0 ? clock(dur - shown) : ""}</span>
@@ -273,6 +308,9 @@ export function TvPlayerChrome(p: TvChromeProps) {
             const r = e.currentTarget.getBoundingClientRect();
             commit(((e.clientX - r.left) / r.width) * dur);
           }} data-hover-focus>
+          {dur > 0 && p.markers?.map((m) => (
+            <span key={m.kind} className={`tvp-mark is-${m.kind}`} style={{ left: `${(m.start / dur) * 100}%`, width: `${((m.end - m.start) / dur) * 100}%` }} title={MARKER_LABEL[m.kind]} />
+          ))}
           <span className="tvp-track-fill" style={{ transform: `scaleX(${frac})` }} />
           <span className="tvp-knob" style={{ left: `${frac * 100}%` }} />
         </div>
@@ -319,6 +357,17 @@ export function TvPlayerChrome(p: TvChromeProps) {
                     onClick={() => p.onSpeed(r)} data-hover-focus>{r === 1 ? "1×" : speedLabel(r)}</button>
                 ))}
               </div>
+              {p.onFit && (
+                <>
+                  <p className="tvp-group">Picture</p>
+                  <div className="tvp-speeds lrud-container" role="radiogroup" aria-label="Picture fit">
+                    {FIT_OPTIONS.map((o) => (
+                      <button key={o.id} id={`tvp-fit-${o.id}`} role="radio" aria-checked={p.fit === o.id} className={`tvp-speed ${p.fit === o.id ? "is-selected" : ""}`}
+                        onClick={() => p.onFit!(o.id)} data-hover-focus>{o.label}</button>
+                    ))}
+                  </div>
+                </>
+              )}
             </>
           )}
         </SidePanel>
@@ -356,6 +405,16 @@ export function TvPlayerChrome(p: TvChromeProps) {
                   </button>
                 )}
               </div>
+              {p.controllable && p.onVolume && (
+                <div className="tvp-vol lrud-container" role="group" aria-label="Volume">
+                  <span className="tvp-vol-label">Volume</span>
+                  <span className="tvp-vol-ctl">
+                  <button id="tvp-vol-down" className="tvp-speed" onClick={() => p.onVolume!(Math.max(0, Math.round(((p.muted ? 0 : p.volume ?? 1) - 0.1) * 10) / 10))} aria-label="Volume down" data-hover-focus><Icon name="volumeDown" /></button>
+                  <span className="tvp-vol-val" aria-live="polite">{Math.round((p.muted ? 0 : p.volume ?? 1) * 100)}%</span>
+                  <button id="tvp-vol-up" className="tvp-speed" onClick={() => p.onVolume!(Math.min(1, Math.round(((p.muted ? 0 : p.volume ?? 1) + 0.1) * 10) / 10))} aria-label="Volume up" data-hover-focus><Icon name="volume" /></button>
+                  </span>
+                </div>
+              )}
             </div>
             <div className="tvp-col">
               <p className="tvp-col-title">Subtitles</p>
@@ -407,12 +466,12 @@ function SidePanel({ title, className, children, footer, onClose }: { title: str
 }
 
 /** Seek preview (§20.11): three cards at −10 s / target / +10 s. Embeds give no frames (D-25), so the cards show the title's artwork at different crops. */
-function SeekStrip({ d, to, duration, delta }: { d: TitleDetails | undefined; to: number; duration: number; delta: number }) {
+function SeekStrip({ d, to, duration, delta, chapter }: { d: TitleDetails | undefined; to: number; duration: number; delta: number; chapter: string | null }) {
   const img = d?.backdrop ?? d?.backdropLarge ?? null;
   const steps = [to - 10, to, to + 10];
   return (
     <div className="tvp-strip" aria-hidden="true">
-      <span className="tvp-seek-bubble" id="tvp-seek-bubble"><strong>{clock(to)}</strong><span>{seekDelta(delta)}</span></span>
+      <span className="tvp-seek-bubble" id="tvp-seek-bubble"><strong>{clock(to)}</strong><span>{seekDelta(delta)}</span>{chapter && <em className="tvp-chapter">{chapter}</em>}</span>
       {steps.map((t, i) => (
         <div key={i} className={`tvp-thumb ${i === 1 ? "is-center" : ""} ${t < 0 || t > duration ? "is-empty" : ""}`}>
           {img && t >= 0 && t <= duration && <Img src={img} alt="" title="" style={{ objectPosition: `${20 + i * 30}% 50%` }} />}

@@ -3,9 +3,31 @@
 .player { position: fixed; inset: 0; z-index: var(--z-overlay); background: var(--black); overflow: hidden; }
 .player-frame { position: absolute; inset: 0; width: 100%; height: 100%; border: 0; background: var(--black); }
 .player-center { position: absolute; inset: 0; display: grid; place-items: center; }
-.player-loading { position: absolute; inset: 0; display: grid; place-items: center; background: var(--black); z-index: 1; }
-.player-loading-bg { position: absolute; inset: 0; opacity: 0.35 !important; filter: blur(6px); }
-.player-loading .spinner-wrap { position: relative; }
+/* first-frames screen (v1.2.6, D-150): above the chrome until the source is ready, then fades */
+.player-loading { position: absolute; inset: 0; display: grid; place-items: center; background: var(--black); z-index: 6; transition: opacity 0.38s var(--ease-out); }
+.player-loading.is-done { opacity: 0; pointer-events: none; }
+.player-loading-bg { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; opacity: 0.3 !important; filter: blur(8px) saturate(0.8); }
+.pll-top { position: absolute; top: 0; left: 0; right: 0; display: flex; align-items: center; gap: calc(12 * var(--u)); padding: calc(14 * var(--u)) calc(16 * var(--u)); padding-top: calc(14 * var(--u) + env(safe-area-inset-top)); background: var(--scrim-top); }
+.pll-back { display: grid; place-items: center; width: calc(44 * var(--u)); height: calc(44 * var(--u)); border-radius: 50%; border: 0; background: rgba(255, 255, 255, 0.1); color: var(--text-1); flex: none; }
+.pll-back svg { width: calc(22 * var(--u)); height: calc(22 * var(--u)); }
+.pll-title { display: flex; flex-direction: column; gap: calc(2 * var(--u)); min-width: 0; }
+.pll-title strong { font-size: calc(17 * var(--u)); font-weight: var(--fw-semibold); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.pll-title span { font-size: calc(13 * var(--u)); color: var(--text-2); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.pll-center { position: relative; display: flex; flex-direction: column; align-items: center; gap: calc(8 * var(--u)); text-align: center; }
+.pll-label { margin: 0; font-size: calc(15 * var(--u)); color: var(--text-2); font-weight: var(--fw-medium); }
+.pll-pct { margin: 0; font-size: calc(34 * var(--u)); font-weight: var(--fw-bold); font-variant-numeric: tabular-nums; letter-spacing: -0.01em; }
+.pll-bar { display: block; width: calc(180 * var(--u)); height: calc(3 * var(--u)); border-radius: 99px; background: rgba(255, 255, 255, 0.16); overflow: hidden; }
+.pll-bar > span { display: block; height: 100%; background: var(--text-1); transform-origin: left; transition: transform 0.2s linear; }
+.pll-src { margin: calc(4 * var(--u)) 0 0; font-size: calc(12 * var(--u)); color: var(--text-3); }
+.player--tv .pll-top { padding: calc(28 * var(--u)) calc(48 * var(--u)); }
+.player--tv .pll-title strong { font-size: calc(26 * var(--u)); }
+.player--tv .pll-title span { font-size: calc(17 * var(--u)); }
+.player--tv .pll-label { font-size: calc(20 * var(--u)); }
+.player--tv .pll-pct { font-size: calc(48 * var(--u)); }
+.player--tv .pll-bar { width: calc(280 * var(--u)); }
+@media (prefers-reduced-motion: reduce) { .player-loading, .pll-bar > span { transition: none; } }
+/* v1.2.6: a 16:9 frame in portrait, so embeds draw a letterboxed picture instead of a "rotate your phone" dialog Panda's controls cover */
+@media (orientation: portrait) { .player--touch .player-frame { top: 50%; bottom: auto; height: auto; aspect-ratio: 16 / 9; transform: translateY(-50%); } }
 .player-hotzone { position: absolute; top: 0; left: 0; right: 0; height: 18%; z-index: 2; }
 .player-top, .player-bottom { position: absolute; left: 0; right: 0; z-index: 3; display: flex; align-items: center; gap: calc(10 * var(--u)); padding: calc(12 * var(--u)) calc(14 * var(--u)); opacity: 0; pointer-events: none; transition: opacity var(--dur-page) var(--ease-out); }
 .player-top { top: 0; padding-top: calc(12 * var(--u) + env(safe-area-inset-top)); background: var(--scrim-top); padding-bottom: calc(36 * var(--u)); }

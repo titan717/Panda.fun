@@ -22,6 +22,10 @@ for (const [w,h] of VPS) {
           const cs = getComputedStyle(el); if (cs.visibility === "hidden" || cs.display === "none" || +cs.opacity === 0) continue;
           const b = el.getBoundingClientRect(); if (!b.width || !b.height) continue;
           if (el.closest("[aria-hidden='true'], .tv-row-track, .m-row-track, [class*='track'], [class*='scroller'], [class*='chips'], .hero, [class*='hero'], .rail, iframe")) continue;
+          // anything inside a horizontal scroller (season tabs, chip strips) is meant to run past the edge
+          let sc = el.parentElement, inScroller = false;
+          while (sc) { const ox = getComputedStyle(sc).overflowX; if (ox === "auto" || ox === "scroll") { inScroller = true; break; } sc = sc.parentElement; }
+          if (inScroller) continue;
           if (b.right > innerWidth + 2 && b.left < innerWidth && el.children.length === 0 && el.textContent.trim()) out.push(`offscreen-right ${el.tagName}.${el.className} "${el.textContent.trim().slice(0,30)}" ${Math.round(b.right)}`);
           if (cs.textOverflow !== "ellipsis" && cs.overflow !== "visible" && el.scrollWidth > el.clientWidth + 2 && el.children.length === 0 && el.textContent.trim() && cs.whiteSpace === "nowrap") out.push(`clipped ${el.tagName}.${el.className} "${el.textContent.trim().slice(0,30)}"`);
         }

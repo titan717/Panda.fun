@@ -174,3 +174,81 @@ export function dragLevel(start: number, dy: number, height: number, min = 0): n
 /** Brightness never goes below this, so the picture stays visible. */
 export const BRIGHT_MIN = 0.2;
 
+
+/** Player top bar line (v1.2.6, MASTER V5 §1): "Season 2, Episode 5 · Title". */
+export function episodeLine(season: number, episode: number, title?: string | null) {
+  return `Season ${season}, Episode ${episode}${title ? ` · ${title}` : ""}`;
+}
+
+/** Typical time to first frame per source when this device has no measurements yet (docs/PLAYER_COMPARISON.md, docs/PERF.md). */
+export const TTFF_DEFAULT_MS: Record<string, number> = { cinesrc: 2600, vidy: 1500, vidyanime: 2000, vidlink: 8000 };
+
+/**
+ * "Buffering the first seconds… N%" (v1.2.6, D-150). No embed reports its buffer level, so the
+ * percentage is an honest time estimate against the source's measured median start time: it moves
+ * 0–10 % while Panda picks a source, then follows 1 − e^(−t/τ) up to 95 % and only reaches 100 %
+ * when the source reports it is ready.
+ */
+export function bufferPct(elapsedMs: number, medianMs: number | null, hasSource: boolean, ready: boolean) {
+  if (ready) return 100;
+  const t = Math.max(0, elapsedMs);
+  if (!hasSource) return Math.min(10, Math.round(t / 150));
+  const tau = Math.max(400, (medianMs && medianMs > 0 ? medianMs : 3000) / 1.5);
+  return Math.min(95, Math.round(10 + 85 * (1 - Math.exp(-t / tau))));
+}
+
+/* ---------------- Seek-bar chapters (v1.2.6) ---------------- */
+
+export type MarkerKind = "recap" | "intro" | "credits";
+export interface SeekMarker { kind: MarkerKind; start: number; end: number }
+export const MARKER_LABEL: Record<MarkerKind, string> = { recap: "Recap", intro: "Intro", credits: "Credits" };
+
+/**
+ * Recap, intro and credits spans for the seek bar, from IntroDB segments or the intro this device
+ * learned. Spans shorter than 5 s or outside the runtime are dropped; credits run to the end.
+ */
+export function seekMarkers(m: { recap?: Segment | null; intro?: Segment | null; credits?: Segment | null; learned?: Intro | null }, duration: number): SeekMarker[] {
+  if (!(duration > 0)) return [];
+  const out: SeekMarker[] = [];
+  const add = (kind: MarkerKind, x: Segment | null | undefined) => {
+    if (!x) return;
+    const start = Math.max(0, x.start), end = Math.min(duration, kind === "credits" && !(x.end > x.start) ? duration : x.end);
+    if (end - start >= 5 && start < duration) out.push({ kind, start, end });
+  };
+  add("recap", m.recap);
+  add("intro", m.intro ?? (m.learned ? { start: m.learned.start, end: m.learned.end } : null));
+  add("credits", m.credits);
+  return out.sort((a, b) => a.start - b.start);
+}
+
+/** Chapter name at a position ("Intro"), or null in the main part. */
+export function chapterAt(t: number, markers: SeekMarker[]) {
+  const hit = markers.find((x) => t >= x.start && t < x.end);
+  return hit ? MARKER_LABEL[hit.kind] : null;
+}
+
+/* ---------------- Picture fit (v1.2.6) ---------------- */
+
+export type FitMode = "fit" | "fill" | "stretch";
+export const FIT_OPTIONS: { id: FitMode; label: string }[] = [{ id: "fit", label: "Fit" }, { id: "fill", label: "Fill" }, { id: "stretch", label: "Stretch" }];
+const FIT_KEY = "panda:fit";
+export function getFit(): FitMode { try { const v = localStorage.getItem(FIT_KEY); return v === "fill" || v === "stretch" ? v : "fit"; } catch { return "fit"; } }
+export function saveFit(m: FitMode) { try { localStorage.setItem(FIT_KEY, m); } catch { /* storage full */ } }
+
+/**
+ * Embeds letterbox the picture inside their frame and expose no object-fit, so Panda scales the
+ * frame itself (D-151). Assumes a 16:9 picture, the shape of nearly every stream: "fill" zooms
+ * evenly until the black bars are gone, "stretch" scales one axis only.
+ */
+export function fitScale(mode: FitMode, w: number, h: number, ar = 16 / 9): { x: number; y: number } {
+  if (mode === "fit" || !(w > 0 && h > 0)) return { x: 1, y: 1 };
+  const s = w / h;
+  if (Math.abs(s - ar) < 0.01) return { x: 1, y: 1 };
+  if (mode === "fill") { const k = Math.max(s / ar, ar / s); return { x: k, y: k }; }
+  return s > ar ? { x: s / ar, y: 1 } : { x: 1, y: ar / s };
+}
+
+/* ---------------- Mute memory (v1.2.6) ---------------- */
+const MUTE_KEY = "panda:muted";
+export function getMutedMemory() { try { return localStorage.getItem(MUTE_KEY) === "1"; } catch { return false; } }
+export function saveMutedMemory(m: boolean) { try { if (m) localStorage.setItem(MUTE_KEY, "1"); else localStorage.removeItem(MUTE_KEY); } catch { /* storage full */ } }

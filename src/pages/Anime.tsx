@@ -50,7 +50,7 @@ export function AnimePage() {
       <div className={cls} aria-busy="true">
         {!tv && <PageHeader title="Anime" />}
         <Skeleton className="anime-hero-sk" />
-        <div className="anime-sk-row">{Array.from({ length: tv ? 7 : 3 }, (_, i) => <Skeleton key={i} className="sk-poster" />)}</div>
+        <div className="anime-sk-row">{Array.from({ length: tv ? 7 : 3 }, (_, i) => <Skeleton key={i} className={tv ? "sk-poster" : "sk-poster-m"} />)}</div>
       </div>
     );
   }

@@ -81,7 +81,7 @@ export function BrowsePage() {
       {b.error && !items.length && <ErrorState message={b.error.message} onRetry={b.retry} />}
       {!b.error && !b.loading && items.length === 0 && <EmptyState title="Nothing here yet" sub="Try a different filter." />}
       <PosterGrid items={items} prefix="browse" />
-      {b.loading && <div className={tv ? "tv-grid" : "m-grid"}>{Array.from({ length: 12 }, (_, i) => <Skeleton key={i} className="sk-poster" />)}</div>}
+      {b.loading && <div className={tv ? "tv-grid" : "m-grid"}>{Array.from({ length: 12 }, (_, i) => <Skeleton key={i} className={tv ? "sk-poster" : "sk-poster-m"} />)}</div>}
       <div ref={sentinel} className="sentinel" aria-hidden="true" />
       {tv && !b.done && items.length > 0 && <button id="browse-more" className="btn btn--secondary tv-more" onClick={b.loadMore} onFocus={b.loadMore} data-hover-focus>Load more</button>}
     </div>

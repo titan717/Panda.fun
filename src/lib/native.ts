@@ -34,7 +34,29 @@ declare global {
   interface Window { KinomaNative?: NativeBridge; __pandaVoice?: (text: string) => void; __pandaPip?: (on: boolean) => void; __pandaRemoteText?: (text: string) => void; __pandaRemote?: (event: string, phones: number) => void }
 }
 
-export const native: NativeBridge | null = typeof window !== "undefined" && window.KinomaNative ? window.KinomaNative : null;
+/**
+ * v1.2.6 bridge key (docs/SECURITY.md §Android): Android injects the bridge object into every frame, including the
+ * providers' and ads' iframes, so the app gates every method that acts or reveals state on a per-launch key. The key
+ * arrives in a <meta> that MainActivity adds to the top document only; it is read once, removed from the DOM and
+ * passed as the first argument of gated calls. Harmless capability getters stay ungated.
+ */
+const OPEN = ["getAppVersion", "getVersionCode", "isTV", "hasVoiceSearch", "canPictureInPicture", "notificationPermission"];
+
+function guard(raw: NativeBridge): NativeBridge {
+  const meta = document.getElementsByName("panda-bridge")[0] as HTMLMetaElement | undefined;
+  const key = meta?.content ?? "";
+  meta?.remove();
+  // every method is gated unless listed in OPEN, so a new bridge method is safe by default
+  return new Proxy(raw, {
+    get(t, n) {
+      const fn = (t as unknown as Record<string | symbol, unknown>)[n];
+      if (typeof fn !== "function") return fn;
+      return OPEN.includes(n as string) ? fn.bind(t) : fn.bind(t, key);
+    },
+  });
+}
+
+export const native: NativeBridge | null = typeof window !== "undefined" && window.KinomaNative ? guard(window.KinomaNative) : null;
 export const isAndroidApp = Boolean(native);
 
 export function nativeVersion(): string | null {

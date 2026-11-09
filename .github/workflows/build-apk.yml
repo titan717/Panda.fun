@@ -22,7 +22,7 @@ jobs:
 
     steps:
       - name: Checkout Panda.fun
-        uses: actions/checkout@v4
+        uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
         with:
           fetch-depth: 0
 
@@ -59,13 +59,13 @@ jobs:
           echo "Resolved stable release: $VERSION_NAME (versionCode $VERSION_CODE)"
 
       - name: Set up JDK 17
-        uses: actions/setup-java@v4
+        uses: actions/setup-java@cf277c60eb25467037889841efdb72551f06f6c3 # v4.9.1
         with:
           distribution: temurin
           java-version: "17"
 
       - name: Set up Android SDK
-        uses: android-actions/setup-android@v4
+        uses: android-actions/setup-android@be39fa834029ff78f1a44aa3bb0819b8fc2bd8fd # v4.0.4
         with:
           packages: "platform-tools"
 
@@ -76,12 +76,12 @@ jobs:
           sdkmanager "platform-tools" "platforms;android-34" "build-tools;34.0.0"
 
       - name: Set up Gradle
-        uses: gradle/actions/setup-gradle@v4
+        uses: gradle/actions/setup-gradle@748248ddd2a24f49513d8f472f81c3a07d4d50e1 # v4.4.4
         with:
           gradle-version: "8.5"
 
       - name: Set up Node.js
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4.4.0
         with:
           node-version: "20"
           cache: "npm"
@@ -184,6 +184,9 @@ jobs:
           APKSIGNER="${ANDROID_HOME:-$ANDROID_SDK_ROOT}/build-tools/34.0.0/apksigner"
           "$APKSIGNER" verify --verbose --print-certs release/Panda.fun-Android-TV.apk
           sha256sum release/Panda.fun-Android-TV.apk | tee release/Panda.fun-Android-TV.apk.sha256
+          # software bill of materials for the web app bundled in the APK (CycloneDX, runtime dependencies only)
+          npm sbom --sbom-format cyclonedx --omit dev > release/Panda.fun-sbom.cdx.json
+          test -s release/Panda.fun-sbom.cdx.json
 
       - name: Release notes
         shell: bash
@@ -201,7 +204,7 @@ jobs:
 
       - name: Publish GitHub stable release
         id: release
-        uses: softprops/action-gh-release@v2
+        uses: softprops/action-gh-release@3bb12739c298aeb8a4eeaf626c5b8d85266b0e65 # v2.6.2
         with:
           tag_name: v${{ steps.version.outputs.version_name }}
           name: Panda.fun Android TV v${{ steps.version.outputs.version_name }}
@@ -211,4 +214,5 @@ jobs:
           files: |
             release/Panda.fun-Android-TV.apk
             release/Panda.fun-Android-TV.apk.sha256
+            release/Panda.fun-sbom.cdx.json
           generate_release_notes: true

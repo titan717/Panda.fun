@@ -1,3 +1,4 @@
+import { native } from "./native";
 /** Voice search via the Web Speech API where the platform provides it (spec 8.1, 13.1). */
 interface Recognition {
   lang: string;
@@ -17,7 +18,7 @@ const Ctor: RecognitionCtor | undefined = typeof window !== "undefined"
   : undefined;
 
 const nativeVoice = (() => {
-  try { return typeof window !== "undefined" && Boolean(window.KinomaNative?.hasVoiceSearch?.()); } catch { return false; }
+  try { return Boolean(native?.hasVoiceSearch?.()); } catch { return false; }
 })();
 
 /** Voice works through the Android system recogniser inside the app, or the Web Speech API in browsers. */
@@ -33,7 +34,7 @@ export function listen(onText: (t: string) => void, onState: (listening: boolean
       if (text.trim()) onText(text.trim()); else onError("Didn't catch that. Try again.");
     };
     onState(true);
-    window.KinomaNative?.startVoiceSearch?.();
+    native?.startVoiceSearch?.();
     return () => { open = false; window.__pandaVoice = undefined; onState(false); };
   }
   if (!Ctor) return () => {};

@@ -2,6 +2,18 @@
 
 Every stable release of Panda.fun. The same notes ship in each GitHub Release and in Settings › What's New.
 
+## 1.2.6
+
+- **A new first-frames screen**: while a video starts, the player shows the title, "Season 1, Episode 2 · episode title" and "Buffering the first seconds…" with a percentage that follows how fast that source usually starts on your device, then fades into the video.
+- **Chapters on the seek bar**: recap, intro and credits are marked on the seek bar on TV and phones, and the seek bubble names the part you are about to land in.
+- **Picture fit**: Fit, Fill or Stretch in the Quality panel under "Picture", remembered on the device. On TV the remote's Menu key now opens this quick panel straight away.
+- **Volume and Sound off you can trust**: volume steps in the Audio column, and a player left on Sound off opens muted next time. Volume, speed and mute are now applied every time, even when the video starts very quickly.
+- **Lock on phones**: the lock button hides every control so pocket taps do nothing; tap and "Tap to unlock", or press Back.
+- **Portrait phones play properly**: in portrait the video sits in a 16:9 frame, so CineSrc's "Rotate your phone" box no longer blocks the screen. Loading placeholders on Lists and Anime show on phones again.
+- **Safer app**: the Android app's native functions can no longer be reached by video providers' or ads' frames, the website now runs under a strict security policy with integrity checks, and every release ships a software bill of materials. Details in docs/SECURITY.md.
+
+None of the video sources let Panda choose audio tracks, boost the volume or shift audio timing, so those controls are not shown; docs/PLAYER.md lists what each source allows.
+
 ## 1.2.5
 
 - **TV rows follow your focus again**: moving right along a row now always scrolls it, including the Top 10 row, and the focused card stops at the safe margin instead of running off the right edge of the screen.

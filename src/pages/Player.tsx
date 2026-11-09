@@ -32,7 +32,8 @@ import { ADAPTERS, embedUrl, parseMessage, READY_TIMEOUT_MS, sendCommand, source
 import { COMPAT, lastResortOnly, nativeShield, rankSources, recordPlay, SANDBOX, setShieldSource, shieldStats, syncNative } from "../lib/shield";
 import { episodeRow, hideSpoiler, nextEpisodeOf, prevEpisodeOf } from "../lib/watch";
 import { airsLater, playClock, pluralEps, runtime, titlePath, watchPath } from "../lib/format";
-import { activeSkip, binge, shouldAskStill, getIntro, learnIntro, nextCardDue, SLEEP_GRACE_S, SLEEP_OFF, sleepDue, sleepLeft, sleepPillLabel, speedLabel, startSleep, type Intro, type SleepMode, type SleepTimer } from "../lib/player2";
+import { PlayerLoading } from "./PlayerLoading";
+import { activeSkip, episodeLine, fitScale, getFit, getMutedMemory, saveMutedMemory, saveFit, seekMarkers, type FitMode, binge, shouldAskStill, getIntro, learnIntro, nextCardDue, SLEEP_GRACE_S, SLEEP_OFF, sleepDue, sleepLeft, sleepPillLabel, speedLabel, startSleep, type Intro, type SleepMode, type SleepTimer } from "../lib/player2";
 /** TV-only chrome lives in its own chunk so phones never download it (v1.1.6, D-85). TV warms it at idle. */
 export const loadTvChrome = () => import("../tv/TvPlayerChrome");
 const TvPlayerChrome = lazyNamed(loadTvChrome, "TvPlayerChrome");
@@ -125,6 +126,9 @@ function Player({ type, id, season, episode, start }: { type: MediaType; id: num
   const [handedSub, setHandedSub] = useState<{ url: string; label: string } | null>(null);
   const [subsSheet, setSubsSheet] = useState(false);
   const [ready, setReady] = useState(false);
+  // keeps the first-frames screen mounted for its 100 % fade-out (v1.2.6)
+  const [loadingFade, setLoadingFade] = useState(false);
+  useEffect(() => { if (!ready) { setLoadingFade(true); return; } const id = setTimeout(() => setLoadingFade(false), 500); return () => clearTimeout(id); }, [ready]);
   const [paused, setPaused] = useState(false);
   const [overlay, setOverlay] = useState(true);
   const [drawer, setDrawer] = useState(false);
@@ -135,6 +139,10 @@ function Player({ type, id, season, episode, start }: { type: MediaType; id: num
   const [muted, setMuted] = useState(false);
   /* ---- v1.2.2 gestures and picture-in-picture ---- */
   const [brightness, setBrightness] = useState(1);
+  // v1.2.6 picture fit (Fit / Fill / Stretch), remembered on this device
+  const [fit, setFitMode] = useState<FitMode>(getFit);
+  const [view, setView] = useState(() => ({ w: window.innerWidth, h: window.innerHeight }));
+  useEffect(() => { const on = () => setView({ w: window.innerWidth, h: window.innerHeight }); window.addEventListener("resize", on); return () => window.removeEventListener("resize", on); }, []);
   const [dragVolume, setDragVolume] = useState<number | null>(null);
   const volSave = useRef<ReturnType<typeof setTimeout> | null>(null);
   const [pip, setPip] = useState(false);
@@ -306,20 +314,27 @@ function Player({ type, id, season, episode, start }: { type: MediaType; id: num
   }, [resumeAsk, ready]);
 
   /* ---- player messages ---- */
+  const primed = useRef(false);
+  const frameKey = source ? `${source.id}-${customChrome ? "c" : "n"}-${prefs.quality}-${nonce}` : "";
+  useEffect(() => { primed.current = false; }, [frameKey]);
   useEffect(() => {
     if (!source) return;
     const onMsg = (m: MessageEvent) => {
       if (m.source !== frame.current?.contentWindow) return;
       const ev = parseMessage(source, m.origin, m.data);
       if (!ev) return;
+      // v1.2.6: apply the saved volume, mute memory and speed on the first message from each embed load. CineSrc can post
+      // "ready" before this listener exists (fast loads), so waiting for "ready" alone silently skipped them.
+      if (!primed.current && source.events === "cinesrc") {
+        primed.current = true;
+        sendCommand(frame.current, source, { c: "volume", value: getPrefs().volume });
+        if (getMutedMemory()) { sendCommand(frame.current, source, { c: "muted", value: true }); setMuted(true); }
+        if (getPrefs().playbackSpeed !== 1) sendCommand(frame.current, source, { c: "rate", value: getPrefs().playbackSpeed });
+      }
       switch (ev.kind) {
         case "ready":
           setReady(true);
           lastTime.current = null;
-          if (source.events === "cinesrc") {
-            sendCommand(frame.current, source, { c: "volume", value: getPrefs().volume });
-            if (getPrefs().playbackSpeed !== 1) sendCommand(frame.current, source, { c: "rate", value: getPrefs().playbackSpeed });
-          }
           break;
         case "skipintro": setIntroSkipped(true); lastTime.current = ev.to; toast("Intro skipped", 1600); break;
         case "rate": break;
@@ -544,8 +559,22 @@ function Player({ type, id, season, episode, start }: { type: MediaType; id: num
     return () => window.removeEventListener("panda:reconnect", h);
   }, []);
 
+  /* ---- v1.2.6: the remote's Menu key opens the quick panel (Quality, source, speed, picture) wherever focus is ---- */
+  // A request flag, not a DOM click: the chrome is a lazy chunk and may still be loading when the key arrives.
+  const [menuReq, setMenuReq] = useState(false);
+  useEffect(() => {
+    const onMenu = (e: KeyboardEvent) => {
+      if (e.key !== "ContextMenu") return;
+      e.preventDefault(); poke(); setMenuReq(true);
+    };
+    // capture phase: focus scopes and sliders below may consume the event before it bubbles up
+    window.addEventListener("keydown", onMenu, true);
+    return () => window.removeEventListener("keydown", onMenu, true);
+  }, [poke]);
+
   /* ---- remote keys while the overlay is hidden ---- */
   const onKeyDown = (k: React.KeyboardEvent) => {
+    // v1.2.6: the remote's Menu key opens the quick panel (Quality, source, speed, picture)
     const key = navKey(k.nativeEvent);
     if (!key || key === "back") return;
     const hidden = !overlay;
@@ -596,6 +625,7 @@ function Player({ type, id, season, episode, start }: { type: MediaType; id: num
   function chromeProps(): TvChromeProps {
     return {
       d: details, isSeries: isTv, ep, episodeTitle: epInfo?.title,
+      menuRequest: menuReq, onMenuHandled: () => setMenuReq(false),
       visible: overlay, poke, hide: () => { if (hideTimer.current) clearTimeout(hideTimer.current); setOverlay(false); },
       paused, ready, position: time.p, duration: time.d,
       controllable,
@@ -611,7 +641,7 @@ function Player({ type, id, season, episode, start }: { type: MediaType; id: num
         reloadEmbed(); setNativeControls(on);
         if (on) setTimeout(() => frame.current?.focus(), 1200);
       },
-      muted, onMuted: (m) => { if (source) sendCommand(frame.current, source, { c: "muted", value: m }); setMuted(m); },
+      muted, onMuted: (m) => { if (source) sendCommand(frame.current, source, { c: "muted", value: m }); setMuted(m); saveMutedMemory(m); },
       upNext, countdown: upNext && prefs.autoplayNext ? countdown : null, onCancelUpNext: () => setUpNext(null),
       onPlayEpisode: playEpisode,
       onPlayTitle: (item) => { save(); go(watchPath(item.type, item.tmdbId), { replace: true }); },
@@ -629,24 +659,28 @@ function Player({ type, id, season, episode, start }: { type: MediaType; id: num
         // saved once the finger settles, not on every move
         if (volSave.current) clearTimeout(volSave.current);
         volSave.current = setTimeout(() => { actions.setPrefs({ volume: v }); setDragVolume(null); }, 450);
-        if (muted !== (v <= 0)) { sendCommand(frame.current, source, { c: "muted", value: v <= 0 }); setMuted(v <= 0); }
+        if (muted !== (v <= 0)) { sendCommand(frame.current, source, { c: "muted", value: v <= 0 }); setMuted(v <= 0); saveMutedMemory(v <= 0); }
       },
       brightness, onBrightness: setBrightness,
       onHold: (on) => { if (source) sendCommand(frame.current, source, { c: "rate", value: on ? 2 : prefs.playbackSpeed }); },
+      fit, onFit: (m) => { setFitMode(m); saveFit(m); toast(`Picture: ${m === "fit" ? "Fit" : m === "fill" ? "Fill" : "Stretch"}`); },
+      markers: seekMarkers({ recap: segments?.recap, intro: segments?.intro, credits: segments?.credits, learned: isTv ? intro : null }, time.d),
       onPip: pipOk ? () => { if (!nativeEnterPip()) toast("Picture-in-picture is turned off for Panda in Android settings", 3200); } : undefined
     };
   }
 
   const title = details?.title ?? "";
   const isolated = Boolean(source) && customChrome && !COMPAT[source!.id];
-  const subtitle = isTv ? `S${ep.s} E${ep.e}${epInfo?.title ? ` · ${epInfo.title}` : ""}` : [details?.year, runtime(details?.runtime)].filter(Boolean).join(" · ");
+  const subtitle = isTv ? episodeLine(ep.s, ep.e, epInfo?.title) : [details?.year, runtime(details?.runtime)].filter(Boolean).join(" · ");
+  // portrait phones already get a 16:9 frame (player.css), so only landscape screens scale
+  const scale = controllable && customChrome && (tv || view.w > view.h) ? fitScale(fit, view.w, view.h) : { x: 1, y: 1 };
   const src = source ? embedUrl(source, { customChrome, start: reloadAt ?? undefined, quality: prefs.quality, autoskip: prefs.autoSkipIntro, subtitle: handsSubs ? handedSub : null }) : null;
 
   return (
     <div ref={root} className={`player ${overlay ? "is-overlay" : ""} ${tv ? "player--tv" : "player--touch"} ${pip ? "is-pip" : ""}`} onKeyDown={onKeyDown} onMouseMove={poke} role="application" aria-label={`Playing ${title}`}>
       {play.error && !play.data && <div className="player-center"><ErrorState message={play.error.message} onRetry={() => play.mutate()} /></div>}
       {src && source && (
-        <iframe key={`${source.id}-${customChrome ? "c" : "n"}-${prefs.quality}-${nonce}`} ref={frame} className={`player-frame ${isolated ? "is-isolated" : ""}`} src={src} title={`${title} — ${SHORT[source.id]}`}
+        <iframe key={frameKey} ref={frame} className={`player-frame ${isolated ? "is-isolated" : ""}`} src={src} style={scale.x !== 1 || scale.y !== 1 ? { transform: `scale(${scale.x.toFixed(4)}, ${scale.y.toFixed(4)})` } : undefined} title={`${title} — ${SHORT[source.id]}`}
           {...(SANDBOX[source.id]?.attr ? { sandbox: SANDBOX[source.id]!.attr! } : {})} data-sandbox={SANDBOX[source.id]?.id ?? "none"}
           allow="autoplay; fullscreen; encrypted-media; picture-in-picture" allowFullScreen referrerPolicy="origin" tabIndex={isolated || (tv && !nativeControls) ? -1 : 0}
           onLoad={() => { if (source.events !== "cinesrc") setReady(true); if (isolated) reclaimFocus(); }} />
@@ -677,11 +711,8 @@ function Player({ type, id, season, episode, start }: { type: MediaType; id: num
           <button id="pl-resume-over" className="btn" data-hover-focus onClick={startOver}><Icon name="replay10" /> Start over</button>
         </div>
       )}
-      {!ready && !play.error && (
-        <div className="player-loading" aria-live="polite">
-          {details?.backdropLarge && <Img src={details.backdropLarge} alt="" title="" className="player-loading-bg" />}
-          <Spinner label={source ? `Loading from ${SHORT[source.id]}…` : "Finding a source…"} />
-        </div>
+      {!play.error && (!ready || loadingFade) && (
+        <PlayerLoading backdrop={details?.backdropLarge} title={title} line={isTv ? episodeLine(ep.s, ep.e, epInfo?.title) : null} sourceId={source?.id ?? null} ready={ready} touch={!tv} onBack={exit} />
       )}
       <div className="player-hotzone" onMouseEnter={poke} aria-hidden="true" />
       {customChrome ? <Suspense fallback={null}><TvPlayerChrome {...chromeProps()} touch={!tv} /></Suspense> : <>

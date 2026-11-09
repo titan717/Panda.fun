@@ -94,7 +94,7 @@ class MainActivity : ComponentActivity() {
 
         /** Same policy as vercel.json (checked by src/test/v117.test.ts) for the web build: only the two providers and YouTube may be framed. */
         private val SECURITY_HEADERS = mapOf(
-            "Content-Security-Policy" to "default-src 'self'; base-uri 'self'; object-src 'none'; frame-ancestors 'self'; form-action 'self'; script-src 'self' https://www.youtube.com https://s.ytimg.com; style-src 'self' 'unsafe-inline'; font-src 'self' data:; img-src 'self' data: blob: https://image.tmdb.org https://i.ytimg.com https://img.youtube.com; media-src 'self' blob:; connect-src 'self' https://apikinoma.vercel.app https://api.github.com; frame-src https://cinesrc.st https://*.cinesrc.st https://vidy.st https://*.vidy.st https://vidlink.pro https://www.youtube-nocookie.com; worker-src 'self' blob:; manifest-src 'self'",
+            "Content-Security-Policy" to "default-src 'self'; base-uri 'self'; object-src 'none'; frame-ancestors 'self'; form-action 'self'; script-src 'self' https://www.youtube.com https://s.ytimg.com; style-src 'self' 'sha256-onpbGLit6K83G1sFUUhH4Hmpzb2FFVwhMx/yjaY6kI0='; upgrade-insecure-requests; font-src 'self' data:; img-src 'self' data: blob: https://image.tmdb.org https://i.ytimg.com https://img.youtube.com; media-src 'self' blob:; connect-src 'self' https://apikinoma.vercel.app https://api.github.com; frame-src https://cinesrc.st https://*.cinesrc.st https://vidy.st https://*.vidy.st https://vidlink.pro https://www.youtube-nocookie.com; worker-src 'self' blob:; manifest-src 'self'",
             "Permissions-Policy" to "autoplay=(self \"https://cinesrc.st\" \"https://www.vidy.st\" \"https://vidy.st\" \"https://vidlink.pro\" \"https://www.youtube-nocookie.com\"), fullscreen=(self \"https://cinesrc.st\" \"https://www.vidy.st\" \"https://vidy.st\" \"https://vidlink.pro\" \"https://www.youtube-nocookie.com\"), picture-in-picture=(self \"https://cinesrc.st\" \"https://www.vidy.st\" \"https://vidy.st\" \"https://vidlink.pro\"), microphone=(), camera=(), geolocation=()",
             "Referrer-Policy" to "strict-origin-when-cross-origin",
             "X-Content-Type-Options" to "nosniff"
@@ -200,7 +200,7 @@ class MainActivity : ComponentActivity() {
                 val url = request.url
                 if (url.host == APP_DOMAIN) {
                     val path = url.path ?: "/"
-                    val resolved = resolveBundledAsset(path)
+                    val resolved = resolveBundledAsset(path, request.isForMainFrame)
                     if (resolved != null) {
                         return resolved
                     }
@@ -394,7 +394,18 @@ class MainActivity : ComponentActivity() {
         checkUpdatesInBackground()
     }
 
-    private fun resolveBundledAsset(path: String): WebResourceResponse? {
+    /**
+     * The app's own top document gets the bridge key (see bridgeKey) as a <meta> right after <head>. Sub-frame and
+     * fetch() requests for the same file get the plain HTML, so no other frame can obtain the key.
+     */
+    private fun htmlStream(stream: java.io.InputStream, mainFrame: Boolean): java.io.InputStream {
+        if (!mainFrame) return stream
+        val html = stream.use { it.readBytes().toString(Charsets.UTF_8) }
+        val keyed = html.replaceFirst("<head>", "<head><meta name=\"panda-bridge\" content=\"$bridgeKey\">")
+        return java.io.ByteArrayInputStream(keyed.toByteArray(Charsets.UTF_8))
+    }
+
+    private fun resolveBundledAsset(path: String, mainFrame: Boolean): WebResourceResponse? {
         val clean = path.removePrefix("/")
         val candidates = mutableListOf<String>()
 
@@ -410,13 +421,13 @@ class MainActivity : ComponentActivity() {
 
         for (candidate in candidates.distinct()) {
             try {
-                val stream = assets.open(candidate)
                 val mimeType = getMimeType(candidate)
+                val raw = assets.open(candidate)
+                val stream = if (mimeType == "text/html") htmlStream(raw, mainFrame) else raw
                 val response = WebResourceResponse(mimeType, "UTF-8", stream)
-                val headers = mutableMapOf(
-                    "Access-Control-Allow-Origin" to "*",
-                    "Cache-Control" to "no-cache"
-                )
+                // v1.2.6: no Access-Control-Allow-Origin. The bundle is same-origin; a wildcard let provider and ad
+                // frames read the app's files.
+                val headers = mutableMapOf("Cache-Control" to "no-cache")
                 if (mimeType == "text/html") headers.putAll(SECURITY_HEADERS)
                 response.responseHeaders = headers
                 return response
@@ -429,9 +440,9 @@ class MainActivity : ComponentActivity() {
         val lastSegment = clean.substringAfterLast('/')
         if (!lastSegment.contains('.')) {
             return try {
-                val stream = assets.open("web/index.html")
+                val stream = htmlStream(assets.open("web/index.html"), mainFrame)
                 val response = WebResourceResponse("text/html", "UTF-8", stream)
-                response.responseHeaders = mapOf("Access-Control-Allow-Origin" to "*") + SECURITY_HEADERS
+                response.responseHeaders = mapOf("Cache-Control" to "no-cache") + SECURITY_HEADERS
                 response
             } catch (e: Exception) {
                 Log.e(TAG, "Failed to open fallback web/index.html for SPA route: $path", e)
@@ -919,6 +930,20 @@ class MainActivity : ComponentActivity() {
         }
     }
 
+    /**
+     * v1.2.6 bridge key (docs/SECURITY.md): addJavascriptInterface exposes the bridge to every frame, including provider
+     * and ad iframes. Methods that act or reveal state require this per-launch random key, which only the app's own top
+     * document receives (a <meta> added in resolveBundledAsset for main-frame HTML; iframes are other origins and cannot
+     * read it). Capability getters (version, isTV, hasVoiceSearch, canPictureInPicture, notificationPermission) stay open.
+     */
+    private val bridgeKey: String = ByteArray(16).also { java.security.SecureRandom().nextBytes(it) }.joinToString("") { "%02x".format(it) }
+
+    private fun trusted(key: String): Boolean {
+        val ok = java.security.MessageDigest.isEqual(key.toByteArray(), bridgeKey.toByteArray())
+        if (!ok) Log.w(TAG, "Bridge call without the app key refused")
+        return ok
+    }
+
     inner class KinomaTVBridge(private val context: Context) {
         @JavascriptInterface
         fun getAppVersion(): String {
@@ -934,12 +959,14 @@ class MainActivity : ComponentActivity() {
         fun getVersionCode(): Int = BuildConfig.VERSION_CODE
 
         @JavascriptInterface
-        fun exitApp() {
+        fun exitApp(key: String) {
+            if (!trusted(key)) return
             runOnUiThread { finishAffinity() }
         }
 
         @JavascriptInterface
-        fun installDownloadedUpdate() {
+        fun installDownloadedUpdate(key: String) {
+            if (!trusted(key)) return
             runOnUiThread {
                 val uri = pendingVerifiedUpdateUri
                 when {
@@ -954,7 +981,8 @@ class MainActivity : ComponentActivity() {
         fun hasVoiceSearch(): Boolean = voiceIntent().resolveActivity(context.packageManager) != null
 
         @JavascriptInterface
-        fun startVoiceSearch() {
+        fun startVoiceSearch(key: String) {
+            if (!trusted(key)) return
             runOnUiThread {
                 try { voiceLauncher.launch(voiceIntent()) } catch (e: Exception) {
                     Log.w(TAG, "Voice search unavailable", e)
@@ -969,14 +997,16 @@ class MainActivity : ComponentActivity() {
         }
 
         @JavascriptInterface
-        fun checkForUpdates() {
+        fun checkForUpdates(key: String) {
+            if (!trusted(key)) return
             runOnUiThread {
                 checkUpdatesInBackground()
             }
         }
 
         @JavascriptInterface
-        fun checkForUpdatesManual() {
+        fun checkForUpdatesManual(key: String) {
+            if (!trusted(key)) return
             runOnUiThread {
                 checkUpdatesFromSettings()
             }
@@ -986,7 +1016,8 @@ class MainActivity : ComponentActivity() {
         fun notificationPermission(): String = Notifier.permission(context)
 
         @JavascriptInterface
-        fun requestNotificationPermission() {
+        fun requestNotificationPermission(key: String) {
+            if (!trusted(key)) return
             runOnUiThread {
                 if (Build.VERSION.SDK_INT >= 33 && Notifier.permission(context) == "default") {
                     notifPermLauncher.launch(Manifest.permission.POST_NOTIFICATIONS)
@@ -997,22 +1028,30 @@ class MainActivity : ComponentActivity() {
         }
 
         @JavascriptInterface
-        fun showNotification(tag: String, title: String, body: String, path: String) {
+        fun showNotification(key: String, tag: String, title: String, body: String, path: String) {
+            if (!trusted(key)) return
             Notifier.show(context, tag, title, body, path)
         }
 
         @JavascriptInterface
-        fun takeLaunchPath(): String {
+        fun takeLaunchPath(key: String): String {
+            if (!trusted(key)) return ""
             val p = launchPath ?: ""
             launchPath = null
             return p
         }
 
         @JavascriptInterface
-        fun shieldStats(): String = AdShield.drain()
+        fun shieldStats(key: String): String {
+            if (!trusted(key)) return ""
+            return AdShield.drain()
+        }
 
         @JavascriptInterface
-        fun setShieldSource(id: String) { AdShield.activeSource = id.take(24) }
+        fun setShieldSource(key: String, id: String) {
+            if (!trusted(key)) return
+            AdShield.activeSource = id.take(24)
+        }
 
         /** v1.2.2: true when this device can show the player in a picture-in-picture window. */
         @JavascriptInterface
@@ -1020,10 +1059,14 @@ class MainActivity : ComponentActivity() {
 
         /** v1.2.2: the web player tells the app when a video is on screen (auto PiP when leaving). */
         @JavascriptInterface
-        fun setPlaybackActive(active: Boolean, auto: Boolean) { playbackActive = active; autoPip = auto }
+        fun setPlaybackActive(key: String, active: Boolean, auto: Boolean) {
+            if (!trusted(key)) return
+            playbackActive = active; autoPip = auto
+        }
 
         @JavascriptInterface
-        fun enterPictureInPicture(): Boolean {
+        fun enterPictureInPicture(key: String): Boolean {
+            if (!trusted(key)) return false
             var ok = false
             val latch = java.util.concurrent.CountDownLatch(1)
             runOnUiThread { ok = enterPip(); latch.countDown() }
@@ -1033,17 +1076,22 @@ class MainActivity : ComponentActivity() {
 
         /** v1.2.4 phone remote: state JSON {on, enabled, ip, port, code, phones, address?, url?}. */
         @JavascriptInterface
-        fun remoteInfo(): String = this@MainActivity.remoteInfo()
+        fun remoteInfo(key: String): String {
+            if (!trusted(key)) return ""
+            return this@MainActivity.remoteInfo()
+        }
 
         @JavascriptInterface
-        fun startRemote(): String {
+        fun startRemote(key: String): String {
+            if (!trusted(key)) return ""
             getSharedPreferences("panda_remote", Context.MODE_PRIVATE).edit().putBoolean("on", true).apply()
             remote.start()
             return this@MainActivity.remoteInfo()
         }
 
         @JavascriptInterface
-        fun stopRemote(): String {
+        fun stopRemote(key: String): String {
+            if (!trusted(key)) return ""
             getSharedPreferences("panda_remote", Context.MODE_PRIVATE).edit().putBoolean("on", false).apply()
             remote.stop()
             return this@MainActivity.remoteInfo()
@@ -1051,17 +1099,22 @@ class MainActivity : ComponentActivity() {
 
         /** New pairing code: every paired phone has to scan again. */
         @JavascriptInterface
-        fun resetRemote(): String {
+        fun resetRemote(key: String): String {
+            if (!trusted(key)) return ""
             remote.newCode()
             return this@MainActivity.remoteInfo()
         }
 
         @JavascriptInterface
-        fun setRemoteState(json: String) { if (json.length <= 4000) remoteState = json }
+        fun setRemoteState(key: String, json: String) {
+            if (!trusted(key)) return
+            if (json.length <= 4000) remoteState = json
+        }
 
         /** v1.2.4: Android share sheet (WebView has no Web Share API). */
         @JavascriptInterface
-        fun shareText(title: String, text: String): Boolean {
+        fun shareText(key: String, title: String, text: String): Boolean {
+            if (!trusted(key)) return false
             return try {
                 val send = Intent(Intent.ACTION_SEND).apply {
                     type = "text/plain"
@@ -1074,7 +1127,8 @@ class MainActivity : ComponentActivity() {
         }
 
         @JavascriptInterface
-        fun downloadUpdate() {
+        fun downloadUpdate(key: String) {
+            if (!trusted(key)) return
             runOnUiThread {
                 downloadAvailableUpdate()
             }

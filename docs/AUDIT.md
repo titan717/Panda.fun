@@ -1,5 +1,26 @@
 # Audit
 
+## Audit v1.2.6 — player and security gate (2026-11-09)
+
+Inspected: the player on phones (portrait and landscape), tablets and TV with the CineSrc, Vidy and VidLink stand-ins and the live embeds; every workflow in `.github/workflows`; `npm audit`; `vercel.json` headers; the Android WebView, bridge and bundled-asset responses (`MainActivity.kt`); the entry chunk by module.
+
+| # | Finding | Where | Fix |
+|---|---|---|---|
+| A126-1 | CSP allowed `'unsafe-inline'` styles for one inline `<style>` | `vercel.json`, `MainActivity.kt` | SHA-256 hash, build fails on mismatch (`scripts/vite-integrity.mjs`) |
+| A126-2 | No HSTS of Panda's own, no SRI on entry assets | `vercel.json`, `index.html` | HSTS preload, sha384 integrity |
+| A126-3 | Actions referenced by tag | all workflows | pinned by SHA, least-privilege permissions, CodeQL, gitleaks, Dependabot, SBOM |
+| A126-4 | `npm audit`: happy-dom ≤ 21.0.3 (High), minimatch ReDoS (Moderate), dev tooling only | `package.json` | happy-dom 21.0.4, typescript-eslint 8.72.1, `overrides` minimatch 11.0.5, exact versions |
+| A126-5 | **High:** the Android bridge was reachable from provider and ad iframes (pairing code, notifications, downloads, exit) | `MainActivity.kt` | per-launch bridge key given to the top document only (docs/SECURITY.md) |
+| A126-6 | Bundled app files served with `Access-Control-Allow-Origin: *` | `MainActivity.kt` | header removed |
+| A126-7 | Kids PIN unhashed on the device | `lib/store.ts` | v1.2.7 |
+| A126-8 | `allowBackup="true"` | `AndroidManifest.xml` | v1.2.7 |
+| A126-9 | Update flow relies on the OS signature check | `UpdateChecker.kt` | v1.2.7 |
+| A126-10 | CineSrc's "Rotate your phone" dialog appeared in portrait under Panda's tap layer and could not be dismissed | `pages/player.css` | 16:9 frame in portrait (D-152) |
+| A126-11 | Mobile skeleton posters on Lists and Anime had zero size (`--poster-w/h` undefined on phones) | `pages/Lists.tsx`, `pages/Anime.tsx` | phone skeleton class |
+| A126-12 | Saved volume, speed and mute were only applied on CineSrc's `ready`, which fast loads can post before Panda listens | `pages/Player.tsx` | applied on the first message of each load |
+| A126-13 | The remote's Menu key did nothing while the lazy chrome chunk was still loading, or when focus sat outside the player | `pages/Player.tsx`, `tv/TvPlayerChrome.tsx` | window-level key handler and an open request the chrome consumes when it mounts |
+| A126-14 | Audio column volume row overflowed on landscape phones | `tv/tvplayer.css` | `nowrap` control group |
+
 ## Audit 2 — state at v1.1.6 (2026-11-08, before v1.1.7)
 
 Inspected: the whole repo, every doc, `package.json` (1.1.6), GitHub Releases (latest `v1.1.6`, signed APK + `.sha256`), Actions (CI green on `a654c86`; emulator check for v1.1.6 running, phone job passed), Vercel production deployments (one per `main` commit, latest `a654c86`), `titan717/movieapi` (`main` at `257338f`, live at `https://apikinoma.vercel.app/api/v1`, `/health` 200), and the Drive blueprint folder `0AIeajh48Vj_sUk9PVA`.

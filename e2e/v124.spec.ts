@@ -4,7 +4,7 @@ import { expect, test, type Page } from "@playwright/test";
 /** v1.2.4: Connect Phone (phone as a remote over the local network), share links and sync links. */
 const STATE = JSON.stringify({ profiles: [{ id: "pa", name: "Ana", avatar: "smile", kids: false, createdAt: 1 }], activeProfileId: "pa", prefs: { autoplayTrailers: false }, data: { pa: {} } });
 
-/** A stand-in for the Android bridge's remote methods (MainActivity.remoteInfo & co.). */
+/** A stand-in for the Android bridge's remote methods (MainActivity.remoteInfo & co.). Since v1.2.6 gated methods take the bridge key first. */
 async function fakeBridge(page: Page) {
   await page.addInitScript(() => {
     const w = window as unknown as Record<string, unknown>;
@@ -16,7 +16,7 @@ async function fakeBridge(page: Page) {
     w.KinomaNative = {
       remoteInfo: info, startRemote: () => { on = true; calls.push("start"); return info(); }, stopRemote: () => { on = false; phones = 0; calls.push("stop"); return info(); },
       resetRemote: () => { code = "W3PH-8RTV"; phones = 0; calls.push("reset"); return info(); },
-      setRemoteState: (s: string) => { calls.push(`state:${s}`); }, shareText: (t: string, x: string) => { calls.push(`share:${t}|${x}`); },
+      setRemoteState: (_k: string, s: string) => { calls.push(`state:${s}`); }, shareText: (_k: string, t: string, x: string) => { calls.push(`share:${t}|${x}`); },
     };
   });
 }
