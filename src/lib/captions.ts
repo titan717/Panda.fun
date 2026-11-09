@@ -1,5 +1,6 @@
 import { API_BASE } from "./api";
 import type { SubtitleTrack } from "./types";
+import type { Prefs } from "./store";
 
 /**
  * Caption layer (v1.2.1). Panda draws external subtitles itself, above the embed, timed by the
@@ -24,12 +25,64 @@ export type SubtitleStyle = "shadow" | "box" | "yellow" | "outline";
 export const SUB_SIZES: { id: SubtitleSize; label: string; note?: string }[] = [
   { id: "small", label: "Small" }, { id: "medium", label: "Medium", note: "Recommended" }, { id: "large", label: "Large" }, { id: "xlarge", label: "Extra large" }
 ];
-export const SUB_STYLES: { id: SubtitleStyle; label: string; note: string }[] = [
-  { id: "shadow", label: "Classic", note: "White text with a soft shadow" },
-  { id: "box", label: "Box", note: "White text on a dark box, easiest to read" },
-  { id: "yellow", label: "Yellow", note: "Yellow text with a shadow" },
-  { id: "outline", label: "Outline", note: "White text with a black edge" }
+export type SubColor = NonNullable<Prefs["subtitleColor"]>;
+export type SubBg = NonNullable<Prefs["subtitleBg"]>;
+export type SubEdge = NonNullable<Prefs["subtitleEdge"]>;
+/** The resolved look the caption layer draws (v1.2.7). */
+export interface SubLook { size: SubtitleSize; color: SubColor; bg: SubBg; edge: SubEdge; pos: number }
+
+export const SUB_COLORS: { id: SubColor; label: string; hex: string }[] = [
+  { id: "white", label: "White", hex: "#ffffff" }, { id: "yellow", label: "Yellow", hex: "#ffe14d" },
+  { id: "cyan", label: "Cyan", hex: "#7fe7ff" }, { id: "green", label: "Green", hex: "#a6f58c" }
 ];
+export const SUB_BGS: { id: SubBg; label: string }[] = [{ id: "none", label: "None" }, { id: "dim", label: "Translucent" }, { id: "box", label: "Solid box" }];
+export const SUB_EDGES: { id: SubEdge; label: string }[] = [{ id: "shadow", label: "Shadow" }, { id: "outline", label: "Outline" }, { id: "none", label: "None" }];
+export const SUB_POS_MAX = 30;
+export const SUB_POS_STEP = 2;
+/** Height presets in Settings (the player panel moves in SUB_POS_STEP steps). */
+export const SUB_HEIGHTS = [0, 6, 12, 20, 30];
+
+/** v1.2.1 presets, read as colour / background / edge for profiles that never changed the v1.2.7 controls. */
+const PRESETS: Record<SubtitleStyle, [SubColor, SubBg, SubEdge]> = {
+  shadow: ["white", "none", "shadow"], box: ["white", "box", "none"], yellow: ["yellow", "none", "shadow"], outline: ["white", "none", "outline"]
+};
+export function subLook(p: Pick<Prefs, "subtitleSize" | "subtitleStyle" | "subtitleColor" | "subtitleBg" | "subtitleEdge" | "subtitlePos">): SubLook {
+  const [color, bg, edge] = PRESETS[p.subtitleStyle] ?? PRESETS.shadow;
+  const pos = Math.max(0, Math.min(SUB_POS_MAX, Math.round(Number(p.subtitlePos) || 0)));
+  return { size: p.subtitleSize, color: p.subtitleColor ?? color, bg: p.subtitleBg ?? bg, edge: p.subtitleEdge ?? edge, pos };
+}
+/** The class list and custom properties for a caption block in this look. */
+export const lookClass = (l: SubLook) => `cap--${l.size} cap-c--${l.color} cap-bg--${l.bg} cap-e--${l.edge}`;
+
+/**
+ * Remembered per title (v1.2.7): the track the viewer picked (or Off), the timing offset and the
+ * second language, for this profile. The newest 200 titles are kept.
+ */
+export interface SubMemory { off?: boolean; lang?: string; sdh?: boolean; id?: string; offset?: number; dual?: string | null }
+const MEM_KEY = "panda:v1:subs";
+const MEM_MAX = 200;
+type MemStore = Record<string, SubMemory & { at: number }>;
+function readMem(): MemStore {
+  try {
+    const v = JSON.parse(localStorage.getItem(MEM_KEY) ?? "{}") as unknown;
+    return v && typeof v === "object" && !Array.isArray(v) ? Object.assign(Object.create(null) as MemStore, v) : (Object.create(null) as MemStore);
+  } catch { return Object.create(null) as MemStore; }
+}
+export function subMemory(profile: string, title: string): SubMemory | null {
+  const v = readMem()[`${profile}|${title}`];
+  return v && typeof v === "object" ? v : null;
+}
+export function saveSubMemory(profile: string, title: string, patch: SubMemory, now = Date.now()) {
+  const all = readMem();
+  const key = `${profile}|${title}`;
+  all[key] = { ...(all[key] ?? {}), ...patch, at: now };
+  const keep = Object.entries(all).sort((a, b) => (b[1].at ?? 0) - (a[1].at ?? 0)).slice(0, MEM_MAX);
+  try { localStorage.setItem(MEM_KEY, JSON.stringify(Object.fromEntries(keep))); } catch { /* storage full */ }
+}
+
+/** Offset steps while a timing button is held: 0.1 s each, repeating faster the longer it is held. */
+export const holdDelay = (n: number) => (n === 0 ? 420 : n < 6 ? 160 : n < 20 ? 90 : 50);
+
 export const SUB_MODES: { id: SubtitleMode; label: string; note: string }[] = [
   { id: "foreign", label: "When the audio is in another language", note: "Turn on for titles not in your subtitle language" },
   { id: "always", label: "Always", note: "Turn on for every title that has them" },
@@ -116,3 +169,13 @@ export function loadCues(track: SubtitleTrack, fetchImpl: typeof fetch = fetch):
 }
 
 export const offsetLabel = (s: number) => (s === 0 ? "In sync" : `${s > 0 ? "+" : "−"}${Math.abs(s).toFixed(1)} s ${s > 0 ? "later" : "earlier"}`);
+
+/** The remote's CC / Subtitle key (Android TV, Fire TV, webOS 460) or C on a keyboard (v1.2.7 one-press toggle). */
+export function isCcKey(e: Pick<KeyboardEvent, "key" | "keyCode" | "ctrlKey" | "metaKey" | "altKey" | "target">) {
+  if (e.key === "ClosedCaptionToggle" || e.key === "Subtitle" || e.keyCode === 460) return true;
+  if ((e.key === "c" || e.key === "C") && !e.ctrlKey && !e.metaKey && !e.altKey) {
+    const el = e.target as HTMLElement | null;
+    return !(el && (el.tagName === "INPUT" || el.tagName === "TEXTAREA" || el.isContentEditable));
+  }
+  return false;
+}

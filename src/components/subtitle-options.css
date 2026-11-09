@@ -1,0 +1,58 @@
+/* Subtitles panel (v1.2.7, lazy). Sized in em so it fits the TV player's blue side panel (20 tu) and phone sheets (15 px).
+   Colours follow the TV player panel: white text, glassy rows, the white-to-blue focus pill. */
+.so { --so-gap: 0.7em; --so-row: rgba(255, 255, 255, 0.08); --so-line: rgba(255, 255, 255, 0.16); --so-focus: var(--tvp-row-focus, linear-gradient(90deg, rgba(255, 255, 255, 0.2) 0%, rgba(160, 200, 255, 0.5) 100%)); display: flex; flex-direction: column; gap: 1em; color: #fff; font-size: 15px; }
+.so--tv { font-size: calc(20 * var(--tu)); }
+.tvp.is-touch .so { font-size: max(13px, calc(20 * var(--tu))); }
+.so-tabs { display: flex; gap: 0.4em; padding: 0.25em; border-radius: 999px; background: rgba(255, 255, 255, 0.08); align-self: flex-start; }
+.so-tab { min-height: 2.2em; min-width: 5.6em; padding: 0 1.1em; border-radius: 999px; border: 0.1em solid transparent; background: transparent; color: rgba(255, 255, 255, 0.86); font-size: 1em; font-weight: 600; }
+.so-tab.is-on { background: #fff; color: #0a1640; }
+html:not([data-mode="tv"]) .so-tabs { align-self: stretch; }
+html:not([data-mode="tv"]) .so-tab { flex: 1 1 0; min-width: 0; padding: 0 0.6em; }
+.so-body { display: flex; flex-direction: column; gap: 1.1em; animation: so-in 200ms var(--ease-out); }
+@keyframes so-in { from { opacity: 0; transform: translateY(0.3em); } }
+.so-sec { display: flex; flex-direction: column; gap: 0.55em; }
+.so-label { margin: 0; font-size: 0.85em; font-weight: 600; letter-spacing: 0.02em; color: rgba(255, 255, 255, 0.78); }
+.so-label small { font-weight: 500; margin-left: 0.5em; color: rgba(255, 255, 255, 0.66); }
+.so-chips { display: flex; flex-wrap: wrap; gap: 0.5em; }
+.so-chips--grid { max-height: 12em; overflow-y: auto; scrollbar-width: none; padding: 0.15em; }
+.so-chip { display: inline-flex; align-items: center; gap: 0.4em; min-height: 2.4em; padding: 0 0.95em; border-radius: 999px; border: 0.08em solid var(--so-line); background: var(--so-row); color: #fff; font-size: 0.95em; font-weight: 600; transition: transform 120ms var(--ease-out), background 120ms; }
+.so-chip svg { width: 1em; height: 1em; }
+.so-chip.is-on { background: rgba(255, 255, 255, 0.92); color: #0a1640; border-color: #fff; }
+.so-chip.is-busy { opacity: 0.7; }
+.so-swatch { width: 1em; height: 1em; border-radius: 50%; box-shadow: 0 0 0 0.1em rgba(0, 0, 0, 0.5) inset, 0 0 0 0.08em rgba(255, 255, 255, 0.6); }
+.so-row { display: flex; align-items: center; gap: 0.8em; width: 100%; min-height: 3em; padding: 0.5em 1em; border-radius: 0.6em; border: 0.1em solid transparent; background: var(--so-row); color: #fff; text-align: left; font-size: 1em; }
+.so-row svg { width: 1.3em; height: 1.3em; flex: none; }
+.so-row.is-on { background: rgba(255, 255, 255, 0.14); }
+.so-row-text { display: flex; flex-direction: column; gap: 0.15em; flex: 1; min-width: 0; }
+.so-row-text strong { font-weight: 600; display: flex; align-items: center; gap: 0.5em; }
+.so-row-text small { color: rgba(255, 255, 255, 0.8); font-size: 0.85em; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.so-row--action { background: transparent; border-color: var(--so-line); }
+.so-list { display: flex; flex-direction: column; gap: 0.35em; }
+.so-check { width: 1.3em; display: inline-flex; color: #ff8bd8; }
+.so-badge { font-style: normal; font-size: 0.7em; font-weight: 700; letter-spacing: 0.04em; padding: 0.1em 0.45em; border-radius: 0.3em; background: rgba(255, 255, 255, 0.2); }
+.so-toggle { min-height: 3.4em; }
+.so-switch { position: relative; width: 2.6em; height: 1.5em; border-radius: 999px; background: rgba(255, 255, 255, 0.28); transition: background 160ms; flex: none; }
+.so-switch span { position: absolute; top: 0.15em; left: 0.15em; width: 1.2em; height: 1.2em; border-radius: 50%; background: #fff; transition: transform 160ms var(--ease-out); }
+.so-switch.is-on { background: #3b82f6; }
+.so-switch.is-on span { transform: translateX(1.1em); }
+.so-filter { width: 100%; min-height: 2.6em; padding: 0 0.9em; border-radius: 0.6em; border: 0.08em solid var(--so-line); background: rgba(0, 0, 0, 0.25); color: #fff; font-size: 1em; }
+.so-note { margin: 0; font-size: 0.85em; color: rgba(255, 255, 255, 0.8); }
+.so-preview { position: relative; touch-action: none; cursor: ns-resize; border-radius: 0.7em; overflow: hidden; }
+.so-preview .captions--preview { font-size: clamp(13px, var(--cap), 40px); }
+.so--tv .so-preview .captions--preview { --cap: calc(24 * var(--tu)); min-height: 8em; }
+.so--tv .so-preview .captions--preview.cap--small { --cap: calc(19 * var(--tu)); }
+.so--tv .so-preview .captions--preview.cap--large { --cap: calc(30 * var(--tu)); }
+.so--tv .so-preview .captions--preview.cap--xlarge { --cap: calc(36 * var(--tu)); }
+.so-drag-hint { position: absolute; top: 0.6em; right: 0.8em; font-size: 0.75em; color: rgba(255, 255, 255, 0.7); pointer-events: none; }
+.so-hold { display: inline-flex; align-items: center; justify-content: center; gap: 0.45em; min-height: 2.8em; min-width: 7em; padding: 0 1em; border-radius: 0.6em; border: 0.08em solid var(--so-line); background: var(--so-row); color: #fff; font-size: 1em; user-select: none; -webkit-user-select: none; touch-action: none; }
+.so-hold small { color: rgba(255, 255, 255, 0.8); font-size: 0.85em; }
+.so-hold svg { width: 1.1em; height: 1.1em; }
+.so-hold:disabled, .so-chip:disabled { opacity: 0.45; }
+.so-hold:active:not(:disabled), .so-chip:active { transform: scale(0.96); }
+.so-chips--timing .so-hold { flex: 1; min-height: 3.4em; }
+.so-offset { margin: 0; font-size: 1.6em; font-weight: 700; text-align: center; font-variant-numeric: tabular-nums; }
+/* one focus language: the TV player's white-to-blue pill, with a ring for keyboards on phones */
+.so :is(.so-tab, .so-chip, .so-row, .so-hold, .so-filter):focus-visible { outline: none; background: var(--so-focus); color: #fff; border-color: rgba(255, 255, 255, 0.92); box-shadow: 0 0 0 0.12em rgba(255, 255, 255, 0.35); }
+html[data-mode="tv"] .so :is(.so-tab, .so-chip, .so-row, .so-hold):focus { outline: none; background: var(--so-focus); color: #fff; border-color: rgba(255, 255, 255, 0.92); transform: scale(1.03); }
+.sheet--subs .so { color: var(--text-1); }
+@media (prefers-reduced-motion: reduce) { .so-body { animation: none; } .so-chip, .so-switch, .so-switch span { transition: none; } html[data-mode="tv"] .so :focus { transform: none; } }

@@ -1,5 +1,5 @@
 import "./tvplayer.css";
-import { useEffect, useMemo, useRef, useState, type PointerEvent as RPointerEvent } from "react";
+import { Suspense, useEffect, useMemo, useRef, useState, type PointerEvent as RPointerEvent } from "react";
 import { Icon } from "../components/Icon";
 import { ExtraIcon } from "../components/ExtraIcons";
 import { Img } from "../components/ui";
@@ -13,6 +13,11 @@ import type { Prefs } from "../lib/store";
 import { BRIGHT_MIN, chapterAt, FIT_OPTIONS, type FitMode, episodeLine, MARKER_LABEL, type SeekMarker, classifyDrag, dragLevel, dragSeek, HOLD_MS, SLEEP_OPTIONS, SPEEDS, speedLabel, type DragKind, type SleepMode } from "../lib/player2";
 import type { Episode, PandaItem, PlaybackSource, SourceId, SourceRankingPayload, SubtitleTrack, TitleDetails } from "../lib/types";
 import { offsetLabel, subLangName } from "../lib/captions";
+import { lazyNamed } from "../lib/lazy";
+import { HoldButton } from "../components/HoldButton";
+import type { SubTab, SubtitleOptionsProps } from "../components/SubtitleOptions";
+
+const SubtitleOptions = lazyNamed(() => import("../components/SubtitleOptions"), "SubtitleOptions");
 
 /** Panda subtitles in the Audio & Subtitles panel (v1.2.1). */
 export interface CaptionControls {
@@ -27,6 +32,8 @@ export interface CaptionControls {
   langs: string[];
   onTrack: (t: SubtitleTrack | "off") => void;
   onNudge: (by: number) => void;
+  /** v1.2.7: the full Subtitles panel (tracks, style, timing, second language). */
+  options?: Omit<SubtitleOptionsProps, "tv" | "tab" | "onPicked">;
 }
 
 /** Quality choices of the TV PLAYER blueprint (§20.9). `cap` is the CineSrc `quality` hint. */
@@ -139,10 +146,11 @@ export interface TvChromeProps {
   onFit?: (m: FitMode) => void;
 }
 
-type Panel = null | "quality" | "audio" | "next" | "report" | "sleep";
+type Panel = null | "quality" | "audio" | "next" | "report" | "sleep" | "subs";
 
 export function TvPlayerChrome(p: TvChromeProps) {
   const [panel, setPanel] = useState<Panel>(null);
+  const [subTab, setSubTab] = useState<SubTab>("tracks");
   const [pending, setPending] = useState<number | null>(null);
   const repeats = useRef(0);
   const lastPress = useRef(0);
@@ -419,7 +427,8 @@ export function TvPlayerChrome(p: TvChromeProps) {
             <div className="tvp-col">
               <p className="tvp-col-title">Subtitles</p>
               <div className="tvp-list lrud-container" role="radiogroup" aria-label="Subtitles">
-                <SubtitleRows c={p.captions} native={p.nativeControls} onOff={() => { if (p.nativeControls) p.onNativeControls(false); p.captions?.onTrack("off"); }} onPicked={() => { if (p.nativeControls) p.onNativeControls(false); }} />
+                <SubtitleRows c={p.captions} native={p.nativeControls} onOff={() => { if (p.nativeControls) p.onNativeControls(false); p.captions?.onTrack("off"); }} onPicked={() => { if (p.nativeControls) p.onNativeControls(false); }}
+                  onOptions={(t) => { setSubTab(t); setPanel("subs"); }} />
                 <button id="tvp-sub-src" role="radio" aria-checked={p.nativeControls} className={`tvp-row ${p.nativeControls ? "is-selected" : ""}`} onClick={() => { p.onNativeControls(true); setPanel(null); }} data-hover-focus>
                   <span className="tvp-check" aria-hidden="true">{p.nativeControls && <Icon name="check" />}</span>
                   <span className="tvp-row-text"><strong>Choose in source player</strong><small>Opens {p.sourceId ? sourceName(p.sourceId) : "the source"}'s subtitle and audio menu</small></span>
@@ -427,6 +436,14 @@ export function TvPlayerChrome(p: TvChromeProps) {
               </div>
             </div>
           </div>
+        </SidePanel>
+      )}
+
+      {panel === "subs" && p.captions?.options && (
+        <SidePanel className="tvp-panel--audio tvp-panel--subs" title="Subtitles" onClose={() => setPanel("audio")}>
+          <Suspense fallback={<p className="tvp-panel-note">Loading…</p>}>
+            <SubtitleOptions {...p.captions.options} tv={!p.touch} tab={subTab} onPicked={() => { if (p.nativeControls) p.onNativeControls(false); }} />
+          </Suspense>
         </SidePanel>
       )}
 
@@ -656,7 +673,7 @@ function GestureHud({ kind, value, position, duration }: { kind: DragKind | "hol
 }
 
 /** Off, Panda's subtitle tracks, a timing nudge and the status line (v1.2.1). */
-function SubtitleRows({ c, native, onOff, onPicked }: { c?: CaptionControls; native: boolean; onOff: () => void; onPicked: () => void }) {
+function SubtitleRows({ c, native, onOff, onPicked, onOptions }: { c?: CaptionControls; native: boolean; onOff: () => void; onPicked: () => void; onOptions: (tab: SubTab) => void }) {
   const offSelected = !native && !c?.trackId;
   const langs = (c?.langs ?? []).map(subLangName).join(" or ");
   return (
@@ -676,10 +693,16 @@ function SubtitleRows({ c, native, onOff, onPicked }: { c?: CaptionControls; nat
       })}
       {c?.available && c.trackId && !native && (
         <div className="tvp-sub-sync lrud-container" role="group" aria-label="Subtitle timing">
-          <button id="tvp-sub-earlier" className="tvp-row tvp-row--half" onClick={() => c.onNudge(-0.5)} data-hover-focus><strong>Earlier</strong><small>−0.5 s</small></button>
-          <button id="tvp-sub-later" className="tvp-row tvp-row--half" onClick={() => c.onNudge(0.5)} data-hover-focus><strong>Later</strong><small>+0.5 s</small></button>
+          <HoldButton id="tvp-sub-earlier" className="tvp-row tvp-row--half" label="Earlier" sub="−0.1 s" onStep={() => c.onNudge(-0.1)} />
+          <HoldButton id="tvp-sub-later" className="tvp-row tvp-row--half" label="Later" sub="+0.1 s" onStep={() => c.onNudge(0.1)} />
           <p className="tvp-sub-offset" aria-live="polite">{offsetLabel(c.offset)}</p>
         </div>
+      )}
+      {c?.available && c.options && (
+        <button id="tvp-sub-options" className="tvp-row" onClick={() => onOptions(c.trackId && !native ? "style" : "tracks")} data-hover-focus>
+          <span className="tvp-check" aria-hidden="true"><Icon name="settings" /></span>
+          <span className="tvp-row-text"><strong>Subtitle options</strong><small>Size, colour, more languages, second language</small></span>
+        </button>
       )}
       {c?.available && (c.loading || c.failed || c.error || !c.tracks.length) && (
         <p className="tvp-panel-note tvp-sub-status" aria-live="polite">

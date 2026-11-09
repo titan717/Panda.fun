@@ -116,9 +116,11 @@
 <script>
 (function () {
   "use strict";
-  var KEY = "panda-remote-code";
+  // v1.2.7: the pairing code is traded once for a session token; only the token is kept (it expires on the TV)
+  var KEY = "panda-remote-session";
+  try { localStorage.removeItem("panda-remote-code"); } catch (e) {}
   var $ = function (id) { return document.getElementById(id); };
-  var code = null, online = false, timer = 0, typeTimer = 0, lastState = null;
+  var code = null, session = null, online = false, timer = 0, typeTimer = 0, lastState = null;
 
   function norm(v) { return String(v || "").toUpperCase().replace(/[\s-]/g, "").replace(/O/g, "0").replace(/[IL]/g, "1"); }
   function pretty(c) { return c.length > 4 ? c.slice(0, 4) + "-" + c.slice(4) : c; }
@@ -132,7 +134,7 @@
   }
 
   function call(path, body) {
-    return fetch("/api/" + path, { method: "POST", headers: { "content-type": "application/json", "x-panda-code": code || "" }, body: JSON.stringify(body || {}) })
+    return fetch("/api/" + path, { method: "POST", headers: path === "hello" ? { "content-type": "application/json", "x-panda-code": code || "" } : { "content-type": "application/json", "x-panda-session": session || "" }, body: JSON.stringify(body || {}) })
       .then(function (r) { return r.json().catch(function () { return { ok: false, error: "BAD_RESPONSE" }; }).then(function (j) { j.status = r.status; return j; }); });
   }
 
@@ -149,8 +151,17 @@
   }
 
   function handle(j) {
-    if (j.ok) { setOnline(true, "Connected to " + (j.device || "TV")); render(j.state, j.device); return true; }
-    if (j.status === 401) { localStorage.removeItem(KEY); code = null; setOnline(false); show("pair"); $("pair-err").textContent = j.triesLeft ? "That code didn't match. Check the TV and try again." : "That code didn't match."; return false; }
+    if (j.ok) {
+      if (j.session) { session = j.session; code = null; try { localStorage.setItem(KEY, session); } catch (e) {} }
+      setOnline(true, "Connected to " + (j.device || "TV")); render(j.state, j.device); return true;
+    }
+    if (j.status === 401) {
+      try { localStorage.removeItem(KEY); } catch (e) {}
+      session = null; code = null; clearTimeout(timer); setOnline(false); show("pair");
+      $("pair-err").textContent = j.error === "SESSION_EXPIRED" ? "This phone was disconnected. Enter the code on the TV to pair again." : j.triesLeft ? "That code didn't match. Check the TV and try again." : "That code didn't match.";
+      return false;
+    }
+    if (j.status === 403) { setOnline(false, "Not allowed"); show("pair"); $("pair-err").textContent = "Open the remote from the TV's address (the QR on Connect Phone), on the same Wi-Fi."; return false; }
     if (j.status === 429) { setOnline(false, "Locked"); show("pair"); $("pair-err").textContent = "Too many wrong codes. Try again in " + Math.ceil((j.retryAfter || 300) / 60) + " min."; return false; }
     toast("The TV refused that"); return false;
   }
@@ -164,7 +175,7 @@
 
   function poll() {
     clearTimeout(timer);
-    if (!code || document.hidden) return;
+    if (!session || document.hidden) return;
     call("state").then(function (j) { handle(j); }, offline).then(function () { timer = setTimeout(poll, 3000); });
   }
 
@@ -175,7 +186,7 @@
     $("pair-go").disabled = true;
     call("hello").then(function (j) {
       $("pair-go").disabled = false;
-      if (handle(j)) { localStorage.setItem(KEY, code); show("remote"); poll(); }
+      if (handle(j)) { show("remote"); poll(); }
     }, function () { $("pair-go").disabled = false; offline(); $("pair-err").textContent = "Can't reach the TV. Phone and TV need the same Wi-Fi, and Panda must be open on the TV."; show("pair"); });
   }
 
@@ -219,7 +230,7 @@
     else prompt("Copy this link", url);
   });
 
-  $("unpair").addEventListener("click", function () { localStorage.removeItem(KEY); code = null; setOnline(false); show("pair"); clearTimeout(timer); });
+  $("unpair").addEventListener("click", function () { try { localStorage.removeItem(KEY); } catch (e) {} code = null; session = null; setOnline(false); show("pair"); clearTimeout(timer); });
   $("pair-go").addEventListener("click", function () { connect($("code").value); });
   $("code").addEventListener("input", function () { var c = norm($("code").value).slice(0, 8); $("code").value = pretty(c); });
   $("code").addEventListener("keydown", function (e) { if (e.key === "Enter") connect($("code").value); });
@@ -230,7 +241,7 @@
   if (location.hash) history.replaceState(null, "", location.pathname);
   var saved = localStorage.getItem(KEY);
   if (fromHash.length === 8) connect(fromHash);
-  else if (saved) connect(saved);
+  else if (saved && /^[0-9a-f]{64}$/.test(saved)) { session = saved; call("state").then(function (j) { if (handle(j)) { show("remote"); poll(); } }, function () { offline(); show("remote"); poll(); }); }
   else show("pair");
 })();
 </script>

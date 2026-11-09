@@ -1,7 +1,7 @@
-import { useEffect, useRef, useState } from "react";
+import { Suspense, useEffect, useRef, useState } from "react";
+import { lazyNamed } from "../lib/lazy";
 import { Icon } from "../components/Icon";
 import { Avatar } from "../components/ui";
-import { Sheet } from "../components/Sheet";
 import { actions, getState, useProfile, useStore, type Profile } from "../lib/store";
 import { useReducedMotion } from "../lib/hooks";
 import { preload } from "swr";
@@ -13,30 +13,8 @@ import { focusFirst } from "../lib/focus";
 import { useNav } from "../lib/nav";
 import { useIsTv } from "../lib/layout";
 
-/** PIN prompt guarding adult profiles when leaving a Kids profile (Parental Controls, spec 15.6). */
-export function PinDialog({ title, onSuccess, onClose }: { title: string; onSuccess: () => void; onClose: () => void }) {
-  const [pin, setPin] = useState("");
-  const [error, setError] = useState(false);
-  const expected = getState().prefs.kidsPin;
-  const submit = (v: string) => {
-    if (v === expected) onSuccess();
-    else { setError(true); setPin(""); }
-  };
-  return (
-    <Sheet title={title} onClose={onClose} className="pin-sheet">
-      <p className="sheet-sub">Enter the 4-digit Parental Controls PIN.</p>
-      <input className="pin-input" inputMode="numeric" pattern="[0-9]*" maxLength={4} autoFocus data-autofocus aria-label="PIN" type="password" value={pin}
-        onChange={(e) => { const v = e.target.value.replace(/\D/g, "").slice(0, 4); setPin(v); setError(false); if (v.length === 4) submit(v); }} />
-      {error && <p className="pin-error" role="alert">That PIN isn't right. Try again.</p>}
-      <div className="pin-pad lrud-container">
-        {["1", "2", "3", "4", "5", "6", "7", "8", "9", "", "0", "⌫"].map((k, i) => k === "" ? <span key={i} /> : (
-          <button key={i} id={`pin-${i}`} className="pin-key" data-hover-focus aria-label={k === "⌫" ? "Delete" : k}
-            onClick={() => { if (k === "⌫") setPin((p) => p.slice(0, -1)); else { const v = (pin + k).slice(0, 4); setPin(v); setError(false); if (v.length === 4) submit(v); } }}>{k}</button>
-        ))}
-      </div>
-    </Sheet>
-  );
-}
+// the PIN pad, its hash check and lockout load on demand (v1.2.7)
+const PinDialog = lazyNamed(() => import("../components/PinDialog"), "PinDialog");
 
 /** "Who's watching?" (spec 3). */
 export function ProfileSelect() {
@@ -96,7 +74,7 @@ export function ProfileSelect() {
         )}
       </ul>
       <button id="prof-manage" className="profiles-manage" onClick={() => go("/profiles/manage")} data-hover-focus><Icon name="edit" /> Manage Profiles</button>
-      {pinFor && <PinDialog title={`Switch to ${pinFor.name}`} onClose={() => setPinFor(null)} onSuccess={() => { const p = pinFor; setPinFor(null); enter(p); }} />}
+      {pinFor && <Suspense fallback={null}><PinDialog title={`Switch to ${pinFor.name}`} onClose={() => setPinFor(null)} onSuccess={() => { const p = pinFor; setPinFor(null); enter(p); }} /></Suspense>}
     </div>
   );
 }

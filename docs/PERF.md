@@ -2,6 +2,14 @@
 
 Measured on every release. Never regress.
 
+## v1.2.7 (subtitles, Kids PIN, Android security)
+
+| Metric | Value |
+|---|---|
+| Entry chunk (gzip) | 23,367 B at gzip -9 (v1.2.6 23,981 B, −614 B). The PIN dialog and its PBKDF2 code moved out of `Profiles` into a lazy `PinDialog` chunk; the subtitles panel is the lazy `SubtitleOptions` chunk; only the CC-key listener (~150 B) joins the entry. |
+| Entry CSS (gzip) | 14,608 B (unchanged): `subtitle-options.css` loads with its chunk. |
+| Native | Pinning is evaluated by the platform TLS stack (no extra round trips); the APK signature check runs once per update after download. |
+
 ## v1.2.6 (player I, security gate)
 
 | Metric | Value |

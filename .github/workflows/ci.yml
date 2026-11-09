@@ -55,6 +55,8 @@ jobs:
         with:
           packages: "platform-tools"
       - run: sdkmanager "platforms;android-34" "build-tools;34.0.0"
+      - name: Certificate pins still match the live chains (network_security_config.xml)
+        run: node scripts/check-pins.mjs
       - uses: gradle/actions/setup-gradle@748248ddd2a24f49513d8f472f81c3a07d4d50e1 # v4.4.4
         with:
           gradle-version: "8.5"

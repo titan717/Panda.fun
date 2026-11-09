@@ -10,8 +10,8 @@ import { Icon, PandaMark, type IconName } from "../components/Icon";
 import { PageHeader } from "../components/PageHeader";
 import { toast } from "../components/ui";
 import { CaptionPreview } from "../components/CaptionLayer";
-import { SUB_LANGS, SUB_MODES, SUB_SIZES, SUB_STYLES, subLangName } from "../lib/captions";
-import { Sheet } from "../components/Sheet";
+import { SUB_BGS, SUB_COLORS, SUB_EDGES, SUB_HEIGHTS, SUB_LANGS, SUB_MODES, SUB_SIZES, subLangName, subLook, type SubBg, type SubColor, type SubEdge } from "../lib/captions";
+import { ParentLock, PinSetup } from "../components/PinDialog";
 import { SyncPanel } from "./SyncSettings";
 import "./sync.css";
 import { actions, usePrefs, useProfile, useReminders, type Prefs } from "../lib/store";
@@ -230,20 +230,6 @@ function StorageUsage() {
   return <p className="set-note">Panda.fun is using {fmtBytes(usage.used)} on this device{usage.quota ? ` of ${fmtBytes(usage.quota)} available` : ""}.</p>;
 }
 
-function PinSetup({ onClose }: { onClose: () => void }) {
-  const [pin, setPin] = useState("");
-  return (
-    <Sheet title="Set Parental Controls PIN" onClose={onClose}>
-      <p className="sheet-sub">You'll need this PIN to switch from a Kids profile to another profile.</p>
-      <input className="pin-input" inputMode="numeric" maxLength={4} type="password" aria-label="New PIN" value={pin} data-autofocus autoFocus
-        onChange={(e) => setPin(e.target.value.replace(/\D/g, "").slice(0, 4))} />
-      <div className="form-actions lrud-container">
-        <button className="btn btn--primary" disabled={pin.length !== 4} onClick={() => { actions.setPrefs({ kidsPin: pin }); toast("PIN saved"); onClose(); }}>Save PIN</button>
-        <button className="btn btn--secondary" onClick={onClose}>Cancel</button>
-      </div>
-    </Sheet>
-  );
-}
 
 /** Settings › Personalize Home (v1.1.9, D-110): move sections up or down, hide sections or single rows. */
 function HomePanel() {
@@ -376,7 +362,7 @@ function Panel({ id }: { id: SectionId }) {
     case "subtitles":
       return (
         <div className="set-panel">
-          <CaptionPreview size={prefs.subtitleSize} look={prefs.subtitleStyle} text={`Subtitles in ${subLangName(prefs.subtitleLang)} will look like this`} />
+          <CaptionPreview look={subLook(prefs)} text={`Subtitles in ${subLangName(prefs.subtitleLang)} will look like this`} second={prefs.subtitleDual ? `${subLangName(prefs.subtitleDual)} subtitles appear here` : undefined} />
           <p className="set-note">Panda shows its own subtitles on CineSrc and Vidy. Settings are saved for this profile only. You can always switch subtitles in the player under Audio &amp; Subtitles.</p>
           <Choice id="submode" title="Turn on subtitles" value={prefs.subtitleMode} options={SUB_MODES} onChange={(v) => { set({ subtitleMode: v }); toast(v === "off" ? "Subtitles stay off until you turn them on" : v === "always" ? "Subtitles on for every title" : "Subtitles on for other languages"); }} />
           <ChipChoice id="sublang" title="Subtitle language" value={prefs.subtitleLang} options={SUB_LANGS} onChange={(v) => { set({ subtitleLang: v, subtitleLang2: prefs.subtitleLang2 === v ? null : prefs.subtitleLang2 }); toast(`Subtitle language: ${subLangName(v)}`); }} />
@@ -384,7 +370,13 @@ function Panel({ id }: { id: SectionId }) {
             onChange={(v) => { set({ subtitleLang2: v === "none" ? null : v }); toast(v === "none" ? "No second subtitle language" : `Second language: ${subLangName(v)}`); }} />
           <Toggle id="sp-sdh" title="Subtitles for the deaf and hard of hearing" sub="Prefer SDH tracks with sound descriptions such as [door slams]" value={prefs.subtitleSdh} onChange={(v) => set({ subtitleSdh: v })} />
           <Choice id="subsize" title="Size" value={prefs.subtitleSize} options={SUB_SIZES} onChange={(v) => set({ subtitleSize: v })} />
-          <Choice id="substyle" title="Style" value={prefs.subtitleStyle} options={SUB_STYLES} onChange={(v) => set({ subtitleStyle: v })} />
+          <ChipChoice id="subcolor" title="Text colour" value={subLook(prefs).color} options={SUB_COLORS} onChange={(v) => set({ subtitleColor: v as SubColor })} />
+          <ChipChoice id="subbg" title="Background" value={subLook(prefs).bg} options={SUB_BGS} onChange={(v) => set({ subtitleBg: v as SubBg })} />
+          <ChipChoice id="subedge" title="Edge" value={subLook(prefs).edge} options={SUB_EDGES} onChange={(v) => set({ subtitleEdge: v as SubEdge })} />
+          <ChipChoice id="subpos" title="Height above the bottom" value={String(SUB_HEIGHTS.reduce((a, b) => (Math.abs(b - subLook(prefs).pos) < Math.abs(a - subLook(prefs).pos) ? b : a)))} options={SUB_HEIGHTS.map((h) => ({ id: String(h), label: h === 0 ? "Default" : `+${h}%` }))} onChange={(v) => set({ subtitlePos: Number(v) })} />
+          <ChipChoice id="subdual" title="Second language on screen at once" value={prefs.subtitleDual ?? "none"} options={[{ id: "none", label: "Off" }, ...SUB_LANGS.filter((l) => l.id !== prefs.subtitleLang)]}
+            onChange={(v) => { set({ subtitleDual: v === "none" ? null : v }); toast(v === "none" ? "One subtitle language at a time" : `${subLangName(v)} shows above the main subtitles`); }} />
+          <Row id="sp-sub-reset" title="Reset subtitle look" sub="Medium white text with a soft shadow at the default height" onClick={() => { set({ subtitleSize: "medium", subtitleStyle: "shadow", subtitleColor: undefined, subtitleBg: undefined, subtitleEdge: undefined, subtitlePos: undefined }); toast("Subtitle look reset"); }} />
         </div>
       );
     case "sources":
@@ -402,11 +394,13 @@ function Panel({ id }: { id: SectionId }) {
     }
     case "parental":
       return (
+        <ParentLock title="Parental Controls" fallback="/settings">
         <div className="set-panel">
           <Row id="sp-pin" title={prefs.kidsPin ? "Change PIN" : "Set PIN"} sub={prefs.kidsPin ? "A PIN is required to leave Kids profiles" : "No PIN set"} onClick={() => setPinOpen(true)} />
           {prefs.kidsPin && <Row id="sp-pin-off" title="Remove PIN" onClick={() => { set({ kidsPin: null }); toast("PIN removed"); }} />}
           {pinOpen && <PinSetup onClose={() => setPinOpen(false)} />}
         </div>
+        </ParentLock>
       );
     case "display":
       return (

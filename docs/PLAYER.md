@@ -70,6 +70,17 @@ In portrait the frame is a centred 16:9 box instead of filling the screen. CineS
 | Play/Pause, Play, Pause, Fast-forward, Rewind | media keys |
 | Back | closes the open panel, then hides the chrome, then leaves the player |
 
+## Subtitles panel (v1.2.7, D-159–D-162)
+
+Panda renders subtitles itself (the embeds expose no text tracks), so everything below works on every source.
+
+- **One press**: the CC key on remotes and keyboards (`ClosedCaptionToggle`, `Subtitle`, key code 460, or `c` outside text fields) and the CC button toggle the last-used track; a toast says "Subtitles on · English" or "Subtitles off".
+- **Tracks tab**: the languages for this title with a quick switch, "More languages" (searches up to three more), an SDH badge for hearing-impaired tracks, and a second (dual) track drawn above the main one in a smaller, dimmer style.
+- **Style tab** with a live preview over the video: size, colour (white, yellow, cyan, green), background (none, translucent, solid box), edge (shadow, outline, none) and height (five steps, chosen with up/down or a tap). TV uses distance-sized defaults.
+- **Timing tab**: earlier/later in 0.1 s steps; holding the button repeats and speeds up (HoldButton, pointer capture so a moving finger doesn't stop it).
+- **Memory**: track, offset and dual choice are remembered per title and profile (`panda:v1:subs`, last 200 titles); style is a per-profile preference, also editable in Settings › Subtitles.
+- The panel is a lazy chunk (`SubtitleOptions`), loaded only when opened.
+
 ## Tests
 
 `src/test/v124*.test.ts`, `src/test/v126.test.ts` (logic) and `e2e/v124-player.spec.ts`, `e2e/v126.spec.ts`, `e2e/subtitles.spec.ts` (stand-in CineSrc embed that reports `ready`, progress and records the commands it receives).

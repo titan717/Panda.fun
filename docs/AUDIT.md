@@ -1,5 +1,22 @@
 # Audit
 
+## Audit v1.2.7 — subtitles, Kids PIN and Android review (2026-11-09)
+
+Affected screens audited first: player subtitles (TV side panel, phone sheet), Settings › Subtitles and Parental, Profiles, Manage/Edit profile, the phone remote page, and the native update, network and storage paths.
+
+| Finding | Severity | Fix |
+|---|---|---|
+| Manage profiles let a child turn Kids off, remove the PIN or add an adult profile without the PIN | High | ParentLock on Settings › Parental, Manage and Edit profile (A127-3) |
+| Kids PIN stored in plain text, unlimited guesses | Medium | PBKDF2 hash + salt, persisted lockout (A127-1, A127-2) |
+| Hold-to-repeat timing buttons stopped as soon as a finger moved on phones | Medium (bug) | HoldButton uses pointer capture and stops only on release/cancel/lost capture |
+| CC key did nothing on phones (focus on `<body>`, listener on the player root) | Low (bug) | window capture listener |
+| Subtitle offset in 0.5 s steps was too coarse for real drift | Low | 0.1 s steps with hold acceleration |
+| Phone remote: no session expiry or rate limit, any source address, no Host check, code kept on the phone | Medium | sessions, LAN-only, IP-literal Host, token bucket, global wrong-code limit (A127-8) |
+| Update APK origin not checked before the installer; FileProvider exposed the external storage root; backups on; no pinning | Medium/Low | A127-4 to A127-7 |
+| R8 full mode implicit | Info | set explicitly; keep rules for Gson/TypeToken already present |
+
+Gates: lint 0 warnings, `tsc -b` strict, 232 unit tests, full Playwright suite on all projects, entry JS 23,367 B (≤ budget), CSP check, Android build and emulator install over 1.2.6 in CI.
+
 ## Audit v1.2.6 — player and security gate (2026-11-09)
 
 Inspected: the player on phones (portrait and landscape), tablets and TV with the CineSrc, Vidy and VidLink stand-ins and the live embeds; every workflow in `.github/workflows`; `npm audit`; `vercel.json` headers; the Android WebView, bridge and bundled-asset responses (`MainActivity.kt`); the entry chunk by module.

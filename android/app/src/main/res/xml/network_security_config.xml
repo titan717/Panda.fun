@@ -1,0 +1,40 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  Panda.fun network security (v1.2.7, SECURITY A127-6). Cleartext is off everywhere and only system CAs are
+  trusted (user-added CAs are ignored in release builds).
+
+  Pins: the update checker's metadata hosts (OkHttp in UpdateChecker.kt). Neither host is ours to rotate, so the
+  pins are the SPKI hashes of every root CA these services issue from, plus backup roots of the other big public
+  CAs. Rotation plan (docs/SECURITY.md "Certificate pins"): scripts/check-pins.mjs runs in CI on every push and
+  fails the build when a live chain no longer contains a pinned key; pins are refreshed in the same release. The
+  pin-set expires on 2027-12-31, after which Android stops enforcing it (fails open) rather than ever bricking
+  updates. The APK itself is verified end-to-end (signing certificate, SHA-256, package and version), so a
+  broken pin can at worst hide an update notice, never install a foreign APK.
+  WebView does not apply pin-sets; the web app's own requests rely on HSTS and the strict CSP (docs/SECURITY.md).
+-->
+<network-security-config>
+    <base-config cleartextTrafficPermitted="false">
+        <trust-anchors>
+            <certificates src="system" />
+        </trust-anchors>
+    </base-config>
+    <domain-config cleartextTrafficPermitted="false">
+        <domain includeSubdomains="false">api.github.com</domain>
+        <domain includeSubdomains="false">apikinoma.vercel.app</domain>
+        <pin-set expiration="2027-12-31">
+            <!-- Let's Encrypt (Vercel): ISRG Root X1, ISRG Root X2 -->
+            <pin digest="SHA-256">C5+lpZ7tcVwmwQIMcRtPbsQtWLABXhQzejna0wHFr8M=</pin>
+            <pin digest="SHA-256">diGVwiVYbubAI3RW4hB9xU8e/CH2GnkuvVFZE8zmgzI=</pin>
+            <!-- Sectigo (GitHub): USERTrust ECC, USERTrust RSA -->
+            <pin digest="SHA-256">ICGRfpgmOUXIWcQ/HXPLQTkFPEFPoDyjvH7ohhQpjzs=</pin>
+            <pin digest="SHA-256">x4QzPSC810K5/cMjb05Qm4k3Bw5zBn4lTdO/nEW/Td4=</pin>
+            <!-- DigiCert: Global Root CA, Global Root G2, Global Root G3 -->
+            <pin digest="SHA-256">r/mIkG3eEpVdm+u/ko/cwxzOMo1bk4TyHIlByibiA5E=</pin>
+            <pin digest="SHA-256">i7WTqTvh0OioIruIfFR4kMPnBqrS2rdiVPl/s2uC/CY=</pin>
+            <pin digest="SHA-256">uUwZgwDOxcBXrQcntwu+kYFpkiVkOaezL0WYEZ3anJc=</pin>
+            <!-- Backups, Google Trust Services: GTS Root R1, GTS Root R4 -->
+            <pin digest="SHA-256">hxqRlPTu1bMS/0DITB1SSu0vd4u/8l8TjPgfaAp63Gc=</pin>
+            <pin digest="SHA-256">mEflZT5enoR1FuXLgYYGqnVEoZvmf9c2bVBpiOjYQ0c=</pin>
+        </pin-set>
+    </domain-config>
+</network-security-config>

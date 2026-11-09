@@ -2,6 +2,17 @@
 
 Every stable release of Panda.fun. The same notes ship in each GitHub Release and in Settings › What's New.
 
+## 1.2.7
+
+- **A real subtitles panel**: open Subtitles in the player for three tabs. Tracks switches language in one press, finds more languages, marks hearing-impaired (SDH) tracks and can show a second language above the first. Style changes size, colour, background, edge and height with a live preview over the video. Timing moves subtitles earlier or later in 0.1-second steps; hold the button to move faster.
+- **Subtitles remember each title**: the track, timing and second language you chose come back next time you open that title, for each profile. The CC button on remotes and keyboards (or the C key) turns subtitles on and off anywhere in the player.
+- **Same choices in Settings**: Settings › Subtitles has the colour, background, edge, height and second-language options too, plus "Reset subtitle look".
+- **Kids profiles you can trust**: the PIN is now stored hashed, five wrong tries lock entry for 30 seconds (longer each time), and Manage profiles, Edit profile and Parental controls all ask for the PIN first. Before, a child could switch Kids off from Manage profiles.
+- **Safer phone remote**: pairing now gives each phone a session that ends after 2 hours unused or 24 hours in total, the TV only answers phones on your home network, and fast repeated requests are slowed down. Pair again by scanning the QR on Connect Phone.
+- **Safer updates and storage**: before installing an update, the app now checks it is Panda, newer than what you have, and signed with the same key. Connections to Panda's server and GitHub are pinned to their certificate authorities, and app data is no longer included in device backups. Use Sync to move your library to another device.
+
+Phones paired with 1.2.6 or older need to scan the QR on the TV's Connect Phone screen once.
+
 ## 1.2.6
 
 - **A new first-frames screen**: while a video starts, the player shows the title, "Season 1, Episode 2 · episode title" and "Buffering the first seconds…" with a percentage that follows how fast that source usually starts on your device, then fades into the video.

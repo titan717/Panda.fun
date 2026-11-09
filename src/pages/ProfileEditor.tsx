@@ -11,9 +11,15 @@ import { useNav } from "../lib/nav";
 import { useIsTv } from "../lib/layout";
 import { useRemoteField } from "../lib/remoteInput";
 import "./profile-editor.css";
+import { ParentLock } from "../components/PinDialog";
 
 /** Manage profiles list (spec 15.3). */
+/** Grown-up settings: while a Kids profile is on and a PIN is set, the PIN opens them (v1.2.7). */
 export function ProfileManage() {
+  return <ParentLock title="Manage Profiles" fallback="/profiles"><ManageList /></ParentLock>;
+}
+
+function ManageList() {
   const profiles = useStore((s) => s.profiles);
   const data = useStore((s) => s.data);
   const tv = useIsTv();
@@ -60,6 +66,10 @@ const AVATARS: AvatarKind[] = ["smile", "panda", "star", "wave", "kids"];
 
 /** Create / edit a profile. */
 export function ProfileEdit({ isNew }: { isNew?: boolean }) {
+  return <ParentLock title={isNew ? "Add Profile" : "Edit Profile"} fallback="/profiles"><EditForm isNew={isNew} /></ParentLock>;
+}
+
+function EditForm({ isNew }: { isNew?: boolean }) {
   const { id } = useParams<{ id: string }>();
   const profiles = useStore((s) => s.profiles);
   const existing = isNew ? null : profiles.find((p) => p.id === id) ?? null;

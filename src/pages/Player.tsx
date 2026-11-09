@@ -13,12 +13,12 @@ import { ErrorState, Img, Spinner, toast } from "../components/ui";
 import { Sheet } from "../components/Sheet";
 import { CaptionLayer } from "../components/CaptionLayer";
 import { useCaptions } from "../lib/useCaptions";
-import { clockAt, offsetLabel, subLangName } from "../lib/captions";
+import { clockAt, isCcKey, offsetLabel, subLangName, subLook } from "../lib/captions";
 import { KidsGate } from "../components/KidsGate";
 import { keys } from "../lib/api";
 import { useSeason, useSourceRanking, useTitle } from "../lib/hooks";
 import { ISSUES, isAnimeTitle, rankOf, reliabilityLabel, reliabilityTone, sourceOrder, tierLabel } from "../lib/sources";
-import { actions, getPrefs, useHistoryEntry, usePrefs } from "../lib/store";
+import { actions, getPrefs, useHistoryEntry, usePrefs, useStore } from "../lib/store";
 import { stopAllTrailers } from "../lib/audio";
 import { useBackHandler, focusEl, focusFirst } from "../lib/focus";
 import { nativeEnterPip, nativePipSupported, nativePlaybackActive } from "../lib/pip";
@@ -41,6 +41,8 @@ const TvPlayerChrome = lazyNamed(loadTvChrome, "TvPlayerChrome");
 const loadPrompts = () => import("../components/PlayerPrompts");
 const PlayerPrompts = lazyNamed(loadPrompts, "PlayerPrompts");
 const PlayerOptionsSheet = lazyNamed(loadPrompts, "PlayerOptionsSheet");
+export const loadSubOptions = () => import("../components/SubtitleOptions");
+const SubtitleOptions = lazyNamed(loadSubOptions, "SubtitleOptions");
 import type { SkipSegments, MediaType, PlaybackPayload, PlaybackSource, SourceId, TitleDetails } from "../lib/types";
 
 const SHORT: Record<SourceId, string> = { cinesrc: sourceName("cinesrc"), vidy: sourceName("vidy"), vidyanime: sourceName("vidyanime"), vidlink: sourceName("vidlink") };
@@ -122,7 +124,8 @@ function Player({ type, id, season, episode, start }: { type: MediaType; id: num
   const captionsOk = Boolean(source && ADAPTERS[source.id]?.captions) && !nativeControls;
   // v1.2.4: VidLink takes Panda's preferred subtitle file (sub_file) and draws it in its own player
   const handsSubs = source?.id === "vidlink" && !nativeControls && prefs.subtitleMode !== "off";
-  const caps = useCaptions({ imdbId: details?.imdbId, season: isTv ? ep.s : undefined, episode: isTv ? ep.e : undefined, enabled: captionsOk || handsSubs, prefs, original: details?.language ?? null });
+  const profileId = useStore((st) => st.activeProfileId);
+  const caps = useCaptions({ imdbId: details?.imdbId, season: isTv ? ep.s : undefined, episode: isTv ? ep.e : undefined, enabled: captionsOk || handsSubs, prefs, original: details?.language ?? null, titleKey: details?.id, profileId: profileId ?? undefined });
   const [handedSub, setHandedSub] = useState<{ url: string; label: string } | null>(null);
   const [subsSheet, setSubsSheet] = useState(false);
   const [ready, setReady] = useState(false);
@@ -572,6 +575,18 @@ function Player({ type, id, season, episode, start }: { type: MediaType; id: num
     return () => window.removeEventListener("keydown", onMenu, true);
   }, [poke]);
 
+  /* ---- v1.2.7: the remote's CC / Subtitle key (and C on a keyboard) switches Panda subtitles in one press, wherever focus is ---- */
+  const ccToggle = useRef<(() => void) | null>(null);
+  ccToggle.current = captionsOk && details?.imdbId ? toggleSubtitles : null;
+  useEffect(() => {
+    const onCc = (e: KeyboardEvent) => {
+      if (e.repeat || !ccToggle.current || !isCcKey(e)) return;
+      e.preventDefault(); e.stopPropagation(); poke(); ccToggle.current();
+    };
+    window.addEventListener("keydown", onCc, true);
+    return () => window.removeEventListener("keydown", onCc, true);
+  }, [poke]);
+
   /* ---- remote keys while the overlay is hidden ---- */
   const onKeyDown = (k: React.KeyboardEvent) => {
     // v1.2.6: the remote's Menu key opens the quick panel (Quality, source, speed, picture)
@@ -617,6 +632,10 @@ function Player({ type, id, season, episode, start }: { type: MediaType; id: num
     caps.choose(t);
     toast(t === "off" ? "Subtitles off" : `Subtitles: ${t.label}`, 1600);
   }
+  function toggleSubtitles() {
+    const t = caps.toggle();
+    toast(t ? `Subtitles: ${t.label}` : caps.track ? "Subtitles off" : caps.loading ? "Looking for subtitles…" : "No subtitles found for this title", 1600);
+  }
   function nudgeSubtitle(by: number) {
     caps.nudge(by);
     toast(offsetLabel(Math.max(-30, Math.min(30, Math.round((caps.offset + by) * 10) / 10))), 1200);
@@ -650,7 +669,8 @@ function Player({ type, id, season, episode, start }: { type: MediaType; id: num
       captions: {
         available: captionsOk && Boolean(details?.imdbId), tracks: caps.tracks, trackId: caps.track?.id ?? null, loading: caps.loading, failed: caps.failed, error: caps.error,
         offset: caps.offset, langs: [prefs.subtitleLang, prefs.subtitleLang2].filter((x): x is string => Boolean(x)),
-        onTrack: chooseSubtitle, onNudge: nudgeSubtitle
+        onTrack: chooseSubtitle, onNudge: nudgeSubtitle,
+        options: { caps, prefs, onPrefs: actions.setPrefs, toast: (m) => toast(m, 1400) }
       },
       gestures: !tv && prefs.gestures,
       volume: dragVolume ?? prefs.volume, onVolume: (v) => {
@@ -689,7 +709,7 @@ function Player({ type, id, season, episode, start }: { type: MediaType; id: num
         <div className="player-dim" style={{ opacity: Math.round((1 - brightness) * 0.85 * 100) / 100 }} aria-hidden="true" />
       )}
       {ready && captionsOk && caps.track && caps.cues && (
-        <CaptionLayer cues={caps.cues} clock={caps.clock} offset={caps.offset} raised={overlay || Boolean(upNext)} size={prefs.subtitleSize} look={prefs.subtitleStyle} />
+        <CaptionLayer cues={caps.cues} second={caps.dual ? caps.dualCues : null} clock={caps.clock} offset={caps.offset} raised={overlay || Boolean(upNext)} look={subLook(prefs)} />
       )}
       {ready && buffering && stall === null && !paused && (
         <div className="player-buffering" id="pl-buffering" role="status" aria-label="Buffering"><div className="spinner" /></div>
@@ -788,27 +808,9 @@ function Player({ type, id, season, episode, start }: { type: MediaType; id: num
       )}
       {subsSheet && (
         <Sheet title="Subtitles" onClose={() => setSubsSheet(false)} className="sheet--report sheet--subs">
-          <div className="report-list lrud-container" role="radiogroup" aria-label="Subtitles">
-            <button id="pl-sub-off" role="radio" aria-checked={!caps.track} className={`report-row ${!caps.track ? "is-selected" : ""}`} data-autofocus={!caps.track ? true : undefined} data-hover-focus onClick={() => { chooseSubtitle("off"); setSubsSheet(false); }}>
-              <Icon name={!caps.track ? "check" : "captions"} /><span>Off</span>
-            </button>
-            {caps.tracks.map((t) => (
-              <button key={t.id} id={`pl-sub-${t.id}`} role="radio" aria-checked={caps.track?.id === t.id} className={`report-row ${caps.track?.id === t.id ? "is-selected" : ""}`} data-autofocus={caps.track?.id === t.id ? true : undefined} data-hover-focus
-                onClick={() => { chooseSubtitle(t); setSubsSheet(false); }}>
-                <Icon name={caps.track?.id === t.id ? "check" : "captions"} /><span>{t.label}</span>{t.release && <small>{t.release}</small>}
-              </button>
-            ))}
-          </div>
-          {caps.track && (
-            <div className="subs-sync lrud-container" role="group" aria-label="Subtitle timing">
-              <button id="pl-sub-earlier" className="btn btn--secondary" onClick={() => nudgeSubtitle(-0.5)} data-hover-focus>Earlier −0.5 s</button>
-              <span className="subs-offset" aria-live="polite">{offsetLabel(caps.offset)}</span>
-              <button id="pl-sub-later" className="btn btn--secondary" onClick={() => nudgeSubtitle(0.5)} data-hover-focus>Later +0.5 s</button>
-            </div>
-          )}
-          {(caps.loading || caps.failed || caps.error || !caps.tracks.length) && (
-            <p className="report-lead" aria-live="polite">{caps.error ? caps.error : caps.failed ? "Subtitles are unavailable right now. Try again in a moment" : caps.loading ? "Looking for subtitles…" : `No ${[prefs.subtitleLang, prefs.subtitleLang2].filter((x): x is string => Boolean(x)).map(subLangName).join(" or ")} subtitles found. Pick other languages in Settings › Subtitles`}</p>
-          )}
+          <Suspense fallback={<Spinner />}>
+            <SubtitleOptions caps={caps} prefs={prefs} onPrefs={actions.setPrefs} toast={(m) => toast(m, 1400)} tv={tv} onPicked={() => setSubsSheet(false)} />
+          </Suspense>
         </Sheet>
       )}
       {drawer && details && <EpisodesDrawer d={details} current={ep} spoilers={prefs.hideSpoilers} onClose={() => setDrawer(false)} onPick={(sn, en) => { setDrawer(false); playEpisode(sn, en); }} />}

@@ -53,7 +53,7 @@ test("Captions show over the source player and the track can be switched off", a
   await page.locator("#tvp-audio").click();
   await expect(page.locator("#tvp-sub-en-1")).toHaveAttribute("aria-checked", "true");
   await page.locator("#tvp-sub-later").click();
-  await expect(page.locator(".tvp-sub-offset")).toContainText("0.5");
+  await expect(page.locator(".tvp-sub-offset")).toContainText("0.1");
   await page.locator("#tvp-sub-off").click();
   await expect(page.locator(".captions:not(.captions--preview)")).toHaveCount(0);
 });

@@ -73,13 +73,20 @@ test("Without the Android app, Connect Phone explains how to pair and the sideba
 test("Phone remote page: pairs from the QR fragment, sends keys, shares the title on the TV", async ({ page }, info) => {
   test.skip(Boolean(info.project.metadata.tv), "phone page");
   const html = readFileSync("android/app/src/main/assets/remote/index.html", "utf8");
-  const sent: { path: string; code: string | undefined; body: string }[] = [];
+  const sent: { path: string; code: string | undefined; session: string | undefined; body: string }[] = [];
+  const TOKEN = "ab".repeat(32);
   await page.route("http://192.168.1.40:8765/**", async (r) => {
     const url = new URL(r.request().url());
     if (url.pathname === "/") return r.fulfill({ contentType: "text/html", body: html });
-    sent.push({ path: url.pathname, code: r.request().headers()["x-panda-code"], body: r.request().postData() ?? "" });
-    const ok = r.request().headers()["x-panda-code"] === "K7QD2M9X";
-    return r.fulfill({ status: ok ? 200 : 401, contentType: "application/json", body: JSON.stringify(ok ? { ok: true, device: "Living room TV", state: { screen: "Details", type: "movie", id: 550, title: "Fight Club", poster: "https://image.tmdb.org/t/p/w342/x.jpg" } } : { ok: false, error: "BAD_CODE", triesLeft: 7 }) });
+    const h = r.request().headers();
+    sent.push({ path: url.pathname, code: h["x-panda-code"], session: h["x-panda-session"], body: r.request().postData() ?? "" });
+    const state = { screen: "Details", type: "movie", id: 550, title: "Fight Club", poster: "https://image.tmdb.org/t/p/w342/x.jpg" };
+    if (url.pathname === "/api/hello") {
+      const ok = h["x-panda-code"] === "K7QD2M9X";
+      return r.fulfill({ status: ok ? 200 : 401, contentType: "application/json", body: JSON.stringify(ok ? { ok: true, device: "Living room TV", state, session: TOKEN } : { ok: false, error: "WRONG_CODE", triesLeft: 7 }) });
+    }
+    const ok = h["x-panda-session"] === TOKEN;
+    return r.fulfill({ status: ok ? 200 : 401, contentType: "application/json", body: JSON.stringify(ok ? { ok: true, device: "Living room TV", state } : { ok: false, error: "SESSION_EXPIRED" }) });
   });
   await page.addInitScript(() => { (navigator as unknown as { share: unknown }).share = (d: unknown) => { (window as unknown as { __shared: unknown }).__shared = d; return Promise.resolve(); }; });
   await page.goto("http://192.168.1.40:8765/#K7QD2M9X");
@@ -87,7 +94,9 @@ test("Phone remote page: pairs from the QR fragment, sends keys, shares the titl
   expect(page.url()).not.toContain("#"); // the code is taken out of the address bar
   await expect(page.locator("#now-title")).toHaveText("Fight Club");
   await page.getByRole("button", { name: "Up", exact: true }).click();
-  await expect.poll(() => sent.some((s) => s.path === "/api/key" && s.body.includes('"up"') && s.code === "K7QD2M9X")).toBe(true);
+  await expect.poll(() => sent.some((s) => s.path === "/api/key" && s.body.includes('"up"') && s.session === TOKEN && !s.code)).toBe(true);
+  // only the session token is stored, never the pairing code
+  expect(await page.evaluate(() => [localStorage.getItem("panda-remote-session"), localStorage.getItem("panda-remote-code")])).toEqual([TOKEN, null]);
   await page.locator("#share").click();
   expect(await page.evaluate(() => (window as unknown as { __shared: { url: string } }).__shared.url)).toBe("https://apikinoma.vercel.app/p/movie/550");
   // a wrong code goes back to pairing
@@ -95,6 +104,11 @@ test("Phone remote page: pairs from the QR fragment, sends keys, shares the titl
   await page.locator("#code").fill("ABCD2345");
   await page.locator("#pair-go").click();
   await expect(page.locator("#pair-err")).toContainText("didn't match");
+  // an expired session sends the phone back to pairing with a clear message
+  await page.evaluate(() => localStorage.setItem("panda-remote-session", "cd".repeat(32)));
+  await page.goto("http://192.168.1.40:8765/");
+  await expect(page.locator("#pair-err")).toContainText("disconnected");
+  expect(await page.evaluate(() => localStorage.getItem("panda-remote-session"))).toBeNull();
 });
 
 test("Mobile Details shares a real web link (the in-app address is not reachable elsewhere)", async ({ page }, info) => {

@@ -1,20 +1,32 @@
-/* Caption layer (v1.2.1, BLUEPRINT_GAPS G-18): broadcast-style captions over the embed. */
-.captions { position: absolute; left: 6%; right: 6%; bottom: calc(7% + env(safe-area-inset-bottom)); z-index: 2; display: flex; flex-direction: column; align-items: center; gap: 0.3em; pointer-events: none; text-align: center; font-weight: 600; line-height: 1.28; letter-spacing: 0.005em; transition: bottom 260ms var(--ease-out); --cap: 4.4vmin; font-size: clamp(14px, var(--cap), 64px); }
-.captions.is-raised { bottom: calc(24% + env(safe-area-inset-bottom)); }
+/* Caption layer (v1.2.1, BLUEPRINT_GAPS G-18): broadcast-style captions over the embed.
+   v1.2.7: colour (cap-c--*), background (cap-bg--*), edge (cap-e--*), height (--cap-lift) and a second language. */
+.captions { --cap-lift: 0%; position: absolute; left: 6%; right: 6%; bottom: calc(7% + var(--cap-lift) + env(safe-area-inset-bottom)); z-index: 2; display: flex; flex-direction: column; align-items: center; gap: 0.3em; pointer-events: none; text-align: center; font-weight: 600; line-height: 1.28; letter-spacing: 0.005em; transition: bottom 260ms var(--ease-out); --cap: 4.4vmin; --cap-ink: #fff; font-size: clamp(14px, var(--cap), 64px); }
+.captions.is-raised { bottom: calc(24% + var(--cap-lift) + env(safe-area-inset-bottom)); }
 /* the intro language pill (TV player blueprint) sits where captions would; lift captions above it while it shows */
-.player:has(.tvp-langs) .captions:not(.is-raised) { bottom: calc(15% + env(safe-area-inset-bottom)); }
+.player:has(.tvp-langs) .captions:not(.is-raised) { bottom: calc(15% + var(--cap-lift) + env(safe-area-inset-bottom)); }
 .cap--small { --cap: 3.4vmin; }
 .cap--medium { --cap: 4.4vmin; }
 .cap--large { --cap: 5.6vmin; }
 .cap--xlarge { --cap: 7vmin; }
+/* TV distance (about 3 m): one step larger and a heavier weight at every size */
+[data-mode="tv"] .captions:not(.captions--preview) { --cap-tv: 1.18; font-size: clamp(18px, calc(var(--cap) * var(--cap-tv)), 96px); font-weight: 650; }
 .cap-cue { margin: 0; max-width: 100%; }
-.cap-line { color: #fff; -webkit-box-decoration-break: clone; box-decoration-break: clone; overflow-wrap: anywhere; }
-.cap--shadow .cap-line { text-shadow: 0 0 2px rgba(0, 0, 0, 0.95), 0 2px 4px rgba(0, 0, 0, 0.9), 0 0 12px rgba(0, 0, 0, 0.6); }
-.cap--yellow .cap-line { color: #ffe14d; text-shadow: 0 0 2px rgba(0, 0, 0, 0.95), 0 2px 4px rgba(0, 0, 0, 0.9), 0 0 12px rgba(0, 0, 0, 0.6); }
-.cap--outline .cap-line { text-shadow: -1.5px -1.5px 0 #000, 1.5px -1.5px 0 #000, -1.5px 1.5px 0 #000, 1.5px 1.5px 0 #000, 0 0 3px #000; }
-.cap--box .cap-line { background: rgba(0, 0, 0, 0.78); padding: 0.06em 0.4em; border-radius: 0.18em; line-height: 1.45; }
-.captions--preview { position: static; inset: auto; padding: 1.4em 1em; border-radius: calc(12 * var(--u)); background: linear-gradient(160deg, #2a3550 0%, #121826 60%, #0a0d14 100%); --cap: 22px; }
+.cap-cue--second { font-size: 0.82em; opacity: 0.92; }
+.cap-line { color: var(--cap-ink); -webkit-box-decoration-break: clone; box-decoration-break: clone; overflow-wrap: anywhere; }
+.cap-c--white { --cap-ink: #fff; }
+.cap-c--yellow { --cap-ink: #ffe14d; }
+.cap-c--cyan { --cap-ink: #7fe7ff; }
+.cap-c--green { --cap-ink: #a6f58c; }
+.cap-cue--second .cap-line { color: #e9edf5; }
+.cap-e--shadow .cap-line { text-shadow: 0 0 2px rgba(0, 0, 0, 0.95), 0 2px 4px rgba(0, 0, 0, 0.9), 0 0 12px rgba(0, 0, 0, 0.6); }
+.cap-e--outline .cap-line { text-shadow: -1.5px -1.5px 0 #000, 1.5px -1.5px 0 #000, -1.5px 1.5px 0 #000, 1.5px 1.5px 0 #000, 0 0 3px #000; }
+.cap-e--none .cap-line { text-shadow: none; }
+.cap-bg--dim .cap-line { background: rgba(0, 0, 0, 0.5); padding: 0.06em 0.4em; border-radius: 0.18em; line-height: 1.45; }
+.cap-bg--box .cap-line { background: rgba(0, 0, 0, 0.85); padding: 0.06em 0.4em; border-radius: 0.18em; line-height: 1.45; }
+/* with no background and no edge the text still needs a whisper of contrast on bright scenes */
+.cap-bg--none.cap-e--none .cap-line { text-shadow: 0 0 1px rgba(0, 0, 0, 0.6); }
+.captions--preview { position: relative; left: auto; right: auto; bottom: auto; inset: auto; justify-content: flex-end; min-height: 7.2em; padding: 1.4em 1em calc(1.1em + var(--cap-lift) * 0.6); border-radius: calc(12 * var(--u)); background: linear-gradient(160deg, #2a3550 0%, #121826 60%, #0a0d14 100%); --cap: 22px; transition: padding 200ms var(--ease-out); }
 .captions--preview.cap--small { --cap: 17px; }
 .captions--preview.cap--large { --cap: 27px; }
 .captions--preview.cap--xlarge { --cap: 33px; }
-@media (prefers-reduced-motion: reduce) { .captions { transition: none; } }
+@media (prefers-reduced-motion: reduce) { .captions, .captions--preview { transition: none; } }

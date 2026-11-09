@@ -5,7 +5,11 @@ import android.content.BroadcastReceiver
 import android.content.Context
 import android.content.Intent
 import android.content.IntentFilter
+import android.content.pm.PackageInfo
+import android.content.pm.PackageManager
+import android.content.pm.Signature
 import android.net.Uri
+import android.os.Build
 import android.os.Environment
 import androidx.core.content.FileProvider
 import com.kinoma.tv.BuildConfig
@@ -185,7 +189,8 @@ object UpdateChecker {
                             when (status) {
                                 DownloadManager.STATUS_SUCCESSFUL -> {
                                     finished = true
-                                    if (destination.exists() && verifySha256(destination, expectedSha256)) {
+                                    val apkProblem = if (destination.exists() && verifySha256(destination, expectedSha256)) verifyApk(context, destination) else "Update checksum did not match."
+                                    if (apkProblem == null) {
                                         val uri = FileProvider.getUriForFile(
                                             context,
                                             "${context.packageName}.fileprovider",
@@ -194,7 +199,7 @@ object UpdateChecker {
                                         mainHandler.post { onComplete(uri) }
                                     } else {
                                         destination.delete()
-                                        mainHandler.post { onError("Update verification failed.") }
+                                        mainHandler.post { onError("Update verification failed. $apkProblem") }
                                     }
                                 }
 
@@ -240,6 +245,49 @@ object UpdateChecker {
         } catch (e: Exception) {
             onError(e.message ?: "Update download failed.")
         }
+    }
+
+    /**
+     * v1.2.7 (SECURITY A127-4): the checksum comes from the same release as the APK, so it only proves an intact
+     * download. This check proves origin: the package must be Panda (same applicationId), be signed by exactly the
+     * certificate(s) of the installed app, and carry a higher versionCode (no downgrades). Returns null when the APK
+     * is safe to hand to the installer, otherwise the reason.
+     */
+    internal fun verifyApk(context: Context, file: File): String? {
+        return try {
+            val pm = context.packageManager
+            @Suppress("DEPRECATION")
+            // both flags on P+: some Android 9-11 builds leave signingInfo empty for archives but still fill signatures
+            val flags = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.P) PackageManager.GET_SIGNING_CERTIFICATES or PackageManager.GET_SIGNATURES else PackageManager.GET_SIGNATURES
+            val archive = pm.getPackageArchiveInfo(file.absolutePath, flags) ?: return "The update package can't be read."
+            if (archive.packageName != context.packageName) return "The update is a different app."
+            @Suppress("DEPRECATION")
+            val installed = pm.getPackageInfo(context.packageName, flags)
+            if (versionCodeOf(archive) <= versionCodeOf(installed)) return "The update is not newer than this version."
+            val want = signerDigests(installed)
+            val got = signerDigests(archive)
+            if (want.isEmpty() || got != want) return "The update is not signed with Panda.fun's key."
+            null
+        } catch (e: Exception) {
+            "The update could not be checked (${e.javaClass.simpleName})."
+        }
+    }
+
+    @Suppress("DEPRECATION")
+    private fun versionCodeOf(info: PackageInfo): Long =
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.P) info.longVersionCode else info.versionCode.toLong()
+
+    /** SHA-256 of every signing certificate (the current signer set; key rotation history is not accepted as a match). */
+    @Suppress("DEPRECATION")
+    private fun signerDigests(info: PackageInfo): Set<String> {
+        val s = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.P) info.signingInfo else null
+        val sigs: Array<Signature> = when {
+            s != null && s.hasMultipleSigners() -> s.apkContentsSigners ?: emptyArray()
+            s != null -> s.signingCertificateHistory?.takeLast(1)?.toTypedArray() ?: emptyArray()
+            else -> info.signatures ?: emptyArray()
+        }
+        val md = java.security.MessageDigest.getInstance("SHA-256")
+        return sigs.map { sig -> md.digest(sig.toByteArray()).joinToString("") { "%02x".format(it) } }.toSet()
     }
 
     private fun verifySha256(file: File, expectedSha256: String): Boolean {

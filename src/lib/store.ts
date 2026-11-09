@@ -109,6 +109,17 @@ export interface Prefs {
   subtitleSdh: boolean;
   subtitleSize: "small" | "medium" | "large" | "xlarge";
   subtitleStyle: "shadow" | "box" | "yellow" | "outline";
+  /**
+   * v1.2.7 subtitle look, set from the player's Subtitles panel or Settings. Unset fields follow
+   * `subtitleStyle` (the v1.2.1 preset), so older profiles keep their look (`subLook` in captions.ts).
+   */
+  subtitleColor?: "white" | "yellow" | "cyan" | "green";
+  subtitleBg?: "none" | "dim" | "box";
+  subtitleEdge?: "shadow" | "outline" | "none";
+  /** Extra lift above the default caption line, in percent of the screen height (0–30). */
+  subtitlePos?: number;
+  /** Second subtitle language shown above the first (dual subtitles), or none. */
+  subtitleDual?: string | null;
   /** v1.2.2: ask "Are you still watching?" after this many episodes in a row (0 = never). */
   stillAfter: number;
   /** v1.2.2: phone and tablet swipe gestures in the player (volume, brightness, seek, hold for 2×). */
