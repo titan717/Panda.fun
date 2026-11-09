@@ -6,7 +6,7 @@ Measured on every release. Never regress.
 
 | Metric | Value |
 |---|---|
-| Entry chunk (gzip) | 23,973 B at gzip -9 (v1.2.5 23,994 B). The Android bridge guard (+~280 B) is paid for by a Proxy-based wrapper and by dropping Vite's module-preload polyfill (D-157). The first-frames screen, chapters, picture fit, lock and volume rows live in the lazy player chunks. |
+| Entry chunk (gzip) | 23,981 B at gzip -9 (v1.2.5 23,994 B). The Android bridge guard (+~280 B) is paid for by a Proxy-based wrapper and by dropping Vite's module-preload polyfill (D-157). The first-frames screen, chapters, picture fit, lock and volume rows live in the lazy player chunks. |
 | Entry CSS (gzip) | 14,608 B (unchanged): the new player styles ship with `player.css` and `tvplayer.css`. |
 | Integrity | SRI hashes add about 300 B to `index.html` (uncompressed), no extra requests. |
 | First frames | Unchanged: the loading screen is drawn by the player chunk that was already loading; its percentage is computed from the per-device time-to-first-frame median. |
