@@ -42,6 +42,13 @@ const stamp = (s: string) => {
   return Number(m[1] ?? 0) * 3600 + Number(m[2]) * 60 + Number(m[3]) + Number((m[4] ?? "0").padEnd(3, "0")) / 1000;
 };
 
+/** Removes every tag except <i>, <b>, <u> until nothing changes, then any stray "<" (nested tags cannot rebuild one). */
+function stripTags(line: string): string {
+  let t = line, prev;
+  do { prev = t; t = t.replace(/<(?!\/?[ibu]>)[^>]*>/g, ""); } while (t !== prev);
+  return t.replace(/<(?!\/?[ibu]>)/g, "").trim();
+}
+
 /** WebVTT (or SRT) → cues sorted by start time. Only <i>, <b>, <u> survive as markup. */
 export function parseVtt(text: string): Cue[] {
   const out: Cue[] = [];
@@ -52,7 +59,7 @@ export function parseVtt(text: string): Cue[] {
     const [a = "", b] = lines[i]!.split("-->");
     const start = stamp(a), end = stamp((b ?? "").trim().split(/\s+/)[0] ?? "");
     if (start === null || end === null || end <= start) continue;
-    const body = lines.slice(i + 1).map((l) => l.replace(/<(?!\/?[ibu]>)[^>]*>/g, "").trim()).filter(Boolean);
+    const body = lines.slice(i + 1).map(stripTags).filter(Boolean);
     if (body.length) out.push({ start, end, lines: body });
   }
   return out.sort((x, y) => x.start - y.start);

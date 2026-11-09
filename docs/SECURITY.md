@@ -74,3 +74,8 @@ Validation of route parameters, rate limits on sync and reports, safe error bodi
 | A126-7 | Medium | Kids PIN stored unhashed on the device | v1.2.7 |
 | A126-8 | Low | `android:allowBackup="true"` lets adb backups include local app data | v1.2.7 (backup rules that exclude WebView storage) |
 | A126-9 | Low | The update flow relies on the OS signature check; the checksum and APK can come from the same mirror | v1.2.7 (compare the APK's signing certificate before installing) |
+| A126-15 | Medium | CodeQL (first scan): sync keys from a decrypted backup could name `__proto__` when merged into plain objects | fixed v1.2.6 (null-prototype clock and merge maps, key guards in track, merge and rebuild) |
+| A126-16 | Low | CodeQL: release-note heading regex escaped only `.` in the version | fixed v1.2.6 (full regex escape) |
+| A126-17 | Low | CodeQL: caption tag stripping was single-pass (nested tags could rebuild one); captions render as text, never HTML | fixed v1.2.6 (strip until stable, drop stray `<`) |
+| A126-18 | Low (build) | CodeQL: check-then-write race on `dist/index.html` in the integrity plugin | fixed v1.2.6 (one descriptor) |
+| A126-19 | Low (dev harness) | CodeQL: the local ad-score harness echoed query parameters into HTML | fixed v1.2.6 (allowlisted URLs, escaped attributes) |

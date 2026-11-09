@@ -20,6 +20,11 @@ Inspected: the player on phones (portrait and landscape), tablets and TV with th
 | A126-12 | Saved volume, speed and mute were only applied on CineSrc's `ready`, which fast loads can post before Panda listens | `pages/Player.tsx` | applied on the first message of each load |
 | A126-13 | The remote's Menu key did nothing while the lazy chrome chunk was still loading, or when focus sat outside the player | `pages/Player.tsx`, `tv/TvPlayerChrome.tsx` | window-level key handler and an open request the chrome consumes when it mounts |
 | A126-14 | Audio column volume row overflowed on landscape phones | `tv/tvplayer.css` | `nowrap` control group |
+| A126-15 | CodeQL `js/remote-property-injection`: backup keys reached plain objects | `lib/sync.ts` | null-prototype maps and key guards (unit test) |
+| A126-16 | CodeQL `js/incomplete-sanitization`: version only partly regex-escaped | `lib/releaseNotes.ts` | full escape |
+| A126-17 | CodeQL `js/incomplete-multi-character-sanitization`: one-pass caption tag strip | `lib/captions.ts` | strip until stable (unit test) |
+| A126-18 | CodeQL `js/file-system-race` in the build plugin | `scripts/vite-integrity.mjs` | single file descriptor |
+| A126-19 | CodeQL `js/reflected-xss` in the local ad-score harness | `scripts/source-adscore.mjs` | allowlist + escaping |
 
 ## Audit 2 — state at v1.1.6 (2026-11-08, before v1.1.7)
 

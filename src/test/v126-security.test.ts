@@ -84,3 +84,27 @@ describe("CI supply chain", () => {
     expect(apk).toContain("npm sbom --sbom-format cyclonedx --omit dev");
   });
 });
+
+describe("v1.2.6 CodeQL findings", () => {
+  it("sync merge, track and rebuild ignore prototype-polluting keys from a backup", async () => {
+    const { merge, track, emptyClock, rebuild } = await import("../lib/sync");
+    const evil = JSON.parse('{"__proto__":{"t":9,"d":{"polluted":true}},"g:__proto__":{"t":9,"d":{"polluted":true}},"h:pa:__proto__":{"t":9,"d":{"polluted":true}}}') as Record<string, { t: number; d: unknown }>;
+    const merged = merge({}, evil, 0);
+    expect(Object.keys(merged.items)).not.toContain("__proto__");
+    const state = { profiles: [{ id: "pa", name: "A", avatar: "smile", kids: false, createdAt: 1 }], activeProfileId: "pa", prefs: {}, data: {}, profilePrefs: {} } as never;
+    rebuild({ ...merged.items, "p:pa": { t: 1, d: { id: "pa", name: "A", avatar: "smile", kids: false, createdAt: 1 } } }, state);
+    track(emptyClock(), state, 1);
+    expect(({} as Record<string, unknown>).polluted).toBeUndefined();
+  });
+  it("release-note headings escape every regex character in the version", async () => {
+    const { whatsNewSection } = await import("../lib/releaseNotes");
+    expect(whatsNewSection("## What's new in 1.2.6\nhello\n## Other", "1.2.6")).toBe("hello");
+    expect(whatsNewSection("## What's new in 1x2y6\nnope\n**Full Changelog** x", "1.2.6")).toBe("## What's new in 1x2y6\nnope");
+  });
+  it("captions strip nested tags completely", async () => {
+    const { parseVtt } = await import("../lib/captions");
+    const cues = parseVtt("WEBVTT\n\n00:00:01.000 --> 00:00:02.000\n<<b>script>alert(1)<</b>/script><i>ok</i>");
+    expect(cues[0]?.lines[0]).not.toMatch(/<script/i);
+    expect(cues[0]?.lines[0]).toContain("<i>ok</i>");
+  });
+});

@@ -33,6 +33,7 @@ const CASES = [
   ["vidy", "anime", "https://www.vidy.st/anime/21/1?autoplay=true", null]
 ].filter((c) => !ONLY || c[0].startsWith(ONLY));
 
+const attr = (v) => v.replace(/[&<>"']/g, (c) => `&#${c.charCodeAt(0)};`);
 const host = (src, sandbox) => `<!doctype html><html><body style="margin:0;background:#000">
 <iframe id="f" src="${src}" ${sandbox ? `sandbox="${sandbox}"` : ""} allow="autoplay; encrypted-media; fullscreen" referrerpolicy="origin"
  style="border:0;width:1280px;height:720px"></iframe>
@@ -41,8 +42,11 @@ const type=d&&(d.type||d.event)||"";const ev=d&&d.data&&d.data.event||"";window.
 
 const server = createServer((req, res) => {
   const u = new URL(req.url, "http://localhost");
+  // local harness only: accept https URLs of the cases above and escape everything echoed into the page
+  const src = u.searchParams.get("src") ?? "", sb = u.searchParams.get("sb") ?? "";
+  if (!CASES.some((c) => c[2] === src) || !/^[a-z -]*$/.test(sb)) { res.statusCode = 400; res.end("bad request"); return; }
   res.setHeader("content-type", "text/html");
-  res.end(host(u.searchParams.get("src"), u.searchParams.get("sb")));
+  res.end(host(attr(src), attr(sb)));
 });
 await new Promise((r) => server.listen(5179, r));
 

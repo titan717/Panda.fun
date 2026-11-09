@@ -3,7 +3,7 @@
 // 2. hashes every inline <style>/<script> in index.html and fails the build when vercel.json's CSP does not allow that exact hash,
 //    so the strict CSP (no 'unsafe-inline') can never silently break the boot splash.
 import { createHash } from "node:crypto";
-import { readFileSync, writeFileSync, existsSync } from "node:fs";
+import { readFileSync, openSync, closeSync, ftruncateSync, writeSync } from "node:fs";
 import { join } from "node:path";
 
 const digest = (alg, data) => createHash(alg).update(data).digest("base64");
@@ -17,12 +17,14 @@ export default function integrity({ csp = true } = {}) {
     writeBundle(opts) {
       const dir = opts.dir;
       const file = join(dir, "index.html");
-      if (!existsSync(file)) return;
-      let src = readFileSync(file, "utf8");
+      // one descriptor for read and rewrite: no check-then-use window on index.html
+      let fd;
+      try { fd = openSync(file, "r+"); } catch { return; }
+      let src = readFileSync(fd, "utf8");
       const lookup = (url) => {
         if (/^[a-z]+:/i.test(url)) return null;
         const path = join(dir, url.replace(/^\.?\//, ""));
-        return existsSync(path) ? readFileSync(path) : null;
+        try { return readFileSync(path); } catch { return null; }
       };
       src = src.replace(/<(script|link)\b([^>]*?)\s(src|href)="([^"]+)"([^>]*)>/g, (tag, el, pre, attr, url, post) => {
         if (/integrity=/.test(tag)) return tag;
@@ -38,10 +40,10 @@ export default function integrity({ csp = true } = {}) {
           if (kind === "script" && !body.trim()) continue;
           const token = `'sha256-${digest("sha256", body)}'`;
           const directive = policy.split(";").map((d) => d.trim()).find((d) => d.startsWith(`${kind}-src `)) ?? "";
-          if (!directive.includes(token)) this.error(`vercel.json CSP ${kind}-src is missing ${token} for an inline <${kind}> in index.html`);
+          if (!directive.includes(token)) { closeSync(fd); this.error(`vercel.json CSP ${kind}-src is missing ${token} for an inline <${kind}> in index.html`); }
         }
       }
-      writeFileSync(file, src);
+      try { ftruncateSync(fd, 0); writeSync(fd, src, 0, "utf8"); } finally { closeSync(fd); }
     }
   };
 }

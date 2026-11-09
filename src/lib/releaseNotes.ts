@@ -4,7 +4,7 @@ import { githubRelease, type GhRelease } from "./updates";
 /** Pull the "## What's new in X" section out of a release body (falls back to the whole body without the changelog link). */
 export function whatsNewSection(body: string, version: string): string {
   const text = body.replace(/\r/g, "");
-  const head = new RegExp(`^##\\s+What's new in ${version.replace(/\./g, "\\.")}\\s*$`, "im");
+  const head = new RegExp(`^##\\s+What's new in ${version.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")}\\s*$`, "im");
   const m = head.exec(text);
   const from = m ? m.index + m[0].length : 0;
   const rest = text.slice(from);

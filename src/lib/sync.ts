@@ -144,7 +144,7 @@ export function hashOf(v: unknown): string {
 }
 
 export interface Clock { hashes: Record<string, string>; times: Record<string, number>; orders: Record<string, number> }
-export const emptyClock = (): Clock => ({ hashes: {}, times: {}, orders: {} });
+export const emptyClock = (): Clock => ({ hashes: Object.create(null) as Record<string, string>, times: Object.create(null) as Record<string, number>, orders: Object.create(null) as Record<string, number> });
 
 /**
  * Stamps changes: new or changed values get `now` (watch progress keeps its own updatedAt when newer),
@@ -155,6 +155,7 @@ export function track(clock: Clock, s: State, now: number, baseline = false): Re
   const flat = flatten(s, clock.orders, now);
   const items: Record<string, Item> = {};
   for (const [k, v] of Object.entries(flat)) {
+    if (k === "__proto__" || k === "constructor" || k === "prototype") continue; // sync keys are "kind:id"; never let one name a prototype property
     const h = hashOf(v);
     if (clock.hashes[k] !== h) {
       const known = clock.hashes[k] !== undefined;
@@ -165,7 +166,8 @@ export function track(clock: Clock, s: State, now: number, baseline = false): Re
     items[k] = { t: clock.times[k] ?? 0, d: v };
   }
   for (const k of Object.keys(clock.hashes)) {
-    if (k in flat) continue;
+    if (k === "__proto__" || k === "constructor" || k === "prototype") continue; 
+    if (Object.prototype.hasOwnProperty.call(flat, k)) continue;
     if (clock.hashes[k] !== "∅") { clock.hashes[k] = "∅"; clock.times[k] = now; }
     if (now - (clock.times[k] ?? 0) > TOMB_TTL) { delete clock.hashes[k]; delete clock.times[k]; delete clock.orders[k]; continue; }
     items[k] = { t: clock.times[k]!, d: null };
@@ -177,9 +179,10 @@ export interface MergeResult { items: Record<string, Item>; conflicts: number; f
 
 /** Last write wins per item; a tie keeps the backup's value. Both sides changing one item since the last sync counts as a conflict. */
 export function merge(local: Record<string, Item>, remote: Record<string, Item>, lastSync: number): MergeResult {
-  const items: Record<string, Item> = {};
+  const items = Object.create(null) as Record<string, Item>;
   let conflicts = 0, fromRemote = 0;
   for (const k of new Set([...Object.keys(local), ...Object.keys(remote)])) {
+    if (k === "__proto__" || k === "constructor" || k === "prototype") continue;
     const a = local[k], b = remote[k];
     if (!b) { items[k] = a!; continue; }
     if (!a) { items[k] = b; fromRemote++; continue; }
@@ -189,6 +192,9 @@ export function merge(local: Record<string, Item>, remote: Record<string, Item>,
   }
   return { items, conflicts, fromRemote };
 }
+
+/** Names that would reach Object.prototype when used as a property key (A126-15). */
+const unsafeKey = (k?: string) => k === "__proto__" || k === "constructor" || k === "prototype";
 
 const emptyData = (): ProfileData => ({ watchlist: [], lists: [], history: {}, ratings: {}, recentSearches: [], recentTitles: [], reminders: [], alertsSeenAt: 0, alerted: [] });
 
@@ -204,6 +210,7 @@ export function rebuild(items: Record<string, Item>, current: State): State {
     if (d === null || d === undefined) continue;
     const [kind, a, ...rest] = k.split(":");
     const b = rest.join(":");
+    if (unsafeKey(a) || unsafeKey(b)) continue;
     if (kind === "g" && a && !LOCAL_PREFS.has(a)) prefs[a] = d;
     else if (kind === "p" && a) profiles.push(d as Profile);
     else if (kind === "pp" && a && b && !LOCAL_PREFS.has(b)) (profilePrefs[a] ??= {} as Partial<Prefs>)[b as keyof Prefs] = d as never;
@@ -245,7 +252,7 @@ const FAIL_KEY = "panda:v1:syncfail";
 export interface Link { code: string; id: string; version: number; lastSync: number; conflicts: number; clock: Clock }
 
 export function readLink(): Link | null {
-  try { const l = JSON.parse(localStorage.getItem(KEY) ?? "null") as Link | null; return l && typeof l.code === "string" && typeof l.id === "string" ? { ...l, clock: l.clock ?? emptyClock() } : null; } catch { return null; }
+  try { const l = JSON.parse(localStorage.getItem(KEY) ?? "null") as Link | null; return l && typeof l.code === "string" && typeof l.id === "string" ? { ...l, clock: l.clock ? { hashes: Object.assign(emptyClock().hashes, l.clock.hashes), times: Object.assign(emptyClock().times, l.clock.times), orders: Object.assign(emptyClock().orders, l.clock.orders) } : emptyClock() } : null; } catch { return null; }
 }
 function writeLink(l: Link | null) {
   try { if (l) localStorage.setItem(KEY, JSON.stringify(l)); else localStorage.removeItem(KEY); } catch { /* storage full */ }
@@ -337,8 +344,8 @@ async function runSync(link: Link, keys: SyncKeys, opts: { restoring?: boolean }
       if (hashOf(next) !== hashOf(getState())) replaceState(next);
       // remember what we now hold so the next look does not mistake it for a local change
       const after = flatten(getState(), link.clock.orders, now);
-      for (const [k, v] of Object.entries(after)) { link.clock.hashes[k] = hashOf(v); link.clock.times[k] = merged.items[k]?.t ?? now; }
-      for (const [k, it] of Object.entries(merged.items)) if (it.d === null) { link.clock.hashes[k] = "∅"; link.clock.times[k] = it.t; }
+      for (const [k, v] of Object.entries(after)) { if (k === "__proto__" || k === "constructor" || k === "prototype") continue; link.clock.hashes[k] = hashOf(v); link.clock.times[k] = merged.items[k]?.t ?? now; }
+      for (const [k, it] of Object.entries(merged.items)) { if (k === "__proto__" || k === "constructor" || k === "prototype") continue; if (it.d === null) { link.clock.hashes[k] = "∅"; link.clock.times[k] = it.t; } }
     }
     const blob = await encrypt(keys, { v: 1, at: now, items: merged.items });
     const put = await call("PUT", keys.id, { blob, base: remote?.version ?? null });
