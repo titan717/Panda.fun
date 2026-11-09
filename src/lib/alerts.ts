@@ -1,7 +1,8 @@
 import { api } from "./api";
 import { alertSub, buildCalendar, dayStart, followedIds, localDay } from "./calendar";
 import { showNotification } from "./notify";
-import { actions, getActiveData } from "./store";
+import { actions, getActiveData, getState } from "./store";
+import { compareVersions, fetchLatestRelease, installedVersion } from "./updates";
 
 /**
  * One pass of new-episode and release notifications for the active profile (v1.1.7, spec 15.4).
@@ -25,4 +26,15 @@ export async function runEpisodeAlerts(signal: AbortSignal) {
     }
     if (fresh.length) actions.markAlerted(fresh.map((a) => a.key));
   } catch { /* offline: next tick */ }
+}
+
+/** Background check for a new app release, shown once per release as a system notification. */
+export async function runReleaseNotice(signal: AbortSignal) {
+  try {
+    const r = await fetchLatestRelease(signal);
+    if (compareVersions(r.version, installedVersion()) > 0 && getState().prefs.notifiedTag !== r.tag) {
+      showNotification({ tag: `update-${r.tag}`, title: "Panda.fun update available", body: `Version ${r.version} is ready to install.`, path: "/settings/updates" });
+      actions.setPrefs({ notifiedTag: r.tag });
+    }
+  } catch { /* offline or rate-limited: try again next launch */ }
 }

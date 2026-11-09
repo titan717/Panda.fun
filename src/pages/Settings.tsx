@@ -12,6 +12,8 @@ import { toast } from "../components/ui";
 import { CaptionPreview } from "../components/CaptionLayer";
 import { SUB_LANGS, SUB_MODES, SUB_SIZES, SUB_STYLES, subLangName } from "../lib/captions";
 import { Sheet } from "../components/Sheet";
+import { SyncPanel } from "./SyncSettings";
+import "./sync.css";
 import { actions, usePrefs, useProfile, useReminders, type Prefs } from "../lib/store";
 import { useGenres, usePage, useSourceHealth, useSourceRanking } from "../lib/hooks";
 import { reliabilityLabel, reliabilityTone } from "../lib/sources";
@@ -25,9 +27,10 @@ import { notifyPermission, requestNotify } from "../lib/notify";
 import type { PreferredSource, SourceId } from "../lib/types";
 import { clearShield, COMPAT, nativeShield, SANDBOX, shieldStats, syncNative } from "../lib/shield";
 
-type SectionId = "profiles" | "home" | "playback" | "trailers" | "subtitles" | "sources" | "languages" | "parental" | "display" | "storage" | "notifications" | "whatsnew" | "updates" | "help";
+type SectionId = "profiles" | "sync" | "home" | "playback" | "trailers" | "subtitles" | "sources" | "languages" | "parental" | "display" | "storage" | "notifications" | "whatsnew" | "updates" | "help";
 const SECTIONS: { id: SectionId; icon: IconName; title: string; sub: string }[] = [
   { id: "profiles", icon: "user", title: "Profiles & Account", sub: "Add, edit or switch profiles" },
+  { id: "sync", icon: "refresh", title: "Sync Code", sub: "Move profiles, lists and progress to another device" },
   { id: "home", icon: "home", title: "Personalize Home", sub: "Reorder or hide rows on Home" },
   { id: "playback", icon: "play", title: "Playback", sub: "Quality and autoplay" },
   { id: "trailers", icon: "volume", title: "Trailers", sub: "Autoplay, sound, volume and delay" },
@@ -382,6 +385,8 @@ function Panel({ id }: { id: SectionId }) {
       );
     case "sources":
       return <SourcesPanel />;
+    case "sync":
+      return <SyncPanel />;
     case "languages": {
       const langs = (genres?.languages ?? [{ code: "ml", name: "Malayalam" }, { code: "hi", name: "Hindi" }, { code: "en", name: "English" }]).map((l) => ({ id: l.code, label: l.name }));
       return (

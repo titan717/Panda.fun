@@ -323,3 +323,14 @@ Drive folder re-checked for this release (2026-11-09): newest file is still tvne
 | Gestures (844×390, 390×844) | Seek readout at 24 % height, volume/brightness level pill at 46 %, 2× pill; no text selection while dragging | Fixed during review: a previous gesture's fade-out hid the 2× readout |
 | Spoiler protection (TV 1920, phone 390) | Blurred stills with eye-off mark, hidden overview line, started/finished episodes unchanged | `e2e/v122.spec.ts` |
 | Settings › Playback (TV 1920, phone 390) | Still-watching choice, spoiler toggle, gestures toggle (phones), PiP toggle (Android app only) | Screenshots in `docs/screenshots/v1.2.2/` |
+
+## 29. v1.2.3 sync code
+
+Drive folder re-checked for this release (2026-11-09): newest file is still tvnewblueprint.pdf, modified 2026-11-08 12:05 UTC; no blueprint changed.
+
+| Area | Check | Result |
+|---|---|---|
+| Settings › Sync Code, off (TV 1920, phone 390) | New section right after Profiles & Account; intro line, Create sync code and Restore from code rows with trailing icons | Fixed during review: trailing icons rendered at 1 em (too small on TV) |
+| Show my code (TV 1920, phone 390) | Code in 54 tu monospace beside a 240 tu QR on TV; stacked on phones with Copy code; Done focused first | Closing the sheet returns focus to Show my code |
+| Restore (TV 1920, phone 390) | Field formats as you type (XXXX-XXXX-XXXX), OK opens the keyboard on TV, wrong codes show tries left, lockout message | `e2e/v123.spec.ts` on TV 1920/1280, phones 390/360, tablet 820 |
+| Linked (TV 1920, phone 390) | Status dot and "Synced just now", Show my code, Sync now, Restore from another code, Regenerate, Revoke | Screenshots in `docs/screenshots/v1.2.3/` |

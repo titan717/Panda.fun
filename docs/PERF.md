@@ -2,6 +2,14 @@
 
 Measured on every release. Never regress.
 
+## v1.2.3 (sync code)
+
+| Metric | Value |
+|---|---|
+| Entry chunk (gzip) | 24.2 KB, down from 24.3 KB: the release-notice check moved into the lazy alerts module; the store gains only two re-exports. |
+| Entry CSS (gzip) | 19.0 KB, unchanged: sync styles ship with the Settings chunk. |
+| Sync | Crypto, merge and QR (qrcode-generator) load with the Settings chunk (+5.5 KB gzip there), never on the first screen. Key derivation (PBKDF2, 150,000 rounds, Web Crypto) runs once per operation; backups are gzipped before encryption; automatic syncs are debounced 20 s and skipped while one is running. |
+
 ## v1.2.2 (still watching, gestures, PiP, spoilers)
 
 | Metric | Value |

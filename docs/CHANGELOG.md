@@ -2,6 +2,18 @@
 
 Every stable release of Panda.fun. The same notes ship in each GitHub Release and in Settings › What's New.
 
+## 1.2.3
+
+- **Sync code, no account needed**: Settings › Sync Code › Create sync code backs up this device and shows a 12-character code like 7KQ2-M9TX-4HRB, in big letters and as a QR. The code uses only letters and numbers that cannot be mixed up (no I, L, O or U), so it is easy to read off a TV.
+- **Restore on another device**: on your other phone, tablet or TV open Settings › Sync Code › Restore from code and type the code (spaces, dashes and lower case are fine; O, I and L are read as 0, 1 and 1). Your profiles, lists, Watchlist, ratings, reminders, settings and watch progress arrive, merged with what that device already has. A device's unused starter profiles make way for the restored ones. After 5 wrong codes the field locks for 15 minutes.
+- **Keeps itself in sync**: linked devices sync by themselves shortly after start, 20 seconds after a change, every 10 minutes and when the app goes to the background, and Sync now does it at once. Each title, list, rating and setting is merged on its own, and the newest change wins; when something was changed on two devices since the last sync, Settings says how many items that was and that the newest change was kept. Layout, notification and update choices stay on each device.
+- **Encrypted on your device**: everything is encrypted with AES-256-GCM using a key made from your code (PBKDF2, 150,000 rounds) before it leaves the device. The server only stores ciphertext under an id derived from the code, and wrong guesses are rate-limited and locked out.
+- **Show, regenerate or revoke**: Show my code brings the code and QR back any time; Regenerate code moves your data to a new code and stops the old one; Revoke code deletes the backup from the server and turns sync off. Other devices learn about it on their next sync.
+- **Quicker start**: the first download is a little smaller than in 1.2.2 (the release-notice check now loads only when it is needed); the sync code loads with Settings, never on the first screen.
+- **Fix**: on TV with a mouse or air-mouse, closing a sheet no longer moves focus to whatever row happened to sit under the resting pointer; only moving the pointer moves focus.
+
+The QR holds the code itself: scanning it with a phone camera lets you copy the code, it does not open Panda yet. Without a configured database the backend keeps backups in TextDB, a free third-party text store that only ever sees the encrypted data; it does not promise how long it keeps files, so a device that has not synced for a long time may need to create a new code. Anyone who has your code can open your backup, so keep it private and revoke it if it gets out.
+
 ## 1.2.2
 
 - **"Are you still watching?" after a few episodes**: when episodes play one after another by themselves, Panda now stops after 3 in a row and asks before starting the next one, so a show does not keep playing all night. The dialog says how many episodes you watched and which one is next. Choose 2, 3 or 4 episodes, or Never, in Settings › Playback. Pressing a button, tapping the screen or picking an episode yourself starts the count again.

@@ -29,7 +29,7 @@ v1.0.0–v1.0.9 rebuild, player, Android shell, updater, performance rounds; v1.
 | A2-6 | §4.G: adaptive icon has no monochrome layer; no notification icon; R8 shrinking is off (`minifyEnabled false`). | Android | v1.1.7 (icons), v1.1.8 (R8 with JS-bridge keep rules) |
 | A2-7 | §5: no `GET /sources/ranking` or rolling success score; the report endpoint only logs. No AniList anime mapping. No embed sandbox attribute. | movieapi, player | v1.2.0 |
 | A2-8 | §5: no external subtitle search, caption overlay or subtitle settings (§4.E "Subtitles"). | player, Settings | v1.2.1 ✅ resolved |
-| A2-9 | §6: no sync code (Settings "Sync code" in §4.E missing). | all | v1.2.3 |
+| A2-9 | §6: no sync code (Settings "Sync code" in §4.E missing). | all | v1.2.3 ✅ resolved |
 | A2-10 | §7: no mood/time picks, Surprise me, Panda TV channel, phone-as-remote, idle screensaver, franchise guides or curated collections. | discovery | v1.2.4–v1.2.8 |
 | A2-11 | Retired host: no reference to the retired hosting service in code or docs; the Android renderer-crash callback is written with an escaped capital R (D-90). | — | none |
 

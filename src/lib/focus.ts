@@ -137,10 +137,12 @@ function onKeyDown(e: KeyboardEvent) {
   }
 }
 
-let pointerMoved = false;
-function onPointerMove() { pointerMoved = true; }
-function onPointerOver(e: PointerEvent) {
-  if (!tvEnabled || !pointerMoved || e.pointerType === "touch") return;
+// Hover moves TV focus only when the pointer really moves: browsers also fire pointerover at a resting
+// pointer when a sheet closes or the page changes under it, which used to pull focus away (v1.2.3).
+let lastX = -1, lastY = -1;
+function onPointerMove(e: PointerEvent) {
+  if (!tvEnabled || e.pointerType === "touch" || (e.clientX === lastX && e.clientY === lastY)) return;
+  lastX = e.clientX; lastY = e.clientY;
   const el = (e.target as HTMLElement | null)?.closest<HTMLElement>("[data-hover-focus]");
   if (el && document.activeElement !== el) el.focus({ preventScroll: true });
 }
@@ -152,7 +154,6 @@ export function installKeyHandling(tv: boolean) {
   installed = true;
   window.addEventListener("keydown", onKeyDown);
   window.addEventListener("pointermove", onPointerMove, { passive: true });
-  window.addEventListener("pointerover", onPointerOver, { passive: true });
 }
 
 export function setTvNavigation(tv: boolean) { tvEnabled = tv; }

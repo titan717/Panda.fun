@@ -136,7 +136,7 @@ export interface UserList {
 export const MAX_LISTS = 12;
 const MAX_LIST_ITEMS = 200;
 
-interface ProfileData {
+export interface ProfileData {
   watchlist: PandaItem[];
   lists: UserList[];
   history: Record<string, HistoryEntry>;
@@ -152,7 +152,7 @@ interface ProfileData {
   alerted: string[];
 }
 
-interface State {
+export interface State {
   profiles: Profile[];
   activeProfileId: string | null;
   prefs: Prefs;
@@ -294,6 +294,8 @@ if (typeof window !== "undefined") {
 
 const subscribe = (l: () => void) => { listeners.add(l); return () => listeners.delete(l); };
 export const getState = () => state;
+/** v1.2.3 sync: listen to every change and swap in a merged state. */
+export { subscribe as subscribeStore, set as replaceState };
 
 export function useStore<T>(selector: (s: State) => T): T {
   return useSyncExternalStore(subscribe, () => selector(state), () => selector(state));

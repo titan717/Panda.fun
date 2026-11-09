@@ -11,11 +11,11 @@ import { detectLayout, type LayoutMode } from "./lib/device";
 import { LayoutContext, useLayout } from "./lib/layout";
 import { installKeyHandling, setRootBackHandler, setTvNavigation } from "./lib/focus";
 import { BUILD_TARGET } from "./lib/nav";
-import { actions, getState, usePrefs, useProfile, useStore } from "./lib/store";
-import { notifyPermission, setNotifyNavigator, showNotification, takeLaunchPath } from "./lib/notify";
+import { getState, usePrefs, useProfile, useStore } from "./lib/store";
+import { notifyPermission, setNotifyNavigator, takeLaunchPath } from "./lib/notify";
 import { exitApp, isAndroidApp, native } from "./lib/native";
 import { useOnline, useReducedMotion } from "./lib/hooks";
-import { compareVersions, fetchLatestRelease, installedVersion, takeUpdateNotice } from "./lib/updates";
+import { takeUpdateNotice } from "./lib/updates";
 import { ErrorBoundary, OfflineBanner, Toasts, toast } from "./components/ui";
 import { PandaMark, Wordmark } from "./components/Icon";
 import { ProfileSelect } from "./pages/Profiles";
@@ -140,12 +140,8 @@ function useReleaseNotifications() {
   useEffect(() => {
     if (!prefs.notifications || notifyPermission() !== "granted") return;
     const ctrl = new AbortController();
-    fetchLatestRelease(ctrl.signal).then((r) => {
-      if (compareVersions(r.version, installedVersion()) > 0 && getState().prefs.notifiedTag !== r.tag) {
-        showNotification({ tag: `update-${r.tag}`, title: "Panda.fun update available", body: `Version ${r.version} is ready to install.`, path: "/settings/updates" });
-        actions.setPrefs({ notifiedTag: r.tag });
-      }
-    }).catch(() => { /* offline or rate-limited: try again next launch */ });
+    // the check runs from the lazy alerts module, keeping it out of the entry chunk (PERF v1.2.3)
+    void import("./lib/alerts").then((m) => m.runReleaseNotice(ctrl.signal));
     return () => ctrl.abort();
   }, [prefs.notifications]);
 }

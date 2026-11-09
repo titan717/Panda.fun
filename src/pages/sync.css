@@ -1,0 +1,22 @@
+/* Settings › Sync Code (v1.2.3). Styled like the blueprint's settings rows and sheets (G-20). */
+.sync-status { display: flex; align-items: center; gap: calc(10 * var(--u)); padding: calc(10 * var(--u)) calc(14 * var(--u)); color: var(--text-1); font-size: calc(14 * var(--u)); }
+.sync-panel .set-row:disabled { opacity: 0.55; }
+.sync-panel .is-error, .sync-msg.is-error { color: var(--danger); }
+.sync-code-card { display: flex; flex-direction: column; align-items: center; gap: calc(16 * var(--u)); padding: calc(18 * var(--u)); margin-bottom: calc(10 * var(--u)); background: var(--m-raised); border: 1px solid var(--m-hairline); border-radius: calc(18 * var(--u)); }
+.sync-code { font-family: ui-monospace, "SF Mono", "Roboto Mono", Menlo, monospace; font-size: calc(30 * var(--u)); font-weight: 700; letter-spacing: 0.12em; color: var(--text-1); white-space: nowrap; }
+.sync-qr { display: block; width: calc(190 * var(--u)); height: calc(190 * var(--u)); border-radius: calc(10 * var(--u)); }
+.sync-input { width: 100%; height: calc(54 * var(--u)); text-align: center; font-family: ui-monospace, "SF Mono", "Roboto Mono", Menlo, monospace; font-size: calc(24 * var(--u)); letter-spacing: 0.14em; text-transform: uppercase; background: var(--m-raised); border: 1px solid var(--m-hairline); border-radius: var(--r-pill-m); color: var(--text-1); }
+.sync-input::placeholder { color: var(--text-3, var(--text-2)); opacity: 0.6; }
+.sync-input.is-error { border-color: var(--danger); }
+.sync-msg { padding-left: 0; padding-right: 0; min-height: 2.6em; }
+.sync-sheet .btn .icon { margin-right: 6px; }
+
+html[data-mode="tv"] .sync-code-card { flex-direction: row; justify-content: center; gap: calc(48 * var(--tu)); padding: calc(28 * var(--tu)); border-radius: calc(24 * var(--tu)); background: var(--tv-translucent, var(--m-raised)); }
+html[data-mode="tv"] .sync-code { font-size: calc(54 * var(--tu)); }
+html[data-mode="tv"] .sync-qr { width: calc(240 * var(--tu)); height: calc(240 * var(--tu)); }
+html[data-mode="tv"] .sync-status { font-size: var(--t-body); padding: calc(12 * var(--tu)) calc(20 * var(--tu)); }
+html[data-mode="tv"] .sync-input { height: calc(76 * var(--tu)); font-size: calc(36 * var(--tu)); }
+html[data-mode="tv"] .sync-input:focus { outline: var(--focus-border); box-shadow: var(--focus-glow); }
+.sync-panel .set-row > .icon { width: calc(20 * var(--u)); height: calc(20 * var(--u)); flex: none; color: var(--text-2); }
+html[data-mode="tv"] .sync-panel .set-row > .icon { width: calc(28 * var(--tu)); height: calc(28 * var(--tu)); }
+html[data-mode="tv"] .sync-panel .set-row:focus > .icon { color: var(--text-1); }

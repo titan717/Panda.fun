@@ -26,7 +26,7 @@ Profiles and Who's watching, My List and list pages, Continue Watching, Kids, Co
 | v1.2.0 | ✅ Source adapters with capabilities, Report broken source with backend ranking (Wilson + decay), AniList anime via Vidy (embed sandbox shipped in v1.1.7) |
 | v1.2.1 | ✅ External subtitles, caption layer, subtitle settings, per-profile languages (A2-8) |
 | v1.2.2 | ✅ Still watching? after N episodes, gestures, picture-in-picture, spoiler protection |
-| v1.2.3 | Sync code with encrypted backup (A2-9) |
+| v1.2.3 | ✅ Sync code with encrypted backup (A2-9) |
 | v1.2.4 | Phone as remote (QR), shareable links |
 | v1.2.5 | Smarter discovery (taste profile, stated reasons, hidden gems) |
 | v1.2.6 | Franchise watch-order guides, curated collections, actor pages 2.0 |
