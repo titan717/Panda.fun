@@ -120,3 +120,9 @@ export function voteLabel(n: number | null | undefined) {
   const v = n >= 1e6 ? `${(n / 1e6).toFixed(n >= 1e7 ? 0 : 1).replace(/\.0$/, "")}M` : n >= 1e3 ? `${(n / 1e3).toFixed(n >= 1e4 ? 0 : 1).replace(/\.0$/, "")}K` : String(n);
   return `${v} ratings`;
 }
+
+/** "23:14" or "1:02:05": a playback position for buttons and prompts. */
+export function playClock(sec: number) {
+  const a = Math.max(0, Math.floor(sec)), h = Math.floor(a / 3600), m = Math.floor((a % 3600) / 60), s = a % 60;
+  return h ? `${h}:${String(m).padStart(2, "0")}:${String(s).padStart(2, "0")}` : `${m}:${String(s).padStart(2, "0")}`;
+}

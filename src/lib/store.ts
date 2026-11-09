@@ -162,7 +162,7 @@ export interface State {
 }
 
 /** v1.2.0: "auto" (community ranking) joins the fixed choices; anything else falls back to auto. */
-const VALID_SOURCES = new Set<string>(["auto", "cinesrc", "vidy", "vidyanime"]);
+const VALID_SOURCES = new Set<string>(["auto", "cinesrc", "vidy", "vidyanime", "vidlink"]);
 
 const defaultPrefs: Prefs = {
   preferredSource: "auto",

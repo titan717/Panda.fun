@@ -27,10 +27,12 @@ export interface SourceAdapter {
 export const ADAPTERS: Record<SourceId, SourceAdapter> = {
   cinesrc: { id: "cinesrc", short: "CineSrc", commands: true, hideControls: true, quality: true, hosts: ["cinesrc.st"], start: true, autonext: true, anime: false, captions: true },
   vidy: { id: "vidy", short: "Vidy", commands: false, hideControls: false, quality: false, hosts: ["vidy.st", "www.vidy.st"], start: true, autonext: true, anime: false, captions: true },
-  vidyanime: { id: "vidyanime", short: "Vidy Anime", commands: false, hideControls: false, quality: false, hosts: ["vidy.st", "www.vidy.st"], start: true, autonext: true, anime: true, captions: false }
+  vidyanime: { id: "vidyanime", short: "Vidy Anime", commands: false, hideControls: false, quality: false, hosts: ["vidy.st", "www.vidy.st"], start: true, autonext: true, anime: true, captions: false },
+  // v1.2.4: themed with Panda's tokens, resumes with startAt, takes Panda's subtitle file; its own controls stay (no command API)
+  vidlink: { id: "vidlink", short: "VidLink", commands: false, hideControls: false, quality: false, hosts: ["vidlink.pro"], start: true, autonext: false, anime: false, captions: false }
 };
 
-export const SOURCE_ORDER: SourceId[] = ["cinesrc", "vidy", "vidyanime"];
+export const SOURCE_ORDER: SourceId[] = ["cinesrc", "vidy", "vidyanime", "vidlink"];
 
 /** What a source can do, as short labels for the source picker (v1.2.0). */
 export function capabilityLabels(id: SourceId): string[] {
@@ -126,10 +128,12 @@ export function sendCommand(frame: HTMLIFrameElement | null, source: PlaybackSou
  * `start` re-opens at a position (quality / controls changes reload the embed); `quality` is the
  * CineSrc preferred-quality hint ("auto" leaves the choice to the source).
  */
-export function embedUrl(source: PlaybackSource, o: { customChrome: boolean; start?: number; quality?: string; autoskip?: boolean }) {
+export function embedUrl(source: PlaybackSource, o: { customChrome: boolean; start?: number; quality?: string; autoskip?: boolean; subtitle?: { url: string; label: string } | null }) {
   try {
     const u = new URL(source.url);
     const start = o.start && o.start > 1 ? String(Math.floor(o.start)) : null;
+    // "Start over": drop the resume position the backend put in the URL
+    if (o.start === 0) for (const k of ["t", "progress", "startAt"]) u.searchParams.delete(k);
     if (source.events === "cinesrc") {
       u.searchParams.set("autonext", "false");
       u.searchParams.set("back", "close");
@@ -137,6 +141,9 @@ export function embedUrl(source: PlaybackSource, o: { customChrome: boolean; sta
       if (o.autoskip) u.searchParams.set("autoskip", "true");
       if (o.quality && o.quality !== "auto") u.searchParams.set("quality", o.quality);
       if (start) { u.searchParams.set("t", start); u.searchParams.set("continueprompt", "false"); }
+    } else if (source.id === "vidlink") {
+      if (start) u.searchParams.set("startAt", start); else u.searchParams.delete("startAt");
+      if (o.subtitle && o.subtitle.url.startsWith("https://")) { u.searchParams.set("sub_file", o.subtitle.url); u.searchParams.set("sub_label", o.subtitle.label); }
     } else if (source.events === "vidy" && start) {
       u.searchParams.set("progress", start);
     }

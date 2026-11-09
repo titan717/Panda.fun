@@ -1,4 +1,6 @@
 import { ADAPTERS, SOURCE_ORDER } from "./player";
+import { effectiveTier, TIER_LABEL } from "./shield";
+import { DEFAULT_TIER } from "./validate";
 import type { PreferredSource, SourceId, SourceRank, SourceRankingPayload, TitleDetails } from "./types";
 
 /**
@@ -31,6 +33,12 @@ export function reliabilityTone(r: SourceRank | undefined | null): "good" | "war
   const rel = r.reliability;
   if (rel !== null && r.plays + r.reports >= 3) return rel >= 0.85 ? "good" : rel >= 0.6 ? "warn" : "bad";
   return r.state === "degraded" ? "warn" : r.state === "healthy" ? "good" : "none";
+}
+
+/** "Ad-free", "Light ads"… for a source on this device (the tier the ranking enforces, §6). */
+export function tierLabel(id: SourceId, r?: SourceRank | null): { tier: 1 | 2 | 3 | 4; label: string } {
+  const tier = effectiveTier({ id, tier: r?.tier ?? DEFAULT_TIER[id] ?? 4 });
+  return { tier, label: TIER_LABEL[tier] };
 }
 
 export const rankOf = (ranking: SourceRankingPayload | null | undefined, id: SourceId) => ranking?.sources.find((s) => s.id === id);

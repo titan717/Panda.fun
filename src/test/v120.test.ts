@@ -5,14 +5,14 @@ import { anime, sourceRanking } from "../lib/validateLazy";
 import { airingLabel, animeCaption } from "../pages/Anime";
 import type { AnimeCard, SourceRank, SourceRankingPayload } from "../lib/types";
 
-const rank = (over: Partial<SourceRank>): SourceRank => ({ id: "cinesrc", rank: 1, score: 0.9, reliability: 0.95, plays: 40, reports: 2, reports24h: 0, state: "healthy", ...over });
+const rank = (over: Partial<SourceRank>): SourceRank => ({ id: "cinesrc", rank: 1, score: 0.9, reliability: 0.95, plays: 40, reports: 2, reports24h: 0, state: "healthy", tier: 1, ads: null, ...over });
 const ranking: SourceRankingPayload = { sources: [rank({ id: "vidy", rank: 1 }), rank({ id: "cinesrc", rank: 2 })], halfLifeHours: 72, shared: false, updatedAt: "2026-11-09T00:00:00Z" };
 
 describe("source adapters and community ranking (v1.2.0)", () => {
   it("starts Automatic in community order and a manual pick first", () => {
-    expect(sourceOrder("auto", ranking)).toEqual(["vidy", "cinesrc", "vidyanime"]);
+    expect(sourceOrder("auto", ranking)).toEqual(["vidy", "cinesrc", "vidyanime", "vidlink"]);
     expect(sourceOrder("auto", null)).toEqual(SOURCE_ORDER);
-    expect(sourceOrder("cinesrc", ranking)).toEqual(["cinesrc", "vidy", "vidyanime"]);
+    expect(sourceOrder("cinesrc", ranking)).toEqual(["cinesrc", "vidy", "vidyanime", "vidlink"]);
   });
   it("labels reliability honestly", () => {
     expect(reliabilityLabel(rank({ reliability: 0.974 }))).toBe("97% reliable");

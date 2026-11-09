@@ -1,0 +1,50 @@
+name: Source ad score
+
+# Weekly measurement of every playback source's ad behaviour (docs/SOURCES.md).
+# Loads each source's real embed inside Panda's iframe sandbox, counts popups, redirects,
+# app-launch attempts and ad/tracker requests, then commits docs/sources/adscore.json.
+# The Panda backend (titan717/movieapi, GET /panda/sources/ranking) reads the `tiers` block
+# from this file on main, so the ranking follows the latest measurement within 6 hours.
+
+on:
+  schedule:
+    - cron: "17 3 * * 1"
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: source-adscore
+  cancel-in-progress: false
+
+jobs:
+  measure:
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+          cache: npm
+      - run: npm ci
+      - run: npx playwright install --with-deps chromium
+      - name: Measure sources
+        run: node scripts/source-adscore.mjs --seconds 25
+      - name: Summary
+        run: |
+          node -e '
+            const d = require("./docs/sources/adscore.json");
+            const rows = Object.entries(d.tiers).map(([id, t]) => `| ${id} | ${t.tier} | ${t.popups} | ${t.navigations} | ${t.adRequests} | ${t.sandbox ? "yes" : "no"} | ${t.firstPlay < 99 ? t.firstPlay + " s" : "did not start"} |`);
+            console.log(["## Source ad score " + d.measuredAt.slice(0, 10), "", "| Source | Tier | Popups | Redirects | Ad requests | Sandboxed | First play |", "|---|---|---|---|---|---|---|", ...rows].join("\n"));
+          ' >> "$GITHUB_STEP_SUMMARY"
+      - name: Commit measurement
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add docs/sources/adscore.json docs/screenshots/sources
+          if git diff --cached --quiet; then echo "No change"; exit 0; fi
+          git commit -m "Source ad score $(date -u +%F) [skip ci]"
+          git pull --rebase origin main
+          git push origin HEAD:main

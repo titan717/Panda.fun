@@ -15,11 +15,12 @@ export interface SandboxProfile { id: "strict" | "none"; label: string; attr: st
 export const SANDBOX: Record<SourceId, SandboxProfile> = {
   cinesrc: { id: "strict", label: "Strict sandbox", attr: "allow-scripts allow-same-origin allow-presentation", note: "No popups, new windows, top navigation, forms or dialogs" },
   vidy: { id: "none", label: "Compatibility mode", attr: null, note: "The provider refuses to play in any sandbox, so its own controls are shown" },
-  vidyanime: { id: "none", label: "Compatibility mode", attr: null, note: "Vidy's anime player, same rules as Vidy" }
+  vidyanime: { id: "none", label: "Compatibility mode", attr: null, note: "Vidy's anime player, same rules as Vidy" },
+  vidlink: { id: "none", label: "Compatibility mode", attr: null, note: "Refuses to play in a sandbox and opens a popup on the first click. Used only when the cleaner sources fail" }
 };
 
 /** Sources whose own interface must stay clickable (no command API). */
-export const COMPAT: Record<SourceId, boolean> = { cinesrc: false, vidy: true, vidyanime: true };
+export const COMPAT: Record<SourceId, boolean> = { cinesrc: false, vidy: true, vidyanime: true, vidlink: true };
 
 /** The Android app blocks popups, redirects and app launches natively, so compatibility sources are safe there. */
 export const nativeShield = isAndroidApp;
@@ -88,8 +89,23 @@ export function rankSources(list: PlaybackSource[], order: SourceId[], opts: { t
   const shielded = opts.shielded ?? nativeShield;
   const base = (s: PlaybackSource) => { const i = order.indexOf(s.id); return i < 0 ? order.length : i; };
   const score = (s: PlaybackSource) => base(s) + (noise(s.id) > 1 ? 1.5 : 0) + (!shielded && COMPAT[s.id] ? (opts.tv ? 100 : 10) : 0);
-  return [...list].sort((a, b) => score(a) - score(b));
+  // v1.2.4 (§6): the ad tier dominates; community ranking, speed and local noise reorder only inside a tier
+  return [...list].sort((a, b) => effectiveTier(a, shielded) - effectiveTier(b, shielded) || score(a) - score(b));
 }
 
-/** Compatibility sources on a TV browser are a last resort (§C.5): skip them unless nothing else plays. */
-export const lastResortOnly = (id: SourceId, tv: boolean) => tv && !nativeShield && COMPAT[id];
+/** Tier as this device experiences it: a popup source (tier 3) outside the Android firewall behaves like tier 4. */
+export function effectiveTier(s: Pick<PlaybackSource, "id" | "tier">, shielded = nativeShield): 1 | 2 | 3 | 4 {
+  const t = s.tier ?? 4;
+  return t >= 3 && !shielded ? 4 : t;
+}
+
+/**
+ * Last-resort sources are never picked first (§6, §C.5): tier 4 anywhere, tier 3 on TV (off by default
+ * there), and compatibility sources in a TV browser. They still play when everything above them fails.
+ */
+export const lastResortOnly = (id: SourceId, tv: boolean, tier?: 1 | 2 | 3 | 4) => {
+  const t = effectiveTier({ id, tier: tier ?? (id === "vidlink" ? 3 : id === "cinesrc" ? 1 : 2) });
+  return t >= 4 || (tv && t >= 3) || (tv && !nativeShield && COMPAT[id]);
+};
+
+export const TIER_LABEL: Record<1 | 2 | 3 | 4, string> = { 1: "Ad-free", 2: "Light ads", 3: "Popups blocked by the app", 4: "Heavy ads · last resort" };

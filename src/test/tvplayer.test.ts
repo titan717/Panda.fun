@@ -14,7 +14,8 @@ describe("TV player chrome helpers", () => {
   });
   it("accelerates the seek step while held", () => {
     expect(seekStep(0)).toBe(10);
-    expect(seekStep(8)).toBe(30);
+    expect(seekStep(5)).toBe(20);
+    expect(seekStep(12)).toBe(30);
     expect(seekStep(20)).toBe(60);
   });
   it("lists the blueprint quality options in order", () => {

@@ -94,8 +94,8 @@ class MainActivity : ComponentActivity() {
 
         /** Same policy as vercel.json (checked by src/test/v117.test.ts) for the web build: only the two providers and YouTube may be framed. */
         private val SECURITY_HEADERS = mapOf(
-            "Content-Security-Policy" to "default-src 'self'; base-uri 'self'; object-src 'none'; frame-ancestors 'self'; form-action 'self'; script-src 'self' https://www.youtube.com https://s.ytimg.com; style-src 'self' 'unsafe-inline'; font-src 'self' data:; img-src 'self' data: blob: https://image.tmdb.org https://i.ytimg.com https://img.youtube.com; media-src 'self' blob:; connect-src 'self' https://apikinoma.vercel.app https://api.github.com; frame-src https://cinesrc.st https://*.cinesrc.st https://vidy.st https://*.vidy.st https://www.youtube-nocookie.com https://www.youtube.com; worker-src 'self' blob:; manifest-src 'self'",
-            "Permissions-Policy" to "autoplay=(self \"https://cinesrc.st\" \"https://www.vidy.st\" \"https://vidy.st\" \"https://www.youtube-nocookie.com\"), fullscreen=(self \"https://cinesrc.st\" \"https://www.vidy.st\" \"https://vidy.st\" \"https://www.youtube-nocookie.com\"), picture-in-picture=(self \"https://cinesrc.st\" \"https://www.vidy.st\" \"https://vidy.st\"), microphone=(), camera=(), geolocation=()",
+            "Content-Security-Policy" to "default-src 'self'; base-uri 'self'; object-src 'none'; frame-ancestors 'self'; form-action 'self'; script-src 'self' https://www.youtube.com https://s.ytimg.com; style-src 'self' 'unsafe-inline'; font-src 'self' data:; img-src 'self' data: blob: https://image.tmdb.org https://i.ytimg.com https://img.youtube.com; media-src 'self' blob:; connect-src 'self' https://apikinoma.vercel.app https://api.github.com; frame-src https://cinesrc.st https://*.cinesrc.st https://vidy.st https://*.vidy.st https://vidlink.pro https://www.youtube-nocookie.com; worker-src 'self' blob:; manifest-src 'self'",
+            "Permissions-Policy" to "autoplay=(self \"https://cinesrc.st\" \"https://www.vidy.st\" \"https://vidy.st\" \"https://vidlink.pro\" \"https://www.youtube-nocookie.com\"), fullscreen=(self \"https://cinesrc.st\" \"https://www.vidy.st\" \"https://vidy.st\" \"https://vidlink.pro\" \"https://www.youtube-nocookie.com\"), picture-in-picture=(self \"https://cinesrc.st\" \"https://www.vidy.st\" \"https://vidy.st\" \"https://vidlink.pro\"), microphone=(), camera=(), geolocation=()",
             "Referrer-Policy" to "strict-origin-when-cross-origin",
             "X-Content-Type-Options" to "nosniff"
         )
@@ -232,7 +232,7 @@ class MainActivity : ComponentActivity() {
                     AdShield.record("navigation", url)
                     return true
                 }
-                if (AdShield.isBlockedHost(url.host)) {
+                if (AdShield.isBlockedHost(url.host) || AdShield.isYouTubeExit(url)) {
                     AdShield.record("navigation", url)
                     return true
                 }

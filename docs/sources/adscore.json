@@ -1,0 +1,277 @@
+{
+  "measuredAt": "2026-11-09T03:34:06.234Z",
+  "seconds": 22,
+  "tiers": {
+    "cinesrc": {
+      "tier": 1,
+      "popups": 0,
+      "navigations": 0,
+      "adRequests": 3,
+      "sandbox": true,
+      "firstPlay": 3.27
+    },
+    "vidlink": {
+      "tier": 4,
+      "popups": 2,
+      "navigations": 0,
+      "adRequests": 23,
+      "sandbox": false,
+      "firstPlay": 99
+    },
+    "vidy": {
+      "tier": 2,
+      "popups": 0,
+      "navigations": 0,
+      "adRequests": 1,
+      "sandbox": false,
+      "firstPlay": 1.367
+    }
+  },
+  "results": [
+    {
+      "id": "cinesrc",
+      "kind": "movie",
+      "sandbox": "strict",
+      "popups": 0,
+      "topNav": 0,
+      "intent": 0,
+      "adRequests": 3,
+      "adHosts": [
+        "usrpubtrk.com",
+        "adexchangerapid.com"
+      ],
+      "requests": 69,
+      "firstEvent": 2.253,
+      "firstPlay": 3.27,
+      "events": 77,
+      "error": null,
+      "eventTypes": [
+        "cinesrc:sourceused",
+        "cinesrc:ready",
+        "cinesrc:loadedmetadata",
+        "cinesrc:timeupdate"
+      ]
+    },
+    {
+      "id": "cinesrc",
+      "kind": "tv",
+      "sandbox": "strict",
+      "popups": 0,
+      "topNav": 0,
+      "intent": 0,
+      "adRequests": 3,
+      "adHosts": [
+        "usrpubtrk.com",
+        "adexchangerapid.com"
+      ],
+      "requests": 77,
+      "firstEvent": 3.996,
+      "firstPlay": 4.255,
+      "events": 71,
+      "error": null,
+      "eventTypes": [
+        "cinesrc:sourceused",
+        "cinesrc:ready",
+        "cinesrc:play",
+        "cinesrc:loadedmetadata",
+        "cinesrc:timeupdate"
+      ]
+    },
+    {
+      "id": "vidlink",
+      "kind": "movie",
+      "sandbox": "strict",
+      "popups": 0,
+      "topNav": 0,
+      "intent": 0,
+      "adRequests": 23,
+      "adHosts": [
+        "mc.yandex.ru",
+        "www.googletagmanager.com",
+        "static.cloudflareinsights.com",
+        "www.clarity.ms",
+        "c.adsco.re",
+        "rfitiqalwkwb.l4.adsco.re",
+        "rfitiqalwkwb.n4.adsco.re",
+        "rfitiqalwkwb.s4.adsco.re",
+        "adsco.re",
+        "4.adsco.re",
+        "6.adsco.re",
+        "usrpubtrck.com",
+        "rapidadexchange.com",
+        "c.bing.com"
+      ],
+      "requests": 90,
+      "firstEvent": 1.98,
+      "firstPlay": null,
+      "events": 13,
+      "error": null,
+      "eventTypes": [
+        "",
+        "MEDIA_DATA"
+      ],
+      "refused": true
+    },
+    {
+      "id": "vidlink",
+      "kind": "tv",
+      "sandbox": "strict",
+      "popups": 0,
+      "topNav": 0,
+      "intent": 0,
+      "adRequests": 22,
+      "adHosts": [
+        "static.cloudflareinsights.com",
+        "mc.yandex.ru",
+        "www.googletagmanager.com",
+        "www.clarity.ms",
+        "c.bing.com",
+        "c.adsco.re",
+        "g94ldx3ql8cv.l4.adsco.re",
+        "g94ldx3ql8cv.n4.adsco.re",
+        "g94ldx3ql8cv.s4.adsco.re",
+        "adsco.re",
+        "4.adsco.re",
+        "6.adsco.re",
+        "usrpubtrck.com",
+        "rapidadexchange.com"
+      ],
+      "requests": 90,
+      "firstEvent": 1.653,
+      "firstPlay": null,
+      "events": 11,
+      "error": null,
+      "eventTypes": [
+        "",
+        "MEDIA_DATA"
+      ],
+      "refused": true
+    },
+    {
+      "id": "vidlink",
+      "kind": "anime",
+      "sandbox": "strict",
+      "popups": 0,
+      "topNav": 0,
+      "intent": 0,
+      "adRequests": 7,
+      "adHosts": [
+        "mc.yandex.ru",
+        "www.googletagmanager.com",
+        "static.cloudflareinsights.com",
+        "www.clarity.ms",
+        "c.bing.com"
+      ],
+      "requests": 50,
+      "firstEvent": 1.377,
+      "firstPlay": null,
+      "events": 1,
+      "error": null,
+      "eventTypes": [
+        ""
+      ]
+    },
+    {
+      "id": "vidlink-open",
+      "kind": "movie",
+      "sandbox": "none",
+      "popups": 2,
+      "topNav": 0,
+      "intent": 0,
+      "adRequests": 21,
+      "adHosts": [
+        "mc.yandex.ru",
+        "www.googletagmanager.com",
+        "static.cloudflareinsights.com",
+        "www.clarity.ms",
+        "c.bing.com",
+        "c.adsco.re",
+        "hcax7fao1si4.l4.adsco.re",
+        "hcax7fao1si4.n4.adsco.re",
+        "hcax7fao1si4.s4.adsco.re",
+        "adsco.re",
+        "4.adsco.re",
+        "6.adsco.re",
+        "usrpubtrck.com",
+        "rapidadexchange.com"
+      ],
+      "requests": 97,
+      "firstEvent": 1.638,
+      "firstPlay": null,
+      "events": 11,
+      "error": null,
+      "eventTypes": [
+        "",
+        "MEDIA_DATA"
+      ]
+    },
+    {
+      "id": "vidy",
+      "kind": "movie",
+      "sandbox": "none",
+      "popups": 0,
+      "topNav": 0,
+      "intent": 0,
+      "adRequests": 1,
+      "adHosts": [
+        "static.cloudflareinsights.com"
+      ],
+      "requests": 79,
+      "firstEvent": 1.321,
+      "firstPlay": 1.587,
+      "events": 173,
+      "error": null,
+      "eventTypes": [
+        "MEDIA_DATA",
+        "PLAYER_EVENT:play",
+        "PLAYER_EVENT:timeupdate",
+        "PLAYER_EVENT:pause"
+      ]
+    },
+    {
+      "id": "vidy",
+      "kind": "tv",
+      "sandbox": "none",
+      "popups": 0,
+      "topNav": 0,
+      "intent": 0,
+      "adRequests": 1,
+      "adHosts": [
+        "static.cloudflareinsights.com"
+      ],
+      "requests": 77,
+      "firstEvent": 1.22,
+      "firstPlay": 1.367,
+      "events": 173,
+      "error": null,
+      "eventTypes": [
+        "MEDIA_DATA",
+        "PLAYER_EVENT:play",
+        "PLAYER_EVENT:timeupdate",
+        "PLAYER_EVENT:pause"
+      ]
+    },
+    {
+      "id": "vidy",
+      "kind": "anime",
+      "sandbox": "none",
+      "popups": 0,
+      "topNav": 0,
+      "intent": 0,
+      "adRequests": 1,
+      "adHosts": [
+        "static.cloudflareinsights.com"
+      ],
+      "requests": 57,
+      "firstEvent": 1.263,
+      "firstPlay": 6.61,
+      "events": 24,
+      "error": null,
+      "eventTypes": [
+        "MEDIA_DATA",
+        "PLAYER_EVENT:play",
+        "PLAYER_EVENT:pause"
+      ]
+    }
+  ]
+}

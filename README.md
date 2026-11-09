@@ -25,7 +25,8 @@ Mobile (390 × 844, touch)
 ## Features
 
 - **Pages:** splash, Who's watching (select, add, edit, delete, kids profiles), Home, Movies, TV Shows, New & Hot, Categories and genre browse, Search (recent and popular searches, voice input where supported, results, filters, empty states), Details (trailer, seasons and episodes, all-episodes page, cast, more like this, trailers & more), My List, Continue Watching, Player, Settings (playback, language, notifications, profiles, Check for Updates), About, Privacy, Terms.
-- **Hero:** auto-advancing carousel; after focus rests on the hero its YouTube trailer fades in (muted toggle), and is destroyed when focus leaves.
+- **Hero and trailers:** auto-advancing carousel; after focus rests on a title for 5 s (per profile) its trailer plays in a sandboxed youtube-nocookie frame. The frame stays hidden and silent for 2 s after it starts playing so YouTube's title and logo overlay never show, then fades in over 600 ms and the sound ramps in; it loops without hiding and is paused and removed when focus leaves. Rules and tests: [docs/TRAILERS.md](docs/TRAILERS.md).
+- **Sources:** CineSrc, Vidy, Vidy Anime and VidLink, ordered by measured ad tier first and community ranking second; a weekly workflow re-measures them ([docs/SOURCES.md](docs/SOURCES.md)).
 - **TV:** spatial navigation (`@bbc/tv-lrud-spatial`), visible focus everywhere, rail navigation, row focus expansion, Back on Backspace / Escape / Android Back / webOS 461 / Tizen 10009, media keys, overscan-safe margins, scaling for 720p / 1080p / 4K.
 - **Mobile:** bottom navigation, swipeable carousels, sheets, safe-area insets, landscape layouts.
 - **Player:** CineSrc and Vidy behind one source registry with a source switcher, automatic fallback, remembered source and volume, resume from the last position, previous / next episode and a 10-second next-episode countdown. See [docs/PLAYER_COMPARISON.md](docs/PLAYER_COMPARISON.md).

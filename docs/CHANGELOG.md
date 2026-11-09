@@ -2,6 +2,19 @@
 
 Every stable release of Panda.fun. The same notes ship in each GitHub Release and in Settings › What's New.
 
+## 1.2.4
+
+- **No more YouTube flash on trailers**: background trailers on the TV home, title pages and rows, and on phone title pages, now stay hidden and silent for two seconds after they start, until YouTube's title, channel picture and logo have gone. Then the video fades in and the sound rises gently. Trailers also start a second in, so nothing is lost, and they keep playing on screen when they loop.
+- **Trailers stop when you move on**: moving focus away before a trailer appears now pauses and mutes it as well, so a hidden trailer can no longer keep playing in the background.
+- **VidLink as a source**: VidLink joins CineSrc and Vidy for movies, shows and anime, with resume and Panda's cleaned subtitles handed to it. Every source now shows an ad tier (1 is cleanest) measured by Panda; Automatic always tries the cleanest tier first and the community ranking only reorders sources inside a tier. VidLink is tier 3 (it opens pop-ups), so it is only used when cleaner sources fail and never picked by itself on TV.
+- **Player states**: "Buffering…" appears when the video stops moving; if it is stuck for 12 seconds a card offers Retry, Switch source and Report, and switches to the next source by itself after a 10-second countdown. Coming back to a title asks "Resume from 23:14" or "Start over".
+- **Faster seeking on TV**: holding or tapping left/right on the remote speeds up from 10 to 20, 30 and 60 seconds a step, and a bubble shows where you will land and how far you moved. Settings shows how fast videos start on this device ("Starts in 1.8 s").
+- **Phone as a TV remote**: on Android TV, Connect Phone in the sidebar shows a QR code; scan it with a phone on the same Wi-Fi to get a remote with a d-pad, typing, volume and "open on TV". Only phones with the pairing code can control the TV, and nothing leaves your home network.
+- **Share links and deep links**: Share on a title page sends a link that opens the title in the Panda app (or on the web), and the sync QR now opens Restore from code directly.
+- **Clean trailer frames**: trailers play from youtube-nocookie.com inside a locked-down frame that cannot open windows, follow links or take focus; clicks and keys over a trailer do nothing.
+
+VidLink loads ads and trackers of its own (about 20 requests per play) and refuses Panda's sandbox, so in a browser Panda cannot stop its pop-ups; in the Android app the ad shield blocks them. The phone remote needs the Panda app on Android TV.
+
 ## 1.2.3
 
 - **Sync code, no account needed**: Settings › Sync Code › Create sync code backs up this device and shows a 12-character code like 7KQ2-M9TX-4HRB, in big letters and as a QR. The code uses only letters and numbers that cannot be mixed up (no I, L, O or U), so it is easy to read off a TV.

@@ -47,7 +47,7 @@ export function prefetchSegments(imdbId: string | null | undefined, s?: number, 
   return true;
 }
 
-export const SOURCE_ORIGINS = { cinesrc: "https://cinesrc.st", vidy: "https://vidy.st", vidyanime: "https://www.vidy.st" } as const;
+export const SOURCE_ORIGINS = { cinesrc: "https://cinesrc.st", vidy: "https://vidy.st", vidyanime: "https://www.vidy.st", vidlink: "https://vidlink.pro" } as const;
 const connected = new Set<string>();
 
 /** Opens DNS + TLS to the playback source so the embedded player's first request is faster. */

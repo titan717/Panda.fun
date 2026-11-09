@@ -15,7 +15,7 @@ export function VideoOverlay({ videoKey, title, onClose }: { videoKey: string; t
   useBackHandler(() => { onClose(); });
   return (
     <div ref={ref} className="video-overlay" role="dialog" aria-modal="true" aria-label={title}>
-      {!failed && <Trailer keys={[videoKey]} play sound volume={prefs.trailerVolume} loop={false} className="video-overlay-player" onPlaying={() => setPlaying(true)} onEnd={onClose} onFail={() => setFailed(true)} />}
+      {!failed && <Trailer keys={[videoKey]} play sound volume={prefs.trailerVolume} loop={false} revealDelayMs={0} className="video-overlay-player" onPlaying={() => setPlaying(true)} onEnd={onClose} onFail={() => setFailed(true)} />}
       {!playing && !failed && <Spinner label="Loading trailer" />}
       {failed && <p className="video-overlay-error">This video can't be played here.</p>}
       <div className="video-overlay-bar">

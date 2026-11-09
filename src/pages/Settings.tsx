@@ -2,7 +2,7 @@ import "./settings.css";
 import "../lib/validateLazy"; // validators for this page's payloads, loaded with the page
 import { forgetIntros, SPEEDS, speedLabel, STILL_AFTER } from "../lib/player2";
 import { nativePipSupported } from "../lib/pip";
-import { useEffect, useRef, useState, type ReactNode } from "react";
+import { useEffect, useMemo, useRef, useState, type ReactNode } from "react";
 import { Link, useParams } from "wouter";
 import { useSWRConfig } from "swr";
 import { clearPersistentCache } from "../lib/cache";
@@ -16,7 +16,7 @@ import { SyncPanel } from "./SyncSettings";
 import "./sync.css";
 import { actions, usePrefs, useProfile, useReminders, type Prefs } from "../lib/store";
 import { useGenres, usePage, useSourceHealth, useSourceRanking } from "../lib/hooks";
-import { reliabilityLabel, reliabilityTone } from "../lib/sources";
+import { reliabilityLabel, reliabilityTone, tierLabel } from "../lib/sources";
 import { HOME_SECTIONS, isCustomHome, moveSection, normalizeOrder, railKey, type HomeSection } from "../lib/homeLayout";
 import { focusEl, focusFirst } from "../lib/focus";
 import { useNav } from "../lib/nav";
@@ -25,6 +25,7 @@ import { installedVersion } from "../lib/updates";
 import { languageName } from "../lib/format";
 import { notifyPermission, requestNotify } from "../lib/notify";
 import type { PreferredSource, SourceId } from "../lib/types";
+import { ttffLabel, ttffStats } from "../lib/ttff";
 import { clearShield, COMPAT, nativeShield, SANDBOX, shieldStats, syncNative } from "../lib/shield";
 
 type SectionId = "profiles" | "sync" | "home" | "playback" | "trailers" | "subtitles" | "sources" | "languages" | "parental" | "display" | "storage" | "notifications" | "whatsnew" | "updates" | "help";
@@ -56,7 +57,8 @@ const TRAILER_DELAYS = [
 export const SOURCES: { id: SourceId; label: string; note: string }[] = [
   { id: "cinesrc", label: "CineSrc", note: "Resume, progress sync and volume control" },
   { id: "vidy", label: "Vidy", note: "Backup source with resume and progress sync" },
-  { id: "vidyanime", label: "Vidy Anime", note: "Anime from AniList's catalogue. Used for Japanese animation only" }
+  { id: "vidyanime", label: "Vidy Anime", note: "Anime from AniList's catalogue. Used for Japanese animation only" },
+  { id: "vidlink", label: "VidLink", note: "Themed in Panda's colours, resumes where you stopped. Has popups, so it is only used when the others fail" }
 ];
 
 /** v1.2.0: "Automatic" starts with the source the community ranks most reliable. */
@@ -173,12 +175,13 @@ function RankingList() {
               <span className="src-rank-n" aria-hidden="true">{r.rank}</span>
               <span className="src-health-name">{SOURCES.find((s) => s.id === r.id)?.label ?? r.id}</span>
               <span className="src-rank-bar" aria-hidden="true"><span style={{ width: `${Math.max(4, pct)}%` }} className={`src-rank-fill src-rel--${reliabilityTone(r)}`} /></span>
+              <span className={`src-tier src-tier--${tierLabel(r.id, r).tier}`}>{tierLabel(r.id, r).label}{r.ads ? ` · ${r.ads.popups} popups, ${r.ads.adRequests} ad requests` : ""}</span>
               <span className="src-health-meta">{(() => { const l = reliabilityLabel(r) ?? "No reports yet"; return r.reports24h > 0 && !l.startsWith("Reported") ? `${l} · ${r.reports24h} ${r.reports24h === 1 ? "report" : "reports"} today` : l; })()}</span>
             </li>
           );
         })}
       </ol>
-      <p className="set-note">Ranked by the Wilson score of plays that started against reports, from every Panda viewer, with older results fading over {data?.halfLifeHours ?? 72} hours. Only the source, the title id and the issue are sent.</p>
+      <p className="set-note">Cleaner sources always come first: each source is measured for popups and ad requests and placed in an ad tier, and only inside a tier is it ranked by the Wilson score of plays that started against reports, from every Panda viewer, with older results fading over {data?.halfLifeHours ?? 72} hours. Only the source, the title id and the issue are sent.</p>
     </>
   );
 }
@@ -186,6 +189,7 @@ function RankingList() {
 /** Ad shield (docs/AD_SHIELD.md, layer 8): read-only counters and the sandbox mode of each source. */
 function ShieldInfo() {
   const [stats, setStats] = useState(() => { syncNative(); return shieldStats(); });
+  const starts = useMemo(() => ttffStats(), []);
   const total = stats.popups + stats.navigations;
   return (
     <>
@@ -202,7 +206,7 @@ function ShieldInfo() {
             <li key={s.id} className="src-health-row">
               <span className={`src-dot src-dot--${SANDBOX[s.id].id === "strict" ? "healthy" : "degraded"}`} aria-hidden="true" />
               <span className="src-health-name">{s.label}</span>
-              <span className="src-health-meta">{SANDBOX[s.id].label}{COMPAT[s.id] && nativeShield ? " · popups blocked by the app" : ""} · {n} blocked</span>
+              <span className="src-health-meta">{SANDBOX[s.id].label}{COMPAT[s.id] && nativeShield ? " · popups blocked by the app" : ""} · {n} blocked{starts[s.id] ? ` · ${ttffLabel(starts[s.id]!.median)}` : ""}</span>
             </li>
           );
         })}

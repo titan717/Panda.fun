@@ -41,7 +41,7 @@ describe("validate", () => {
 });
 
 describe("Vidy events", () => {
-  const vidy: PlaybackSource = { id: "vidy", provider: "vidy", label: "Vidy", url: "https://www.vidy.st/movie/550", origin: "https://www.vidy.st", events: "vidy", supportsStart: true };
+  const vidy: PlaybackSource = { id: "vidy", provider: "vidy", label: "Vidy", url: "https://www.vidy.st/movie/550", origin: "https://www.vidy.st", events: "vidy", supportsStart: true, tier: 2 };
   it("reads the live PLAYER_EVENT shape (timestamp field)", () => {
     const msg = JSON.stringify({ type: "PLAYER_EVENT", data: { event: "timeupdate", timestamp: 42, duration: 8348 } });
     expect(parseMessage(vidy, "https://www.vidy.st", msg)).toEqual({ kind: "time", position: 42, duration: 8348 });

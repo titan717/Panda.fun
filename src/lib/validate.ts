@@ -156,14 +156,17 @@ export function genres(path: string, v: unknown): GenresPayload {
   return { movie: g(o.movie), tv: g(o.tv), languages: arr(o.languages).filter(isObj).filter((y) => str(y.code) && str(y.name)).map((y) => ({ code: str(y.code)!, name: str(y.name)! })) };
 }
 
-export const SOURCE_IDS = new Set(["cinesrc", "vidy", "vidyanime"]);
+export const SOURCE_IDS = new Set(["cinesrc", "vidy", "vidyanime", "vidlink"]);
+/** Fallback tiers when an older backend omits them (docs/SOURCES.md, measured 2026-11-09). */
+export const DEFAULT_TIER: Record<string, 1 | 2 | 3 | 4> = { cinesrc: 1, vidy: 2, vidyanime: 2, vidlink: 3 };
+const tierOf = (v: unknown, id: string): 1 | 2 | 3 | 4 => (v === 1 || v === 2 || v === 3 || v === 4 ? v : DEFAULT_TIER[id] ?? 4);
 export function playback(path: string, v: unknown): PlaybackPayload {
   const o = need(path, v);
   const type = o.type === "tv" ? "tv" : "movie";
   const sources = arr(o.sources).filter(isObj).filter((s) => SOURCE_IDS.has(String(s.id)) && str(s.url)?.startsWith("https://") && str(s.origin)).map((s): PlaybackSource => ({
     id: s.id as PlaybackSource["id"], provider: str(s.provider) ?? String(s.id), label: str(s.label) ?? String(s.id),
     url: str(s.url)!, origin: str(s.origin)!, events: s.events === "cinesrc" ? "cinesrc" : s.events === "vidy" ? "vidy" : "none",
-    supportsStart: s.supportsStart === true
+    supportsStart: s.supportsStart === true, tier: tierOf(s.tier, String(s.id))
   }));
   return { type, tmdbId: num(o.tmdbId) ?? 0, season: num(o.season) ?? undefined, episode: num(o.episode) ?? undefined, anilistId: num(o.anilistId), sources };
 }

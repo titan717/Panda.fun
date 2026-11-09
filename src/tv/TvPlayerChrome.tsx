@@ -8,7 +8,7 @@ import { navKey } from "../lib/keys";
 import { useSeason } from "../lib/hooks";
 import { languageName, runtime } from "../lib/format";
 import { capabilityLabels, sourceName } from "../lib/player";
-import { ISSUES, rankOf, reliabilityLabel, reliabilityTone } from "../lib/sources";
+import { ISSUES, rankOf, reliabilityLabel, reliabilityTone, tierLabel } from "../lib/sources";
 import type { Prefs } from "../lib/store";
 import { BRIGHT_MIN, classifyDrag, dragLevel, dragSeek, HOLD_MS, SLEEP_OPTIONS, SPEEDS, speedLabel, type DragKind, type SleepMode } from "../lib/player2";
 import type { Episode, PandaItem, PlaybackSource, SourceId, SourceRankingPayload, SubtitleTrack, TitleDetails } from "../lib/types";
@@ -46,6 +46,7 @@ export function SourceMeta({ id, ranking }: { id: SourceId; ranking?: SourceRank
   const rel = reliabilityLabel(r);
   return (
     <small className="src-meta">
+      <span className={`src-tier src-tier--${tierLabel(id, r).tier}`}>{tierLabel(id, r).label}</span>
       {rel && <span className={`src-rel src-rel--${reliabilityTone(r)}`}><span className="src-rel-dot" aria-hidden="true" />{rel}</span>}
       <span className="src-caps">{capabilityLabels(id).join(" · ")}</span>
     </small>
@@ -59,8 +60,15 @@ export function clock(sec: number) {
   return `${String(h).padStart(2, "0")}:${String(m).padStart(2, "0")}:${String(r).padStart(2, "0")}`;
 }
 
-/** Accelerating seek step while a direction is held (10 s → 30 s → 60 s). */
-export function seekStep(repeats: number) { return repeats < 6 ? 10 : repeats < 16 ? 30 : 60; }
+/** Accumulating seek step while a direction is held or pressed in a burst (10 s → 20 s → 30 s → 60 s, MASTER V4 §5.1). */
+export function seekStep(repeats: number) { return repeats < 4 ? 10 : repeats < 10 ? 20 : repeats < 18 ? 30 : 60; }
+
+/** "+1:30" / "−0:20" for the seek bubble. */
+export function seekDelta(sec: number) {
+  const a = Math.round(Math.abs(sec)), h = Math.floor(a / 3600), m = Math.floor((a % 3600) / 60), s = a % 60;
+  const body = h ? `${h}:${String(m).padStart(2, "0")}:${String(s).padStart(2, "0")}` : `${m}:${String(s).padStart(2, "0")}`;
+  return `${sec < 0 ? "\u2212" : "+"}${body}`;
+}
 
 export type WatchNextCard =
   | { kind: "episode"; key: string; season: number; episode: number; title: string; image: string | null; sub: string }
@@ -129,6 +137,8 @@ export function TvPlayerChrome(p: TvChromeProps) {
   const [panel, setPanel] = useState<Panel>(null);
   const [pending, setPending] = useState<number | null>(null);
   const repeats = useRef(0);
+  const lastPress = useRef(0);
+  const seekFrom = useRef(0);
   const commitTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const [intro, setIntro] = useState(true);
   const track = useRef<HTMLDivElement>(null);
@@ -184,7 +194,11 @@ export function TvPlayerChrome(p: TvChromeProps) {
     if (!p.controllable || dur <= 0) return;
     if (k === "left" || k === "right" || k === "ff" || k === "rw") {
       e.preventDefault();
-      repeats.current = e.repeat ? repeats.current + 1 : 0;
+      // a held key or a quick burst of presses (< 450 ms apart) both accumulate
+      const now = performance.now();
+      repeats.current = e.repeat || (pending !== null && now - lastPress.current < 450) ? repeats.current + 1 : 0;
+      lastPress.current = now;
+      if (pending === null) seekFrom.current = p.position;
       const step = seekStep(repeats.current) * (k === "left" || k === "rw" ? -1 : 1);
       const base = pending ?? p.position;
       const to = Math.min(dur - 2, Math.max(0, base + step));
@@ -248,7 +262,7 @@ export function TvPlayerChrome(p: TvChromeProps) {
         </div>
       </header>
 
-      {pending !== null && <SeekStrip d={d} to={pending} duration={dur} />}
+      {pending !== null && <SeekStrip d={d} to={pending} duration={dur} delta={pending - seekFrom.current} />}
 
       <div className="tvp-bottom">
         <span className="tvp-remaining" aria-hidden="true">{dur > 0 ? clock(dur - shown) : ""}</span>
@@ -393,11 +407,12 @@ function SidePanel({ title, className, children, footer, onClose }: { title: str
 }
 
 /** Seek preview (§20.11): three cards at −10 s / target / +10 s. Embeds give no frames (D-25), so the cards show the title's artwork at different crops. */
-function SeekStrip({ d, to, duration }: { d: TitleDetails | undefined; to: number; duration: number }) {
+function SeekStrip({ d, to, duration, delta }: { d: TitleDetails | undefined; to: number; duration: number; delta: number }) {
   const img = d?.backdrop ?? d?.backdropLarge ?? null;
   const steps = [to - 10, to, to + 10];
   return (
     <div className="tvp-strip" aria-hidden="true">
+      <span className="tvp-seek-bubble" id="tvp-seek-bubble"><strong>{clock(to)}</strong><span>{seekDelta(delta)}</span></span>
       {steps.map((t, i) => (
         <div key={i} className={`tvp-thumb ${i === 1 ? "is-center" : ""} ${t < 0 || t > duration ? "is-empty" : ""}`}>
           {img && t >= 0 && t <= duration && <Img src={img} alt="" title="" style={{ objectPosition: `${20 + i * 30}% 50%` }} />}

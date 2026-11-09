@@ -27,12 +27,14 @@ object AdShield {
         "appassets.androidplatform.net", "apikinoma.vercel.app", "api.github.com", "github.com",
         "objects.githubusercontent.com", "release-assets.githubusercontent.com",
         "image.tmdb.org", "api.themoviedb.org", "youtube.com", "youtube-nocookie.com", "ytimg.com",
-        "googlevideo.com", "gstatic.com", "cinesrc.st", "vidy.st"
+        "googlevideo.com", "gstatic.com", "cinesrc.st", "vidy.st", "vidlink.pro"
     )
 
     /** Ad / click-tracker hosts seen in provider embeds during Panda's instrumented tests (2026-11-08). */
     private val OBSERVED = listOf(
-        "adexchangerapid.com", "usrpubtrk.com", "roadster24.com", "offer.alibaba.com"
+        "adexchangerapid.com", "usrpubtrk.com", "roadster24.com", "offer.alibaba.com",
+        // VidLink embed, measured 2026-11-09 (docs/SOURCES.md)
+        "adsco.re", "rapidadexchange.com", "usrpubtrck.com"
     )
 
     @Volatile private var hosts: HashSet<String> = HashSet(OBSERVED)
@@ -79,6 +81,17 @@ object AdShield {
         WebResourceResponse("text/plain", "utf-8", 204, "Blocked", mapOf("Cache-Control" to "no-store"), ByteArrayInputStream(ByteArray(0)))
 
     /** http(s) to the app or a provider; everything else (intent:, market:, other apps, ad pages) is blocked. */
+    /**
+     * Clean trailers (docs/TRAILERS.md): a trailer frame may never become youtube.com, a watch page,
+     * a channel or youtu.be. Only the youtube-nocookie.com embed itself is allowed to load.
+     */
+    fun isYouTubeExit(uri: Uri): Boolean {
+        val h = uri.host?.lowercase() ?: return false
+        if (h == "youtu.be") return true
+        if (h == "youtube.com" || h.endsWith(".youtube.com")) return !(uri.path ?: "").startsWith("/embed/")
+        return false
+    }
+
     fun isAllowedNavigation(uri: Uri, appHost: String): Boolean {
         val scheme = uri.scheme?.lowercase() ?: return false
         if (scheme != "https" && scheme != "http") return false

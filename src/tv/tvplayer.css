@@ -41,6 +41,10 @@ html[data-mode="tv"] .tvp-pill:focus { outline: none; background: rgba(255, 255,
 .tvp-lang .icon { width: calc(18 * var(--tu)); height: calc(18 * var(--tu)); }
 @keyframes tvp-fade { 0% { opacity: 0; } 6% { opacity: 1; } 88% { opacity: 1; } 100% { opacity: 0; } }
 .tvp-strip { position: absolute; left: 0; right: 0; bottom: calc(150 * var(--tu)); display: flex; justify-content: center; align-items: flex-end; gap: calc(14 * var(--tu)); pointer-events: none; }
+/* v1.2.4 seek bubble: target time and the accumulated jump (+1:30), above the centre thumbnail */
+.tvp-seek-bubble { position: absolute; left: 50%; bottom: calc(100% + 12 * var(--tu)); transform: translateX(-50%); display: inline-flex; align-items: baseline; gap: calc(10 * var(--tu)); padding: calc(6 * var(--tu)) calc(16 * var(--tu)); border-radius: 999px; background: rgba(0, 0, 0, 0.72); border: 1px solid var(--tv-ice-soft); white-space: nowrap; font-variant-numeric: tabular-nums; }
+.tvp-seek-bubble strong { font-size: calc(22 * var(--tu)); font-weight: 700; color: #fff; }
+.tvp-seek-bubble span { font-size: calc(18 * var(--tu)); font-weight: 600; color: var(--tv-ice); }
 .tvp-thumb { position: relative; width: calc(250 * var(--tu)); aspect-ratio: 16 / 9; border-radius: calc(8 * var(--tu)); overflow: hidden; background: #0b0b0b; }
 .tvp-thumb .img, .tvp-thumb .img-fallback { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; filter: brightness(0.72); }
 .tvp-thumb.is-center { width: calc(330 * var(--tu)); border: calc(3 * var(--tu)) solid #fff; }

@@ -1,6 +1,6 @@
 # Ad shield
 
-Panda plays titles inside embeds from two third-party providers (CineSrc primary, Vidy secondary and anime). Both pay for themselves with ads. The ad shield stops what those embeds try to do to the app: popups, new tabs, redirects of the app page, Play Store and app launches, downloads, permission prompts and native dialogs.
+Panda plays titles inside embeds from three third-party providers (CineSrc primary, Vidy secondary and anime, VidLink last resort). All of them pay for themselves with ads. The ad shield stops what those embeds try to do to the app: popups, new tabs, redirects of the app page, Play Store and app launches, downloads, permission prompts and native dialogs.
 
 What it cannot do: **ads a provider draws inside its own video player (pre-rolls, banners over the picture) cannot be removed through an iframe.** Panda does not claim otherwise in the app or the release notes.
 
@@ -12,6 +12,7 @@ Instrumented headless Chromium (Playwright) loaded each embed, clicked at eight 
 |---|---|---|
 | CineSrc `cinesrc.st/embed/...` | Clicks open popup tabs (e.g. `offer.alibaba.com/cps/...`); click trackers `adexchangerapid.com`, `usrpubtrk.com`, `roadster24.com` | Plays normally (`cinesrc:ready`, `play`, `timeupdate` events; video readyState 4). Every popup attempt is refused by the browser ("sandboxed frame whose 'allow-popups' permission is not set") |
 | Vidy `www.vidy.st/...` | No popups in 8 clicks; loads video hosts on rotating domains | Refuses to play under **any** sandbox, even with `allow-popups allow-forms allow-modals`: shows "Iframe Sandbox Detected" |
+| VidLink `vidlink.pro/...` (v1.2.4) | 1–2 popups on the first click; 20–23 ad and tracker requests per play (adsco.re, rapidadexchange.com, usrpubtrck.com, Yandex Metrica, Clarity, Google Tag Manager, Bing) | Refuses any sandbox ("Please Disable Sandbox"). Tier 3 in the Android app (layers 3 and 4 consume its popups; `AdShield.kt` adds adsco.re, rapidadexchange.com and usrpubtrck.com to the observed list), tier 4 in browsers: only after every cleaner source failed, never automatic on TV. Measured 2026-11-09, docs/SOURCES.md. |
 
 Other documented sources with fewer ads were looked for (embed APIs that publish a postMessage command API and play sandboxed). None met Panda's bar of a documented command API plus TMDB ids plus a stable domain, so no third adapter was added; the ranking (layer 6) is ready for one.
 

@@ -1,3 +1,5 @@
+import { API_BASE } from "../lib/api";
+import { recordTtff, TickWatch } from "../lib/ttff";
 import "./player.css";
 import { ExtraIcon } from "../components/ExtraIcons";
 import { setRemoteTitle } from "../lib/remote";
@@ -15,10 +17,10 @@ import { clockAt, offsetLabel, subLangName } from "../lib/captions";
 import { KidsGate } from "../components/KidsGate";
 import { keys } from "../lib/api";
 import { useSeason, useSourceRanking, useTitle } from "../lib/hooks";
-import { ISSUES, isAnimeTitle, rankOf, reliabilityLabel, reliabilityTone, sourceOrder } from "../lib/sources";
+import { ISSUES, isAnimeTitle, rankOf, reliabilityLabel, reliabilityTone, sourceOrder, tierLabel } from "../lib/sources";
 import { actions, getPrefs, useHistoryEntry, usePrefs } from "../lib/store";
 import { stopAllTrailers } from "../lib/audio";
-import { useBackHandler, focusEl } from "../lib/focus";
+import { useBackHandler, focusEl, focusFirst } from "../lib/focus";
 import { nativeEnterPip, nativePipSupported, nativePlaybackActive } from "../lib/pip";
 import { useNav } from "../lib/nav";
 import { useIsTv } from "../lib/layout";
@@ -29,7 +31,7 @@ import { api } from "../lib/api";
 import { ADAPTERS, embedUrl, parseMessage, READY_TIMEOUT_MS, sendCommand, sourceName, SOURCE_ORDER } from "../lib/player";
 import { COMPAT, lastResortOnly, nativeShield, rankSources, recordPlay, SANDBOX, setShieldSource, shieldStats, syncNative } from "../lib/shield";
 import { episodeRow, hideSpoiler, nextEpisodeOf, prevEpisodeOf } from "../lib/watch";
-import { airsLater, pluralEps, runtime, titlePath, watchPath } from "../lib/format";
+import { airsLater, playClock, pluralEps, runtime, titlePath, watchPath } from "../lib/format";
 import { activeSkip, binge, shouldAskStill, getIntro, learnIntro, nextCardDue, SLEEP_GRACE_S, SLEEP_OFF, sleepDue, sleepLeft, sleepPillLabel, speedLabel, startSleep, type Intro, type SleepMode, type SleepTimer } from "../lib/player2";
 /** TV-only chrome lives in its own chunk so phones never download it (v1.1.6, D-85). TV warms it at idle. */
 export const loadTvChrome = () => import("../tv/TvPlayerChrome");
@@ -40,7 +42,7 @@ const PlayerPrompts = lazyNamed(loadPrompts, "PlayerPrompts");
 const PlayerOptionsSheet = lazyNamed(loadPrompts, "PlayerOptionsSheet");
 import type { SkipSegments, MediaType, PlaybackPayload, PlaybackSource, SourceId, TitleDetails } from "../lib/types";
 
-const SHORT: Record<SourceId, string> = { cinesrc: sourceName("cinesrc"), vidy: sourceName("vidy"), vidyanime: sourceName("vidyanime") };
+const SHORT: Record<SourceId, string> = { cinesrc: sourceName("cinesrc"), vidy: sourceName("vidy"), vidyanime: sourceName("vidyanime"), vidlink: sourceName("vidlink") };
 
 export function PlayerPage() {
   const params = useParams<{ type: string; id: string }>();
@@ -110,14 +112,17 @@ function Player({ type, id, season, episode, start }: { type: MediaType; id: num
   const [sourceId, setSourceId] = useState<SourceId | null>(() => { const p = getPrefs().preferredSource; return p === "auto" ? null : p; });
   const tried = useRef(new Set<SourceId>());
   // a compatibility source is never the first pick on a TV browser (ad shield §C.5)
-  const source: PlaybackSource | undefined = sources.find((x) => x.id === sourceId && !(lastResortOnly(x.id, tv) && !tried.current.size && sources.length > 1)) ?? sources[0];
+  const source: PlaybackSource | undefined = sources.find((x) => x.id === sourceId && !(lastResortOnly(x.id, tv, x.tier) && !tried.current.size && sources.length > 1)) ?? sources[0];
   const [nativeControls, setNativeControls] = useState(false);
   // The TV PLAYER blueprint chrome is drawn over every source that can hide its own controls, on TV
   // and touch alike: the iframe then never receives a click or tap (§6, §20, ad shield layer 1).
   const customChrome = Boolean(source && ADAPTERS[source.id]?.hideControls) && !nativeControls;
   // v1.2.1: Panda's own subtitles over sources that report their position (not with the provider's controls on)
   const captionsOk = Boolean(source && ADAPTERS[source.id]?.captions) && !nativeControls;
-  const caps = useCaptions({ imdbId: details?.imdbId, season: isTv ? ep.s : undefined, episode: isTv ? ep.e : undefined, enabled: captionsOk, prefs, original: details?.language ?? null });
+  // v1.2.4: VidLink takes Panda's preferred subtitle file (sub_file) and draws it in its own player
+  const handsSubs = source?.id === "vidlink" && !nativeControls && prefs.subtitleMode !== "off";
+  const caps = useCaptions({ imdbId: details?.imdbId, season: isTv ? ep.s : undefined, episode: isTv ? ep.e : undefined, enabled: captionsOk || handsSubs, prefs, original: details?.language ?? null });
+  const [handedSub, setHandedSub] = useState<{ url: string; label: string } | null>(null);
   const [subsSheet, setSubsSheet] = useState(false);
   const [ready, setReady] = useState(false);
   const [paused, setPaused] = useState(false);
@@ -136,7 +141,20 @@ function Player({ type, id, season, episode, start }: { type: MediaType; id: num
   const pipOk = useMemo(() => nativePipSupported(), []);
   // position to reopen at when the embed reloads (source / quality / controls change)
   const [reloadAt, setReloadAt] = useState<number | null>(null);
+  // hand the subtitle over once, before the source starts, so the embed never reloads mid-play
+  useEffect(() => {
+    if (!handsSubs || ready || handedSub || !caps.track) return;
+    setHandedSub({ url: new URL(caps.track.file, API_BASE).toString(), label: subLangName(caps.track.language) });
+  }, [handsSubs, ready, handedSub, caps.track]);
+  useEffect(() => { setHandedSub(null); }, [source?.id, ep.s, ep.e]);
   const frame = useRef<HTMLIFrameElement>(null);
+  /* ---- v1.2.4 player states: buffering, stall recovery, resume prompt, TTFF ---- */
+  const ticks = useRef(new TickWatch());
+  const firstFrame = useRef(false);
+  const [buffering, setBuffering] = useState(false);
+  const [stall, setStall] = useState<number | null>(null);
+  const [nonce, setNonce] = useState(0);
+  const [resumeAsk, setResumeAsk] = useState(start > 30);
   const pos = useRef({ position: start, duration: 0, dirty: false });
   const hideTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const root = useRef<HTMLDivElement>(null);
@@ -254,9 +272,38 @@ function Player({ type, id, season, episode, start }: { type: MediaType; id: num
   useEffect(() => {
     if (!source || ready) return;
     loadedAt.current = Date.now();
+    ticks.current.reset(); firstFrame.current = false; setBuffering(false); setStall(null);
     const timer = setTimeout(() => fallback("No source could start playback. Try again later."), READY_TIMEOUT_MS);
     return () => clearTimeout(timer);
   }, [source, ready, fallback]);
+
+  // buffering shows only after the source's own update rhythm stops (≥ 400 ms); 12 s of stall opens recovery
+  useEffect(() => {
+    if (!ready || paused || !source || pip) { setBuffering(false); return; }
+    const t = setInterval(() => {
+      const s = ticks.current.stalledFor(performance.now());
+      setBuffering(s > 0);
+      if (s > 12_000) setStall((x) => x ?? 10);
+    }, 250);
+    return () => clearInterval(t);
+  }, [ready, paused, source?.id, pip]); // eslint-disable-line react-hooks/exhaustive-deps
+  useEffect(() => {
+    if (stall === null) return;
+    if (stall <= 0) { setStall(null); stallSwitch(); return; }
+    const t = setTimeout(() => setStall((x) => (x === null ? null : x - 1)), 1000);
+    return () => clearTimeout(t);
+  }, [stall]); // eslint-disable-line react-hooks/exhaustive-deps
+  // the recovery card and the resume prompt take the remote's focus when they appear
+  const stallOpen = stall !== null;
+  useEffect(() => { if (stallOpen) requestAnimationFrame(() => focusFirst(document.getElementById("pl-stall"))); }, [stallOpen]);
+  const resumeOpen = resumeAsk && ready;
+  useEffect(() => { if (resumeOpen && tv) requestAnimationFrame(() => focusFirst(document.getElementById("pl-resume"))); }, [resumeOpen, tv]);
+  // the resume prompt stays up for 8 s after playback starts, then playback simply continues
+  useEffect(() => {
+    if (!resumeAsk || !ready) return;
+    const t = setTimeout(() => setResumeAsk(false), 8000);
+    return () => clearTimeout(t);
+  }, [resumeAsk, ready]);
 
   /* ---- player messages ---- */
   useEffect(() => {
@@ -281,6 +328,10 @@ function Player({ type, id, season, episode, start }: { type: MediaType; id: num
         case "volume": setMuted(ev.muted); break;
         case "time":
           setReady(true); setPaused(false);
+          ticks.current.tick(performance.now());
+          if (buffering) setBuffering(false);
+          if (stall !== null) setStall(null);
+          if (!firstFrame.current && ev.position > 0 && loadedAt.current) { firstFrame.current = true; recordTtff(source.id, Date.now() - loadedAt.current); }
           caps.clock.current = { position: ev.position, at: performance.now(), playing: true, rate: getPrefs().playbackSpeed };
           if (ev.position > 1) reportOk();
           if (ev.duration > 0) {
@@ -427,6 +478,25 @@ function Player({ type, id, season, episode, start }: { type: MediaType; id: num
     exit();
   }, !customChrome);
 
+  const nextSource = () => sources.find((x) => x.id !== source?.id && !tried.current.has(x.id)) ?? sources.find((x) => x.id !== source?.id);
+  /** Stall recovery: reload the same source where it stopped. */
+  const retryStall = () => {
+    setStall(null); setBuffering(false); ticks.current.reset();
+    setReloadAt(pos.current.position); setReady(false); setNonce((n) => n + 1);
+  };
+  function stallSwitch() {
+    const n = nextSource();
+    if (!source) return;
+    void api.report({ type, tmdbId: id, season: isTv ? ep.s : undefined, episode: isTv ? ep.e : undefined, source: source.id, issue: "noplay", position: Math.floor(pos.current.position) }).catch(() => undefined);
+    if (n) switchSource(n.id); else retryStall();
+  }
+  const startOver = () => {
+    setResumeAsk(false);
+    pos.current = { ...pos.current, position: 0, dirty: true };
+    if (source && ADAPTERS[source.id]?.commands && ready) { sendCommand(frame.current, source, { c: "seek", to: 0 }); return; }
+    setReloadAt(0); setReady(false); setNonce((n) => n + 1);
+  };
+
   const switchSource = (sid: SourceId) => {
     if (sid === source?.id) return;
     save();
@@ -570,13 +640,13 @@ function Player({ type, id, season, episode, start }: { type: MediaType; id: num
   const title = details?.title ?? "";
   const isolated = Boolean(source) && customChrome && !COMPAT[source!.id];
   const subtitle = isTv ? `S${ep.s} E${ep.e}${epInfo?.title ? ` · ${epInfo.title}` : ""}` : [details?.year, runtime(details?.runtime)].filter(Boolean).join(" · ");
-  const src = source ? embedUrl(source, { customChrome, start: reloadAt ?? undefined, quality: prefs.quality, autoskip: prefs.autoSkipIntro }) : null;
+  const src = source ? embedUrl(source, { customChrome, start: reloadAt ?? undefined, quality: prefs.quality, autoskip: prefs.autoSkipIntro, subtitle: handsSubs ? handedSub : null }) : null;
 
   return (
     <div ref={root} className={`player ${overlay ? "is-overlay" : ""} ${tv ? "player--tv" : "player--touch"} ${pip ? "is-pip" : ""}`} onKeyDown={onKeyDown} onMouseMove={poke} role="application" aria-label={`Playing ${title}`}>
       {play.error && !play.data && <div className="player-center"><ErrorState message={play.error.message} onRetry={() => play.mutate()} /></div>}
       {src && source && (
-        <iframe key={`${source.id}-${customChrome ? "c" : "n"}-${prefs.quality}`} ref={frame} className={`player-frame ${isolated ? "is-isolated" : ""}`} src={src} title={`${title} — ${SHORT[source.id]}`}
+        <iframe key={`${source.id}-${customChrome ? "c" : "n"}-${prefs.quality}-${nonce}`} ref={frame} className={`player-frame ${isolated ? "is-isolated" : ""}`} src={src} title={`${title} — ${SHORT[source.id]}`}
           {...(SANDBOX[source.id]?.attr ? { sandbox: SANDBOX[source.id]!.attr! } : {})} data-sandbox={SANDBOX[source.id]?.id ?? "none"}
           allow="autoplay; fullscreen; encrypted-media; picture-in-picture" allowFullScreen referrerPolicy="origin" tabIndex={isolated || (tv && !nativeControls) ? -1 : 0}
           onLoad={() => { if (source.events !== "cinesrc") setReady(true); if (isolated) reclaimFocus(); }} />
@@ -584,8 +654,28 @@ function Player({ type, id, season, episode, start }: { type: MediaType; id: num
       {brightness < 1 && !tv && (
         <div className="player-dim" style={{ opacity: Math.round((1 - brightness) * 0.85 * 100) / 100 }} aria-hidden="true" />
       )}
-      {ready && caps.track && caps.cues && (
+      {ready && captionsOk && caps.track && caps.cues && (
         <CaptionLayer cues={caps.cues} clock={caps.clock} offset={caps.offset} raised={overlay || Boolean(upNext)} size={prefs.subtitleSize} look={prefs.subtitleStyle} />
+      )}
+      {ready && buffering && stall === null && !paused && (
+        <div className="player-buffering" id="pl-buffering" role="status" aria-label="Buffering"><div className="spinner" /></div>
+      )}
+      {stall !== null && source && (
+        <div className="player-stall" id="pl-stall" role="alertdialog" aria-labelledby="pl-stall-title">
+          <p id="pl-stall-title" className="player-stall-title">{SHORT[source.id]} stopped playing</p>
+          <p className="player-stall-sub" aria-live="polite">{nextSource() ? `Switching to ${SHORT[nextSource()!.id]} in ${stall} s` : `Trying again in ${stall} s`}</p>
+          <div className="player-stall-actions lrud-container">
+            <button id="pl-stall-retry" className="btn btn--primary" data-autofocus data-hover-focus onClick={retryStall}><Icon name="refresh" /> Retry</button>
+            {nextSource() && <button id="pl-stall-switch" className="btn" data-hover-focus onClick={() => { setStall(null); switchSource(nextSource()!.id); }}>Switch source</button>}
+            <button id="pl-stall-report" className="btn" data-hover-focus onClick={() => { setStall(null); setReportSheet(true); }}>Report</button>
+          </div>
+        </div>
+      )}
+      {resumeAsk && ready && start > 30 && stall === null && (
+        <div className="player-resume" id="pl-resume" role="dialog" aria-label="Resume">
+          <button id="pl-resume-go" className="btn btn--primary" data-autofocus data-hover-focus onClick={() => setResumeAsk(false)}><Icon name="play" /> Resume from {playClock(start)}</button>
+          <button id="pl-resume-over" className="btn" data-hover-focus onClick={startOver}><Icon name="replay10" /> Start over</button>
+        </div>
       )}
       {!ready && !play.error && (
         <div className="player-loading" aria-live="polite">
@@ -601,7 +691,7 @@ function Player({ type, id, season, episode, start }: { type: MediaType; id: num
         <div className="pl-sources" role="radiogroup" aria-label="Video source">
           {sources.map((x) => (
             <button key={x.id} id={`pl-src-${x.id}`} role="radio" aria-checked={x.id === source?.id} className={`pl-pill ${x.id === source?.id ? "is-active" : ""}`} onClick={() => switchSource(x.id)} data-hover-focus
-              title={reliabilityLabel(rankOf(ranking, x.id)) ?? undefined}>
+              title={[tierLabel(x.id, rankOf(ranking, x.id)).label, reliabilityLabel(rankOf(ranking, x.id))].filter(Boolean).join(" · ")}>
               <span className={`src-rel-dot src-rel--${reliabilityTone(rankOf(ranking, x.id))}`} aria-hidden="true" />{SHORT[x.id]}
             </button>
           ))}

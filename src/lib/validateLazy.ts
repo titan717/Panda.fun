@@ -1,5 +1,5 @@
 import type { CalendarEntry, CalendarEpisode, CalendarPayload, CalendarRef, AnimeCard, AnimePayload, PersonCredit, PersonDetails, PlaybackSource, SourceHealthPayload, SourceRankingPayload, SubtitleTrack, SubtitlesPayload } from "./types";
-import { arr, isObj, item, need, num, SOURCE_IDS, str, ValidationError } from "./validate";
+import { arr, DEFAULT_TIER, isObj, item, need, num, SOURCE_IDS, str, ValidationError } from "./validate";
 
 /**
  * Validators for payloads only lazy pages read (Person, Anime, Settings › Sources, the player's
@@ -38,7 +38,9 @@ export function sourceRanking(path: string, v: unknown): SourceRankingPayload {
   return {
     sources: arr(o.sources).filter(isObj).filter((s) => SOURCE_IDS.has(String(s.id))).map((s) => ({
       id: s.id as PlaybackSource["id"], rank: num(s.rank) ?? 99, score: num(s.score) ?? 0, reliability: num(s.reliability),
-      plays: num(s.plays) ?? 0, reports: num(s.reports) ?? 0, reports24h: num(s.reports24h) ?? 0, state: state(s.state)
+      plays: num(s.plays) ?? 0, reports: num(s.reports) ?? 0, reports24h: num(s.reports24h) ?? 0, state: state(s.state),
+      tier: s.tier === 1 || s.tier === 2 || s.tier === 3 || s.tier === 4 ? s.tier : DEFAULT_TIER[String(s.id)] ?? 4,
+      ads: isObj(s.ads) ? { popups: num(s.ads.popups) ?? 0, navigations: num(s.ads.navigations) ?? 0, adRequests: num(s.ads.adRequests) ?? 0, measuredAt: str(s.ads.measuredAt) } : null
     })).sort((a, b) => a.rank - b.rank),
     halfLifeHours: num(o.halfLifeHours) ?? 72, shared: o.shared === true, updatedAt: str(o.updatedAt) ?? new Date().toISOString()
   };

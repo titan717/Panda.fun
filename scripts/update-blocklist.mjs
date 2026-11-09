@@ -12,7 +12,7 @@ const OUT = "android/app/src/main/assets/shield/hosts.txt.gz";
 // Provider ad/click hosts Panda observed in instrumented playback (2026-11-08). Always included.
 const OBSERVED = ["adexchangerapid.com", "usrpubtrk.com", "roadster24.com", "offer.alibaba.com"];
 // Never blocked, whatever the list says (the app, its API and the two playback providers).
-const NEVER = /(^|\.)(appassets\.androidplatform\.net|apikinoma\.vercel\.app|cinesrc\.st|vidy\.st|themoviedb\.org|tmdb\.org|youtube\.com|youtube-nocookie\.com|ytimg\.com|googlevideo\.com|gstatic\.com|github\.com|githubusercontent\.com)$/;
+const NEVER = /(^|\.)(appassets\.androidplatform\.net|apikinoma\.vercel\.app|cinesrc\.st|vidy\.st|vidlink\.pro|themoviedb\.org|tmdb\.org|youtube\.com|youtube-nocookie\.com|ytimg\.com|googlevideo\.com|gstatic\.com|github\.com|githubusercontent\.com)$/;
 
 export function parseHosts(text) {
   const out = new Set();

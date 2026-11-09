@@ -2,6 +2,16 @@
 
 Measured on every release. Never regress.
 
+## v1.2.4 (player states, VidLink, clean trailers, phone remote)
+
+| Metric | Value |
+|---|---|
+| Entry chunk (gzip) | 24.3 KB as reported by Vite (24.26), 24.1 KB at gzip -9; v1.2.3 24.2. The trailer engine, VidLink adapter and phone remote live in lazy chunks (`ListCard`, `player2`, `ConnectPhone`). |
+| Entry CSS (gzip) | 18.8 KB (v1.2.3 19.0). |
+| Time to first frame | Measured on every play from `play()` to the first progress event and kept per source on the device (`src/lib/ttff.ts`, median of the last 20). Settings shows it as "Starts in X s". Source measurement 2026-11-09 (docs/SOURCES.md): Vidy ~1.4 s, CineSrc ~3.0 s, VidLink 8.2 s. |
+| Trailers | Hidden for 2 s after PLAYING (`REVEAL_DELAY_MS`) then a 600 ms fade; the video becomes visible about 1.1 s later than in v1.2.3 (which revealed after 900 ms). The backdrop stays until the reveal, so there is never a blank frame. |
+| Settings chunk (gzip) | 15.7 KB (ranking tiers and "Starts in"). |
+
 ## v1.2.3 (sync code)
 
 | Metric | Value |

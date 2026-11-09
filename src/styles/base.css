@@ -128,10 +128,12 @@ html[data-mode="tv"] .sheet-item { font-size: calc(24 * var(--tu)); padding: cal
 .rate-opt.is-selected { color: var(--text-1); background: var(--tv-translucent); }
 
 /* ---------- trailers & video overlay ---------- */
-.trailer { position: absolute; inset: 0; opacity: 0; transition: opacity var(--dur-crossfade) var(--ease-out); pointer-events: none; overflow: hidden; }
+.trailer { position: absolute; inset: 0; opacity: 0; transition: opacity var(--dur-trailer-fade) var(--ease-out); pointer-events: none; overflow: hidden; }
 .trailer.is-visible { opacity: 1; }
 .trailer { container-type: size; }
-.trailer iframe { position: absolute; top: 50%; left: 50%; width: max(100cqw, 177.78cqh); height: max(100cqh, 56.25cqw); transform: translate(-50%, -50%) scale(1.12); border: 0; pointer-events: none; }
+.trailer iframe { position: absolute; top: 50%; left: 50%; width: max(100cqw, 177.78cqh); height: max(100cqh, 56.25cqw); transform: translate(-50%, -50%) scale(1.1); border: 0; pointer-events: none; user-select: none; }
+/* clean trailers: a soft black edge hides whatever the 10% crop leaves at the frame border */
+.trailer::after { content: ""; position: absolute; inset: 0; pointer-events: none; box-shadow: inset 0 0 6cqmin 2cqmin #000; }
 /* low-memory / data-saver devices: slow zoom on the backdrop instead of a video trailer */
 @keyframes ken-burns { from { transform: scale(1); } to { transform: scale(1.08); } }
 .is-kenburns .img { animation: ken-burns 14s var(--ease-out) forwards; transform-origin: 70% 40%; }
@@ -290,3 +292,10 @@ html[data-mode="tv"] .sheet-group { font-size: calc(18 * var(--tu)); margin: cal
 /* v1.1.7 Coming Up badges and notification prompt */
 .img--fill { object-fit: cover; object-position: 50% 22%; }
 
+
+/* v1.2.4: ad tier badge on source rows (docs/SOURCES.md) */
+.src-tier { display: inline-flex; align-items: center; gap: 0.35em; padding: 0.1em 0.55em; border-radius: 999px; font-size: 0.82em; font-weight: 600; line-height: 1.5; white-space: nowrap; border: 1px solid currentColor; }
+.src-tier--1 { color: var(--success); }
+.src-tier--2 { color: #9fd7ff; }
+.src-tier--3 { color: #f5b83d; }
+.src-tier--4 { color: var(--danger); }

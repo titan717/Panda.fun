@@ -121,3 +121,20 @@ html[data-mode="tv"] .subs-offset { font-size: calc(18 * var(--tu)); min-width: 
 /* v1.2.2 picture-in-picture: only the picture shows in the small window */
 .player.is-pip > :not(.player-frame):not(.player-dim) { display: none !important; }
 .player-dim { position: absolute; inset: 0; z-index: 1; background: #000; pointer-events: none; transition: opacity .12s linear; }
+
+/* ---- v1.2.4 player states (MASTER V4 §5.1) ---- */
+.player-buffering { position: absolute; left: 50%; top: 50%; transform: translate(-50%, -50%); z-index: 3; pointer-events: none; padding: calc(14 * var(--u)); border-radius: 50%; background: rgba(0, 0, 0, 0.45); animation: pl-state-in var(--dur-rail) var(--ease-out) both; }
+.player-stall { position: absolute; left: 50%; top: 50%; transform: translate(-50%, -50%); z-index: 8; width: min(92vw, calc(560 * var(--u))); padding: calc(24 * var(--u)) calc(26 * var(--u)); border-radius: calc(16 * var(--u)); background: rgba(10, 12, 16, 0.94); border: 1px solid rgba(255, 255, 255, 0.12); box-shadow: 0 24px 60px rgba(0, 0, 0, 0.6); text-align: center; animation: pl-state-in var(--dur-rail) var(--ease-out) both; }
+.player-stall-title { font-size: calc(19 * var(--u)); font-weight: 700; margin: 0 0 calc(6 * var(--u)); }
+.player-stall-sub { margin: 0 0 calc(18 * var(--u)); color: rgba(255, 255, 255, 0.72); font-variant-numeric: tabular-nums; }
+.player-stall-actions { display: flex; flex-wrap: wrap; justify-content: center; gap: calc(10 * var(--u)); }
+.player-resume { position: absolute; left: calc(32 * var(--u)); bottom: calc(120 * var(--u)); z-index: 7; display: flex; gap: calc(10 * var(--u)); animation: pl-state-in var(--dur-rail) var(--ease-out) both; }
+.player--touch .player-resume { left: 50%; transform: translateX(-50%); bottom: calc(96 * var(--u)); }
+.player-resume .btn:not(.btn--primary), .player-stall .btn:not(.btn--primary) { background: rgba(255, 255, 255, 0.12); color: #fff; }
+html[data-mode="tv"] .player-resume { left: calc(60 * var(--tu)); bottom: calc(170 * var(--tu)); gap: calc(16 * var(--tu)); }
+html[data-mode="tv"] .player-resume .btn, html[data-mode="tv"] .player-stall .btn { min-height: calc(56 * var(--tu)); padding: 0 calc(26 * var(--tu)); font-size: calc(22 * var(--tu)); border-radius: 999px; }
+html[data-mode="tv"] .player-resume .btn:focus, html[data-mode="tv"] .player-stall .btn:focus { transform: scale(1.08); box-shadow: 0 0 0 calc(3 * var(--tu)) var(--tv-ice-strong); }
+html[data-mode="tv"] .player-stall { width: calc(720 * var(--tu)); padding: calc(36 * var(--tu)); border-radius: calc(20 * var(--tu)); }
+html[data-mode="tv"] .player-stall-title { font-size: calc(30 * var(--tu)); }
+html[data-mode="tv"] .player-stall-sub { font-size: calc(22 * var(--tu)); }
+@keyframes pl-state-in { from { opacity: 0; } to { opacity: 1; } }

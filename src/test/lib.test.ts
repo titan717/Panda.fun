@@ -50,8 +50,8 @@ describe("navKey", () => {
 });
 
 describe("player protocol", () => {
-  const cine: PlaybackSource = { id: "cinesrc", provider: "cinesrc", label: "CineSrc", url: "https://cinesrc.st/embed/tv/1399?s=1&e=2", origin: "https://cinesrc.st", events: "cinesrc", supportsStart: true };
-  const vid: PlaybackSource = { id: "vidy", provider: "vidy", label: "Vidy", url: "https://www.vidy.st/tv/1399/1/2", origin: "https://www.vidy.st", events: "vidy", supportsStart: true };
+  const cine: PlaybackSource = { id: "cinesrc", provider: "cinesrc", label: "CineSrc", url: "https://cinesrc.st/embed/tv/1399?s=1&e=2", origin: "https://cinesrc.st", events: "cinesrc", supportsStart: true, tier: 1 };
+  const vid: PlaybackSource = { id: "vidy", provider: "vidy", label: "Vidy", url: "https://www.vidy.st/tv/1399/1/2", origin: "https://www.vidy.st", events: "vidy", supportsStart: true, tier: 2 };
   it("parses CineSrc events and ignores other origins", () => {
     expect(parseMessage(cine, "https://cinesrc.st", { type: "cinesrc:timeupdate", data: { currentTime: 12, duration: 100 } })).toEqual({ kind: "time", position: 12, duration: 100 });
     expect(parseMessage(cine, "https://evil.example", { type: "cinesrc:ended" })).toBeNull();

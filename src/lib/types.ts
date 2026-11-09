@@ -186,7 +186,9 @@ export interface GenresPayload {
   languages: { code: string; name: string }[];
 }
 
-export type SourceId = "cinesrc" | "vidy" | "vidyanime";
+export type SourceId = "cinesrc" | "vidy" | "vidyanime" | "vidlink";
+/** Ad tier (docs/SOURCES.md): 1 ad-free, 2 rare light ads, 3 popups the Android app consumes, 4 heavy ads (last resort). */
+export type SourceTier = 1 | 2 | 3 | 4;
 /** Settings › Sources: a fixed first source, or "auto" = the community ranking (v1.2.0). */
 export type PreferredSource = SourceId | "auto";
 
@@ -198,6 +200,8 @@ export interface PlaybackSource {
   origin: string;
   events: "cinesrc" | "vidy" | "none";
   supportsStart: boolean;
+  /** Measured ad tier sent by the backend (v1.2.4); ad behaviour outranks community ranking. */
+  tier: SourceTier;
 }
 
 export interface PlaybackPayload {
@@ -220,6 +224,9 @@ export interface SourceRank {
   reports: number;
   reports24h: number;
   state: "healthy" | "degraded" | "down" | null;
+  /** v1.2.4: measured ad tier and the latest automated ad measurement (docs/SOURCES.md). */
+  tier: SourceTier;
+  ads: { popups: number; navigations: number; adRequests: number; measuredAt: string | null } | null;
 }
 export interface SourceRankingPayload { sources: SourceRank[]; halfLifeHours: number; shared: boolean; updatedAt: string }
 

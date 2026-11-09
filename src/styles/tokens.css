@@ -80,6 +80,7 @@
   --dur-expand: 260ms;
   --dur-page: 200ms;
   --dur-crossfade: 300ms;
+  --dur-trailer-fade: 600ms;
   --focus-scale: 1.06;
 
   /* mobile metrics (11-15) */
@@ -205,6 +206,7 @@ html[data-mode="tv"] {
     --dur-rail: 0ms;
     --dur-page: 0ms;
     --dur-crossfade: 0ms;
+    --dur-trailer-fade: 0ms;
     --focus-scale: 1;
   }
 }
@@ -216,6 +218,7 @@ html[data-motion="reduce"] {
   --dur-rail: 0ms;
   --dur-page: 0ms;
   --dur-crossfade: 0ms;
+  --dur-trailer-fade: 0ms;
   --focus-scale: 1;
 }
 html[data-motion="reduce"] *, html[data-motion="reduce"] *::before, html[data-motion="reduce"] *::after {
