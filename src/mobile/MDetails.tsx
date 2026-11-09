@@ -1,4 +1,6 @@
 import "./details.css";
+import { native } from "../lib/native";
+import { titleLink } from "../lib/remote";
 import { useEffect, useRef, useState } from "react";
 import { Link } from "wouter";
 import { Icon } from "../components/Icon";
@@ -132,8 +134,10 @@ function MDetailsView({ d }: { d: TitleDetails }) {
     return () => window.removeEventListener("scroll", on);
   }, []);
 
+  // a real web link (the app's own address is unreachable outside the APK), opening Panda when installed (v1.2.4)
   const share = async () => {
-    const url = window.location.href;
+    const url = titleLink(d.type, d.tmdbId);
+    if (native?.shareText) { native.shareText(d.title, `Watch ${d.title} on Panda.fun ${url}`); return; }
     try {
       if (navigator.share) await navigator.share({ title: d.title, text: `Watch ${d.title} on Panda.fun`, url });
       else { await navigator.clipboard.writeText(url); toast("Link copied"); }

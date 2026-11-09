@@ -1,0 +1,35 @@
+/* Connect Phone (v1.2.4, BLUEPRINT_GAPS G-21): TV page title, numbered steps in the blueprint's body text,
+   a white-on-glass QR card like the sync code card, settings-style buttons. */
+.cp-empty { display: flex; flex-direction: column; align-items: center; text-align: center; gap: calc(12 * var(--u)); padding: calc(40 * var(--u)) calc(20 * var(--u)); max-width: 520px; margin: 0 auto; }
+.cp-empty h2 { font-size: calc(18 * var(--u)); font-weight: var(--fw-bold); color: var(--text-1); }
+.cp-empty p { color: var(--text-2); font-size: calc(14 * var(--u)); line-height: 1.5; }
+.cp-disc { display: grid; place-items: center; width: calc(64 * var(--u)); height: calc(64 * var(--u)); border-radius: 50%; background: var(--m-raised-2); color: var(--text-1); }
+.cp-disc .icon { width: calc(30 * var(--u)); height: calc(30 * var(--u)); }
+.cp-dot-wait { background: #8fc7ff; box-shadow: 0 0 calc(6 * var(--u)) rgba(143, 199, 255, 0.7); animation: cp-pulse 1.6s ease-in-out infinite; }
+@keyframes cp-pulse { 50% { opacity: 0.35; } }
+@media (prefers-reduced-motion: reduce) { .cp-dot-wait { animation: none; } }
+
+html[data-mode="tv"] .cp-page .cp-empty { max-width: calc(900 * var(--tu)); gap: calc(20 * var(--tu)); padding-top: calc(80 * var(--tu)); }
+html[data-mode="tv"] .cp-page .cp-empty h2 { font-size: calc(36 * var(--tu)); }
+html[data-mode="tv"] .cp-page .cp-empty p { font-size: var(--t-body); }
+html[data-mode="tv"] .cp-disc { width: calc(112 * var(--tu)); height: calc(112 * var(--tu)); }
+html[data-mode="tv"] .cp-disc .icon { width: calc(52 * var(--tu)); height: calc(52 * var(--tu)); }
+html[data-mode="tv"] .cp-cols { display: grid; grid-template-columns: minmax(0, 1fr) calc(560 * var(--tu)); gap: calc(80 * var(--tu)); align-items: start; margin-top: calc(24 * var(--tu)); max-width: calc(1520 * var(--tu)); }
+html[data-mode="tv"] .cp-steps ol { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: calc(30 * var(--tu)); }
+html[data-mode="tv"] .cp-steps li { display: grid; grid-template-columns: calc(56 * var(--tu)) 1fr; gap: calc(22 * var(--tu)); align-items: start; font-size: var(--t-body); color: rgba(255, 255, 255, 0.72); line-height: 1.45; }
+html[data-mode="tv"] .cp-steps li strong { display: block; color: var(--text-1); font-size: calc(30 * var(--tu)); font-weight: var(--fw-bold); margin-bottom: calc(4 * var(--tu)); }
+html[data-mode="tv"] .cp-n { display: grid; place-items: center; width: calc(56 * var(--tu)); height: calc(56 * var(--tu)); border-radius: 50%; background: rgba(255, 255, 255, 0.1); border: calc(2 * var(--tu)) solid rgba(190, 215, 255, 0.28); color: var(--text-1); font-size: calc(26 * var(--tu)); font-weight: var(--fw-bold); }
+html[data-mode="tv"] .cp-status { display: flex; align-items: center; gap: calc(14 * var(--tu)); margin-top: calc(44 * var(--tu)); font-size: calc(28 * var(--tu)); font-weight: var(--fw-semibold); color: var(--text-1); }
+html[data-mode="tv"] .cp-status .src-dot { width: calc(14 * var(--tu)); height: calc(14 * var(--tu)); }
+html[data-mode="tv"] .cp-actions { display: flex; gap: calc(20 * var(--tu)); margin-top: calc(28 * var(--tu)); }
+html[data-mode="tv"] .cp-actions .btn { min-height: calc(64 * var(--tu)); padding: 0 calc(30 * var(--tu)); font-size: calc(24 * var(--tu)); border-radius: 999px; gap: calc(12 * var(--tu)); }
+html[data-mode="tv"] .cp-actions .btn .icon { width: calc(26 * var(--tu)); height: calc(26 * var(--tu)); }
+html[data-mode="tv"] .cp-actions .btn:focus { outline: none; background: #fff; color: #000; transform: scale(1.04); box-shadow: var(--focus-glow); }
+html[data-mode="tv"] .cp-note { margin-top: calc(28 * var(--tu)); max-width: calc(820 * var(--tu)); font-size: calc(22 * var(--tu)); line-height: 1.5; color: rgba(255, 255, 255, 0.56); }
+html[data-mode="tv"] .cp-card { display: flex; flex-direction: column; align-items: center; gap: calc(18 * var(--tu)); padding: calc(40 * var(--tu)) calc(36 * var(--tu)); border-radius: calc(28 * var(--tu)); background: linear-gradient(180deg, rgba(255, 255, 255, 0.09), rgba(255, 255, 255, 0.03)); border: calc(1 * var(--tu)) solid rgba(190, 215, 255, 0.16); text-align: center; }
+html[data-mode="tv"] .cp-qr { display: block; width: calc(340 * var(--tu)); height: calc(340 * var(--tu)); border-radius: calc(16 * var(--tu)); }
+html[data-mode="tv"] .cp-or { font-size: calc(22 * var(--tu)); color: rgba(255, 255, 255, 0.72); line-height: 1.45; margin-top: calc(6 * var(--tu)); }
+html[data-mode="tv"] .cp-or strong { color: var(--text-1); white-space: nowrap; }
+html[data-mode="tv"] .cp-code { font-family: ui-monospace, "SF Mono", "Roboto Mono", Menlo, monospace; font-size: calc(54 * var(--tu)); font-weight: 700; letter-spacing: 0.12em; color: var(--text-1); white-space: nowrap; }
+html[data-mode="tv"] .cp-off { display: flex; flex-direction: column; align-items: center; gap: calc(20 * var(--tu)); padding: calc(60 * var(--tu)) 0; color: rgba(255, 255, 255, 0.72); font-size: var(--t-body); line-height: 1.45; }
+html[data-mode="tv"] .cp-off .icon { width: calc(72 * var(--tu)); height: calc(72 * var(--tu)); color: var(--text-1); }

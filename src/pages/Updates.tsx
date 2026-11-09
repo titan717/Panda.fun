@@ -1,4 +1,5 @@
 import "./updates.css";
+import { ExtraIcon } from "../components/ExtraIcons";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { Icon } from "../components/Icon";
 import { ReleaseNotes as Notes } from "../components/ReleaseNotes";
@@ -73,7 +74,7 @@ export function UpdatesPage() {
         {state.s === "checking" && <Spinner label="Checking for updates…" />}
         {state.s === "offline" && (
           <>
-            <p className="upd-status"><Icon name="signal" /> You're offline</p>
+            <p className="upd-status"><ExtraIcon name="signal" /> You're offline</p>
             <p className="upd-sub">Connect to the internet to check for updates.</p>
             <button className="btn btn--secondary" data-autofocus disabled={!online} onClick={() => void check()}><Icon name="refresh" /> Retry</button>
           </>

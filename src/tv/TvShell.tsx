@@ -1,10 +1,12 @@
 import { useEffect, useRef, useState, type CSSProperties, type ReactNode } from "react";
 import { Link, useLocation } from "wouter";
 import { Icon, PandaMark, type IconName } from "../components/Icon";
+import { ExtraIcon } from "../components/ExtraIcons";
 import { Avatar } from "../components/ui";
 import { useProfile } from "../lib/store";
 import { focusEl, focusFirst } from "../lib/focus";
 import { useUpdateAvailable } from "../lib/updates";
+import { installRemote } from "../lib/remote";
 
 /**
  * TV sidebar (BLUEPRINT_SPEC §4, measured from tv1#15, tv1#22, tv2#11, tv2#12, blueprinttvpanda#21).
@@ -13,8 +15,9 @@ import { useUpdateAvailable } from "../lib/updates";
  * slides over the content (content never moves), the pill moves beside the logo, Home's sub-items
  * (TV, Movies, New & Hot) unfold under it, labels fade in. Only transform and opacity animate.
  */
-interface Item { id: string; href: string; label: string; icon: IconName | "avatar"; sub?: boolean; match: (p: string) => boolean }
-const ITEMS: Item[] = [
+interface Item { id: string; href: string; label: string; icon: IconName | "avatar" | "phone"; sub?: boolean; match: (p: string) => boolean }
+const ALL_ITEMS: Item[] = [
+  { id: "rail-phone", href: "/connect-phone", label: "Connect Phone", icon: "phone", match: (p) => p.startsWith("/connect-phone") },
   { id: "rail-search", href: "/search", label: "Search", icon: "search", match: (p) => p.startsWith("/search") },
   { id: "rail-home", href: "/", label: "Home", icon: "home", match: (p) => p === "/" },
   { id: "rail-tv", href: "/tv", label: "TV", icon: "tv", sub: true, match: (p) => p === "/tv" || p.startsWith("/browse/tv") },
@@ -23,6 +26,8 @@ const ITEMS: Item[] = [
   { id: "rail-categories", href: "/categories", label: "Categories", icon: "grid", match: (p) => p.startsWith("/categories") || p.startsWith("/browse/") },
   { id: "rail-myspace", href: "/my-space", label: "My Space", icon: "avatar", match: (p) => p.startsWith("/my-space") || p.startsWith("/my-list") || p.startsWith("/list") || p.startsWith("/continue-watching") || p.startsWith("/settings") || p.startsWith("/profiles") }
 ];
+/** Connect Phone heads the blueprint's list (4.10); it is shown where the phone remote exists (the Android app, D-136). */
+const ITEMS = typeof window !== "undefined" && typeof window.KinomaNative?.remoteInfo === "function" ? ALL_ITEMS : ALL_ITEMS.slice(1);
 const LIST = ITEMS.filter((i) => i.icon !== "avatar");
 const TOP = LIST.filter((i) => !i.sub);
 const ORDER = ["rail-update", ...ITEMS.map((i) => i.id)];
@@ -38,11 +43,13 @@ function offsets(item: Item) {
 let lastContent: HTMLElement | null = null;
 
 export function TvShell({ children }: { children: ReactNode }) {
-  const [path] = useLocation();
+  const [path, navigate] = useLocation();
+  // v1.2.4 phone remote (Android app): typing from the phone, connection toasts, the phone's "On your TV" card
+  useEffect(() => { if (ITEMS[0]!.id === "rail-phone") installRemote(navigate); }, [navigate]);
   const profile = useProfile();
   const nav = useRef<HTMLElement>(null);
   const [open, setOpen] = useState(false);
-  const currentItem = ITEMS.find((i) => i.match(path)) ?? ITEMS[1]!;
+  const currentItem = ITEMS.find((i) => i.match(path)) ?? ITEMS.find((i) => i.id === "rail-home")!;
   const current = currentItem.id;
   // collapsed, a sub-page lights its parent (Home), as in the blueprint
   const lit = currentItem.sub ? "rail-home" : current;
@@ -94,6 +101,7 @@ export function TvShell({ children }: { children: ReactNode }) {
         aria-current={isCurrent ? "page" : undefined} tabIndex={item.sub && !open ? -1 : 0} aria-hidden={item.sub && !open ? true : undefined} data-hover-focus>
         {item.icon === "avatar"
           ? <Avatar kind={profile?.avatar ?? "smile"} className="rail-avatar" />
+          : item.icon === "phone" ? <ExtraIcon name="phone" className="rail-icon" />
           : <Icon name={item.icon} className="rail-icon" filled={item.id === lit && (item.icon === "home" || item.icon === "grid" || item.icon === "flame")} />}
         <span className="rail-label">{item.label}</span>
       </Link>

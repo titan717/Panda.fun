@@ -5,3 +5,4 @@ export { TvDetails } from "./TvDetails";
 export { TvSearch } from "./TvSearch";
 export { TvCategories } from "./TvCategories";
 export { TvMySpace } from "./TvMySpace";
+export { ConnectPhonePage } from "../pages/ConnectPhone";

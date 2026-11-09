@@ -1,6 +1,7 @@
-import qrcode from "qrcode-generator";
-import { useEffect, useMemo, useState, useSyncExternalStore } from "react";
+import { useEffect, useState, useSyncExternalStore } from "react";
 import { Icon } from "../components/Icon";
+import { Qr } from "../components/Qr";
+import { syncLink } from "../lib/remote";
 import { Sheet } from "../components/Sheet";
 import { toast } from "../components/ui";
 import { useIsTv } from "../lib/layout";
@@ -22,33 +23,14 @@ export function syncedAgo(at: number, now = Date.now()) {
 const waitText = (sec: number) => { const m = Math.ceil(sec / 60); return m <= 1 ? "a minute" : `${m} minutes`; };
 const message = (e: unknown) => (e instanceof SyncError && e.kind === "locked" ? `${e.message.replace(/ Try again.*$/, "")} Try again in ${waitText(e.retryAfter)}.` : e instanceof Error ? e.message : "Sync failed");
 
-/** The code as a QR, drawn as one SVG path so it stays sharp on 4K TVs. */
-export function CodeQr({ text, size = 200 }: { text: string; size?: number }) {
-  const d = useMemo(() => {
-    const q = qrcode(0, "M");
-    q.addData(text);
-    q.make();
-    const n = q.getModuleCount();
-    let path = "";
-    for (let r = 0; r < n; r++) for (let c = 0; c < n; c++) if (q.isDark(r, c)) path += `M${c + 2} ${r + 2}h1v1h-1z`;
-    return { path, n: n + 4 };
-  }, [text]);
-  return (
-    <svg className="sync-qr" width={size} height={size} viewBox={`0 0 ${d.n} ${d.n}`} role="img" aria-label={`QR code for ${text}`} shapeRendering="crispEdges">
-      <rect width={d.n} height={d.n} fill="#fff" />
-      <path d={d.path} fill="#000" />
-    </svg>
-  );
-}
-
 function ShowCode({ code, fresh, onClose }: { code: string; fresh: boolean; onClose: () => void }) {
   const tv = useIsTv();
   return (
     <Sheet title={fresh ? "Your sync code is ready" : "Your sync code"} onClose={onClose} className="sync-sheet">
-      <p className="sheet-sub">On your other device open Settings › Sync Code › Restore from code and type this code, or scan the QR with your phone's camera to copy it.</p>
+      <p className="sheet-sub">On your other device open Settings › Sync Code › Restore from code and type this code. On a phone with Panda, scan the QR with the camera and tap Restore in Panda.</p>
       <div className="sync-code-card">
         <span id="sync-code-text" className="sync-code" aria-label={`Sync code ${code.split("").join(" ")}`}>{code}</span>
-        <CodeQr text={code} />
+        <Qr text={syncLink(code)} label={`QR code with a restore link for ${code}`} />
       </div>
       <p className="set-note">Anyone with this code can open your backup. Keep it private; revoke it in Settings if it gets out.</p>
       <div className="form-actions lrud-container">
@@ -61,9 +43,9 @@ function ShowCode({ code, fresh, onClose }: { code: string; fresh: boolean; onCl
   );
 }
 
-function RestoreSheet({ onClose, onDone }: { onClose: () => void; onDone: () => void }) {
+function RestoreSheet({ onClose, onDone, initial = "" }: { onClose: () => void; onDone: () => void; initial?: string }) {
   const tv = useIsTv();
-  const [value, setValue] = useState("");
+  const [value, setValue] = useState(initial);
   const [error, setError] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
   const field = useRemoteField(tv, () => document.getElementById("sync-restore-go")?.focus());
@@ -81,10 +63,10 @@ function RestoreSheet({ onClose, onDone }: { onClose: () => void; onDone: () => 
     <Sheet title="Restore from code" onClose={onClose} className="sync-sheet">
       <p className="sheet-sub">Type the 12-character code shown on your other device. Profiles, lists, ratings, settings and watch progress are merged into this device; for anything changed on both, the newest change is kept.</p>
       <input id="sync-code-input" ref={field.ref} {...field.props} className={`sync-input ${error ? "is-error" : ""}`} value={value} placeholder="XXXX-XXXX-XXXX" aria-label="Sync code" autoCapitalize="characters" autoComplete="off" spellCheck={false}
-        maxLength={14} data-autofocus onChange={(e) => { setValue(typingCode(e.target.value)); setError(null); }} onKeyDown={(e) => { field.props.onKeyDown?.(e); if (!tv && e.key === "Enter") void go(); }} />
+        maxLength={14} data-autofocus={initial ? undefined : true} onChange={(e) => { setValue(typingCode(e.target.value)); setError(null); }} onKeyDown={(e) => { field.props.onKeyDown?.(e); if (!tv && e.key === "Enter") void go(); }} />
       <p className={`set-note sync-msg ${error ? "is-error" : ""}`} role={error ? "alert" : undefined}>{error ?? (busy ? "Unlocking your backup…" : "Letters O, I and L are read as 0, 1 and 1.")}</p>
       <div className="form-actions lrud-container">
-        <button id="sync-restore-go" className="btn btn--primary" disabled={!valid || busy} onClick={() => void go()}>{busy ? "Restoring…" : "Restore"}</button>
+        <button id="sync-restore-go" className="btn btn--primary" data-autofocus={initial ? true : undefined} disabled={!valid || busy} onClick={() => void go()}>{busy ? "Restoring…" : "Restore"}</button>
         <button className="btn btn--secondary" onClick={onClose}>Cancel</button>
       </div>
     </Sheet>
@@ -116,10 +98,23 @@ function Row({ id, title, sub, icon, onClick, disabled }: { id: string; title: s
   );
 }
 
+/** v1.2.4: the code from a restore link, once. */
+export function takeIncomingCode(): string | null {
+  const url = new URL(window.location.href);
+  const raw = url.searchParams.get("code");
+  if (raw === null) return null;
+  url.searchParams.delete("code");
+  window.history.replaceState(window.history.state, "", url);
+  const code = normalizeCode(raw);
+  return code ? typingCode(code) : null;
+}
+
 /** Settings › Sync Code (v1.2.3, master mission §6). */
 export function SyncPanel() {
   const st = useSyncExternalStore(subscribeSync, getSyncStatus, getSyncStatus);
-  const [sheet, setSheet] = useState<null | "show" | "fresh" | "restore" | "revoke">(null);
+  // a restore link (pandafun://sync/CODE or the sync QR) arrives as ?code=…; take it and clear the address bar
+  const [incoming] = useState(takeIncomingCode);
+  const [sheet, setSheet] = useState<null | "show" | "fresh" | "restore" | "revoke">(incoming ? "restore" : null);
   const [, tick] = useState(0);
   useEffect(() => { const t = setInterval(() => tick((n) => n + 1), 30_000); return () => clearInterval(t); }, []);
   const run = (p: Promise<unknown>, ok: (v: never) => void) => p.then(ok as (v: unknown) => void, (e) => toast(message(e)));
@@ -151,7 +146,7 @@ export function SyncPanel() {
         </>
       )}
       {(sheet === "show" || sheet === "fresh") && st.code && <ShowCode code={st.code} fresh={sheet === "fresh"} onClose={() => { setSheet(null); requestAnimationFrame(() => document.getElementById("sync-show")?.focus()); }} />}
-      {sheet === "restore" && <RestoreSheet onClose={() => setSheet(null)} onDone={() => setSheet(null)} />}
+      {sheet === "restore" && <RestoreSheet initial={incoming ?? ""} onClose={() => setSheet(null)} onDone={() => setSheet(null)} />}
       {sheet === "revoke" && <RevokeSheet onClose={() => { setSheet(null); requestAnimationFrame(() => document.getElementById("sync-create")?.focus()); }} />}
     </div>
   );

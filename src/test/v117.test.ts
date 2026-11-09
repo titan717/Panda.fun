@@ -99,7 +99,7 @@ describe("v1.1.7 TV sidebar", () => {
   it("keeps the blueprint order, labels and geometry tokens", () => {
     const shell = shellSrc;
     const ids = [...shell.matchAll(/id: "(rail-[a-z]+)"/g)].map((m) => m[1]);
-    expect(ids).toEqual(["rail-search", "rail-home", "rail-tv", "rail-movies", "rail-new", "rail-categories", "rail-myspace"]);
+    expect(ids).toEqual(["rail-phone", "rail-search", "rail-home", "rail-tv", "rail-movies", "rail-new", "rail-categories", "rail-myspace"]);
     expect(shell).toContain('label: "My Space"');
     const tokens = tokensSrc;
     expect(tokens).toContain("--rail-w-open: calc(400 * var(--tu))");

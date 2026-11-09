@@ -1,4 +1,6 @@
 import "./player.css";
+import { ExtraIcon } from "../components/ExtraIcons";
+import { setRemoteTitle } from "../lib/remote";
 import "../styles/spoilers.css";
 import "../lib/validateLazy"; // validators for this page's payloads, loaded with the page
 import { Suspense, useCallback, useEffect, useMemo, useRef, useState } from "react";
@@ -78,6 +80,7 @@ function Player({ type, id, season, episode, start }: { type: MediaType; id: num
   const tv = useIsTv();
   const { go, back } = useNav();
   const details = useTitle(type, id).data;
+  useEffect(() => { if (details) setRemoteTitle({ type, id, title: details.title, poster: details.poster, playing: true }); return () => setRemoteTitle(null); }, [details, type, id]);
   const isTv = type === "tv";
   const [ep, setEp] = useState({ s: season, e: episode });
   const seasonData = useSeason(isTv ? id : null, isTv ? ep.s : null).data;
@@ -615,7 +618,7 @@ function Player({ type, id, season, episode, start }: { type: MediaType; id: num
         {isTv && <button id="pl-eps" className="pl-chip" onClick={() => setDrawer(true)} data-hover-focus><Icon name="episodes" /> Episodes</button>}
         {isTv && next && <button id="pl-next" className="pl-chip" onClick={() => playEpisode(next.season, next.episode)} data-hover-focus><Icon name="next" /> Next Episode</button>}
         {captionsOk && details?.imdbId && <button id="pl-subs" className={`pl-chip ${caps.track ? "is-active" : ""}`} onClick={() => setSubsSheet(true)} data-hover-focus><Icon name="captions" /> {caps.track ? subLangName(caps.track.language) : "Subtitles"}</button>}
-        <button id="pl-report" className="pl-chip" onClick={() => setReportSheet(true)} data-hover-focus><Icon name="warning" /> Report</button>
+        <button id="pl-report" className="pl-chip" onClick={() => setReportSheet(true)} data-hover-focus><ExtraIcon name="warning" /> Report</button>
         <button id="pl-options" className={`pl-chip pl-chip--icon ${sleep.mode !== "off" ? "is-active" : ""}`} onClick={() => setOptionsSheet("menu")} aria-label="Speed and sleep timer" data-hover-focus>
           <Icon name="settings" />{sleep.mode !== "off" ? <span>{sleep.mode === "end" ? "End" : `${sleepLeft(sleep)}m`}</span> : prefs.playbackSpeed !== 1 && controllable ? <span>{prefs.playbackSpeed}×</span> : null}
         </button>
@@ -655,7 +658,7 @@ function Player({ type, id, season, episode, start }: { type: MediaType; id: num
             {ISSUES.map((i, n) => (
               <button key={i.id} id={`pl-issue-${i.id}`} className="report-row" role="listitem" data-autofocus={n === 0 ? true : undefined} data-hover-focus
                 onClick={() => { setReportSheet(false); report(i); }}>
-                <Icon name="warning" /><span>{i.label}</span>
+                <ExtraIcon name="warning" /><span>{i.label}</span>
                 {i.switchSource && sources.length > 1 && <small>Tries another source</small>}
               </button>
             ))}

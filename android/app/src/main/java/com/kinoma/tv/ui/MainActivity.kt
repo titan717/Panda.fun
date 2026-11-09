@@ -49,6 +49,9 @@ import android.webkit.PermissionRequest
 import android.webkit.JsResult
 import android.webkit.JsPromptResult
 import java.io.InputStream
+import android.media.AudioManager
+import android.os.SystemClock
+import com.kinoma.tv.remote.RemoteServer
 
 class MainActivity : ComponentActivity() {
 
@@ -75,6 +78,9 @@ class MainActivity : ComponentActivity() {
     private var pendingVerifiedUpdateUri: Uri? = null
     /** Path from a tapped notification, handed to the web app once it asks (cold start). */
     @Volatile private var launchPath: String? = null
+    /** v1.2.4 phone remote (local network) and what the web app says is on screen, for the phone. */
+    private lateinit var remote: RemoteServer
+    @Volatile private var remoteState: String = "{}"
 
     private val notifPermLauncher = registerForActivityResult(ActivityResultContracts.RequestPermission()) { _ ->
         val js = "window.__pandaNotifPerm && window.__pandaNotifPerm(${JSONObject.quote(Notifier.permission(this))})"
@@ -101,7 +107,8 @@ class MainActivity : ComponentActivity() {
 
         Log.i(TAG, "Starting Panda.fun MainActivity")
         AdShield.load(applicationContext)
-        launchPath = intent?.getStringExtra(Notifier.EXTRA_PATH)
+        launchPath = intent?.getStringExtra(Notifier.EXTRA_PATH) ?: DeepLinks.path(intent?.data)
+        remote = RemoteServer(assets, getSharedPreferences("panda_remote", Context.MODE_PRIVATE), remoteListener)
 
         // TV viewing stays immersive; phones and tablets retain their system bars.
         if (isTelevisionDevice()) {
@@ -586,7 +593,12 @@ class MainActivity : ComponentActivity() {
     override fun onNewIntent(intent: Intent) {
         super.onNewIntent(intent)
         setIntent(intent)
-        val path = intent.getStringExtra(Notifier.EXTRA_PATH) ?: return
+        val path = intent.getStringExtra(Notifier.EXTRA_PATH) ?: DeepLinks.path(intent.data) ?: return
+        openPath(path)
+    }
+
+    /** Hands an in-app path to the web app now, or keeps it until the web app asks (cold start). */
+    private fun openPath(path: String) {
         if (::webView.isInitialized) {
             webView.evaluateJavascript("window.__pandaOpen ? (window.__pandaOpen(${JSONObject.quote(path)}), 1) : 0") { r ->
                 if (r != "1") launchPath = path
@@ -608,6 +620,94 @@ class MainActivity : ComponentActivity() {
                 installVerifiedApk(uri)
             }
         }
+    }
+
+    override fun onStart() {
+        super.onStart()
+        if (getSharedPreferences("panda_remote", Context.MODE_PRIVATE).getBoolean("on", false)) remote.start()
+    }
+
+    override fun onStop() {
+        super.onStop()
+        // the phone remote only listens while Panda is on screen
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N && isInPictureInPictureMode) return
+        remote.stop()
+    }
+
+    private val remoteListener = object : RemoteServer.Listener {
+        override fun onKey(name: String): Boolean {
+            if (name == "home") { runOnUiThread { openPath("/") }; return true }
+            val code = when (name) {
+                "up" -> KeyEvent.KEYCODE_DPAD_UP
+                "down" -> KeyEvent.KEYCODE_DPAD_DOWN
+                "left" -> KeyEvent.KEYCODE_DPAD_LEFT
+                "right" -> KeyEvent.KEYCODE_DPAD_RIGHT
+                "ok" -> KeyEvent.KEYCODE_DPAD_CENTER
+                "back" -> KeyEvent.KEYCODE_BACK
+                "playpause" -> KeyEvent.KEYCODE_MEDIA_PLAY_PAUSE
+                "rewind" -> KeyEvent.KEYCODE_MEDIA_REWIND
+                "forward" -> KeyEvent.KEYCODE_MEDIA_FAST_FORWARD
+                "menu" -> KeyEvent.KEYCODE_MENU
+                else -> return false
+            }
+            runOnUiThread {
+                if (customView == null && !webView.hasFocus()) webView.requestFocus()
+                val t = SystemClock.uptimeMillis()
+                dispatchKeyEvent(KeyEvent(t, t, KeyEvent.ACTION_DOWN, code, 0))
+                dispatchKeyEvent(KeyEvent(t, t + 40, KeyEvent.ACTION_UP, code, 0))
+            }
+            return true
+        }
+
+        override fun onText(text: String) {
+            val js = "window.__pandaRemoteText && window.__pandaRemoteText(${JSONObject.quote(text)})"
+            runOnUiThread { webView.evaluateJavascript(js, null) }
+        }
+
+        override fun onOpen(path: String): Boolean {
+            if (!DeepLinks.isRemotePath(path)) return false
+            runOnUiThread { openPath(path) }
+            return true
+        }
+
+        override fun onVolume(direction: String): Boolean {
+            val audio = getSystemService(Context.AUDIO_SERVICE) as? AudioManager ?: return false
+            val adjust = when (direction) {
+                "up" -> AudioManager.ADJUST_RAISE
+                "down" -> AudioManager.ADJUST_LOWER
+                "mute" -> if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) AudioManager.ADJUST_TOGGLE_MUTE else return false
+                else -> return false
+            }
+            audio.adjustStreamVolume(AudioManager.STREAM_MUSIC, adjust, AudioManager.FLAG_SHOW_UI)
+            return true
+        }
+
+        override fun onPhoneConnected(count: Int) {
+            runOnUiThread { webView.evaluateJavascript("window.__pandaRemote && window.__pandaRemote('connected', $count)", null) }
+        }
+
+        override fun deviceName(): String = (Build.MODEL ?: "Android TV").take(40)
+
+        override fun state(): String = remoteState
+    }
+
+    private fun remoteInfo(): String {
+        val prefs = getSharedPreferences("panda_remote", Context.MODE_PRIVATE)
+        val ip = RemoteServer.localIpv4()
+        val on = remote.running
+        val code = remote.code
+        val o = JSONObject()
+            .put("on", on)
+            .put("enabled", prefs.getBoolean("on", false))
+            .put("ip", ip ?: JSONObject.NULL)
+            .put("port", if (on) remote.port else JSONObject.NULL)
+            .put("code", code.substring(0, 4) + "-" + code.substring(4))
+            .put("phones", remote.phoneCount())
+        if (on && ip != null) {
+            val base = "http://$ip:${remote.port}"
+            o.put("address", base).put("url", "$base/#$code")
+        }
+        return o.toString()
     }
 
     override fun onPause() {
@@ -929,6 +1029,48 @@ class MainActivity : ComponentActivity() {
             runOnUiThread { ok = enterPip(); latch.countDown() }
             latch.await(800, java.util.concurrent.TimeUnit.MILLISECONDS)
             return ok
+        }
+
+        /** v1.2.4 phone remote: state JSON {on, enabled, ip, port, code, phones, address?, url?}. */
+        @JavascriptInterface
+        fun remoteInfo(): String = this@MainActivity.remoteInfo()
+
+        @JavascriptInterface
+        fun startRemote(): String {
+            getSharedPreferences("panda_remote", Context.MODE_PRIVATE).edit().putBoolean("on", true).apply()
+            remote.start()
+            return this@MainActivity.remoteInfo()
+        }
+
+        @JavascriptInterface
+        fun stopRemote(): String {
+            getSharedPreferences("panda_remote", Context.MODE_PRIVATE).edit().putBoolean("on", false).apply()
+            remote.stop()
+            return this@MainActivity.remoteInfo()
+        }
+
+        /** New pairing code: every paired phone has to scan again. */
+        @JavascriptInterface
+        fun resetRemote(): String {
+            remote.newCode()
+            return this@MainActivity.remoteInfo()
+        }
+
+        @JavascriptInterface
+        fun setRemoteState(json: String) { if (json.length <= 4000) remoteState = json }
+
+        /** v1.2.4: Android share sheet (WebView has no Web Share API). */
+        @JavascriptInterface
+        fun shareText(title: String, text: String): Boolean {
+            return try {
+                val send = Intent(Intent.ACTION_SEND).apply {
+                    type = "text/plain"
+                    putExtra(Intent.EXTRA_SUBJECT, title.take(200))
+                    putExtra(Intent.EXTRA_TEXT, text.take(1000))
+                }
+                runOnUiThread { startActivity(Intent.createChooser(send, "Share").addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)) }
+                true
+            } catch (e: Exception) { false }
         }
 
         @JavascriptInterface

@@ -240,7 +240,7 @@ export function TvPlayerChrome(p: TvChromeProps) {
         <div className="tvp-actions lrud-container">
           {p.onPip && <button id="tvp-pip" className="tvp-pill tvp-pill--icon" onClick={p.onPip} aria-label="Picture in picture" title="Picture in picture" data-hover-focus><ExtraIcon name="pip" /></button>}
           <button id="tvp-quality" className="tvp-pill" onClick={() => setPanel("quality")} data-hover-focus>
-            <Icon name="videoBox" /> Quality <span className="tvp-pill-val">{QUALITIES.find((q) => q.id === p.quality)?.label ?? "Auto"}</span>
+            <ExtraIcon name="videoBox" /> Quality <span className="tvp-pill-val">{QUALITIES.find((q) => q.id === p.quality)?.label ?? "Auto"}</span>
           </button>
           <button id="tvp-audio" className="tvp-pill" onClick={() => setPanel("audio")} data-hover-focus>
             <Icon name="captions" /> Audio &amp; Subtitles
@@ -271,7 +271,7 @@ export function TvPlayerChrome(p: TvChromeProps) {
 
       {panel === "quality" && (
         <SidePanel className="tvp-panel--quality" title="Quality" onClose={() => setPanel(null)}
-          footer={<button id="tvp-report" className="tvp-row tvp-row--report" onClick={() => setPanel("report")} data-hover-focus><Icon name="warning" /> Report an Issue</button>}>
+          footer={<button id="tvp-report" className="tvp-row tvp-row--report" onClick={() => setPanel("report")} data-hover-focus><ExtraIcon name="warning" /> Report an Issue</button>}>
           <div className="tvp-list lrud-container" role="radiogroup" aria-label="Quality">
             {QUALITIES.map((q) => (
               <button key={q.id} id={`tvp-q-${q.id}`} role="radio" aria-checked={p.quality === q.id} className={`tvp-row ${p.quality === q.id ? "is-selected" : ""}`}

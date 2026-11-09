@@ -68,6 +68,7 @@ const MyListPage = lz(loadLists, "MyListPage");
 const NotFoundPage = lz(loadLists, "NotFoundPage");
 const ProfileManage = lz(loadProfileEditor, "ProfileManage");
 const ProfileEdit = lz(loadProfileEditor, "ProfileEdit");
+const ConnectPhonePage = lz(loadTv, "ConnectPhonePage"); // the phone remote is a TV feature (D-136)
 
 /** Start downloading the active layout at once, and the rest of the app when the device is idle. */
 export function prefetchRoutes(mode: LayoutMode) {
@@ -283,6 +284,7 @@ function Routes({ mode }: { mode: LayoutMode }) {
             <Route path="/my-list"><MyListPage /></Route>
             <Route path="/continue-watching"><ContinueWatchingPage /></Route>
             <Route path="/calendar"><CalendarPage /></Route>
+            <Route path="/connect-phone"><ConnectPhonePage /></Route>
             <Route path="/profiles/manage"><ProfileManage /></Route>
             <Route path="/profiles/new"><ProfileEdit isNew /></Route>
             <Route path="/profiles/edit/:id"><ProfileEdit /></Route>

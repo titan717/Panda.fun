@@ -48,6 +48,20 @@
                 <category android:name="android.intent.category.LEANBACK_LAUNCHER" />
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
+            <!-- v1.2.4 deep links (DeepLinks.kt): pandafun://title/movie/550, pandafun://sync/CODE, pandafun://remote -->
+            <intent-filter>
+                <action android:name="android.intent.action.VIEW" />
+                <category android:name="android.intent.category.DEFAULT" />
+                <category android:name="android.intent.category.BROWSABLE" />
+                <data android:scheme="pandafun" />
+            </intent-filter>
+            <!-- Public share links (https://apikinoma.vercel.app/p/...) offer to open in Panda -->
+            <intent-filter>
+                <action android:name="android.intent.action.VIEW" />
+                <category android:name="android.intent.category.DEFAULT" />
+                <category android:name="android.intent.category.BROWSABLE" />
+                <data android:scheme="https" android:host="apikinoma.vercel.app" android:pathPrefix="/p/" />
+            </intent-filter>
         </activity>
 
         <activity

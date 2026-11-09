@@ -18,7 +18,7 @@ import { actions, usePrefs, useProfile, useReminders, type Prefs } from "../lib/
 import { useGenres, usePage, useSourceHealth, useSourceRanking } from "../lib/hooks";
 import { reliabilityLabel, reliabilityTone } from "../lib/sources";
 import { HOME_SECTIONS, isCustomHome, moveSection, normalizeOrder, railKey, type HomeSection } from "../lib/homeLayout";
-import { focusFirst } from "../lib/focus";
+import { focusEl, focusFirst } from "../lib/focus";
 import { useNav } from "../lib/nav";
 import { useIsTv } from "../lib/layout";
 import { installedVersion } from "../lib/updates";
@@ -466,11 +466,19 @@ export function SettingsPage() {
   const { section } = useParams<{ section?: string }>();
   const profile = useProfile();
   const { go } = useNav();
-  const [focused, setFocused] = useState<SectionId>("profiles");
-  const root = useRef<HTMLDivElement>(null);
-  useEffect(() => { if (tv && root.current) focusFirst(root.current); }, [tv]);
-
   const current = SECTIONS.find((s) => s.id === section);
+  // v1.2.4: /settings/<section> opens that section on TV too (deep links, phone remote, restore links)
+  const start = current && current.id !== "updates" && current.id !== "whatsnew" ? current.id : null;
+  const [focused, setFocused] = useState<SectionId>(start ?? "profiles");
+  const root = useRef<HTMLDivElement>(null);
+  useEffect(() => {
+    if (!tv || !root.current) return;
+    if (document.activeElement?.closest(".sheet")) return; // a sheet opened by the section keeps its focus
+    const want = start ? document.getElementById(`set-${start}`) : null;
+    if (want) focusEl(want); else focusFirst(root.current);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [tv]);
+
   if (!tv && current) {
     return (
       <div className="m-page">

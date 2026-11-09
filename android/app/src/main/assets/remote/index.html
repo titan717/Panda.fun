@@ -1,0 +1,238 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, user-scalable=no">
+<meta name="theme-color" content="#000000">
+<title>Panda remote</title>
+<style>
+  :root { --blue: #1f80e0; --ice: #8fc7ff; --text: #f4f6fb; --muted: #8f98ab; --glass: rgba(255,255,255,.07); --line: rgba(255,255,255,.12); color-scheme: dark; }
+  * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+  html, body { margin: 0; background: #000; color: var(--text); font: 15px/1.4 Inter, system-ui, -apple-system, "Segoe UI", Roboto, sans-serif; }
+  body { min-height: 100dvh; display: flex; flex-direction: column; padding: max(16px, env(safe-area-inset-top)) 18px max(18px, env(safe-area-inset-bottom)); gap: 16px; user-select: none; -webkit-user-select: none; }
+  button { font: inherit; color: inherit; border: 0; background: none; cursor: pointer; }
+  header { display: flex; align-items: center; gap: 10px; }
+  header svg { width: 30px; height: 30px; }
+  header h1 { font-size: 18px; font-weight: 700; margin: 0; flex: 1; }
+  .dot { width: 8px; height: 8px; border-radius: 50%; background: #5b6375; display: inline-block; margin-right: 6px; }
+  .dot.is-on { background: #3ddc84; box-shadow: 0 0 8px #3ddc84; }
+  .status { font-size: 12px; color: var(--muted); display: flex; align-items: center; }
+  .card { background: linear-gradient(180deg, rgba(255,255,255,.08), rgba(255,255,255,.03)); border: 1px solid var(--line); border-radius: 16px; padding: 14px; }
+  .pair { display: flex; flex-direction: column; gap: 14px; margin-top: 8vh; text-align: center; }
+  .pair h2 { font-size: 22px; margin: 0; }
+  .pair p { margin: 0; color: var(--muted); }
+  input { font: inherit; color: var(--text); background: #11141c; border: 1px solid var(--line); border-radius: 12px; padding: 14px 16px; width: 100%; outline: none; }
+  input:focus { border-color: var(--blue); }
+  .code-input { font-size: 24px; letter-spacing: .18em; text-align: center; text-transform: uppercase; font-weight: 700; }
+  .primary { background: #fff; color: #000; font-weight: 700; border-radius: 12px; padding: 14px; }
+  .primary[disabled] { opacity: .5; }
+  .err { color: #ff8a8a; font-size: 13px; min-height: 18px; margin: 0; }
+  .now { display: flex; gap: 12px; align-items: center; min-height: 76px; }
+  .now img { width: 48px; height: 72px; object-fit: cover; border-radius: 6px; background: #1a1d26; flex: none; }
+  .now .meta { flex: 1; min-width: 0; }
+  .now .kicker { font-size: 11px; letter-spacing: .12em; text-transform: uppercase; color: var(--ice); font-weight: 700; }
+  .now .title { font-size: 16px; font-weight: 700; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .chip { background: var(--glass); border: 1px solid var(--line); border-radius: 999px; padding: 8px 14px; font-size: 13px; font-weight: 600; display: inline-flex; gap: 6px; align-items: center; }
+  .pad { position: relative; width: min(78vw, 320px); aspect-ratio: 1; margin: 0 auto; border-radius: 50%; background: radial-gradient(circle at 50% 40%, #1c2130, #0b0d13 70%); border: 1px solid var(--line); touch-action: none; }
+  .pad .arrow { position: absolute; width: 33%; height: 33%; display: grid; place-items: center; color: #d4dcec; }
+  .pad .arrow svg { width: 30px; height: 30px; }
+  .pad .up { top: 0; left: 33.5%; } .pad .down { bottom: 0; left: 33.5%; } .pad .left { left: 0; top: 33.5%; } .pad .right { right: 0; top: 33.5%; }
+  .pad .ok { position: absolute; inset: 31%; border-radius: 50%; background: linear-gradient(180deg, #2a3142, #161a24); border: 1px solid rgba(255,255,255,.16); font-weight: 800; letter-spacing: .06em; }
+  .pad .hint { position: absolute; bottom: -24px; left: 0; right: 0; text-align: center; font-size: 11px; color: var(--muted); }
+  .pressed { transform: scale(.94); filter: brightness(1.35); transition: transform 80ms, filter 80ms; }
+  .row { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; }
+  .row.five { grid-template-columns: repeat(5, 1fr); }
+  .key { background: var(--glass); border: 1px solid var(--line); border-radius: 14px; padding: 12px 4px 10px; display: flex; flex-direction: column; align-items: center; gap: 4px; font-size: 11px; color: #a7b0c6; }
+  .key svg { width: 24px; height: 24px; color: var(--text); }
+  .type { display: flex; gap: 8px; }
+  .type button { flex: none; padding: 0 16px; border-radius: 12px; background: var(--blue); color: #fff; font-weight: 700; }
+  .foot { text-align: center; font-size: 12px; color: var(--muted); margin-top: auto; }
+  .foot button { color: var(--ice); text-decoration: underline; font-size: 12px; }
+  [hidden] { display: none !important; }
+  .toast { position: fixed; left: 50%; bottom: max(24px, env(safe-area-inset-bottom)); transform: translateX(-50%); background: #fff; color: #000; padding: 10px 16px; border-radius: 999px; font-weight: 600; font-size: 13px; opacity: 0; transition: opacity .2s; pointer-events: none; }
+  .toast.is-on { opacity: 1; }
+  @media (prefers-reduced-motion: reduce) { .pressed { transition: none; } }
+</style>
+</head>
+<body>
+<header>
+  <svg viewBox="0 0 64 64" aria-hidden="true"><circle cx="16" cy="15" r="10" fill="#171820" stroke="#f7f5ff" stroke-width="2.5"/><circle cx="48" cy="15" r="10" fill="#171820" stroke="#f7f5ff" stroke-width="2.5"/><rect x="11" y="12" width="42" height="42" rx="20" fill="#f7f5ff"/><ellipse cx="22" cy="30" rx="8" ry="11" transform="rotate(28 22 30)" fill="#171820"/><ellipse cx="42" cy="30" rx="8" ry="11" transform="rotate(-28 42 30)" fill="#171820"/><circle cx="24" cy="29" r="2.4" fill="#f7f5ff"/><circle cx="40" cy="29" r="2.4" fill="#f7f5ff"/><path d="M29 39c1.8-2.2 4.2-2.2 6 0-1 3.4-5 4.1-6 0Z" fill="#171820"/><circle cx="18" cy="40" r="3" fill="#d9ccff"/><circle cx="46" cy="40" r="3" fill="#d9ccff"/></svg>
+  <h1>Panda remote</h1>
+  <span class="status" id="status"><span class="dot" id="dot"></span><span id="status-text">Not connected</span></span>
+</header>
+
+<section class="pair" id="pair" hidden>
+  <h2>Connect to your TV</h2>
+  <p>On the TV, open Connect Phone in the Panda sidebar and type the code shown there.</p>
+  <input id="code" class="code-input" maxlength="9" placeholder="XXXX-XXXX" autocomplete="off" autocapitalize="characters" spellcheck="false" inputmode="text" aria-label="Pairing code">
+  <p class="err" id="pair-err" role="alert"></p>
+  <button class="primary" id="pair-go">Connect</button>
+</section>
+
+<main id="remote" hidden style="display:flex;flex-direction:column;gap:16px">
+  <div class="card now" id="now">
+    <img id="now-img" alt="" hidden>
+    <div class="meta">
+      <div class="kicker" id="now-kicker">On your TV</div>
+      <div class="title" id="now-title">Panda</div>
+    </div>
+    <button class="chip" id="share" hidden aria-label="Share this title">
+      <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 4v11M8 8l4-4 4 4M5 13v6h14v-6"/></svg>Share
+    </button>
+  </div>
+
+  <div class="pad" id="pad">
+    <button class="arrow up" data-k="up" aria-label="Up"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="m6 15 6-6 6 6"/></svg></button>
+    <button class="arrow left" data-k="left" aria-label="Left"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="m15 6-6 6 6 6"/></svg></button>
+    <button class="arrow right" data-k="right" aria-label="Right"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="m9 6 6 6-6 6"/></svg></button>
+    <button class="arrow down" data-k="down" aria-label="Down"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="m6 9 6 6 6-6"/></svg></button>
+    <button class="ok" data-k="ok" aria-label="OK">OK</button>
+    <div class="hint">Tap the arrows or swipe on the pad</div>
+  </div>
+
+  <div class="row" style="margin-top:14px">
+    <button class="key" data-k="back"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 12H5m6-6-6 6 6 6"/></svg>Back</button>
+    <button class="key" data-k="home"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"><path d="M4 11.5 12 5l8 6.5V20a1 1 0 0 1-1 1h-4.5v-6h-5v6H5a1 1 0 0 1-1-1v-8.5Z"/></svg>Home</button>
+    <button class="key" data-k="playpause"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M6 5h4v14H6zM14 5h4v14h-4z"/></svg>Play / Pause</button>
+  </div>
+  <div class="row five">
+    <button class="key" data-k="rewind" aria-label="Rewind"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M11 6v12L3 12l8-6Zm10 0v12l-8-6 8-6Z"/></svg>Back 10s</button>
+    <button class="key" data-k="forward" aria-label="Fast forward"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M13 6v12l8-6-8-6ZM3 6v12l8-6-8-6Z"/></svg>Fwd 10s</button>
+    <button class="key" data-v="down" aria-label="Volume down"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"><path d="M5 10v4h3l4 4V6L8 10H5Zm11 2h5"/></svg>Vol −</button>
+    <button class="key" data-v="mute" aria-label="Mute"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round" stroke-linecap="round"><path d="M5 10v4h3l4 4V6L8 10H5Zm11-1 5 6m0-6-5 6"/></svg>Mute</button>
+    <button class="key" data-v="up" aria-label="Volume up"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round" stroke-linecap="round"><path d="M5 10v4h3l4 4V6L8 10H5Zm11 2h5m-2.5-2.5v5"/></svg>Vol +</button>
+  </div>
+
+  <form class="type" id="type-form" autocomplete="off">
+    <input id="type" placeholder="Type on the TV or search" maxlength="120" enterkeyhint="search" aria-label="Type on the TV">
+    <button type="submit">Search</button>
+  </form>
+
+  <p class="foot">Keep this page open while you watch. <button id="unpair">Disconnect this phone</button></p>
+</main>
+
+<div class="toast" id="toast" role="status" aria-live="polite"></div>
+
+<script>
+(function () {
+  "use strict";
+  var KEY = "panda-remote-code";
+  var $ = function (id) { return document.getElementById(id); };
+  var code = null, online = false, timer = 0, typeTimer = 0, lastState = null;
+
+  function norm(v) { return String(v || "").toUpperCase().replace(/[\s-]/g, "").replace(/O/g, "0").replace(/[IL]/g, "1"); }
+  function pretty(c) { return c.length > 4 ? c.slice(0, 4) + "-" + c.slice(4) : c; }
+  function toast(text) { var t = $("toast"); t.textContent = text; t.classList.add("is-on"); clearTimeout(toast.t); toast.t = setTimeout(function () { t.classList.remove("is-on"); }, 1800); }
+  function buzz() { try { navigator.vibrate && navigator.vibrate(8); } catch (e) {} }
+
+  function setOnline(on, text) {
+    online = on;
+    $("dot").classList.toggle("is-on", on);
+    $("status-text").textContent = text || (on ? "Connected" : "Not connected");
+  }
+
+  function call(path, body) {
+    return fetch("/api/" + path, { method: "POST", headers: { "content-type": "application/json", "x-panda-code": code || "" }, body: JSON.stringify(body || {}) })
+      .then(function (r) { return r.json().catch(function () { return { ok: false, error: "BAD_RESPONSE" }; }).then(function (j) { j.status = r.status; return j; }); });
+  }
+
+  function show(view) { $("pair").hidden = view !== "pair"; $("remote").hidden = view !== "remote"; }
+
+  function render(state, device) {
+    lastState = state || {};
+    var t = lastState.title;
+    $("now-kicker").textContent = lastState.playing ? "Playing on " + (device || "your TV") : "On " + (device || "your TV");
+    $("now-title").textContent = t || lastState.screen || "Panda";
+    var img = $("now-img");
+    if (lastState.poster && /^https:\/\/image\.tmdb\.org\//.test(lastState.poster)) { img.src = lastState.poster; img.hidden = false; } else img.hidden = true;
+    $("share").hidden = !(lastState.type && lastState.id);
+  }
+
+  function handle(j) {
+    if (j.ok) { setOnline(true, "Connected to " + (j.device || "TV")); render(j.state, j.device); return true; }
+    if (j.status === 401) { localStorage.removeItem(KEY); code = null; setOnline(false); show("pair"); $("pair-err").textContent = j.triesLeft ? "That code didn't match. Check the TV and try again." : "That code didn't match."; return false; }
+    if (j.status === 429) { setOnline(false, "Locked"); show("pair"); $("pair-err").textContent = "Too many wrong codes. Try again in " + Math.ceil((j.retryAfter || 300) / 60) + " min."; return false; }
+    toast("The TV refused that"); return false;
+  }
+
+  function offline() { setOnline(false, "TV not reachable"); }
+
+  function send(path, body) {
+    buzz();
+    return call(path, body).then(handle, function () { offline(); toast("Can't reach the TV. Is Panda open on it?"); });
+  }
+
+  function poll() {
+    clearTimeout(timer);
+    if (!code || document.hidden) return;
+    call("state").then(function (j) { handle(j); }, offline).then(function () { timer = setTimeout(poll, 3000); });
+  }
+
+  function connect(c) {
+    code = norm(c);
+    $("pair-err").textContent = "";
+    if (code.length !== 8) { $("pair-err").textContent = "The code has 8 characters, like ABCD-2345."; show("pair"); return; }
+    $("pair-go").disabled = true;
+    call("hello").then(function (j) {
+      $("pair-go").disabled = false;
+      if (handle(j)) { localStorage.setItem(KEY, code); show("remote"); poll(); }
+    }, function () { $("pair-go").disabled = false; offline(); $("pair-err").textContent = "Can't reach the TV. Phone and TV need the same Wi-Fi, and Panda must be open on the TV."; show("pair"); });
+  }
+
+  // buttons: keys and volume
+  document.addEventListener("click", function (e) {
+    var b = e.target.closest && e.target.closest("button");
+    if (!b) return;
+    if (swiped) { swiped = false; e.preventDefault(); return; }
+    if (b.dataset.k) send("key", { k: b.dataset.k });
+    else if (b.dataset.v) send("volume", { d: b.dataset.v });
+  });
+  document.addEventListener("pointerdown", function (e) { var b = e.target.closest && e.target.closest("button"); if (b) b.classList.add("pressed"); });
+  ["pointerup", "pointercancel", "pointerleave"].forEach(function (n) { document.addEventListener(n, function () { var p = document.querySelectorAll(".pressed"); for (var i = 0; i < p.length; i++) p[i].classList.remove("pressed"); }, true); });
+
+  // swipe on the pad: one arrow per swipe
+  var start = null, swiped = false;
+  $("pad").addEventListener("pointerdown", function (e) { start = { x: e.clientX, y: e.clientY }; });
+  $("pad").addEventListener("pointerup", function (e) {
+    if (!start) return;
+    var dx = e.clientX - start.x, dy = e.clientY - start.y; start = null;
+    if (Math.max(Math.abs(dx), Math.abs(dy)) < 36) return; // a tap: the button's own click handles it
+    swiped = true; setTimeout(function () { swiped = false; }, 400);
+    send("key", { k: Math.abs(dx) > Math.abs(dy) ? (dx > 0 ? "right" : "left") : (dy > 0 ? "down" : "up") });
+  });
+
+  // typing mirrors into the TV's focused text field; Search opens the TV's search
+  $("type").addEventListener("input", function () { clearTimeout(typeTimer); var v = $("type").value; typeTimer = setTimeout(function () { call("text", { t: v }).then(handle, offline); }, 180); });
+  $("type-form").addEventListener("submit", function (e) {
+    e.preventDefault();
+    var q = $("type").value.trim();
+    if (!q) return;
+    send("open", { path: "/search?q=" + encodeURIComponent(q) }).then(function (ok) { if (ok) toast("Searching on the TV"); });
+  });
+
+  $("share").addEventListener("click", function () {
+    if (!lastState || !lastState.type || !lastState.id) return;
+    var url = "https://apikinoma.vercel.app/p/" + lastState.type + "/" + lastState.id;
+    var title = lastState.title || "Panda";
+    if (navigator.share) navigator.share({ title: title, text: "Watch " + title + " on Panda", url: url }).catch(function () {});
+    else if (navigator.clipboard) navigator.clipboard.writeText(url).then(function () { toast("Link copied"); }, function () { prompt("Copy this link", url); });
+    else prompt("Copy this link", url);
+  });
+
+  $("unpair").addEventListener("click", function () { localStorage.removeItem(KEY); code = null; setOnline(false); show("pair"); clearTimeout(timer); });
+  $("pair-go").addEventListener("click", function () { connect($("code").value); });
+  $("code").addEventListener("input", function () { var c = norm($("code").value).slice(0, 8); $("code").value = pretty(c); });
+  $("code").addEventListener("keydown", function (e) { if (e.key === "Enter") connect($("code").value); });
+  document.addEventListener("visibilitychange", function () { if (!document.hidden) poll(); });
+
+  // the QR carries the code in the fragment (never sent over the network); take it and clean the address bar
+  var fromHash = norm(location.hash.slice(1));
+  if (location.hash) history.replaceState(null, "", location.pathname);
+  var saved = localStorage.getItem(KEY);
+  if (fromHash.length === 8) connect(fromHash);
+  else if (saved) connect(saved);
+  else show("pair");
+})();
+</script>
+</body>
+</html>

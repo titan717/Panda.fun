@@ -21,10 +21,17 @@ export interface NativeBridge {
   canPictureInPicture?(): boolean;
   setPlaybackActive?(active: boolean, auto: boolean): void;
   enterPictureInPicture?(): boolean;
+  /** v1.2.4 phone remote (local network server in the app) and the Android share sheet. JSON strings. */
+  remoteInfo?(): string;
+  startRemote?(): string;
+  stopRemote?(): string;
+  resetRemote?(): string;
+  setRemoteState?(json: string): void;
+  shareText?(title: string, text: string): boolean;
 }
 
 declare global {
-  interface Window { KinomaNative?: NativeBridge; __pandaVoice?: (text: string) => void; __pandaPip?: (on: boolean) => void }
+  interface Window { KinomaNative?: NativeBridge; __pandaVoice?: (text: string) => void; __pandaPip?: (on: boolean) => void; __pandaRemoteText?: (text: string) => void; __pandaRemote?: (event: string, phones: number) => void }
 }
 
 export const native: NativeBridge | null = typeof window !== "undefined" && window.KinomaNative ? window.KinomaNative : null;

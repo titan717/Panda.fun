@@ -1,4 +1,5 @@
 import "./details.css";
+import { setRemoteTitle } from "../lib/remote";
 import { useEffect, useRef, useState } from "react";
 import { Icon } from "../components/Icon";
 import { ExtraIcon } from "../components/ExtraIcons";
@@ -43,6 +44,7 @@ function TvDetailsSkeleton() {
 
 function TvDetailsView({ d, initialTab }: { d: TitleDetails; initialTab?: Tab }) {
   const prefs = usePrefs();
+  useEffect(() => { setRemoteTitle({ type: d.type, id: d.tmdbId, title: d.title, poster: d.poster }); return () => setRemoteTitle(null); }, [d]);
   const history = useHistoryEntry(d.id);
   const hasLists = useHasLists();
   const [saveTo, setSaveTo] = useState(false);
