@@ -153,7 +153,7 @@ export const emptyClock = (): Clock => ({ hashes: Object.create(null) as Record<
  */
 export function track(clock: Clock, s: State, now: number, baseline = false): Record<string, Item> {
   const flat = flatten(s, clock.orders, now);
-  const items: Record<string, Item> = {};
+  const items = Object.create(null) as Record<string, Item>;
   for (const [k, v] of Object.entries(flat)) {
     if (k === "__proto__" || k === "constructor" || k === "prototype") continue; // sync keys are "kind:id"; never let one name a prototype property
     const h = hashOf(v);
@@ -165,14 +165,19 @@ export function track(clock: Clock, s: State, now: number, baseline = false): Re
     }
     items[k] = { t: clock.times[k] ?? 0, d: v };
   }
-  for (const k of Object.keys(clock.hashes)) {
-    if (k === "__proto__" || k === "constructor" || k === "prototype") continue; 
+  // tombstones: keys this device held before; worked on Maps so a stored key can never act as a property name (A126-15)
+  const hashes = new Map(Object.entries(clock.hashes)), times = new Map(Object.entries(clock.times)), orders = new Map(Object.entries(clock.orders));
+  const tombs = new Map<string, Item>();
+  for (const k of hashes.keys()) {
     if (Object.prototype.hasOwnProperty.call(flat, k)) continue;
-    if (clock.hashes[k] !== "∅") { clock.hashes[k] = "∅"; clock.times[k] = now; }
-    if (now - (clock.times[k] ?? 0) > TOMB_TTL) { delete clock.hashes[k]; delete clock.times[k]; delete clock.orders[k]; continue; }
-    items[k] = { t: clock.times[k]!, d: null };
+    if (hashes.get(k) !== "∅") { hashes.set(k, "∅"); times.set(k, now); }
+    if (now - (times.get(k) ?? 0) > TOMB_TTL) { hashes.delete(k); times.delete(k); orders.delete(k); continue; }
+    tombs.set(k, { t: times.get(k) ?? 0, d: null });
   }
-  return items;
+  clock.hashes = Object.assign(emptyClock().hashes, Object.fromEntries(hashes));
+  clock.times = Object.assign(emptyClock().times, Object.fromEntries(times));
+  clock.orders = Object.assign(emptyClock().orders, Object.fromEntries(orders));
+  return Object.assign(items, Object.fromEntries(tombs));
 }
 
 export interface MergeResult { items: Record<string, Item>; conflicts: number; fromRemote: number }
