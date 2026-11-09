@@ -19,7 +19,7 @@ export const MPoster = memo(function MPoster({ item, rank, top10, className, con
   return (
     <>
     {/* press and hold opens quick actions (Watchlist 2.0) */}
-    <Link id={id} href={titlePath(item)} className={`m-poster ${rank ? "has-rank" : ""} ${className ?? ""}`} aria-label={item.title}
+    <Link id={id} href={titlePath(item)} className={`m-poster ${rank ? "has-rank" : ""} ${rank && rank > 9 ? "is-wide-rank" : ""} ${className ?? ""}`} aria-label={item.title}
       onPointerDown={() => prefetchItem(item)} onClick={onOpen} onContextMenu={(e) => { e.preventDefault(); setMenu(true); }}>
       {rank !== undefined && <span className="m-rank" aria-hidden="true">{rank}</span>}
       <span className="m-poster-media">

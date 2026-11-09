@@ -2,6 +2,14 @@
 
 Measured on every release. Never regress.
 
+## v1.2.5 (Home polish)
+
+| Metric | Value |
+|---|---|
+| Entry chunk (gzip) | 23,994 B at gzip -9 (v1.2.4 24,097 B), 24.2 KB as reported by Vite. The row-scroll fix adds about 60 B to `focus.ts`; the rarely seen Kids "not available" screen moved into a lazy `KidsBlocked` chunk (0.5 KB) to pay for it. |
+| Entry CSS (gzip) | 14,608 B at gzip -9 (v1.2.4 18,767 B), 14.9 KB as reported by Vite. The TV shell rules (sidebar, Home, hero, rows and cards, details tabs, search, categories, My Space, lists) moved from `styles/tv.css` into `tv/shell.css`, which loads with the lazy TV shell chunk (D-147). Phones never download them; on TV they arrive with the shell JS they style. |
+| Style parity | Computed styles of every element were compared between the split and an unsplit build on 22 TV routes and 13 phone routes: no differences. |
+
 ## v1.2.4 (player states, VidLink, clean trailers, phone remote)
 
 | Metric | Value |

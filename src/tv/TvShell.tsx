@@ -1,3 +1,4 @@
+import "./shell.css";
 import { useEffect, useRef, useState, type CSSProperties, type ReactNode } from "react";
 import { Link, useLocation } from "wouter";
 import { Icon, PandaMark, type IconName } from "../components/Icon";

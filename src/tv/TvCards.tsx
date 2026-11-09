@@ -29,7 +29,7 @@ export const TvPoster = memo(function TvPoster({ item, id, rank, expand = true, 
   const badge = calBadge ?? itemBadge(item);
   const meta = [item.year, details?.certification, item.type === "movie" ? runtime(details?.runtime) : details?.numberOfSeasons ? `${details.numberOfSeasons} Season${details.numberOfSeasons > 1 ? "s" : ""}` : null, ...item.genres.slice(0, 2)].filter(Boolean);
   return (
-    <div className={`tv-card-wrap ${rank ? "has-rank" : ""}`}>
+    <div className={`tv-card-wrap ${rank ? "has-rank" : ""} ${rank && rank > 9 ? "is-wide-rank" : ""}`}>
       {rank !== undefined && <span className="top10-num" aria-hidden="true">{rank}</span>}
       <Link href={titlePath(item)} id={id} className={`tv-card tv-poster ${focused && expand ? "is-expanded" : ""} ${onRemove ? "is-removable" : onOptions ? "is-editable" : ""}`} data-hover-focus
         aria-label={onRemove ? `Remove ${item.title}` : onOptions ? `Options for ${item.title}` : cardLabel(item, pos, rank ? `Number ${rank}` : null)}

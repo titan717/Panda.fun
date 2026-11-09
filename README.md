@@ -29,7 +29,8 @@ Mobile (390 × 844, touch)
 - **Sources:** CineSrc, Vidy, Vidy Anime and VidLink, ordered by measured ad tier first and community ranking second; a weekly workflow re-measures them ([docs/SOURCES.md](docs/SOURCES.md)).
 - **TV:** spatial navigation (`@bbc/tv-lrud-spatial`), visible focus everywhere, rail navigation, row focus expansion, Back on Backspace / Escape / Android Back / webOS 461 / Tizen 10009, media keys, overscan-safe margins, scaling for 720p / 1080p / 4K.
 - **Mobile:** bottom navigation, swipeable carousels, sheets, safe-area insets, landscape layouts.
-- **Player:** CineSrc and Vidy behind one source registry with a source switcher, automatic fallback, remembered source and volume, resume from the last position, previous / next episode and a 10-second next-episode countdown. See [docs/PLAYER_COMPARISON.md](docs/PLAYER_COMPARISON.md).
+- **Design polish (v1.2.5 to v1.3.0):** shared type, spacing and Top 10 numeral tokens (`src/styles/tokens.css`), one card language for hover, keyboard focus and touch press, and TV rows that always scroll the focused card inside the overscan-safe margin. Each polish release is listed in [docs/CHANGELOG.md](docs/CHANGELOG.md); the current version is 1.2.5.
+- **Player:** CineSrc, Vidy and VidLink behind one source registry with a source switcher, automatic fallback, remembered source and volume, resume from the last position, previous / next episode and a 10-second next-episode countdown. See [docs/PLAYER_COMPARISON.md](docs/PLAYER_COMPARISON.md).
 - **Data:** SWR caching with retry, skeleton states that match final layout, offline and error states with retry, error boundaries.
 - **Privacy:** no analytics or tracking, no client secrets; profiles, My List and progress live in `localStorage`.
 - **Accessibility:** semantic buttons and landmarks, labels on icon buttons, focus rings, `prefers-reduced-motion` respected.

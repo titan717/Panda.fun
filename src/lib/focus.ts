@@ -68,33 +68,36 @@ export function focusEl(el: HTMLElement | null | undefined) {
   return true;
 }
 
+/** Left edge of `el` in the content coordinates of the scroll row `row` (ignores transforms, works through positioned wrappers). */
+export function trackLeft(el: HTMLElement, row: HTMLElement) {
+  let x = 0;
+  for (let n: HTMLElement | null = el; n && n !== row; n = n.offsetParent as HTMLElement | null) {
+    if (!row.contains(n)) return x - row.offsetLeft - row.clientLeft;
+    x += n.offsetLeft;
+  }
+  return x;
+}
+
 /** Keep the focused element visible inside horizontal rows and the vertical page scroller. */
 export function revealFocus(el: HTMLElement) {
-  const reduce = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
-  const behavior: ScrollBehavior = reduce ? "auto" : "smooth";
+  const behavior: ScrollBehavior = matchMedia("(prefers-reduced-motion: reduce)").matches ? "auto" : "smooth";
   const row = el.closest<HTMLElement>("[data-scroll-x]");
   if (row) {
-    const pad = parseFloat(getComputedStyle(row).paddingLeft) || 0;
-    const target = el.offsetLeft - pad;
-    const mode = row.dataset.scrollX;
-    if (mode === "start") row.scrollTo({ left: Math.max(0, target), behavior });
-    else {
-      const left = el.offsetLeft, right = left + el.offsetWidth;
-      if (left - pad < row.scrollLeft) row.scrollTo({ left: Math.max(0, left - pad), behavior });
-      else if (right + pad > row.scrollLeft + row.clientWidth) row.scrollTo({ left: right + pad - row.clientWidth, behavior });
-    }
+    const cs = getComputedStyle(row), pad = parseFloat(cs.paddingLeft) || 0;
+    // measure against the row itself: cards may sit in a positioned wrapper (Top 10 rank), so offsetLeft is not row-relative
+    const start = trackLeft(el, row) - pad;
+    // the right padding is the overscan-safe margin: a focused card never ends inside it
+    const over = start + pad + el.offsetWidth + (parseFloat(cs.paddingRight) || pad) - row.clientWidth;
+    if (row.dataset.scrollX === "start" || start < row.scrollLeft) row.scrollTo({ left: Math.max(0, start), behavior });
+    else if (over > row.scrollLeft) row.scrollTo({ left: over, behavior });
   }
   const page = el.closest<HTMLElement>("[data-scroll-y]");
   if (page) {
-    const anchor = el.closest<HTMLElement>("[data-row]") ?? el;
+    const rect = (el.closest<HTMLElement>("[data-row]") ?? el).getBoundingClientRect();
+    const box = page.getBoundingClientRect();
     const offset = Number(page.dataset.scrollOffset ?? 0.18) * page.clientHeight;
-    const top = anchor.getBoundingClientRect().top - page.getBoundingClientRect().top + page.scrollTop;
-    if (page.dataset.scrollY === "row") page.scrollTo({ top: Math.max(0, top - offset), behavior });
-    else {
-      const rect = anchor.getBoundingClientRect();
-      const box = page.getBoundingClientRect();
-      if (rect.top < box.top + 8 || rect.bottom > box.bottom - 8) page.scrollTo({ top: Math.max(0, top - offset), behavior });
-    }
+    const top = rect.top - box.top + page.scrollTop;
+    if (page.dataset.scrollY === "row" || rect.top < box.top + 8 || rect.bottom > box.bottom - 8) page.scrollTo({ top: Math.max(0, top - offset), behavior });
   }
 }
 
@@ -109,28 +112,23 @@ function onKeyDown(e: KeyboardEvent) {
   }
   if (!tvEnabled || e.defaultPrevented) return;
   const active = document.activeElement as HTMLElement | null;
-  if (key === "left" || key === "right" || key === "up" || key === "down") {
+  const code = ({ left: 37, up: 38, right: 39, down: 40 } as Record<string, number | undefined>)[key];
+  if (code) {
     if (active && isTyping(active) && (key === "left" || key === "right")) {
-      const input = active as HTMLInputElement;
-      const atStart = input.selectionStart === 0 && input.selectionEnd === 0;
-      const atEnd = input.selectionStart === input.value.length;
-      if ((key === "left" && !atStart) || (key === "right" && !atEnd)) return;
+      const { selectionStart: a, selectionEnd: b, value } = active as HTMLInputElement;
+      // let the caret move inside the field until it reaches the edge
+      if (key === "left" ? a !== 0 || b !== 0 : a !== value.length) return;
     }
     const scope = scopeStack[scopeStack.length - 1] ?? document.getElementById("app") ?? document.body;
     const from = active && active !== document.body && scope.contains(active) ? active : null;
     e.preventDefault();
     if (!from) { focusFirst(scope); return; }
-    const code = { left: 37, up: 38, right: 39, down: 40 }[key];
     const next = getNextFocus(from, code, scope);
-    if (next) {
-      const blocked = next.closest("[inert]");
-      if (!blocked) focusEl(next);
-    }
+    if (next && !next.closest("[inert]")) focusEl(next);
     return;
   }
   if (key === "enter" && active && !isTyping(active)) {
-    const tag = active.tagName;
-    if (tag !== "BUTTON" && tag !== "A" && tag !== "INPUT" && tag !== "SELECT") {
+    if (!/^(BUTTON|A|INPUT|SELECT)$/.test(active.tagName)) {
       e.preventDefault();
       active.click();
     }

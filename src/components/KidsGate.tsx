@@ -1,10 +1,9 @@
-import { useEffect, useRef, type ReactNode } from "react";
-import { Icon } from "./Icon";
+import { Suspense, type ReactNode } from "react";
 import { Spinner } from "./ui";
 import { useTitle } from "../lib/hooks";
 import { useProfile } from "../lib/store";
 import { isKidsSafeTitle } from "../lib/kids";
-import { useNav } from "../lib/nav";
+import { lazyNamed } from "../lib/lazy";
 import type { MediaType } from "../lib/types";
 
 /**
@@ -12,28 +11,14 @@ import type { MediaType } from "../lib/types";
  * "More like this", Continue Watching from before a profile became Kids, or a shared link could still reach
  * a grown-up title, so Details and the player check again here.
  */
+// the blocked screen is rare, so it loads on demand (v1.2.5, keeps the entry chunk flat)
+const KidsBlocked = lazyNamed(() => import("./KidsBlocked"), "KidsBlocked");
+
 export function KidsGate({ type, id, wait = false, children }: { type: MediaType; id: number; wait?: boolean; children: ReactNode }) {
   const profile = useProfile();
   const { data } = useTitle(profile?.kids ? type : null, profile?.kids ? id : null);
   if (!profile?.kids) return <>{children}</>;
   if (!data) return wait ? <div className="kids-gate"><Spinner /></div> : <>{children}</>;
   if (isKidsSafeTitle(data)) return <>{children}</>;
-  return <KidsBlocked title={data.title} />;
-}
-
-function KidsBlocked({ title }: { title: string }) {
-  const { go, back } = useNav();
-  const first = useRef<HTMLButtonElement>(null);
-  useEffect(() => { first.current?.focus({ preventScroll: true }); }, []);
-  return (
-    <div className="kids-gate" role="alert">
-      <span className="kids-gate-icon"><Icon name="lock" size={44} /></span>
-      <p className="state-title">Not available on Kids profiles</p>
-      <p className="state-sub">{title} is for older viewers. Switch to a grown-up profile to watch it.</p>
-      <div className="kids-gate-actions">
-        <button ref={first} id="kids-back" className="btn btn--primary" data-autofocus data-hover-focus onClick={() => back("/")}><Icon name="back" /> Go back</button>
-        <button className="btn btn--secondary" data-hover-focus onClick={() => go("/profiles", { replace: true })}><Icon name="user" /> Switch profile</button>
-      </div>
-    </div>
-  );
+  return <Suspense fallback={<div className="kids-gate"><Spinner /></div>}><KidsBlocked title={data.title} /></Suspense>;
 }

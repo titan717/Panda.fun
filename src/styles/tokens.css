@@ -94,6 +94,18 @@
   --m-small: 12px;
   --m-tiny: 11px;
   --m-body-size: 13px;
+  /* v1.2.5 type scale (phone): display 26 · page header 18 · row title 17 (20 on tablets) · body 13 · small 12 · tiny 11 */
+  --m-display: 26px;
+  --m-header: 18px;
+  /* v1.2.5 spacing rhythm (phone, 4 px grid): rows 24 apart, header 10 above its track, header hit area 44 */
+  --m-row-space: 24px;
+  --m-head-gap: 10px;
+  --m-hit: 44px;
+  /* v1.2.5 Top 10 numerals (spec 6.4 / 12.4): outlined, gradient fill; shared by TV and phone */
+  --rank-stroke: rgba(255, 255, 255, 0.75);
+  --rank-fill: linear-gradient(180deg, rgba(255, 255, 255, 0.05), rgba(150, 190, 230, 0.55));
+  --rank-tracking: -0.06em;
+  --rank-tracking-wide: -0.09em;
 
   /* extra surfaces sampled in 14.7, 15.2, 7.10, 11.6, 4.3, 3.4 */
   --m-pill-dark: #22252e;
@@ -192,6 +204,13 @@ html[data-mode="tv"] {
   --t-small: calc(21 * var(--tu));
   --t-badge: calc(19 * var(--tu));
   --t-label: calc(26 * var(--tu));
+  /* v1.2.5 row rhythm and Top 10 numerals (spec 6.2 / 6.4, scaled with the 300 x 400 tu posters) */
+  --row-space: calc(40 * var(--tu));
+  --row-head-gap: calc(16 * var(--tu));
+  --row-glow: 0 0 calc(20 * var(--tu)) rgba(150, 205, 255, 0.35);
+  --rank-size: calc(220 * var(--tu));
+  --rank-pad: calc(110 * var(--tu));
+  --rank-pad-wide: calc(200 * var(--tu));
   --cta-h: calc(76 * var(--tu));
   --cta-w: calc(620 * var(--tu));
   --square: calc(74 * var(--tu));
