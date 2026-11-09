@@ -221,9 +221,9 @@ class RemoteServer(
         val f = fails[ip]
         if (f != null && f[1] > now) return error(out, 429, "LOCKED") { it.put("retryAfter", (f[1] - now) / 1000) }
         if (!sameCode(req.headers["x-panda-code"])) {
-            val entry = fails.getOrPut(ip) { longArrayOf(0, 0) }
-            entry[0] += 1
-            val left = MAX_FAILS - entry[0]
+            val entry: LongArray = fails.getOrPut(ip) { longArrayOf(0L, 0L) }
+            entry[0] = entry[0] + 1L
+            val left: Long = MAX_FAILS - entry[0]
             if (left <= 0) { entry[0] = 0; entry[1] = now + LOCK_MS }
             return error(out, 401, "WRONG_CODE") { it.put("triesLeft", maxOf(0L, left)) }
         }

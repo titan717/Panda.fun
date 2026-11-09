@@ -87,3 +87,33 @@ shot player-after-input
 adb logcat -d | grep -E "PandaShield" | tail -200 >> shots/shield.txt || true
 if [[ "$FOREIGN" == 1 ]]; then echo "AD SHIELD FAILURE: another activity came to the front during playback" | tee -a shots/shield.txt; exit 1; fi
 echo "ad shield: no external activity launched during playback" | tee -a shots/shield.txt
+
+# v1.2.4 deep links: a shared title link opens its Details page inside Panda.
+adb shell am start -W -a android.intent.action.VIEW -d "pandafun://title/movie/550" "$PKG" | tee -a shots/package.txt
+sleep 8; shot deeplink-title
+adb shell am start -W -a android.intent.action.VIEW -d "https://apikinoma.vercel.app/p/movie/550" "$PKG" | tee -a shots/package.txt
+sleep 6; shot deeplink-share
+adb shell pidof "$PKG" >/dev/null || { echo "app crashed on a deep link"; adb logcat -d -b crash > shots/logcat-deeplink.txt; exit 1; }
+adb shell dumpsys activity activities | grep -E "mResumedActivity|topResumedActivity" | head -1 | grep -q "$PKG/" || { echo "deep link did not open Panda"; exit 1; }
+echo "deep links: pandafun:// and share links open in Panda" | tee -a shots/remote.txt
+
+# v1.2.4 phone remote: Connect Phone starts the LAN server; it serves the remote page and refuses calls without the code.
+adb shell am start -W -n "$PKG/.ui.MainActivity" --es panda_path /connect-phone >/dev/null
+sleep 8; shot connect-phone
+adb forward tcp:18765 tcp:8765
+curl -s -m 5 http://127.0.0.1:18765/ | grep -q "Panda remote" || { echo "REMOTE FAILURE: remote page not served"; exit 1; }
+CODE_STATUS=$(curl -s -o /dev/null -w "%{http_code}" -m 5 -X POST -H "content-type: application/json" -d '{"k":"up"}' http://127.0.0.1:18765/api/key)
+[[ "$CODE_STATUS" == 401 ]] || { echo "REMOTE FAILURE: call without a code answered $CODE_STATUS"; exit 1; }
+adb shell uiautomator dump /sdcard/cp.xml >/dev/null 2>&1 || true
+CODE=$(adb shell cat /sdcard/cp.xml 2>/dev/null | grep -oE '\b[0-9A-HJKMNP-TV-Z]{4}-[0-9A-HJKMNP-TV-Z]{4}\b' | head -1 || true)
+if [[ -n "$CODE" ]]; then
+  HELLO=$(curl -s -o /dev/null -w "%{http_code}" -m 5 -X POST -H "X-Panda-Code: $CODE" -H "content-type: application/json" -d '{"name":"CI phone"}' http://127.0.0.1:18765/api/hello)
+  [[ "$HELLO" == 200 ]] || { echo "REMOTE FAILURE: pairing with the on-screen code answered $HELLO"; exit 1; }
+  curl -s -m 5 -X POST -H "X-Panda-Code: $CODE" -H "content-type: application/json" -d '{"k":"down"}' http://127.0.0.1:18765/api/key >/dev/null
+  sleep 3; shot connect-phone-paired
+  echo "phone remote: paired with the on-screen code and sent a key" | tee -a shots/remote.txt
+else
+  echo "phone remote: code not exposed to accessibility on this image; pairing step skipped" | tee -a shots/remote.txt
+fi
+adb shell pidof "$PKG" >/dev/null || { echo "app crashed on Connect Phone"; adb logcat -d -b crash > shots/logcat-remote.txt; exit 1; }
+echo "phone remote: page served, unpaired calls refused" | tee -a shots/remote.txt

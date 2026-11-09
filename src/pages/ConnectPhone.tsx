@@ -80,7 +80,7 @@ export function ConnectPhonePage() {
             <>
               <Qr text={info!.url!} size={320} label="QR code that opens the phone remote" className="cp-qr" />
               <p className="cp-or">Or open <strong id="cp-address">{info!.address}</strong> on your phone and enter</p>
-              <p className="cp-code" id="cp-code" aria-label={`Code ${info!.code.split("").join(" ")}`}>{info!.code}</p>
+              <p className="cp-code" id="cp-code">{info!.code}</p>
             </>
           ) : (
             <div className="cp-off">
