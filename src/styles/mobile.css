@@ -356,3 +356,10 @@ a.m-cast { color: inherit; text-decoration: none; }
   html[data-density="compact"] .m-row-track > .m-poster { width: calc((min(100vw, 1180px) - 2 * var(--m-gutter)) / 7.3); }
   html[data-density="compact"] .m-grid, html[data-density="compact"] .m-mosaic { grid-template-columns: repeat(7, 1fr); }
 }
+
+/* v1.2.8 touch targets: small text links, the card "more" button, the What's New tag and chips keep their look
+   but get an invisible hit area of at least 44 px (WCAG 2.5.8 / Android 48 dp guidance), so taps stop missing. */
+html[data-mode="mobile"] :is(.m-link, .m-head-link, .m-whats-new, .m-allow, .m-chip) { position: relative; }
+html[data-mode="mobile"] :is(.m-link, .m-head-link, .m-whats-new)::after { content: ""; position: absolute; inset: -12px -8px; }
+html[data-mode="mobile"] :is(.m-chip, .m-allow)::after { content: ""; position: absolute; inset: -6px -2px; }
+html[data-mode="mobile"] .m-more { width: 36px; height: 40px; right: -8px; bottom: -4px; }

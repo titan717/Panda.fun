@@ -2,6 +2,13 @@
 
 Every stable release of Panda.fun. The same notes ship in each GitHub Release and in Settings › What's New.
 
+## 1.2.8
+
+- **Rows you can scroll with a mouse**: on a computer, rest the pointer on any row and arrows appear at its edges. Click one to move the row by a page, so every card is reachable without a keyboard. The arrows only show on the side that has more to see, and never on TVs or phones.
+- **The mouse wheel follows the remote**: on Home, a title's page and My Space, each wheel step moves to the next or previous row, just like pressing Down or Up, so the big artwork and the selected title always stay in step. Settings, Search and long lists still scroll normally.
+- **Player keyboard shortcuts**: Space or K plays and pauses, J and L jump 10 seconds back or forward, M turns the sound off and on, F goes full screen and C switches subtitles. Press ? in the player for a card that lists them all; Back or Esc closes it.
+- **Easier taps on phones**: small links such as "All Episodes", "Edit" and "Help & Settings", the What's New tag, filter chips and the "more" button on cards now respond to taps across a 44-pixel area, so taps stop missing, while they look exactly the same.
+
 ## 1.2.7
 
 - **A real subtitles panel**: open Subtitles in the player for three tabs. Tracks switches language in one press, finds more languages, marks hearing-impaired (SDH) tracks and can show a second language above the first. Style changes size, colour, background, edge and height with a live preview over the video. Timing moves subtitles earlier or later in 0.1-second steps; hold the button to move faster.

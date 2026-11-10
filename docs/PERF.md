@@ -2,6 +2,15 @@
 
 Measured on every release. Never regress.
 
+## v1.2.8 (desktop mouse, player shortcuts, touch targets)
+
+| Metric | Value |
+|---|---|
+| Entry chunk (gzip) | 23,475 B at gzip -9 (v1.2.7 23,367 B, +108 B): only the `finePointer()` check and the lazy loader for the new `DesktopMouse` chunk (1.46 KB JS + 0.50 KB CSS gzip), which phones, TVs and the Android app never download. Accepted as the smallest possible loader (D-168). |
+| Entry CSS (gzip) | 14,675 B (v1.2.7 14,608 B, +67 B): the invisible 44 px hit areas on small phone controls. |
+| Player chunk | Shortcuts and the shortcuts sheet live in the lazy `Player` chunk and `player.css`. |
+| Runtime | Paddles measure the hovered row once per animation frame (passive pointer and scroll listeners); the wheel handler does nothing on pages that scroll by themselves. |
+
 ## v1.2.7 (subtitles, Kids PIN, Android security)
 
 | Metric | Value |

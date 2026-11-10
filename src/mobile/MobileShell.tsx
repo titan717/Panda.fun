@@ -1,13 +1,17 @@
-import { useState, type ReactNode } from "react";
+import { Suspense, useState, type ReactNode } from "react";
 import { Link, useLocation } from "wouter";
 import { Icon, PandaMark } from "../components/Icon";
 import { Avatar } from "../components/ui";
 import { Sheet } from "../components/Sheet";
+import { finePointer } from "../lib/device";
+import { lazyNamed } from "../lib/lazy";
 import { useProfile } from "../lib/store";
 import { useCategories } from "../lib/hooks";
 import { browseHref } from "../lib/format";
 import { useNav } from "../lib/nav";
 
+/** v1.2.8: wheel stepping and row paddles, only fetched where a mouse can hover (never on phones or TVs). */
+const DesktopMouse = finePointer() ? lazyNamed(() => import("../components/DesktopMouse"), "DesktopMouse") : null;
 const HOME_PATHS = new Set(["/", "/tv", "/movies"]);
 
 /** Bottom navigation (spec 11.5). */
@@ -88,6 +92,7 @@ export function MobileShell({ children }: { children: ReactNode }) {
       <main className="m-main" id="main">{children}</main>
       {showFloat && <FloatingPill path={path} />}
       <BottomNav path={path} />
+      {DesktopMouse && <Suspense fallback={null}><DesktopMouse /></Suspense>}
     </div>
   );
 }

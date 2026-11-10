@@ -27,3 +27,9 @@ export function isTvDevice() {
   if (isAndroidApp) return nativeIsTV();
   return TV_UA.test(navigator.userAgent);
 }
+
+/** A mouse or trackpad that can hover, on a computer rather than a TV (v1.2.8 desktop mouse: row paddles, wheel). */
+export function finePointer() {
+  if (typeof window === "undefined" || typeof window.matchMedia !== "function" || isAndroidApp) return false;
+  return window.matchMedia("(hover: hover) and (pointer: fine)").matches && !isTvDevice();
+}

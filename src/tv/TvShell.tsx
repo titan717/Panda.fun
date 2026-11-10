@@ -1,5 +1,5 @@
 import "./shell.css";
-import { useEffect, useRef, useState, type CSSProperties, type ReactNode } from "react";
+import { Suspense, useEffect, useRef, useState, type CSSProperties, type ReactNode } from "react";
 import { Link, useLocation } from "wouter";
 import { Icon, PandaMark, type IconName } from "../components/Icon";
 import { ExtraIcon } from "../components/ExtraIcons";
@@ -8,6 +8,11 @@ import { useProfile } from "../lib/store";
 import { focusEl, focusFirst } from "../lib/focus";
 import { useUpdateAvailable } from "../lib/updates";
 import { installRemote } from "../lib/remote";
+import { finePointer } from "../lib/device";
+import { lazyNamed } from "../lib/lazy";
+
+/** v1.2.8: wheel stepping and row paddles, only fetched where a mouse can hover (never on phones or TVs). */
+const DesktopMouse = finePointer() ? lazyNamed(() => import("../components/DesktopMouse"), "DesktopMouse") : null;
 
 /**
  * TV sidebar (BLUEPRINT_SPEC §4, measured from tv1#15, tv1#22, tv2#11, tv2#12, blueprinttvpanda#21).
@@ -121,6 +126,7 @@ export function TvShell({ children }: { children: ReactNode }) {
         <div className="rail-bottom">{row(ITEMS[ITEMS.length - 1]!)}</div>
       </nav>
       <main className="tv-main" id="main">{children}</main>
+      {DesktopMouse && <Suspense fallback={null}><DesktopMouse /></Suspense>}
     </div>
   );
 }

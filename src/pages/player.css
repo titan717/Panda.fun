@@ -160,3 +160,11 @@ html[data-mode="tv"] .player-stall { width: calc(720 * var(--tu)); padding: calc
 html[data-mode="tv"] .player-stall-title { font-size: calc(30 * var(--tu)); }
 html[data-mode="tv"] .player-stall-sub { font-size: calc(22 * var(--tu)); }
 @keyframes pl-state-in { from { opacity: 0; } to { opacity: 1; } }
+
+/* v1.2.8 keyboard shortcuts sheet (press ? in the player) */
+.keys-list { display: grid; gap: 10px; margin: 0; }
+.keys-row { display: grid; grid-template-columns: 9em 1fr; align-items: center; gap: 16px; }
+.keys-row dt { display: flex; gap: 6px; }
+.keys-row dd { margin: 0; color: var(--text-2); }
+.keys-row kbd { min-width: 2em; padding: 0.2em 0.55em; border-radius: 6px; border: 1px solid rgba(255, 255, 255, 0.28); border-bottom-width: 2px; background: rgba(255, 255, 255, 0.08); color: var(--text-1); font: 600 0.9em/1.4 var(--font-sans); text-align: center; }
+html[data-mode="tv"] .keys-list { gap: calc(14 * var(--tu)); font-size: calc(24 * var(--tu)); }

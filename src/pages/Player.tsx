@@ -13,6 +13,7 @@ import { ErrorState, Img, Spinner, toast } from "../components/ui";
 import { Sheet } from "../components/Sheet";
 import { CaptionLayer } from "../components/CaptionLayer";
 import { useCaptions } from "../lib/useCaptions";
+import { playerShortcut, SHORTCUTS, toggleFullscreen } from "../lib/shortcuts";
 import { clockAt, isCcKey, offsetLabel, subLangName, subLook } from "../lib/captions";
 import { KidsGate } from "../components/KidsGate";
 import { keys } from "../lib/api";
@@ -140,6 +141,7 @@ function Player({ type, id, season, episode, start }: { type: MediaType; id: num
   const [countdown, setCountdown] = useState(10);
   const [time, setTime] = useState({ p: start, d: 0 });
   const [muted, setMuted] = useState(false);
+  const [keysHelp, setKeysHelp] = useState(false);
   /* ---- v1.2.2 gestures and picture-in-picture ---- */
   const [brightness, setBrightness] = useState(1);
   // v1.2.6 picture fit (Fit / Fill / Stretch), remembered on this device
@@ -587,6 +589,35 @@ function Player({ type, id, season, episode, start }: { type: MediaType; id: num
     return () => window.removeEventListener("keydown", onCc, true);
   }, [poke]);
 
+  /* ---- v1.2.8: keyboard shortcuts (Space/K, J, L, M, F, ?) for desktop and laptop keyboards ---- */
+  const keysOpen = useRef(false);
+  keysOpen.current = keysHelp;
+  const shortcut = useRef<(a: NonNullable<ReturnType<typeof playerShortcut>>) => void>(() => {});
+  shortcut.current = (a) => {
+    if (a === "help") { setKeysHelp((v) => !v); return; }
+    if (a === "fullscreen") { void toggleFullscreen(); return; }
+    if (a === "toggle") { togglePlay(); return; }
+    if (a === "back10") { seekBy(-10); toast("Back 10 s", 900); return; }
+    if (a === "fwd10") { seekBy(10); toast("Forward 10 s", 900); return; }
+    if (a === "mute") {
+      const m = !muted;
+      if (source) sendCommand(frame.current, source, { c: "muted", value: m });
+      setMuted(m); saveMutedMemory(m); toast(m ? "Sound off" : "Sound on", 1000);
+    }
+  };
+  useEffect(() => {
+    const onShortcut = (e: KeyboardEvent) => {
+      // the shortcuts sheet sits above the TV chrome: Back (and ?) close it before the chrome sees the key
+      if (keysOpen.current && navKey(e) === "back") { e.preventDefault(); e.stopPropagation(); setKeysHelp(false); return; }
+      if (e.repeat && e.key !== "j" && e.key !== "l") return;
+      const a = playerShortcut(e);
+      if (!a) return;
+      e.preventDefault(); e.stopPropagation(); poke(); shortcut.current(a);
+    };
+    window.addEventListener("keydown", onShortcut, true);
+    return () => window.removeEventListener("keydown", onShortcut, true);
+  }, [poke]);
+
   /* ---- remote keys while the overlay is hidden ---- */
   const onKeyDown = (k: React.KeyboardEvent) => {
     // v1.2.6: the remote's Menu key opens the quick panel (Quality, source, speed, picture)
@@ -811,6 +842,15 @@ function Player({ type, id, season, episode, start }: { type: MediaType; id: num
           <Suspense fallback={<Spinner />}>
             <SubtitleOptions caps={caps} prefs={prefs} onPrefs={actions.setPrefs} toast={(m) => toast(m, 1400)} tv={tv} onPicked={() => setSubsSheet(false)} />
           </Suspense>
+        </Sheet>
+      )}
+      {keysHelp && (
+        <Sheet title="Keyboard shortcuts" onClose={() => setKeysHelp(false)} className="sheet--keys">
+          <dl className="keys-list">
+            {SHORTCUTS.map((k) => (
+              <div key={k.label} className="keys-row"><dt>{k.keys.map((x) => <kbd key={x}>{x}</kbd>)}</dt><dd>{k.label}</dd></div>
+            ))}
+          </dl>
         </Sheet>
       )}
       {drawer && details && <EpisodesDrawer d={details} current={ep} spoilers={prefs.hideSpoilers} onClose={() => setDrawer(false)} onPick={(sn, en) => { setDrawer(false); playEpisode(sn, en); }} />}

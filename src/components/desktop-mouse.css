@@ -1,0 +1,11 @@
+/* v1.2.8 desktop mouse: row paddles (src/components/RowPaddles.tsx). Pointer-only, never on TVs or touch. */
+.row-paddle { position: fixed; z-index: calc(var(--z-sticky) + 5); display: grid; place-items: center; width: 44px; padding: 0; border: 0; color: var(--text-1); cursor: pointer; opacity: 0; animation: paddle-in var(--dur-focus, 160ms) var(--ease-out, ease-out) forwards; }
+.row-paddle--left { background: linear-gradient(90deg, rgba(0, 0, 0, 0.82), rgba(0, 0, 0, 0.35) 70%, transparent); justify-items: start; padding-left: 6px; }
+.row-paddle--right { background: linear-gradient(270deg, rgba(0, 0, 0, 0.82), rgba(0, 0, 0, 0.35) 70%, transparent); justify-items: end; padding-right: 6px; }
+.row-paddle .icon { width: 30px; height: 30px; stroke-width: 2.5; filter: drop-shadow(0 1px 3px rgba(0, 0, 0, 0.7)); transition: transform var(--dur-focus, 160ms) var(--ease-out, ease-out); }
+.row-paddle:hover .icon { transform: scale(1.25); }
+.row-paddle:active .icon { transform: scale(1.05); }
+html[data-mode="tv"] .row-paddle { width: calc(72 * var(--tu)); }
+html[data-mode="tv"] .row-paddle .icon { width: calc(44 * var(--tu)); height: calc(44 * var(--tu)); }
+@keyframes paddle-in { to { opacity: 1; } }
+@media (prefers-reduced-motion: reduce) { .row-paddle { animation: none; opacity: 1; } .row-paddle .icon { transition: none; } }

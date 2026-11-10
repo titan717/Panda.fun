@@ -155,3 +155,5 @@ export function installKeyHandling(tv: boolean) {
 }
 
 export function setTvNavigation(tv: boolean) { tvEnabled = tv; }
+/** TV navigation state for the lazy desktop-mouse module (v1.2.8): is spatial navigation on, and the innermost focus scope. */
+export function tvNavigation() { return { enabled: tvEnabled, scope: scopeStack[scopeStack.length - 1] ?? null }; }
