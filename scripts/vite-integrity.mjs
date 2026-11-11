@@ -4,7 +4,7 @@
 //    so the strict CSP (no 'unsafe-inline') can never silently break the boot splash.
 import { createHash } from "node:crypto";
 import { readFileSync, openSync, closeSync, ftruncateSync, writeSync } from "node:fs";
-import { join } from "node:path";
+import { join, dirname } from "node:path";
 
 const digest = (alg, data) => createHash(alg).update(data).digest("base64");
 
@@ -15,15 +15,20 @@ export default function integrity({ csp = true } = {}) {
     enforce: "post",
     // writeBundle runs after every plugin has finished rewriting chunks, so the hashes match the bytes actually served.
     writeBundle(opts) {
-      const dir = opts.dir;
-      const file = join(dir, "index.html");
+      // v1.2.9: the /welcome landing page is a second HTML entry and gets the same SRI + CSP gate
+      for (const page of ["index.html", "welcome/index.html"]) gate.call(this, opts.dir, page);
+    }
+  };
+  function gate(dir, page) {
+      const file = join(dir, page);
       // one descriptor for read and rewrite: no check-then-use window on index.html
       let fd;
       try { fd = openSync(file, "r+"); } catch { return; }
       let src = readFileSync(fd, "utf8");
       const lookup = (url) => {
         if (/^[a-z]+:/i.test(url)) return null;
-        const path = join(dir, url.replace(/^\.?\//, ""));
+        // root-absolute URLs resolve from dist/, relative ones from the page's own folder
+        const path = url.startsWith("/") ? join(dir, url.slice(1)) : join(dir, dirname(page), url.replace(/^\.\//, ""));
         try { return readFileSync(path); } catch { return null; }
       };
       src = src.replace(/<(script|link)\b([^>]*?)\s(src|href)="([^"]+)"([^>]*)>/g, (tag, el, pre, attr, url, post) => {
@@ -40,10 +45,9 @@ export default function integrity({ csp = true } = {}) {
           if (kind === "script" && !body.trim()) continue;
           const token = `'sha256-${digest("sha256", body)}'`;
           const directive = policy.split(";").map((d) => d.trim()).find((d) => d.startsWith(`${kind}-src `)) ?? "";
-          if (!directive.includes(token)) { closeSync(fd); this.error(`vercel.json CSP ${kind}-src is missing ${token} for an inline <${kind}> in index.html`); }
+          if (!directive.includes(token)) { closeSync(fd); this.error(`vercel.json CSP ${kind}-src is missing ${token} for an inline <${kind}> in ${page}`); }
         }
       }
       try { ftruncateSync(fd, 0); writeSync(fd, src, 0, "utf8"); } finally { closeSync(fd); }
     }
-  };
 }

@@ -9,6 +9,7 @@ import "../styles/spoilers.css";
 import { ErrorState, Img, Skeleton, TitleArt, toast } from "../components/ui";
 import { Trailer, pickTrailer, rankTrailers } from "../components/Trailer";
 import { RatePopover, rateLabel } from "../components/RatePopover";
+import { RateEmoji } from "../components/RateEmoji";
 import { VideoOverlay } from "../components/VideoOverlay";
 import { warmPlayback } from "../lib/prefetch";
 import { whenIdle } from "../lib/lazy";
@@ -74,10 +75,10 @@ export function EpisodeList({ d, limit, onSeason }: { d: TitleDetails; limit?: n
           const pct = row.pct;
         const spoil = hideSpoiler(prefs.hideSpoilers, row.done, pct);
         return (
-          <button key={ep.id} className={`m-ep ${soon ? "is-upcoming" : ""} ${row.done ? "is-watched" : ""}`} aria-disabled={soon || undefined} onClick={() => { if (soon) toast(`Episode ${ep.number} arrives ${shortDate(ep.airDate)}`); else go(href); }}
+          <button key={ep.id} className={`m-ep ${soon ? "is-upcoming" : ""} ${row.done ? "is-watched" : ""} ${row.badge ? "is-current" : ""}`} aria-current={row.badge ? "step" : undefined} aria-disabled={soon || undefined} onClick={() => { if (soon) toast(`Episode ${ep.number} arrives ${shortDate(ep.airDate)}`); else go(href); }}
             onContextMenu={(e) => { e.preventDefault(); if (!soon) setMenu({ season: ep.season, number: ep.number, title: ep.title, done: row.done }); }}>
             <span className="m-ep-row">
-              <span className={`m-ep-still ${spoil ? "is-spoiler" : ""}`}><Img src={ep.still} alt="" title={`E${ep.number}`} />{spoil && <ExtraIcon name="eyeOff" className="spoiler-mark" />}{!soon && <Icon name="play" className="m-ep-play" />}{pct > 0 && <span className="progress"><span style={{ width: `${pct}%` }} /></span>}</span>
+              <span className={`m-ep-still ${spoil ? "is-spoiler" : ""}`}><Img src={ep.still} alt="" title={`E${ep.number}`} />{spoil && <ExtraIcon name="eyeOff" className="spoiler-mark" />}{!soon && <Icon name="play" className="m-ep-play" />}{row.badge && <span className={`ep-badge ep-badge--${row.badge}`}>{row.badge === "next" ? "Up next" : "Continue"}</span>}{row.done && <span className="ep-done" aria-label="Watched"><Icon name="check" /></span>}{pct > 0 && <span className="progress"><span style={{ width: `${pct}%` }} /></span>}</span>
               <span className="m-ep-text">
                 <span className="m-ep-title">{ep.number}. {ep.title}</span>
                 <span className="m-ep-meta">{soon ? `Coming ${shortDate(ep.airDate)}` : [`S${ep.season} E${ep.number}`, row.done ? null : shortDate(ep.airDate), row.left ? `${row.left}m left` : runtime(ep.runtime)].filter(Boolean).join(" • ")}{row.done && <span className="ep-watched"><Icon name="check" /> Watched</span>}</span>
@@ -183,9 +184,9 @@ function MDetailsView({ d }: { d: TitleDetails }) {
             : <button disabled={!trailerKey} onClick={() => trailerKey && setVideo({ key: trailerKey, name: `${d.title} — Trailer` })}><Icon name="movie" size={22} /><span>Trailer</span></button>}
           <div className="m-rate-wrap">
             <button className={rating ? "is-on" : ""} onClick={() => setRateOpen((o) => !o)} aria-haspopup="menu" aria-expanded={rateOpen}>
-              <Icon name={rating === "dislike" ? "thumbDown" : rating === "like" ? "thumbUp" : "heart"} filled={Boolean(rating)} size={22} /><span>{rating ? "Rated" : "Rate"}</span>
+              {rating ? <RateEmoji kind={rating} size={22} /> : <Icon name="heart" size={22} />}<span>{rating ? "Rated" : "Rate"}</span>
             </button>
-            {rateOpen && <RatePopover itemId={d.id} current={rating} onClose={() => setRateOpen(false)} className="rate-pop--m" />}
+            {rateOpen && <RatePopover itemId={d.id} current={rating} onClose={() => setRateOpen(false)} variant="m" />}
           </div>
         </div>
         {rating && <p className="sr-only">{rateLabel(rating)}</p>}

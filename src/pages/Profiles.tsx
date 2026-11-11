@@ -12,12 +12,13 @@ import { PosterWall } from "../components/PosterWall";
 import { focusFirst } from "../lib/focus";
 import { useNav } from "../lib/nav";
 import { useIsTv } from "../lib/layout";
+import { whoDone } from "../lib/launch";
 
 // the PIN pad, its hash check and lockout load on demand (v1.2.7)
 const PinDialog = lazyNamed(() => import("../components/PinDialog"), "PinDialog");
 
 /** "Who's watching?" (spec 3). */
-export function ProfileSelect() {
+export function ProfileSelect({ stay = false }: { stay?: boolean }) {
   const profiles = useStore((s) => s.profiles);
   const current = useProfile();
   const [chosen, setChosen] = useState<string | null>(null);
@@ -41,7 +42,8 @@ export function ProfileSelect() {
       if (h) void preload(keys.title(h.type, h.tmdbId), fetcher);
     }).catch(() => undefined);
     void loadYouTubeApi().catch(() => undefined);
-    setTimeout(() => go("/", { replace: true }), reduce ? 0 : 560);
+    // a fresh start opened on a deep link (or a notification) stays on it; otherwise Home
+    setTimeout(() => { whoDone(); if (!stay) go("/", { replace: true }); }, reduce ? 0 : 560);
   };
   const choose = (p: Profile) => {
     if (current?.kids && !p.kids && getState().prefs.kidsPin) { setPinFor(p); return; }

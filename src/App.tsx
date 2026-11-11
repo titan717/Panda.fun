@@ -14,12 +14,13 @@ import { BUILD_TARGET } from "./lib/nav";
 import { getState, usePrefs, useProfile, useStore } from "./lib/store";
 import { notifyPermission, setNotifyNavigator, takeLaunchPath } from "./lib/notify";
 import { exitApp, isAndroidApp, native } from "./lib/native";
-import { useOnline, useReducedMotion } from "./lib/hooks";
+import { useOnline } from "./lib/hooks";
 import { takeUpdateNotice } from "./lib/updates";
 import { ErrorBoundary, OfflineBanner, Toasts, toast } from "./components/ui";
-import { PandaMark, Wordmark } from "./components/Icon";
 import { ProfileSelect } from "./pages/Profiles";
 import { lazyNamed, whenIdle } from "./lib/lazy";
+import { useWhoPending } from "./lib/launch";
+import { Intro, useIntro } from "./components/Intro";
 import type { MediaType, PageKind } from "./lib/types";
 
 const loadTv = () => import("./tv");
@@ -112,27 +113,6 @@ function useLayoutMode(): LayoutMode {
     setTvNavigation(mode === "tv");
   }, [mode]);
   return mode;
-}
-
-function Splash({ leaving }: { leaving: boolean }) {
-  return (
-    <div className={`splash ${leaving ? "is-leaving" : ""}`} role="status" aria-label="Loading Panda.fun">
-      <PandaMark size={96} className="splash-mark" />
-      <Wordmark className="splash-word" />
-    </div>
-  );
-}
-
-function useSplash() {
-  const reduce = useReducedMotion();
-  const [phase, setPhase] = useState<"show" | "leave" | "done">(() => (sessionStorage.getItem("panda:splash") ? "done" : "show"));
-  useEffect(() => {
-    if (phase === "done") return;
-    const a = setTimeout(() => setPhase("leave"), reduce ? 300 : 1400);
-    const b = setTimeout(() => { setPhase("done"); sessionStorage.setItem("panda:splash", "1"); }, reduce ? 400 : 1800);
-    return () => { clearTimeout(a); clearTimeout(b); };
-  }, [phase, reduce]);
-  return phase;
 }
 
 /** Background check for new app releases when the user opted into notifications. */
@@ -245,8 +225,11 @@ function Routes({ mode }: { mode: LayoutMode }) {
   useEffect(() => { if (profile && launch.current) { const p = launch.current; launch.current = null; navigate(p); } }, [profile, navigate]);
 
   const [notice, setNotice] = useState<string | null>(takeUpdateNotice);
-  const needsProfile = !profile && !PUBLIC_PATHS.includes(location) && !location.startsWith("/profiles");
-  if (needsProfile) return <ProfileSelect />;
+  const askWho = useWhoPending();
+  const hasProfiles = useStore((s) => s.profiles.length > 0);
+  const needsProfile = (!profile || (askWho && hasProfiles)) && !PUBLIC_PATHS.includes(location) && !location.startsWith("/profiles");
+  // v1.2.9: a fresh start asks "Who's watching?" first and then opens the screen it was started on
+  if (needsProfile) return <ProfileSelect stay={Boolean(profile)} />;
 
   if (location.startsWith("/watch/")) {
     return (
@@ -309,7 +292,7 @@ function Routes({ mode }: { mode: LayoutMode }) {
 export function App() {
   const mode = useLayoutMode();
   useDisplayPrefs(mode);
-  const splash = useSplash();
+  const intro = useIntro(mode === "tv");
   useReleaseNotifications();
   useEpisodeAlerts();
   const routerProps = BUILD_TARGET === "android" ? { hook: useHashLocation } : {};
@@ -322,7 +305,7 @@ export function App() {
           </Router>
           <Toasts />
           <ReconnectRecovery />
-          {splash !== "done" && <Splash leaving={splash === "leave"} />}
+          {intro.phase !== "done" && <Intro tv={mode === "tv"} phase={intro.phase} skip={intro.skip} reduce={intro.reduce} />}
         </div>
       </LayoutContext.Provider>
     </SWRConfig>

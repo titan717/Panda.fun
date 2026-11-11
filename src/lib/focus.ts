@@ -78,17 +78,38 @@ export function trackLeft(el: HTMLElement, row: HTMLElement) {
   return x;
 }
 
+/**
+ * Scroll a TV rail so `anchor` leads it. Measured on the next frame: focus re-renders the cards (the card that
+ * lost focus shrinks back to a poster, the new one widens), and measuring before that commit overshot the row by
+ * the width the old card gives back. The frame runs before paint, so the row never shows the wrong position.
+ */
+function leadRow(row: HTMLElement, anchor: HTMLElement, pad: number) {
+  const run = () => {
+    if (!row.isConnected || !anchor.isConnected) return;
+    const left = Math.max(0, trackLeft(anchor, row) - pad);
+    if (Math.abs(row.scrollLeft - left) > 1) row.scrollTo({ left, behavior: "auto" });
+  };
+  if (typeof requestAnimationFrame === "function") requestAnimationFrame(run); else run();
+}
+
 /** Keep the focused element visible inside horizontal rows and the vertical page scroller. */
 export function revealFocus(el: HTMLElement) {
   const behavior: ScrollBehavior = matchMedia("(prefers-reduced-motion: reduce)").matches ? "auto" : "smooth";
   const row = el.closest<HTMLElement>("[data-scroll-x]");
   if (row) {
     const cs = getComputedStyle(row), pad = parseFloat(cs.paddingLeft) || 0;
+    // v1.2.9 TV rails: the focused card leads the row. Right slides the card that had focus out past the left edge,
+    // Left brings it back; the jump is instant, like the card's own resize, so the row never lags the remote.
+    const tvRail = document.documentElement.dataset.mode === "tv" && row.dataset.scrollX !== "edge";
+    // a Top 10 card leads with its numeral
+    const anchor = tvRail ? el.closest<HTMLElement>(".tv-card-wrap") ?? el : el;
     // measure against the row itself: cards may sit in a positioned wrapper (Top 10 rank), so offsetLeft is not row-relative
-    const start = trackLeft(el, row) - pad;
+    const start = trackLeft(anchor, row) - pad;
     // the right padding is the overscan-safe margin: a focused card never ends inside it
-    const over = start + pad + el.offsetWidth + (parseFloat(cs.paddingRight) || pad) - row.clientWidth;
-    if (row.dataset.scrollX === "start" || start < row.scrollLeft) row.scrollTo({ left: Math.max(0, start), behavior });
+    const over = start + pad + anchor.offsetWidth + (parseFloat(cs.paddingRight) || pad) - row.clientWidth;
+    if (tvRail) leadRow(row, anchor, pad);
+    else if (row.dataset.scrollX === "start") row.scrollTo({ left: Math.max(0, start), behavior });
+    else if (start < row.scrollLeft) row.scrollTo({ left: Math.max(0, start), behavior });
     else if (over > row.scrollLeft) row.scrollTo({ left: over, behavior });
   }
   const page = el.closest<HTMLElement>("[data-scroll-y]");
@@ -99,6 +120,19 @@ export function revealFocus(el: HTMLElement) {
     const top = rect.top - box.top + page.scrollTop;
     if (page.dataset.scrollY === "row" || rect.top < box.top + 8 || rect.bottom > box.bottom - 8) page.scrollTo({ top: Math.max(0, top - offset), behavior });
   }
+}
+
+/**
+ * v1.2.9: side zones (the TV sidebar, `data-nav-side`) are entered only sideways. The sidebar spans the full
+ * screen height, so for Up/Down lrud-spatial often scored one of its items closer than the next content row
+ * (Details: Watch Now ↓ landed on the sidebar instead of the tabs; Categories did the same). Vertical moves
+ * from the content now ignore side zones; when nothing lies below or above, focus stays where it is.
+ */
+export function nextFocus(from: HTMLElement, key: string, code: number, scope: HTMLElement) {
+  if (key !== "up" && key !== "down") return getNextFocus(from, code, scope);
+  const sides = Array.from(scope.querySelectorAll<HTMLElement>("[data-nav-side]")).filter((z) => !z.contains(from) && !z.classList.contains("lrud-ignore"));
+  for (const z of sides) z.classList.add("lrud-ignore");
+  try { return getNextFocus(from, code, scope); } finally { for (const z of sides) z.classList.remove("lrud-ignore"); }
 }
 
 function onKeyDown(e: KeyboardEvent) {
@@ -123,7 +157,7 @@ function onKeyDown(e: KeyboardEvent) {
     const from = active && active !== document.body && scope.contains(active) ? active : null;
     e.preventDefault();
     if (!from) { focusFirst(scope); return; }
-    const next = getNextFocus(from, code, scope);
+    const next = nextFocus(from, key, code, scope);
     if (next && !next.closest("[inert]")) focusEl(next);
     return;
   }

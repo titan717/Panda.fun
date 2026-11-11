@@ -2,6 +2,16 @@
 
 Measured on every release. Never regress.
 
+## v1.2.9 (launch, D-pad, CineSrc server memory, rating, landing page)
+
+| Metric | Value |
+|---|---|
+| Entry chunk (gzip) | 24,098 B at gzip -9 (v1.2.8 23,475 B, +623 B): the new launch intro (it has to paint before anything else, so it stays in the entry), the launch / Who's watching logic and the shared `nextFocus()` navigation. The old splash code it replaces was removed. |
+| Entry CSS (gzip) | 16,183 B (v1.2.8 14,675 B, +1,508 B): intro styles (phone ring turn, TV particles stage), the rating faces and the episode badges, which are used on Home-adjacent screens. The old splash CSS was removed. |
+| Intro cost | Phone: CSS transforms only, about 1.2 s. TV: one half-resolution 2D canvas with 90 particles, about 2.4 s, stopped and removed when it ends. Reduced motion: 450 ms fade. Skippable with any key, click or tap. |
+| TV rows | The focused card changes size with no width transition (box-shadow only), and the row lead is measured once per animation frame. |
+| Landing page `/welcome` | Separate HTML entry that never loads the app: 2,338 B JS + 5,582 B CSS gzip + 4.8 KB HTML. Screenshots are WebP (355 KB for five). three.js (131,649 B gzip, `panda3d` chunk) loads only after `load` and an idle callback, only with WebGL and without Save-Data; DPR capped at 1.75 (1.5 on phones), rendering pauses off screen and in background tabs, and Reduce motion renders one still frame. Release info is cached per tab for 30 minutes. |
+
 ## v1.2.8 (desktop mouse, player shortcuts, touch targets)
 
 | Metric | Value |

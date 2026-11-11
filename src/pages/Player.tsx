@@ -29,7 +29,7 @@ import { navKey } from "../lib/keys";
 import type { TvChromeProps } from "../tv/TvPlayerChrome";
 import { lazyNamed } from "../lib/lazy";
 import { api } from "../lib/api";
-import { ADAPTERS, embedUrl, parseMessage, READY_TIMEOUT_MS, sendCommand, sourceName, SOURCE_ORDER } from "../lib/player";
+import { ADAPTERS, embedUrl, parseMessage, READY_TIMEOUT_MS, rememberCineServer, sendCommand, sourceName, SOURCE_ORDER } from "../lib/player";
 import { COMPAT, lastResortOnly, nativeShield, rankSources, recordPlay, SANDBOX, setShieldSource, shieldStats, syncNative } from "../lib/shield";
 import { episodeRow, hideSpoiler, nextEpisodeOf, prevEpisodeOf } from "../lib/watch";
 import { airsLater, playClock, pluralEps, runtime, titlePath, watchPath } from "../lib/format";
@@ -93,7 +93,9 @@ function Player({ type, id, season, episode, start }: { type: MediaType; id: num
   const play = useSWR<PlaybackPayload>(keys.play(type, id, isTv ? { s: season, e: episode, t: start || undefined } : { t: start || undefined }), { revalidateOnFocus: false, revalidateIfStale: false, dedupingInterval: 0 });
 
   // v1.2.0: anime titles also ask the backend for Vidy's AniList-keyed anime player
-  const anime = isAnimeTitle(details);
+  // v1.2.9: on the TV app CineSrc is the only player for series episodes, so the anime catalogue is not asked for
+  const cineOnly = tv && isTv;
+  const anime = isAnimeTitle(details) && !cineOnly;
   const animePlay = useSWR<PlaybackPayload>(anime ? keys.play(type, id, isTv ? { s: season, e: episode, t: start || undefined, anime: 1 } : { t: start || undefined, anime: 1 }) : null, { revalidateOnFocus: false, revalidateIfStale: false, dedupingInterval: 0 });
   // the start order is frozen when the sources arrive, so a late ranking never swaps a loading source
   const rankingSwr = useSourceRanking();
@@ -109,8 +111,9 @@ function Player({ type, id, season, episode, start }: { type: MediaType; id: num
   const sources = useMemo(() => {
     const list = [...(playData?.sources ?? [])];
     for (const s of animePlay.data?.sources ?? []) if (!list.some((x) => x.id === s.id)) list.push(s);
-    return rankSources(list, order, { tv });
-  }, [playData, animePlay.data, order, tv]);
+    const ranked = rankSources(list, order, { tv });
+    return cineOnly ? ranked.filter((x) => x.id === "cinesrc") : ranked;
+  }, [playData, animePlay.data, order, tv, cineOnly]);
   const rankingFor = ranking;
   // an explicit preference is honoured as before (the ad-shield rules still apply, D-94); Automatic picks the first ranked source
   const [sourceId, setSourceId] = useState<SourceId | null>(() => { const p = getPrefs().preferredSource; return p === "auto" ? null : p; });
@@ -164,9 +167,11 @@ function Player({ type, id, season, episode, start }: { type: MediaType; id: num
   /* ---- v1.2.4 player states: buffering, stall recovery, resume prompt, TTFF ---- */
   const ticks = useRef(new TickWatch());
   const firstFrame = useRef(false);
+  const cineServer = useRef<string | null>(null);
   const [buffering, setBuffering] = useState(false);
   const [stall, setStall] = useState<number | null>(null);
   const [nonce, setNonce] = useState(0);
+  const [dead, setDead] = useState<string | null>(null);
   const [resumeAsk, setResumeAsk] = useState(start > 30);
   const pos = useRef({ position: start, duration: 0, dirty: false });
   const hideTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -278,7 +283,8 @@ function Player({ type, id, season, episode, start }: { type: MediaType; id: num
       setReady(false);
       setSourceId(nextSrc.id);
     } else {
-      toast(reason);
+      // v1.2.9: every source has been tried: say so on screen instead of leaving the loading card up
+      setDead(reason);
     }
   }, [source, sources, type, id, isTv]);
 
@@ -343,6 +349,8 @@ function Player({ type, id, season, episode, start }: { type: MediaType; id: num
           break;
         case "skipintro": setIntroSkipped(true); lastTime.current = ev.to; toast("Intro skipped", 1600); break;
         case "rate": break;
+        // v1.2.9: keep the server only once it really plays (below), so a server that fails is never preferred
+        case "server": cineServer.current = ev.id; if (firstFrame.current) rememberCineServer(ev.id); break;
         case "play": setReady(true); setPaused(false); reportOk(); caps.clock.current = { ...caps.clock.current, at: performance.now(), playing: true }; break;
         case "pause": setPaused(true); caps.clock.current = { ...caps.clock.current, position: clockAt(caps.clock.current, performance.now()), at: performance.now(), playing: false }; break;
         case "volume": setMuted(ev.muted); break;
@@ -351,7 +359,7 @@ function Player({ type, id, season, episode, start }: { type: MediaType; id: num
           ticks.current.tick(performance.now());
           if (buffering) setBuffering(false);
           if (stall !== null) setStall(null);
-          if (!firstFrame.current && ev.position > 0 && loadedAt.current) { firstFrame.current = true; recordTtff(source.id, Date.now() - loadedAt.current); }
+          if (!firstFrame.current && ev.position > 0 && loadedAt.current) { firstFrame.current = true; recordTtff(source.id, Date.now() - loadedAt.current); if (cineServer.current) rememberCineServer(cineServer.current); }
           caps.clock.current = { position: ev.position, at: performance.now(), playing: true, rate: getPrefs().playbackSpeed };
           if (ev.position > 1) reportOk();
           if (ev.duration > 0) {
@@ -510,6 +518,15 @@ function Player({ type, id, season, episode, start }: { type: MediaType; id: num
     void api.report({ type, tmdbId: id, season: isTv ? ep.s : undefined, episode: isTv ? ep.e : undefined, source: source.id, issue: "noplay", position: Math.floor(pos.current.position) }).catch(() => undefined);
     if (n) switchSource(n.id); else retryStall();
   }
+  const failed = !play.error && Boolean(dead || (playData && !sources.length));
+  useEffect(() => { setDead(null); }, [playData]);
+  // the remote lands on Retry as soon as the failure panel appears
+  useEffect(() => { if (failed) requestAnimationFrame(() => focusEl(root.current?.querySelector<HTMLElement>(".player-failed button"))); }, [failed]);
+  /** v1.2.9 failure panel: start over from the first source. */
+  const retryAll = () => {
+    tried.current.clear(); setDead(null); setStall(null); setBuffering(false); ticks.current.reset();
+    setReloadAt(pos.current.position || null); setReady(false); setSourceId(sources[0]?.id ?? null); setNonce((n) => n + 1);
+  };
   const startOver = () => {
     setResumeAsk(false);
     pos.current = { ...pos.current, position: 0, dirty: true };
@@ -730,6 +747,12 @@ function Player({ type, id, season, episode, start }: { type: MediaType; id: num
   return (
     <div ref={root} className={`player ${overlay ? "is-overlay" : ""} ${tv ? "player--tv" : "player--touch"} ${pip ? "is-pip" : ""}`} onKeyDown={onKeyDown} onMouseMove={poke} role="application" aria-label={`Playing ${title}`}>
       {play.error && !play.data && <div className="player-center"><ErrorState message={play.error.message} onRetry={() => play.mutate()} /></div>}
+      {failed && (
+        <div className="player-center player-failed lrud-container" role="alertdialog" aria-label="Playback problem">
+          <ErrorState message={dead ?? (cineOnly ? "CineSrc has no stream for this episode right now." : "No source has this title right now.")} onRetry={sources.length ? retryAll : () => { void play.mutate(); }} />
+          <button id="pl-failed-back" className="btn" data-hover-focus onClick={exit}><Icon name="back" /> Back</button>
+        </div>
+      )}
       {src && source && (
         <iframe key={frameKey} ref={frame} className={`player-frame ${isolated ? "is-isolated" : ""}`} src={src} style={scale.x !== 1 || scale.y !== 1 ? { transform: `scale(${scale.x.toFixed(4)}, ${scale.y.toFixed(4)})` } : undefined} title={`${title} — ${SHORT[source.id]}`}
           {...(SANDBOX[source.id]?.attr ? { sandbox: SANDBOX[source.id]!.attr! } : {})} data-sandbox={SANDBOX[source.id]?.id ?? "none"}
@@ -762,7 +785,7 @@ function Player({ type, id, season, episode, start }: { type: MediaType; id: num
           <button id="pl-resume-over" className="btn" data-hover-focus onClick={startOver}><Icon name="replay10" /> Start over</button>
         </div>
       )}
-      {!play.error && (!ready || loadingFade) && (
+      {!play.error && !failed && (!ready || loadingFade) && (
         <PlayerLoading backdrop={details?.backdropLarge} title={title} line={isTv ? episodeLine(ep.s, ep.e, epInfo?.title) : null} sourceId={source?.id ?? null} ready={ready} touch={!tv} onBack={exit} />
       )}
       <div className="player-hotzone" onMouseEnter={poke} aria-hidden="true" />

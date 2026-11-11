@@ -2,6 +2,19 @@
 
 Every stable release of Panda.fun. The same notes ship in each GitHub Release and in Settings › What's New.
 
+## 1.2.9
+
+- **Who's watching? on every start**: opening the app (or a new browser tab) now asks who is watching, even when you open a link straight to a title. Moving between screens, coming back to Home, reloading the page, rotating the phone or Android recreating the screen never asks again. Profiles, lists and progress are never cleared.
+- **New launch intros**: phones get a quick, minimal 3D turn of the Panda mark (about 1.2 s); TVs get a grander version with drifting particles, a camera push and a light sweep (about 2.4 s). Any key, click or tap skips it, and Reduce motion shortens it to a simple fade.
+- **D-pad that goes where you look**: on a title's page, Down from Watch Now moves to the tabs and More Like This, and on Categories it moves to the next row; focus no longer jumps to the side rail. The fix is in the shared navigation code, so every screen benefits.
+- **TV rows that lead**: the focused card on Home changes size immediately and sits at the start of its row; moving Right hides the card on the left, moving Left brings it back.
+- **A softer focus edge**: the TV focus border is now a soft silver instead of bright white, easier on the eyes in a dark room.
+- **CineSrc remembers the fastest server**: the player now notes which CineSrc server actually started playing and asks CineSrc to try that one first next time (`prioritize=true&lastserver=<server>`), checked against the real embed. On TV, episodes play from CineSrc only; phones keep the current CineSrc behaviour and sources.
+- **Clear player failures**: when no source can start, the player shows a "Couldn't play this" panel with Retry and Back instead of loading forever.
+- **New rating**: Love, Like and Not for me with animated faces. On TV a large vertical card next to the button; on phones a horizontal row above the content. A second tap while saving is ignored, a failed save says so, and tapping your current rating removes it.
+- **Episodes that show your place**: "Up next" and "Continue" badges, a check on finished episodes, the current episode highlighted and runtimes on TV. The selected season gets a clearer marker and the title page artwork eases in.
+- **New landing page at /welcome on the web app**: panda.fun by titan717, with a 3D panda (with a static picture when 3D is off or unsupported), real screenshots, the APK's real version and size from GitHub, and a four-step install guide.
+
 ## 1.2.8
 
 - **Rows you can scroll with a mouse**: on a computer, rest the pointer on any row and arrows appear at its edges. Click one to move the row by a page, so every card is reachable without a keyboard. The arrows only show on the side that has more to see, and never on TVs or phones.

@@ -61,6 +61,7 @@ export type PlayerEvent =
   | { kind: "close" }
   | { kind: "skipintro"; to: number }
   | { kind: "rate"; rate: number }
+  | { kind: "server"; id: string }
   | { kind: "error"; message: string };
 
 function originMatches(source: PlaybackSource, origin: string) {
@@ -91,6 +92,8 @@ export function parseMessage(source: PlaybackSource, origin: string, raw: unknow
       case "cinesrc:skipintro": return { kind: "skipintro", to: Number(p.time) || 0 };
       case "cinesrc:ratechange": return { kind: "rate", rate: Number(p.playbackRate) || 1 };
       case "cinesrc:error": return { kind: "error", message: String(p.error ?? "Playback error") };
+      // v1.2.9: the server CineSrc picked; remembered so the next play starts on it (see lastCineServer)
+      case "cinesrc:sourceused": { const sid = String(p.sourceId ?? ""); return SERVER_ID.test(sid) ? { kind: "server", id: sid } : null; }
     }
     return null;
   }
@@ -123,6 +126,21 @@ export function sendCommand(frame: HTMLIFrameElement | null, source: PlaybackSou
   return true;
 }
 
+/** CineSrc server ids are short tokens ("febbox", "server-2"…); anything else is ignored. */
+const SERVER_ID = /^[A-Za-z0-9_.-]{1,40}$/;
+const SERVER_KEY = "panda:cinesrc:server";
+
+/** The CineSrc server that last started playback on this device, or null. */
+export function lastCineServer(): string | null {
+  try { const v = localStorage.getItem(SERVER_KEY); return v && SERVER_ID.test(v) ? v : null; } catch { return null; }
+}
+
+/** Remember the server that is playing now (from cinesrc:sourceused, once playback has started). */
+export function rememberCineServer(id: string) {
+  if (!SERVER_ID.test(id)) return;
+  try { localStorage.setItem(SERVER_KEY, id); } catch { /* storage full or blocked: the next play simply auto-picks */ }
+}
+
 /**
  * Final iframe URL: Panda's own chrome replaces the embed's controls where the adapter allows it.
  * `start` re-opens at a position (quality / controls changes reload the embed); `quality` is the
@@ -135,6 +153,12 @@ export function embedUrl(source: PlaybackSource, o: { customChrome: boolean; sta
     // "Start over": drop the resume position the backend put in the URL
     if (o.start === 0) for (const k of ["t", "progress", "startAt"]) u.searchParams.delete(k);
     if (source.events === "cinesrc") {
+      // v1.2.9: start on the server that played last time. CineSrc documents `prioritize=true` ("prioritize the last
+      // used server on load") and `lastserver=<server id>` ("server ID to use as the preferred server"); `lastserver`
+      // takes an id, not true/false, so Panda passes the id CineSrc reported in its last cinesrc:sourceused event.
+      u.searchParams.set("prioritize", "true");
+      const server = lastCineServer();
+      if (server) u.searchParams.set("lastserver", server); else u.searchParams.delete("lastserver");
       u.searchParams.set("autonext", "false");
       u.searchParams.set("back", "close");
       if (o.customChrome) u.searchParams.set("controls", "false");

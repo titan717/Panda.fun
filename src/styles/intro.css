@@ -1,0 +1,47 @@
+/* ---------- v1.2.9 launch intros (directive §5) ---------- */
+.intro { position: fixed; inset: 0; z-index: var(--z-splash); display: grid; place-items: center; overflow: hidden; background: radial-gradient(120% 90% at 50% 40%, #0d1a3f 0%, #070912 55%, #030409 100%); color: #e9f1fb; transition: opacity 300ms var(--ease-out); cursor: default; }
+.intro.is-leaving { opacity: 0; pointer-events: none; }
+.intro-stage { position: relative; display: flex; flex-direction: column; align-items: center; perspective: 900px; }
+.intro-rig { position: relative; display: grid; place-items: center; width: 34vmin; height: 34vmin; transform-style: preserve-3d; }
+.intro-mark { position: relative; z-index: 2; width: 15vmin; height: 15vmin; filter: drop-shadow(0 1.4vmin 2.6vmin rgba(0, 0, 0, 0.55)); }
+.intro-ring { position: absolute; inset: 0; border-radius: 50%; border: 1px solid rgba(255, 255, 255, 0.16); background: radial-gradient(circle, rgba(255, 255, 255, 0.04), transparent 70%); }
+.intro-ring--a { border-color: rgba(57, 255, 136, 0.5); inset: 10%; }
+.intro-ring--b { border-color: rgba(155, 92, 255, 0.45); inset: 4%; }
+.intro-ring--c { border-color: rgba(43, 212, 214, 0.35); inset: -4%; }
+.intro-glow { position: absolute; inset: 18%; border-radius: 50%; background: radial-gradient(circle, rgba(57, 255, 136, 0.35), rgba(155, 92, 255, 0.12) 55%, transparent 72%); filter: blur(2vmin); }
+.intro-word { margin-top: 2.6vmin; font-size: 7.4vmin; font-weight: var(--fw-bold); letter-spacing: -0.02em; line-height: 1; }
+.intro-word em { font-style: normal; color: #39ff88; }
+.intro-tag { margin-top: 1.8vmin; font-size: 2.2vmin; letter-spacing: 0.32em; text-transform: uppercase; color: rgba(214, 226, 240, 0.7); }
+
+/* phone: a fast 3D turn through the rings, then the wordmark rises */
+.intro--m .intro-rig { animation: im-turn 820ms cubic-bezier(.2, .8, .2, 1) both; }
+.intro--m .intro-ring--a { animation: im-ring 820ms cubic-bezier(.2, .8, .2, 1) both; --rx: 64deg; }
+.intro--m .intro-ring--b { animation: im-ring 820ms 60ms cubic-bezier(.2, .8, .2, 1) both; --rx: -58deg; }
+.intro--m .intro-ring--c { animation: im-ring 820ms 120ms cubic-bezier(.2, .8, .2, 1) both; --rx: 72deg; }
+.intro--m .intro-word { animation: i-rise 520ms 300ms var(--ease-out) both; }
+@keyframes im-turn { from { opacity: 0; transform: rotateY(-70deg) rotateX(18deg) scale(0.7); } }
+@keyframes im-ring { from { opacity: 0; transform: rotateX(var(--rx)) scale(0.6); } to { transform: rotateX(var(--rx)) rotateY(20deg); } }
+@keyframes i-rise { from { opacity: 0; transform: translateY(1.8vmin); filter: blur(4px); } }
+
+/* TV: particles + a slow camera push through depth layers + a light sweep */
+.intro-dust { position: absolute; inset: 0; width: 100%; height: 100%; opacity: 0.9; }
+.intro--tv::after { content: ""; position: absolute; inset: 0; pointer-events: none; background: radial-gradient(70% 60% at 50% 50%, transparent 40%, rgba(0, 0, 0, 0.65)); }
+.intro--tv .intro-stage { animation: it-camera 2300ms cubic-bezier(.25, .7, .2, 1) both; }
+.intro--tv .intro-rig { width: 40vmin; height: 40vmin; animation: it-orbit 2300ms cubic-bezier(.25, .7, .2, 1) both; }
+.intro--tv .intro-mark { width: 17vmin; height: 17vmin; animation: it-mark 1100ms 150ms cubic-bezier(.2, .9, .3, 1.2) both; }
+.intro--tv .intro-ring--a { animation: it-ring 2300ms both; --rx: 70deg; --ry: 0deg; }
+.intro--tv .intro-ring--b { animation: it-ring 2300ms 80ms both; --rx: 70deg; --ry: 60deg; }
+.intro--tv .intro-ring--c { animation: it-ring 2300ms 160ms both; --rx: 70deg; --ry: -60deg; }
+.intro--tv .intro-word { position: relative; font-size: 9vmin; animation: i-rise 700ms 700ms var(--ease-out) both; background: linear-gradient(100deg, #e9f1fb 40%, #ffffff 50%, #e9f1fb 60%); background-size: 300% 100%; -webkit-background-clip: text; background-clip: text; }
+.intro--tv .intro-word span { color: transparent; animation: it-sweep 1400ms 900ms ease-in-out both; background: inherit; -webkit-background-clip: text; background-clip: text; }
+.intro--tv .intro-tag { animation: i-rise 700ms 1100ms var(--ease-out) both; }
+@keyframes it-camera { from { transform: translateZ(0) scale(1.35); filter: blur(6px); } 35% { filter: blur(0); } to { transform: scale(1); } }
+@keyframes it-orbit { from { transform: rotateX(28deg) rotateY(-40deg); } to { transform: rotateX(0) rotateY(0); } }
+@keyframes it-mark { from { opacity: 0; transform: translateZ(-300px) rotateY(-120deg); } }
+@keyframes it-ring { from { opacity: 0; transform: rotateX(var(--rx)) rotateY(var(--ry)) rotateZ(0) scale(0.4); } 40% { opacity: 1; } to { transform: rotateX(var(--rx)) rotateY(var(--ry)) rotateZ(240deg) scale(1); } }
+@keyframes it-sweep { from { background-position: 100% 0; } to { background-position: 0 0; } }
+
+/* reduced motion: a still mark, no particles, no camera */
+.intro--still *, .intro--still .intro-stage { animation: none !important; }
+.intro--still .intro-ring { display: none; }
+@media (prefers-reduced-motion: reduce) { .intro *, .intro .intro-stage { animation: none !important; } }

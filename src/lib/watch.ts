@@ -29,7 +29,11 @@ export function episodeRow(h: HistoryEntry | null, tmdbId: number, season: numbe
   const resumable = !!ep && !ep.done && ep.p > 30;
   const pct = ep?.done ? 100 : resumable && ep.d ? Math.min(100, (ep.p / ep.d) * 100) : 0;
   const left = resumable && ep.d > ep.p ? Math.max(1, Math.round((ep.d - ep.p) / 60)) : 0;
-  return { href: resumable ? `${base}&t=${ep.p}` : base, pct, done: !!ep?.done, left };
+  // v1.2.9 episode cards: the episode the profile is on wears "Up next" (queued after a finished one) or
+  // "Continue" (started, not finished)
+  const here = !!h && h.season === season && h.episode === episode && !h.completed;
+  const badge: "next" | "current" | null = here ? (h.upNext ? "next" : resumable ? "current" : null) : null;
+  return { href: resumable ? `${base}&t=${ep.p}` : base, pct, done: !!ep?.done, left, badge };
 }
 
 /** Primary + optional secondary CTA for the details screens (spec 7.5, 14.4). */

@@ -30,7 +30,8 @@ async function shell(req) {
   const cache = await caches.open(SHELL);
   try {
     const res = await Promise.race([fetch(req), new Promise((_, rej) => setTimeout(() => rej(new Error("slow")), 3000))]);
-    if (res.ok) cache.put("/", res.clone());
+    // only the app's own pages refresh the offline shell; the /welcome landing page is a separate document (v1.2.9)
+    if (res.ok && !new URL(req.url).pathname.startsWith("/welcome")) cache.put("/", res.clone());
     return res;
   } catch {
     return (await cache.match("/")) || fetch(req);

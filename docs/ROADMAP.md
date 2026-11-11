@@ -13,7 +13,7 @@ v1.0.0–v1.0.9 rebuild, player, Android shell, updater, perf 1–2 · v1.1.0–
 | v1.2.6 | Anime source research (≥10, docs/ANIME_SOURCES.md), sub/dub choice | Anime: skip intro/recap/credits where sources report them |
 | v1.2.7 | Player overhaul 2 (mobile): gestures, lock, panels, landscape layout | Mobile chrome to blueprint |
 | v1.2.8 | **Shipped as a UI/UX pass** (desktop mouse paddles and wheel, player keyboard shortcuts, phone touch targets); code review 1 moves to v1.2.9 with it. Code review 1 (docs/CODE_REVIEW.md), dead code, error boundaries | Player error paths |
-| v1.2.9 | Refine pages 1 + TV sidebar exactly like the blueprint | Next-episode 10 s ring |
+| v1.2.9 | **Shipped** (master directive): fresh-start Who's watching, new intros, shared D-pad rule, TV row lead and silver focus, CineSrc server memory and TV CineSrc-only episodes, failure panel, new rating, episode badges, `/welcome` landing page. Refine pages 1 + TV sidebar move to v1.3.0 | Next-episode 10 s ring (exists since v1.0.x; unchanged) |
 | v1.3.0 | Refine pages 2 + customization 1 | Player panel motion 200–240 ms |
 | v1.3.1 | Replaces "phone remote/QR/share" (shipped in v1.2.4): **Watch history 2.0** — per-episode history, rewatch, remove, timeline, export | Resume across devices via sync |
 | v1.3.2 | Smarter discovery | Recommendations at the end card |

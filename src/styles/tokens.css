@@ -34,7 +34,8 @@
   --tv-bg-deep: #000000;
   --tv-bg-gradient: #000000;
   --tv-ice: #bfe6ff;
-  --tv-ice-strong: rgba(214, 238, 255, 0.92);
+  /* v1.2.9 focus edge: the blueprint's soft silver rim (tvnewblueprint p6–p12), not a bright white or blue line */
+  --tv-ice-strong: rgba(222, 228, 237, 0.84);
   --tv-ice-soft: rgba(120, 175, 215, 0.35);
   --tv-meta: #e6ecf5;
   --tv-body: #c8d1e0;
@@ -47,7 +48,7 @@
   --tv-chip-fill: rgba(90, 160, 210, 0.35);
   --tv-divider: rgba(190, 225, 255, 0.25);
   --focus-border: 2px solid var(--tv-ice-strong);
-  --focus-glow: 0 0 0 1px rgba(150, 205, 255, 0.35), 0 0 22px rgba(110, 180, 255, 0.45);
+  --focus-glow: 0 0 0 1px rgba(8, 12, 20, 0.6), 0 12px 30px rgba(0, 0, 0, 0.5), 0 0 18px rgba(226, 232, 242, 0.2);
 
   /* 1.6 / 1.7 / 1.8 buttons */
   --brand-gradient: linear-gradient(90deg, #1b5fd6 0%, #2f6fe0 45%, #7a3fd0 78%, #d2337e 100%);
@@ -119,7 +120,7 @@
   --tv-rail-panel: linear-gradient(180deg, #0d111c 0%, #06080e 100%);
   --tv-rail-edge: rgba(190, 215, 255, 0.16);
   --tv-rail-glow: rgba(64, 120, 255, 0.45);
-  --tv-hero-border: rgba(170, 215, 255, 0.55);
+  --tv-hero-border: rgba(222, 228, 237, 0.72);
   --tv-hero-scrim: linear-gradient(0deg, rgba(5, 10, 20, 0.92) 0%, rgba(5, 10, 20, 0.55) 35%, transparent 65%);
   --tv-hero-scrim-left: linear-gradient(90deg, rgba(5, 10, 20, 0.7) 0%, transparent 55%);
   --tv-det-scrim: linear-gradient(90deg, #000000 0%, rgba(0, 0, 0, 0.92) 30%, rgba(0, 0, 0, 0.4) 55%, transparent 75%);

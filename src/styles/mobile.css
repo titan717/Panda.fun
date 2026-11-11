@@ -151,7 +151,13 @@ html[data-mode="mobile"] body { background: var(--m-bg); }
 .m-cta { display: flex; align-items: center; justify-content: center; gap: 8px; width: 100%; height: var(--m-btn-h); border-radius: var(--r-btn-m); background: var(--m-cta-bg); color: var(--m-cta-fg); font-size: 15px; font-weight: var(--fw-bold); }
 .m-cta .icon { width: 16px; height: 16px; }
 .m-rate-wrap { position: relative; }
-.rate-pop--m { right: 0; bottom: calc(100% + 6px); }
+/* phone rating row (mobile blueprint pp.26-27): emoji above labels, floating above the action bar */
+.rate-pop--m { right: -6px; bottom: calc(100% + 8px); gap: 4px; padding: 8px 6px; border-radius: 18px; background: rgba(22, 26, 36, 0.98); border: 1px solid rgba(255, 255, 255, 0.1); box-shadow: 0 14px 36px rgba(0, 0, 0, 0.55); transform-origin: 85% 100%; }
+.rate-pop--m .rate-opt { flex-direction: column; justify-content: center; gap: 6px; min-width: 76px; min-height: 72px; padding: 6px 4px; border-radius: 12px; font-size: 12px; }
+.rate-pop--m .rate-emoji { width: 34px; height: 34px; }
+.rate-pop--m .rate-opt.is-selected { background: rgba(255, 255, 255, 0.08); }
+.rate-pop--m .rate-opt:active .rate-emoji { transform: scale(1.12); }
+.m-rate-wrap .rate-emoji { margin: 0 auto; }
 .m-link { display: inline-flex; align-items: center; gap: 4px; color: var(--m-link); font-size: 13px; font-weight: var(--fw-semibold); }
 .m-link .icon { width: 14px; height: 14px; }
 
@@ -363,3 +369,8 @@ html[data-mode="mobile"] :is(.m-link, .m-head-link, .m-whats-new, .m-allow, .m-c
 html[data-mode="mobile"] :is(.m-link, .m-head-link, .m-whats-new)::after { content: ""; position: absolute; inset: -12px -8px; }
 html[data-mode="mobile"] :is(.m-chip, .m-allow)::after { content: ""; position: absolute; inset: -6px -2px; }
 html[data-mode="mobile"] .m-more { width: 36px; height: 40px; right: -8px; bottom: -4px; }
+
+/* v1.2.9 episode cards (directive §10, compact phone layout) */
+.m-ep-still { font-size: 10px; }
+.m-ep.is-current .m-ep-title { color: #fff; }
+.m-ep.is-current .m-ep-still { box-shadow: 0 0 0 2px rgba(31, 128, 224, 0.6); }

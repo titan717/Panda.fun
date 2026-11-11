@@ -1,8 +1,7 @@
 import "./desktop-mouse.css";
 import { useEffect, useRef, useState } from "react";
-import { getNextFocus } from "@bbc/tv-lrud-spatial";
 import { Icon } from "./Icon";
-import { focusEl, focusFirst, tvNavigation } from "../lib/focus";
+import { focusEl, focusFirst, nextFocus, tvNavigation } from "../lib/focus";
 
 /**
  * v1.2.8 desktop mouse, loaded only where a fine pointer can hover (finePointer() in lib/device), so phones and
@@ -51,7 +50,7 @@ export function onWheel(e: WheelEvent) {
   const active = document.activeElement as HTMLElement | null;
   const scope = nav.scope ?? page;
   if (!active || active === document.body || !scope.contains(active) || active.closest("nav.rail")) { focusFirst(page); return; }
-  const next = getNextFocus(active, down ? 40 : 38, scope);
+  const next = nextFocus(active, down ? "down" : "up", down ? 40 : 38, scope);
   if (next && !next.closest("[inert]")) focusEl(next);
 }
 

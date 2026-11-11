@@ -1,0 +1,258 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+    <title>panda.fun by titan717 — movies and TV shows on Android, Android TV and the web</title>
+    <meta name="description" content="panda.fun by titan717: one app for Android phones and Android TV, plus a browser version. Download the APK or start streaming in your browser." />
+    <meta name="referrer" content="strict-origin-when-cross-origin" />
+    <meta name="theme-color" content="#06070a" />
+    <meta name="color-scheme" content="dark" />
+    <meta property="og:title" content="panda.fun by titan717" />
+    <meta property="og:description" content="Movies and TV shows on Android phones, Android TV and the web." />
+    <meta property="og:type" content="website" />
+    <meta property="og:image" content="/pwa-512x512.png" />
+    <link rel="icon" type="image/svg+xml" href="/icon.svg" />
+    <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
+    <link rel="preconnect" href="https://api.github.com" crossorigin />
+    <script type="module" src="/src/landing/main.ts"></script>
+  </head>
+  <body>
+    <a class="skip" href="#main">Skip to content</a>
+
+    <header class="nav" id="nav">
+      <a class="brand" href="/welcome" aria-label="panda.fun home">
+        <img src="/icon.svg" alt="" width="32" height="32" />
+        <span>panda<b>.fun</b> <small>by titan717</small></span>
+      </a>
+      <nav class="nav-links" aria-label="Sections">
+        <a href="#features">Features</a>
+        <a href="#screens">Screens</a>
+        <a href="#tv">Android TV</a>
+        <a href="#download">Install</a>
+      </nav>
+      <a class="btn btn-sm btn-green" href="https://github.com/titan717/Panda.fun/releases/latest/download/Panda.fun-Android-TV.apk" data-apk>Get the APK</a>
+    </header>
+
+    <main id="main">
+      <!-- HERO -->
+      <section class="hero" aria-labelledby="hero-title">
+        <div class="hero-glow" aria-hidden="true"></div>
+        <div class="hero-copy">
+          <p class="kicker reveal"><span class="dot" aria-hidden="true"></span>One APK for Android phones and Android TV</p>
+          <h1 id="hero-title" class="reveal">Movies and shows, <em>made for the couch</em> and your pocket.</h1>
+          <p class="lede reveal">A touch-first app on your phone and a cinematic, remote-first interface on your TV. Two experiences, each designed for the screen in front of you.</p>
+          <div class="cta-row reveal">
+            <a class="btn btn-lg btn-green" href="https://github.com/titan717/Panda.fun/releases/latest/download/Panda.fun-Android-TV.apk" data-apk>
+              <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3v12m0 0-5-5m5 5 5-5M5 20h14" /></svg>
+              <span>Download Android APK</span>
+            </a>
+            <a class="btn btn-lg btn-glass" href="/">
+              <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M8 5.5v13l10.5-6.5z" /></svg>
+              <span>Stream in Browser</span>
+            </a>
+          </div>
+          <p class="apk-meta reveal" data-release aria-live="polite">Latest release on GitHub</p>
+        </div>
+
+        <div class="hero-stage reveal" aria-hidden="true">
+          <figure class="stage-screen">
+            <img src="/src/landing/shots/tv-home.webp" alt="" width="1440" height="810" fetchpriority="high" />
+          </figure>
+          <div class="stage-panda" data-panda>
+            <svg class="panda-fallback" viewBox="0 0 240 240">
+              <defs>
+                <radialGradient id="pf-head" cx="45%" cy="38%" r="70%"><stop offset="0" stop-color="#ffffff" /><stop offset="1" stop-color="#cfd5df" /></radialGradient>
+                <linearGradient id="pf-band" x1="0" x2="1"><stop offset="0" stop-color="#22d3c5" /><stop offset=".5" stop-color="#39ff88" /><stop offset="1" stop-color="#8b5cf6" /></linearGradient>
+              </defs>
+              <circle cx="56" cy="50" r="27" fill="#1c1f27" stroke="#d9dee8" stroke-width="3" />
+              <circle cx="184" cy="50" r="27" fill="#1c1f27" stroke="#d9dee8" stroke-width="3" />
+              <ellipse cx="120" cy="196" rx="78" ry="44" fill="#eef1f6" />
+              <ellipse cx="120" cy="116" rx="86" ry="76" fill="url(#pf-head)" />
+              <ellipse cx="88" cy="112" rx="21" ry="28" transform="rotate(28 88 112)" fill="#15171d" />
+              <ellipse cx="152" cy="112" rx="21" ry="28" transform="rotate(-28 152 112)" fill="#15171d" />
+              <circle cx="91" cy="108" r="6" fill="#fff" /><circle cx="149" cy="108" r="6" fill="#fff" />
+              <ellipse cx="120" cy="146" rx="26" ry="18" fill="#fff" />
+              <ellipse cx="120" cy="140" rx="9" ry="6" fill="#15171d" />
+              <path d="M40 112a80 80 0 0 1 160 0" fill="none" stroke="url(#pf-band)" stroke-width="9" stroke-linecap="round" />
+              <rect x="24" y="96" width="26" height="46" rx="12" fill="#2a1f4d" stroke="#39ff88" stroke-width="3" />
+              <rect x="190" y="96" width="26" height="46" rx="12" fill="#2a1f4d" stroke="#39ff88" stroke-width="3" />
+            </svg>
+            <canvas class="panda-canvas" data-panda-canvas></canvas>
+          </div>
+          <div class="chip chip-a glass">Android TV · D-pad</div>
+          <div class="chip chip-b glass">Phones · touch</div>
+          <div class="chip chip-c glass">Who's watching?</div>
+        </div>
+      </section>
+
+      <!-- MARQUEE -->
+      <div class="marquee" aria-hidden="true">
+        <div class="marquee-track">
+          <span>Profiles and kids profiles</span><i></i><span>Resume where you stopped</span><i></i><span>Next-episode countdown</span><i></i><span>Subtitles panel</span><i></i><span>Trailers on focus</span><i></i><span>Voice search where supported</span><i></i><span>In-app updates</span><i></i>
+          <span>Profiles and kids profiles</span><i></i><span>Resume where you stopped</span><i></i><span>Next-episode countdown</span><i></i><span>Subtitles panel</span><i></i><span>Trailers on focus</span><i></i><span>Voice search where supported</span><i></i><span>In-app updates</span><i></i>
+        </div>
+      </div>
+
+      <!-- FEATURES -->
+      <section class="section" id="features" aria-labelledby="features-title">
+        <header class="section-head reveal">
+          <p class="eyebrow">What's inside</p>
+          <h2 id="features-title">Everything you need, <em>nothing in the way</em>.</h2>
+        </header>
+        <div class="bento">
+          <article class="tile tile-tv glass reveal">
+            <div class="tile-art tile-art-dpad" aria-hidden="true">
+              <span class="dp dp-u"></span><span class="dp dp-r"></span><span class="dp dp-d"></span><span class="dp dp-l"></span><span class="dp dp-ok"></span>
+            </div>
+            <h3>Remote-first on Android TV</h3>
+            <p>Spatial D-pad navigation, a visible focus edge on every control, a side rail, overscan-safe margins and Back that always goes where you expect.</p>
+          </article>
+          <article class="tile tile-phone glass reveal">
+            <h3>Touch-first on your phone</h3>
+            <p>Bottom navigation, swipeable carousels, sheets and safe-area aware layouts that work one-handed.</p>
+          </article>
+          <article class="tile tile-profiles glass reveal">
+            <div class="avatars" aria-hidden="true"><span class="av av-1"></span><span class="av av-2"></span><span class="av av-3"></span><span class="av av-k">Kids</span></div>
+            <h3>Who's watching?</h3>
+            <p>Profiles with their own history and list, including kids profiles. The picker appears each time the app starts.</p>
+          </article>
+          <article class="tile tile-player glass reveal">
+            <div class="bar" aria-hidden="true"><span class="bar-fill"></span><span class="bar-knob"></span></div>
+            <h3>A player that keeps up</h3>
+            <p>Resume from your last position, previous and next episode, a 10-second next-episode countdown, a subtitles panel and automatic source fallback.</p>
+          </article>
+          <article class="tile tile-trailers glass reveal">
+            <h3>Trailers on focus</h3>
+            <p>Rest on a title and its trailer fades in. Move on and it stops.</p>
+          </article>
+          <article class="tile tile-search glass reveal">
+            <h3>Search that helps</h3>
+            <p>Recent and popular searches, filters and voice input where the device supports it.</p>
+          </article>
+          <article class="tile tile-private glass reveal">
+            <h3>Private by design</h3>
+            <p>No analytics or tracking. Profiles, your list and progress stay on the device.</p>
+          </article>
+          <article class="tile tile-update glass reveal">
+            <h3>Updates inside the app</h3>
+            <p>The Android app checks GitHub Releases and installs new versions from Settings.</p>
+          </article>
+        </div>
+      </section>
+
+      <!-- SHOWCASE: PHONE -->
+      <section class="section showcase" id="screens" aria-labelledby="screens-title">
+        <div class="phone-wrap reveal" aria-hidden="true">
+          <div class="phone" data-phone>
+            <div class="phone-screen">
+              <img class="is-on" src="/src/landing/shots/m-home.webp" alt="" width="585" height="1266" loading="lazy" data-shot="0" />
+              <img src="/src/landing/shots/m-details.webp" alt="" width="585" height="1266" loading="lazy" data-shot="1" />
+              <img src="/src/landing/shots/m-search.webp" alt="" width="585" height="1266" loading="lazy" data-shot="2" />
+            </div>
+            <span class="phone-notch"></span>
+          </div>
+          <div class="phone-shadow"></div>
+        </div>
+        <div class="showcase-copy">
+          <header class="section-head reveal">
+            <p class="eyebrow">Real screens from the app</p>
+            <h2 id="screens-title">Small screen, <em>big picture</em>.</h2>
+          </header>
+          <ol class="steps" role="list">
+            <li><button type="button" class="step is-on" data-step="0" aria-pressed="true"><b>Home</b><span>A For You carousel, Top 10 rows by language and quick filters for TV, Movies and Categories.</span></button></li>
+            <li><button type="button" class="step" data-step="1" aria-pressed="false"><b>Details</b><span>One tap to the first or next episode, seasons and episodes, watchlist, share and rating.</span></button></li>
+            <li><button type="button" class="step" data-step="2" aria-pressed="false"><b>Search</b><span>Popular searches for your region, voice input and a poster grid that fills the screen.</span></button></li>
+          </ol>
+        </div>
+      </section>
+
+      <!-- SHOWCASE: TV -->
+      <section class="section tv-section" id="tv" aria-labelledby="tv-title">
+        <header class="section-head center reveal">
+          <p class="eyebrow">Android TV</p>
+          <h2 id="tv-title">Not a stretched phone app. <em>A real TV interface</em>.</h2>
+        </header>
+        <div class="tv reveal" data-tv>
+          <div class="tv-frame">
+            <img class="is-on" src="/src/landing/shots/tv-home.webp" alt="panda.fun Android TV home screen with the hero carousel and rows" width="1440" height="810" loading="lazy" />
+            <img src="/src/landing/shots/tv-details.webp" alt="panda.fun Android TV details screen for a series with watch buttons and tabs" width="1440" height="810" loading="lazy" />
+          </div>
+          <div class="tv-stand" aria-hidden="true"></div>
+        </div>
+        <ul class="tv-points" role="list">
+          <li class="reveal"><b>Focus you can read from the sofa</b><span>A soft silver edge and gentle lift on whatever the remote is on.</span></li>
+          <li class="reveal"><b>Rows that lead</b><span>The focused card sits at the start of its row, the way TV apps should feel.</span></li>
+          <li class="reveal"><b>Cinematic details</b><span>Full-bleed artwork, seasons, episodes, more like this, trailers and cast.</span></li>
+        </ul>
+      </section>
+
+      <!-- DOWNLOAD -->
+      <section class="section download" id="download" aria-labelledby="download-title">
+        <div class="dl-card glass reveal">
+          <div class="dl-head">
+            <img src="/pwa-192x192.png" alt="" width="72" height="72" loading="lazy" />
+            <div>
+              <p class="eyebrow">Android APK</p>
+              <h2 id="download-title">Get <em>panda.fun</em> for Android</h2>
+            </div>
+          </div>
+          <dl class="dl-meta" data-release-meta>
+            <div><dt>Version</dt><dd data-r="version">See GitHub</dd></div>
+            <div><dt>File size</dt><dd data-r="size">See GitHub</dd></div>
+            <div><dt>Released</dt><dd data-r="date">See GitHub</dd></div>
+            <div><dt>Requires</dt><dd>Android 5.0 or later</dd></div>
+          </dl>
+          <p class="dl-note">The same APK installs on phones, tablets and Android TV.</p>
+          <div class="cta-row">
+            <a class="btn btn-lg btn-green" href="https://github.com/titan717/Panda.fun/releases/latest/download/Panda.fun-Android-TV.apk" data-apk>
+              <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3v12m0 0-5-5m5 5 5-5M5 20h14" /></svg>
+              <span>Download APK</span>
+            </a>
+            <a class="btn btn-lg btn-glass" href="https://github.com/titan717/Panda.fun/releases/latest" rel="noopener">Release notes</a>
+          </div>
+          <p class="dl-sum"><a href="https://github.com/titan717/Panda.fun/releases/latest/download/Panda.fun-Android-TV.apk.sha256" data-sha rel="noopener">SHA-256 checksum</a> published with every release.</p>
+        </div>
+
+        <div class="install">
+          <header class="section-head reveal">
+            <p class="eyebrow">Install in four steps</p>
+            <h2>From download to <em>first episode</em>.</h2>
+          </header>
+          <ol class="install-steps" role="list">
+            <li class="reveal"><span class="n">1</span><div><b>Download the APK</b><p>Tap Download APK on your phone. On Android TV, open this page in a browser app on the TV, or copy the file over with a file manager or USB drive.</p></div></li>
+            <li class="reveal"><span class="n">2</span><div><b>Open the file</b><p>Open it from your notifications, Downloads or file manager.</p></div></li>
+            <li class="reveal"><span class="n">3</span><div><b>Allow this one app to install</b><p>If Android asks, allow installs only for the browser or file manager you used. You can switch that permission off again after installing.</p></div></li>
+            <li class="reveal"><span class="n">4</span><div><b>Install and open</b><p>Tap Install, then open panda.fun and pick who's watching. Future updates arrive from Settings.</p></div></li>
+          </ol>
+        </div>
+      </section>
+
+      <!-- CLOSER -->
+      <section class="closer" aria-labelledby="closer-title">
+        <h2 id="closer-title" class="wordmark reveal">panda<span>.fun</span></h2>
+        <p class="reveal">Press play on the sofa or on the go.</p>
+        <div class="cta-row center reveal">
+          <a class="btn btn-lg btn-green" href="https://github.com/titan717/Panda.fun/releases/latest/download/Panda.fun-Android-TV.apk" data-apk><span>Download Android APK</span></a>
+          <a class="btn btn-lg btn-glass" href="/"><span>Stream in Browser</span></a>
+        </div>
+      </section>
+    </main>
+
+    <footer class="footer">
+      <div class="foot-brand">
+        <a class="brand" href="/welcome"><img src="/icon.svg" alt="" width="28" height="28" /><span>panda<b>.fun</b> <small>by titan717</small></span></a>
+        <p>Built by <a href="https://github.com/titan717" rel="noopener">titan717</a>. Catalogue data and artwork from TMDB.</p>
+      </div>
+      <nav class="foot-links" aria-label="Footer">
+        <a href="/">Web app</a>
+        <a href="https://github.com/titan717/Panda.fun" rel="noopener">GitHub</a>
+        <a href="https://github.com/titan717/Panda.fun/releases" rel="noopener">Releases</a>
+        <a href="/about">About</a>
+        <a href="/privacy">Privacy</a>
+        <a href="/terms">Terms</a>
+      </nav>
+      <p class="foot-copy">© <span data-year>2026</span> titan717</p>
+    </footer>
+  </body>
+</html>

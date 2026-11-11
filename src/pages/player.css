@@ -168,3 +168,6 @@ html[data-mode="tv"] .player-stall-sub { font-size: calc(22 * var(--tu)); }
 .keys-row dd { margin: 0; color: var(--text-2); }
 .keys-row kbd { min-width: 2em; padding: 0.2em 0.55em; border-radius: 6px; border: 1px solid rgba(255, 255, 255, 0.28); border-bottom-width: 2px; background: rgba(255, 255, 255, 0.08); color: var(--text-1); font: 600 0.9em/1.4 var(--font-sans); text-align: center; }
 html[data-mode="tv"] .keys-list { gap: calc(14 * var(--tu)); font-size: calc(24 * var(--tu)); }
+/* v1.2.9: every source failed (or none exists): a clear panel with Retry and Back instead of an endless loader */
+.player-failed { z-index: 6; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 14px; background: radial-gradient(80% 70% at 50% 45%, rgba(20, 26, 44, 0.92), rgba(3, 4, 9, 0.98)); }
+.player--tv .player-failed { gap: calc(20 * var(--tu)); font-size: calc(24 * var(--tu)); }

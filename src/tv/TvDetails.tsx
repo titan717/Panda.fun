@@ -7,7 +7,8 @@ import "../styles/spoilers.css";
 import { Link } from "wouter";
 import { ErrorState, Img, Skeleton, TitleArt, toast } from "../components/ui";
 import { Trailer, rankTrailers } from "../components/Trailer";
-import { RatePopover } from "../components/RatePopover";
+import { RatePopover, rateLabel } from "../components/RatePopover";
+import { RateEmoji } from "../components/RateEmoji";
 import { VideoOverlay } from "../components/VideoOverlay";
 import { warmPlayback } from "../lib/prefetch";
 import { whenIdle } from "../lib/lazy";
@@ -99,7 +100,7 @@ function TvDetailsView({ d, initialTab }: { d: TitleDetails; initialTab?: Tab })
   };
 
   return (
-    <div ref={root} className={`tv-page tv-det ${zone === "tabs" ? "is-tabs" : ""} ${trailerOn ? "is-trailer" : ""}`}>
+    <div ref={root} className={`tv-page tv-det ${lite ? "is-lite" : ""} ${zone === "tabs" ? "is-tabs" : ""} ${trailerOn ? "is-trailer" : ""}`}>
       <div className={`tv-det-bg ${lite ? "is-kenburns" : ""}`} aria-hidden="true">
         <Img src={d.backdropLarge ?? d.backdrop} alt="" title="" eager className={trailerOn ? "is-hidden" : ""} />
         {stage !== "idle" && trailerKeys.length > 0 && (
@@ -139,8 +140,8 @@ function TvDetailsView({ d, initialTab }: { d: TitleDetails; initialTab?: Tab })
                 <Icon name={inList ? "check" : "plus"} />
               </button>
               <div className="tv-rate-wrap">
-                <button id="det-rate" className={`tv-square ${rating ? "is-on" : ""}`} onClick={() => setRateOpen(true)} aria-label="Rate" aria-haspopup="menu" data-hover-focus>
-                  <Icon name={rating === "dislike" ? "thumbDown" : rating === "like" ? "thumbUp" : "heart"} filled={Boolean(rating)} />
+                <button id="det-rate" className={`tv-square ${rating ? "is-on" : ""}`} onClick={() => setRateOpen(true)} aria-label={rating ? `Rated ${rateLabel(rating)}` : "Rate"} aria-haspopup="menu" aria-expanded={rateOpen} data-hover-focus>
+                  {rating ? <RateEmoji kind={rating} /> : <Icon name="heart" />}
                 </button>
                 {rateOpen && <RatePopover itemId={d.id} current={rating} onClose={() => { setRateOpen(false); focusEl(document.getElementById("det-rate")); }} />}
               </div>
@@ -232,9 +233,13 @@ function EpisodesTab({ d }: { d: TitleDetails }) {
           const pct = row.pct;
           const spoil = hideSpoiler(prefs.hideSpoilers, row.done, pct);
           return (
-            <a key={ep.id} id={`ep-${ep.season}-${ep.number}`} href={href} className={`tv-ep ${soon ? "is-upcoming" : ""} ${row.done ? "is-watched" : ""}`} aria-disabled={soon || undefined} data-hover-focus
+            <a key={ep.id} id={`ep-${ep.season}-${ep.number}`} href={href} className={`tv-ep ${soon ? "is-upcoming" : ""} ${row.done ? "is-watched" : ""} ${row.badge ? "is-current" : ""}`} aria-current={row.badge ? "step" : undefined} aria-disabled={soon || undefined} data-hover-focus
               onClick={(e) => { e.preventDefault(); if (soon) toast(`Episode ${ep.number} arrives ${shortDate(ep.airDate)}`); else go(href); }}>
-              <span className={`tv-ep-still ${spoil ? "is-spoiler" : ""}`}><Img src={ep.still} alt="" title={`Episode ${ep.number}`} />{spoil && <ExtraIcon name="eyeOff" className="spoiler-mark" />}{!soon && <Icon name="play" className="tv-ep-play" />}{pct > 0 && <span className="progress"><span style={{ width: `${pct}%` }} /></span>}</span>
+              <span className={`tv-ep-still ${spoil ? "is-spoiler" : ""}`}><Img src={ep.still} alt="" title={`Episode ${ep.number}`} />{spoil && <ExtraIcon name="eyeOff" className="spoiler-mark" />}{!soon && <Icon name="play" className="tv-ep-play" />}
+                {row.badge && <span className={`ep-badge ep-badge--${row.badge}`}>{row.badge === "next" ? "Up next" : "Continue"}</span>}
+                {row.done && <span className="ep-done" aria-label="Watched"><Icon name="check" /></span>}
+                {!soon && ep.runtime ? <span className="ep-runtime">{runtime(ep.runtime)}</span> : null}
+                {pct > 0 && <span className="progress"><span style={{ width: `${pct}%` }} /></span>}</span>
               <span className="tv-ep-text">
                 <span className="tv-ep-title">{ep.number}. {ep.title}</span>
                 <span className="tv-ep-meta">{soon ? `Coming ${shortDate(ep.airDate)}` : [`S${ep.season} E${ep.number}`, row.done ? null : shortDate(ep.airDate), row.left ? `${row.left}m left` : runtime(ep.runtime)].filter(Boolean).join(" • ")}{row.done && <span className="ep-watched"><Icon name="check" /> Watched</span>}</span>

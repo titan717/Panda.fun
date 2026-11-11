@@ -386,8 +386,12 @@ class MainActivity : ComponentActivity() {
         setContentView(rootLayout)
 
         // Load the bundled production Panda.fun web application
-        Log.i(TAG, "Loading entry URL: $WEB_ENTRY_URL")
-        webView.loadUrl(WEB_ENTRY_URL)
+        // v1.2.9: a recreated activity (system theme or language change, or Android restoring the task) gets a
+        // new WebView with an empty sessionStorage. ?resumed=1 tells the web app this is not a fresh start, so it
+        // skips the intro and does not ask "Who's watching?" again; a real cold start loads the plain entry URL.
+        val entry = if (savedInstanceState != null) "$WEB_ENTRY_URL?resumed=1" else WEB_ENTRY_URL
+        Log.i(TAG, "Loading entry URL: $entry")
+        webView.loadUrl(entry)
         webView.requestFocus()
 
         // Background check for updates without blocking TV interface

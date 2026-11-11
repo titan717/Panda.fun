@@ -115,7 +115,7 @@ export function TvShell({ children }: { children: ReactNode }) {
   };
   return (
     <div className={`tv-shell ${open ? "is-rail-open" : ""}`}>
-      <nav ref={nav} className={`rail ${open ? "is-open" : ""}`} aria-label="Main" data-focus={current} data-block-exit="up down left" onKeyDown={onKeyDown}
+      <nav ref={nav} className={`rail ${open ? "is-open" : ""}`} aria-label="Main" data-focus={current} data-nav-side data-block-exit="up down left" onKeyDown={onKeyDown}
         onMouseLeave={() => { if (!nav.current?.contains(document.activeElement)) setOpen(false); }}>
         <div className="rail-panel" aria-hidden="true" />
         <div className="rail-top">
