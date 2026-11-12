@@ -57,7 +57,7 @@ jobs:
       - run: sdkmanager "platforms;android-34" "build-tools;34.0.0"
       - name: Certificate pins still match the live chains (network_security_config.xml)
         run: node scripts/check-pins.mjs
-      - uses: gradle/actions/setup-gradle@748248ddd2a24f49513d8f472f81c3a07d4d50e1 # v4.4.4
+      - uses: gradle/actions/setup-gradle@8da46b539cd8fe6ab27ca75128919a18d757604c # v6.4.1
         with:
           gradle-version: "8.5"
       - name: Compile Kotlin and resources, and shrink the release build with R8
