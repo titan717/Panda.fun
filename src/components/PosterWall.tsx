@@ -2,44 +2,72 @@ import { memo, useMemo } from "react";
 import { useLiteMotion, useReducedMotion, useTrending, useWall } from "../lib/hooks";
 
 /**
- * Drifting poster wall behind "Who's watching?" (§4.D). Columns of small real posters move
- * at different speeds in alternating directions under a slight tilt. Each column gets a unique
- * slice of the backend wall (no poster appears twice on screen); the slice is rendered twice so a
- * translateY(-50%) loop is seamless. Transform-only animation; fewer columns on weak devices.
+ * Poster wall behind "Who's watching?" (§4.D, v1.3.0 depth layers, D-179). The near layer is the blueprint's
+ * upright centred band (tv1#33: seven columns on TV, six in lite mode, four on phones). Behind it, wider bands of
+ * smaller, softly blurred posters drift more slowly (parallax), so the band reads as the front of a deep wall.
+ * TV draws three layers, phones two, lite mode only the near band. Each column is a slice rendered twice so a
+ * translateY(-50%) loop is seamless. Only transforms animate; blur is a static filter on the images, painted once
+ * into each column's layer. The near band has an opaque backing so the far layers never muddy it.
  */
+type Layer = { key: "far" | "mid" | "near"; cols: number; speed: number };
+
+export function wallLayers(tv: boolean, lite: boolean): Layer[] {
+  if (lite) return [{ key: "near", cols: tv ? 6 : 4, speed: 1 }];
+  return tv
+    ? [{ key: "far", cols: 12, speed: 2.2 }, { key: "mid", cols: 9, speed: 1.5 }, { key: "near", cols: 7, speed: 1 }]
+    : [{ key: "far", cols: 6, speed: 2 }, { key: "near", cols: 4, speed: 1 }];
+}
+
+/** Splits posters into columns per layer: the near band gets unique posters first; deeper layers reuse the rest. */
+export function splitWall(src: string[], layers: Layer[]): string[][][] {
+  const uniq = [...new Set(src)];
+  const near = layers[layers.length - 1]!;
+  const per = Math.min(10, Math.floor(uniq.length / near.cols));
+  if (per < 4) return [];
+  let cursor = 0;
+  // front to back, so the band in focus never shows a poster twice
+  const out = [...layers].reverse().map((l) => Array.from({ length: l.cols }, () => {
+    const col: string[] = [];
+    for (let i = 0; i < per; i++) col.push(uniq[(cursor++) % uniq.length]!);
+    return col;
+  }));
+  return out.reverse();
+}
+
 export const PosterWall = memo(function PosterWall({ tv }: { tv: boolean }) {
   const wall = useWall();
   const trending = useTrending("all", "week");
   const lite = useLiteMotion();
   const reduce = useReducedMotion();
-  // tv1#33: a centred band of about seven upright columns (four on phones)
-  const cols = tv ? (lite ? 6 : 7) : 4;
+  const layers = useMemo(() => wallLayers(tv, lite), [tv, lite]);
 
   const columns = useMemo(() => {
     const src = wall.data?.posters.length
       ? wall.data.posters.map((p) => p.poster)
       : (trending.data?.results ?? []).map((i) => i.poster).filter((p): p is string => Boolean(p));
-    const uniq = [...new Set(src)];
-    const per = Math.floor(uniq.length / cols);
-    if (per < 4) return [];
-    return Array.from({ length: cols }, (_, c) => uniq.slice(c * per, (c + 1) * per));
-  }, [wall.data, trending.data, cols]);
+    return splitWall(src, layers);
+  }, [wall.data, trending.data, layers]);
 
   if (!columns.length) return <div className="poster-wall" aria-hidden="true" />;
+  const base = tv ? 70 : 55;
   return (
-    <div className={`poster-wall ${reduce ? "is-static" : ""}`} aria-hidden="true" style={{ ["--wall-cols" as string]: cols }}>
-      <div className="poster-wall-tilt">
-        {columns.map((col, c) => (
-          <div key={c} className={`poster-wall-col ${c % 2 ? "is-down" : "is-up"}`}
-            style={{ animationDuration: `${(tv ? 70 : 55) + ((c * 37) % 5) * 12}s`, animationDelay: `${-((c * 53) % 40)}s` }}>
-            {[0, 1].map((dup) => (
-              <div key={dup} className="poster-wall-run">
-                {col.map((src) => <img key={src} src={src} alt="" loading={dup ? "lazy" : "eager"} decoding="async" draggable={false} />)}
+    <div className={`poster-wall ${reduce ? "is-static" : ""}`} aria-hidden="true">
+      {layers.map((l, li) => (
+        <div key={l.key} className={`poster-wall-layer poster-wall-layer--${l.key}`}>
+          <div className="poster-wall-tilt" style={{ ["--wall-cols" as string]: l.cols }}>
+            {columns[li]!.map((col, c) => (
+              <div key={c} className={`poster-wall-col ${(c + li) % 2 ? "is-down" : "is-up"}`}
+                style={{ animationDuration: `${Math.round((base + ((c * 37) % 5) * 12) * l.speed)}s`, animationDelay: `${-((c * 53 + li * 17) % 40)}s` }}>
+                {[0, 1].map((dup) => (
+                  <div key={dup} className="poster-wall-run">
+                    {col.map((src, i) => <img key={`${src}-${i}`} src={src} alt="" loading={dup || l.key !== "near" ? "lazy" : "eager"} decoding="async" draggable={false} />)}
+                  </div>
+                ))}
               </div>
             ))}
           </div>
-        ))}
-      </div>
+        </div>
+      ))}
       <span className="poster-wall-shade" />
     </div>
   );

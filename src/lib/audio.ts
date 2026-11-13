@@ -37,3 +37,8 @@ export function installAudioUnlock() {
 const stoppers = new Set<() => void>();
 export function registerTrailer(stop: () => void) { stoppers.add(stop); return () => { stoppers.delete(stop); }; }
 export function stopAllTrailers(except?: () => void) { stoppers.forEach((s) => { if (s !== except) s(); }); }
+
+/* ---------------- Mute memory (v1.2.6, moved here in v1.3.0 so the launch intro can respect it) ---------------- */
+const MUTE_KEY = "panda:muted";
+export function getMutedMemory() { try { return localStorage.getItem(MUTE_KEY) === "1"; } catch { return false; } }
+export function saveMutedMemory(m: boolean) { try { if (m) localStorage.setItem(MUTE_KEY, "1"); else localStorage.removeItem(MUTE_KEY); } catch { /* storage full */ } }

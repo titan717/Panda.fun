@@ -52,7 +52,8 @@ html[data-mode="tv"] .state--compact .state-title { font-size: calc(28 * var(--t
 .tv-info .info-body { padding: calc(10 * var(--tu)); border-radius: var(--r-card); }
 html[data-mode="tv"] .profiles-title { font-size: calc(56 * var(--tu)); }
 html[data-mode="tv"] .profiles { padding-top: calc(110 * var(--tu)); }
-html[data-mode="tv"] .profiles-list { gap: calc(56 * var(--tu)); top: calc(var(--horizon) - 66 * var(--tu)); }
+/* v1.3.0: avatar centres sit exactly on the horizon (padding 6u + half of the 120 tu avatar; was 3 tu low) */
+html[data-mode="tv"] .profiles-list { gap: calc(56 * var(--tu)); top: calc(var(--horizon) - 6 * var(--u) - 60 * var(--tu)); }
 
 /* player on TV: big targets, focus rings */
 .tv-hero-bgwrap { position: absolute; inset: 0; overflow: hidden; }

@@ -46,7 +46,9 @@ describe("v1.1.7 Coming Up", () => {
     expect(v("/panda/calendar", { entries: [{ item: { tmdbId: 1, type: "tv", title: "A" }, episodes: [{ season: 1, episode: 1, airDate: "2026-11-09" }, { season: "x" }] }, { item: null }] })).toMatchObject({ entries: [{ episodes: [{ season: 1 }] }] });
   });
   it("offers Remind Me instead of play for unreleased titles", () => {
-    const d = { ...film, seasons: [], videos: [] } as unknown as TitleDetails;
+    // detailsCtas compares with the real clock, so the release date must be in the real future (this failed once
+    // the fixed NOW + 5 days, 13 Nov 2026, arrived; fixed in v1.3.0)
+    const d = { ...film, releaseDate: localDay(Date.now() + 5 * 86_400_000), seasons: [], videos: [] } as unknown as TitleDetails;
     expect(detailsCtas(d, null).primary).toMatchObject({ kind: "remind", label: "Remind Me", href: "/title/movie/9" });
   });
   it("stores reminders and alert state per profile", () => {

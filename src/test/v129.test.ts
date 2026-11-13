@@ -88,7 +88,7 @@ describe("Who's watching on a fresh start (v1.2.9, directive §4)", () => {
   });
   it("App asks with a saved profile too, and keeps the deep link", () => {
     expect(appSrc).toContain("<ProfileSelect stay={Boolean(profile)} />");
-    expect(appSrc).toContain("<Intro tv={mode === \"tv\"}");
+    expect(appSrc).toContain("<Intro tv={intro.tv}"); // v1.3.0: the layout is frozen for the intro's first frame
   });
 });
 

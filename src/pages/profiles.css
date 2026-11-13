@@ -1,0 +1,76 @@
+/* ---------- Who's watching? (spec 3) ----------
+   v1.3.0: loads with the lazy Profiles chunk, which downloads underneath the launch intro (D-180). TV sizes that
+   must stay in the entry sheet (title, padding, list position) remain in styles/tv.css. */
+.profiles { position: fixed; inset: 0; z-index: var(--z-overlay); overflow: hidden; background: var(--tv-bg-gradient); display: flex; flex-direction: column; align-items: center; padding-top: calc(env(safe-area-inset-top) + 9vh); }
+/* Drifting poster wall (§4.D, v1.3.0 depth layers D-179): transform-only, columns alternate direction, seamless -50% loop */
+.poster-wall { position: absolute; inset: 0; overflow: hidden; pointer-events: none; background: #000; contain: strict; }
+.poster-wall-layer { position: absolute; inset: 0; transform-origin: 50% 45%; }
+/* tv1#33: an upright band of posters centred behind the title, fading out to the sides and into the glow */
+.poster-wall-tilt { position: absolute; top: -20%; bottom: -20%; left: 50%; width: min(64vw, 128vh); transform: translateX(-50%); display: grid; grid-template-columns: repeat(var(--wall-cols, 10), 1fr); gap: 0.9vmin; -webkit-mask-image: linear-gradient(90deg, transparent 0%, #000 26%, #000 74%, transparent 100%); mask-image: linear-gradient(90deg, transparent 0%, #000 26%, #000 74%, transparent 100%); }
+.poster-wall-col { display: flex; flex-direction: column; will-change: transform; animation: wall-up 80s linear infinite; }
+.poster-wall-col.is-down { animation-name: wall-down; }
+.poster-wall-run { display: flex; flex-direction: column; gap: 0.9vmin; padding-bottom: 0.9vmin; }
+.poster-wall-run img { display: block; width: 100%; aspect-ratio: 2 / 3; object-fit: cover; border-radius: 0.6vmin; background: #0b0b0b; }
+/* near: the blueprint band, with an opaque backing so the deeper layers never show through it */
+.poster-wall-layer--near .poster-wall-tilt { background: #000; }
+.poster-wall-layer--near img { opacity: 0.42; }
+/* mid and far: wider, smaller, dimmer and softly blurred (a static filter painted once into each column) */
+.poster-wall-layer--mid .poster-wall-tilt { width: min(86vw, 165vh); transform: translateX(-50%) scale(0.9); -webkit-mask-image: linear-gradient(90deg, transparent 0%, #000 18%, #000 82%, transparent 100%); mask-image: linear-gradient(90deg, transparent 0%, #000 18%, #000 82%, transparent 100%); }
+.poster-wall-layer--mid img { opacity: 0.3; filter: blur(1px); }
+.poster-wall-layer--far .poster-wall-tilt { width: 104vw; transform: translateX(-50%) scale(0.8); -webkit-mask-image: linear-gradient(90deg, transparent 0%, #000 12%, #000 88%, transparent 100%); mask-image: linear-gradient(90deg, transparent 0%, #000 12%, #000 88%, transparent 100%); }
+.poster-wall-layer--far img { opacity: 0.2; filter: blur(2.5px); }
+.poster-wall.is-static .poster-wall-col { animation: none; }
+.poster-wall-shade { position: absolute; inset: 0; background: radial-gradient(75% 65% at 50% 45%, rgba(0, 0, 0, 0.25) 0%, rgba(0, 0, 0, 0.78) 70%, #000 100%), linear-gradient(180deg, rgba(0, 0, 0, 0.55) 0%, rgba(0, 0, 0, 0) 30%, rgba(0, 0, 0, 0.35) 55%, #000 100%); }
+@keyframes wall-up { from { transform: translate3d(0, 0, 0); } to { transform: translate3d(0, -50%, 0); } }
+@keyframes wall-down { from { transform: translate3d(0, -50%, 0); } to { transform: translate3d(0, 0, 0); } }
+/* choosing: the camera pushes in through the wall, near layers faster than far ones, while Home preloads */
+.profiles.is-choosing .poster-wall-layer { opacity: 0; transition: transform 620ms cubic-bezier(.5, 0, .75, .3), opacity 380ms 220ms ease-in; }
+.profiles.is-choosing .poster-wall-layer--near { transform: scale(1.9); }
+.profiles.is-choosing .poster-wall-layer--mid { transform: scale(1.5); }
+.profiles.is-choosing .poster-wall-layer--far { transform: scale(1.25); }
+/* then a veil painted like the picker's last frame dissolves into Home (dissolveIntoHome) */
+.who-veil { position: fixed; inset: 0; z-index: var(--z-overlay); pointer-events: none; background: var(--tv-bg-gradient); animation: who-veil 420ms var(--ease-out) forwards; }
+@keyframes who-veil { from { opacity: 1; } to { opacity: 0; } }
+.profiles-title { position: relative; z-index: 2; font-size: calc(30 * var(--u)); font-weight: var(--fw-bold); color: #A9DCFF; text-shadow: 0 0 28px rgba(110, 190, 255, 0.55); }
+/* horizon line at ~78 % height (tv1#33, re-measured v1.1.8): blue → violet → pink, glowing, avatars sit on it */
+/* --horizon (78 % TV, 68 % phone) lives in tokens.css since v1.3.0 so the launch intro's line lands on the same spot */
+.profiles::after { content: ""; position: absolute; left: 0; right: 0; bottom: 0; height: 55%; pointer-events: none; background: radial-gradient(34% 46% at 50% 62%, rgba(24, 104, 255, 0.42) 0%, rgba(24, 80, 220, 0.16) 45%, transparent 75%); }
+.profiles-arc { position: absolute; z-index: 1; left: 0; right: 0; top: var(--horizon); height: 2px; background: var(--arc-gradient); filter: drop-shadow(0 0 6px rgba(70, 130, 255, 0.85)); }
+.profiles-list { position: absolute; z-index: 2; top: calc(var(--horizon) - 48 * var(--u)); left: 0; right: 0; display: flex; justify-content: safe center; gap: calc(18 * var(--u)); flex-wrap: nowrap; overflow-x: auto; scrollbar-width: none; padding: 0 16px; }
+.profile-btn { position: relative; display: flex; flex-direction: column; align-items: center; gap: calc(10 * var(--u)); padding: calc(6 * var(--u)); border-radius: 50%; }
+/* v1.3.0 focus: the avatar lifts off the horizon with its ring and a glow, a light spot stays on the line below it */
+.profile-lift { position: relative; display: grid; place-items: center; transition: transform var(--dur-focus) var(--ease-out); }
+.profile-btn .avatar { position: relative; width: calc(84 * var(--u)); height: calc(84 * var(--u)); transition: transform var(--dur-focus) var(--ease-out); }
+html[data-mode="tv"] .profile-btn .avatar { width: calc(120 * var(--tu)); height: calc(120 * var(--tu)); }
+.profile-ring { position: absolute; top: 50%; left: 50%; width: calc(96 * var(--u)); height: calc(96 * var(--u)); margin: calc(-48 * var(--u)) 0 0 calc(-48 * var(--u)); border-radius: 50%; opacity: 0; background: conic-gradient(from 0deg, #2b6bff, #8c4bff, #ff3d8b, #2b6bff); -webkit-mask: radial-gradient(circle, transparent 64%, #000 66%); mask: radial-gradient(circle, transparent 64%, #000 66%); transition: opacity var(--dur-focus); }
+html[data-mode="tv"] .profile-ring { width: calc(136 * var(--tu)); height: calc(136 * var(--tu)); margin: calc(-68 * var(--tu)) 0 0 calc(-68 * var(--tu)); }
+.profile-glow { position: absolute; top: 50%; left: 50%; width: calc(170 * var(--u)); height: calc(170 * var(--u)); margin: calc(-85 * var(--u)) 0 0 calc(-85 * var(--u)); border-radius: 50%; background: radial-gradient(circle, rgba(80, 150, 255, 0.5) 0%, rgba(140, 75, 255, 0.22) 42%, transparent 68%); opacity: 0; transform: scale(0.75); transition: opacity var(--dur-focus), transform var(--dur-focus) var(--ease-out); pointer-events: none; }
+html[data-mode="tv"] .profile-glow { width: calc(240 * var(--tu)); height: calc(240 * var(--tu)); margin: calc(-120 * var(--tu)) 0 0 calc(-120 * var(--tu)); }
+.profile-btn::before { content: ""; position: absolute; left: 50%; top: calc(6 * var(--u) + 42 * var(--u)); width: calc(150 * var(--u)); height: calc(16 * var(--u)); margin: calc(-8 * var(--u)) 0 0 calc(-75 * var(--u)); border-radius: 50%; background: radial-gradient(closest-side, rgba(150, 200, 255, 0.85), rgba(90, 120, 255, 0.25) 55%, transparent); opacity: 0; transition: opacity var(--dur-focus); pointer-events: none; }
+html[data-mode="tv"] .profile-btn::before { top: calc(6 * var(--u) + 60 * var(--tu)); width: calc(220 * var(--tu)); height: calc(22 * var(--tu)); margin: calc(-11 * var(--tu)) 0 0 calc(-110 * var(--tu)); }
+.profile-name { font-size: calc(15 * var(--u)); color: #7FA6C9; font-weight: var(--fw-medium); transition: color var(--dur-focus), transform var(--dur-focus) var(--ease-out); }
+html[data-mode="tv"] .profile-name { font-size: calc(24 * var(--tu)); }
+.profile-btn:focus-visible, .profile-btn:hover { outline: none; }
+.profile-btn:focus .profile-lift, .profile-btn:hover .profile-lift { transform: translateY(calc(-10 * var(--u))); }
+.profile-btn:focus .avatar, .profile-btn:hover .avatar { transform: scale(1.12); }
+.profile-btn:focus .profile-glow, .profile-btn:hover .profile-glow { opacity: 1; transform: scale(1); }
+.profile-btn:focus::before, .profile-btn:hover::before { opacity: 1; }
+.profile-btn:focus .profile-ring, .profile-btn:hover .profile-ring { opacity: 1; animation: spin 3s linear infinite; }
+.profile-btn:focus .profile-name, .profile-btn:hover .profile-name { color: #8FD3FF; font-weight: var(--fw-bold); transform: scale(1.18); text-shadow: 0 0 14px rgba(110, 190, 255, 0.75); }
+html[data-contrast="high"] .profile-btn:focus .avatar { box-shadow: var(--focus-glow); }
+html[data-contrast="high"] .profile-btn:focus .profile-name { color: #ffffff; }
+.profiles-list li { transition: opacity 400ms var(--ease-out), transform 600ms var(--ease-out); }
+.profiles-list li.is-faded { opacity: 0; }
+.profiles-list li { will-change: transform; }
+.profiles-list li.is-chosen { transform: scale(2.6) translateY(-6vh); opacity: 0; transition: transform 620ms cubic-bezier(.5, 0, .75, .3), opacity 260ms 340ms ease-in; }
+.profiles.is-choosing .profiles-title, .profiles.is-choosing .profiles-manage, .profiles.is-choosing .profiles-arc { opacity: 0; transition: opacity 300ms; }
+/* v1.3.0 handoff from the launch intro: hidden while it plays, then the title drops in and avatars rise onto the line */
+.profiles.is-waiting .profiles-title, .profiles.is-waiting .profiles-list li, .profiles.is-waiting .profiles-manage { opacity: 0; }
+.profiles.is-arriving .profiles-title { animation: who-drop 520ms var(--ease-out) backwards; }
+.profiles.is-arriving .profiles-list li { animation: who-rise 560ms calc(120ms + var(--n, 0) * 60ms) var(--ease-out) backwards; }
+.profiles.is-arriving .profiles-manage { animation: who-fade 420ms 380ms var(--ease-out) backwards; }
+@keyframes who-drop { from { opacity: 0; transform: translateY(-2vh); } }
+@keyframes who-rise { from { opacity: 0; transform: translateY(4vh) scale(0.92); } }
+@keyframes who-fade { from { opacity: 0; } }
+.profiles-manage { position: absolute; z-index: 2; bottom: calc(env(safe-area-inset-bottom) + 4vh); display: inline-flex; align-items: center; gap: 8px; padding: calc(10 * var(--u)) calc(18 * var(--u)); border-radius: var(--r-pill); background: var(--tv-translucent); font-size: calc(14 * var(--u)); font-weight: var(--fw-semibold); }
+html[data-mode="tv"] .profiles-manage:focus { box-shadow: var(--focus-glow); outline: var(--focus-border); }

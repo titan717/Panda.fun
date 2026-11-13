@@ -34,9 +34,8 @@ test("Down from the Details actions moves into the tabs, never the side rail", a
 test("Who's watching appears on a fresh start and not again after a reload", async ({ page }, info) => {
   test.skip(info.project.name !== "tv-1920" && info.project.name !== "mobile-390", "one TV and one phone size");
   await open(page, "/", { fresh: true });
-  // skip the launch intro with any key or tap
-  await page.waitForTimeout(400);
-  await page.keyboard.press("Enter");
+  // v1.3.0: the launch intro cannot be skipped; wait for it to hand off
+  await expect(page.locator("[data-intro]")).toHaveCount(0, { timeout: 6_000 });
   await expect(page.getByRole("heading", { name: "Who's watching?" })).toBeVisible({ timeout: 15_000 });
   await page.locator(".profile-btn").first().click();
   await expect(page.getByRole("heading", { name: "Who's watching?" })).toHaveCount(0);

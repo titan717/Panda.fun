@@ -36,5 +36,5 @@ export default defineConfig(({ mode }) => ({
       output: { manualChunks: { react: ["preact", "preact/compat", "preact/hooks"], vendor: ["swr", "wouter", "@bbc/tv-lrud-spatial"] } } }
   },
   server: { port: 5173, host: true },
-  test: { environment: "happy-dom", include: ["src/**/*.test.{ts,tsx}"], globals: false, css: { include: [/styles\/(tokens|tv|mobile)\.css/, /tv\/shell\.css/, /pages\/player\.css/] } }
+  test: { environment: "happy-dom", include: ["src/**/*.test.{ts,tsx}"], globals: false, css: { include: [/styles\/(tokens|tv|mobile|intro)\.css/, /pages\/profiles\.css/, /tv\/shell\.css/, /pages\/player\.css/] } }
 }));

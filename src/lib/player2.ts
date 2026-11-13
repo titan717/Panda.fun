@@ -249,6 +249,5 @@ export function fitScale(mode: FitMode, w: number, h: number, ar = 16 / 9): { x:
 }
 
 /* ---------------- Mute memory (v1.2.6) ---------------- */
-const MUTE_KEY = "panda:muted";
-export function getMutedMemory() { try { return localStorage.getItem(MUTE_KEY) === "1"; } catch { return false; } }
-export function saveMutedMemory(m: boolean) { try { if (m) localStorage.setItem(MUTE_KEY, "1"); else localStorage.removeItem(MUTE_KEY); } catch { /* storage full */ } }
+// v1.3.0: lives in audio.ts (entry) so the launch intro can respect it; re-exported for the player
+export { getMutedMemory, saveMutedMemory } from "./audio";

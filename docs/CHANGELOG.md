@@ -2,6 +2,14 @@
 
 Every stable release of Panda.fun. The same notes ship in each GitHub Release and in Settings › What's New.
 
+## 1.3.0
+
+- **A new launch intro with sound**: two crimson eyes open in the dark, blink, the panda's face forms around them and the camera dives through the eyes into a burst of light ribbons that settles into the Who's watching? horizon. About 3.6 s on TVs and 2.4 s on phones, with no text. The score is made live in the app (no audio files): a low rumble, a tick on the blink, a warm swell, a rising sweep and one deep drum hit with a short echo, then a soft hum. It follows the app's sound-off setting and volume, and plays silently when the device has not allowed sound yet.
+- **The intro always plays to the end**: keys, the remote, taps and clicks are ignored while it runs, and nothing moves underneath. It shows only on a fresh start (never when Android recreates the screen), the app loads behind it, and it always ends on time (4.2 s on TVs, 3 s on phones at most) even if something goes wrong. Reduce motion shows a short still frame with a soft tone instead.
+- **A deeper Who's watching? screen**: the poster wall now drifts in two or three depth layers (one in Lite mode), the focused profile lifts off the horizon, glows and shows its name brighter and larger, so focus is easy to see in a dark room. The profiles rise into place as the intro hands over.
+- **Into Home through the wall**: choosing a profile pushes the camera through the poster wall and dissolves into Home, which is already loading behind it. Kids PIN, Add Profile and Manage Profiles work as before.
+- **Fixes**: on TVs the profile avatars sat slightly below the horizon line; they are now centred on it. A date-dependent unit test no longer fails as time passes.
+
 ## 1.2.9
 
 - **Who's watching? on every start**: opening the app (or a new browser tab) now asks who is watching, even when you open a link straight to a title. Moving between screens, coming back to Home, reloading the page, rotating the phone or Android recreating the screen never asks again. Profiles, lists and progress are never cleared.

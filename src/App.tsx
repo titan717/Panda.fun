@@ -17,10 +17,9 @@ import { exitApp, isAndroidApp, native } from "./lib/native";
 import { useOnline } from "./lib/hooks";
 import { takeUpdateNotice } from "./lib/updates";
 import { ErrorBoundary, OfflineBanner, Toasts, toast } from "./components/ui";
-import { ProfileSelect } from "./pages/Profiles";
 import { lazyNamed, whenIdle } from "./lib/lazy";
-import { useWhoPending } from "./lib/launch";
-import { Intro, useIntro } from "./components/Intro";
+import { useWhoPending, whoPending } from "./lib/launch";
+import { Intro, IntroBoundary, useIntro } from "./components/Intro";
 import type { MediaType, PageKind } from "./lib/types";
 
 const loadTv = () => import("./tv");
@@ -38,6 +37,12 @@ const loadLists = () => import("./pages/Lists");
 const loadProfileEditor = () => import("./pages/ProfileEditor");
 
 const lz = lazyNamed;
+// v1.3.0 (D-180): Who's watching is a lazy chunk. A fresh start fetches it at once, so it is ready long before the
+// launch intro hands off; the intro covers the download, and the entry stays within its budget.
+const loadProfiles = () => import("./pages/Profiles");
+const ProfileSelect = lazyNamed(loadProfiles, "ProfileSelect");
+if (typeof window !== "undefined" && (whoPending() || !getState().activeProfileId)) void loadProfiles().catch(() => undefined);
+const WhoLoading = () => <div className="profiles-loading" aria-hidden="true" />;
 const TvShell = lz(loadTv, "TvShell");
 const TvHome = lz(loadTv, "TvHome");
 const TvDetails = lz(loadTv, "TvDetails");
@@ -229,7 +234,7 @@ function Routes({ mode }: { mode: LayoutMode }) {
   const hasProfiles = useStore((s) => s.profiles.length > 0);
   const needsProfile = (!profile || (askWho && hasProfiles)) && !PUBLIC_PATHS.includes(location) && !location.startsWith("/profiles");
   // v1.2.9: a fresh start asks "Who's watching?" first and then opens the screen it was started on
-  if (needsProfile) return <ProfileSelect stay={Boolean(profile)} />;
+  if (needsProfile) return <Suspense fallback={<WhoLoading />}><ProfileSelect stay={Boolean(profile)} /></Suspense>;
 
   if (location.startsWith("/watch/")) {
     return (
@@ -240,7 +245,7 @@ function Routes({ mode }: { mode: LayoutMode }) {
       </ErrorBoundary>
     );
   }
-  if (location === "/profiles") return <ProfileSelect />;
+  if (location === "/profiles") return <Suspense fallback={<WhoLoading />}><ProfileSelect /></Suspense>;
 
   return (
     <>
@@ -305,7 +310,7 @@ export function App() {
           </Router>
           <Toasts />
           <ReconnectRecovery />
-          {intro.phase !== "done" && <Intro tv={mode === "tv"} phase={intro.phase} skip={intro.skip} reduce={intro.reduce} />}
+          {intro.phase !== "done" && <IntroBoundary onError={intro.end}><Intro tv={intro.tv} phase={intro.phase} reduce={intro.reduce} beats={intro.beats} /></IntroBoundary>}
         </div>
       </LayoutContext.Provider>
     </SWRConfig>

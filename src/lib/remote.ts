@@ -1,4 +1,5 @@
 import { native } from "./native";
+import { introActive } from "./launch";
 import { toast } from "../components/ui";
 
 /**
@@ -73,7 +74,8 @@ export const REMOTE_EVENT = "panda:remote";
 
 /** Called once by the app (Android only): typing, connection toasts and screen tracking. */
 export function installRemote(open: (path: string) => void) {
-  window.__pandaRemoteText = (text) => typeIntoTv(text, open);
+  // v1.3.0: nothing reaches the app while the launch intro plays (it cannot be skipped)
+  window.__pandaRemoteText = (text) => { if (!introActive()) typeIntoTv(text, open); };
   window.__pandaRemote = (event, phones) => {
     if (event === "connected") toast(phones > 1 ? `${phones} phones connected as remotes` : "Phone connected as a remote");
     window.dispatchEvent(new CustomEvent(REMOTE_EVENT));

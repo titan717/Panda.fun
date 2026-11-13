@@ -157,7 +157,11 @@
   --z-modal: 100;
   --z-toast: 120;
   --z-splash: 200;
+
+  /* v1.3.0: Who's watching? horizon (tv1#33, 78 % TV / 68 % phone); the launch intro draws its line at the same place */
+  --horizon: 78%;
 }
+html[data-mode="mobile"] { --horizon: 68%; }
 
 html[data-mode="tv"] {
   /* 1 tv unit relative to a 1920x1080 canvas, letterboxed for non-16:9 screens. */

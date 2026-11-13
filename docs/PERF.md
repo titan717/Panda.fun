@@ -2,6 +2,16 @@
 
 Measured on every release. Never regress.
 
+## v1.3.0 (non-skippable launch intro with Web Audio score, Who's watching depth)
+
+| Metric | Value |
+|---|---|
+| Entry chunk (gzip) | 23,812 B at gzip -9 (v1.2.9 24,098 B, −286 B): the new intro and its input block stay in the entry (they paint first), the picker moved to a lazy `Profiles` chunk (2.16 KB JS + 2.20 KB CSS gzip) prefetched only when Who's watching is pending. |
+| Entry CSS (gzip) | 15,370 B (v1.2.9 16,183 B, −813 B): the profiles styles left the entry with their chunk; the old particle-stage intro CSS was replaced. |
+| Intro score | Lazy `introScore` chunk, 2,237 B gzip, fetched only on a fresh start; about 25 short-lived Web Audio nodes, the context is closed after the reverb tail. No audio files. |
+| Intro cost | Transform and opacity only, one compositor layer per element (eyes, face, ribbons, horizon); no canvas, no animated filters. TV 3.6 s, phone 2.4 s, hard stop 4.2 s / 3.0 s; Lite mode draws 5 ribbons instead of 9. The app renders underneath the whole time, so the intro hides loading and adds none. |
+| Poster wall | 2–3 layers drifting with `transform` only (Lite: one layer); blur on far layers is static. |
+
 ## v1.2.9 (launch, D-pad, CineSrc server memory, rating, landing page)
 
 | Metric | Value |
