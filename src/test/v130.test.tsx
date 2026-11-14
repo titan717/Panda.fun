@@ -72,7 +72,7 @@ describe("v1.3.0 launch intro: cannot be skipped", () => {
     expect(appSrc).not.toContain("skip={");
   });
 
-  it("ends on the timeline (TV 3.6 s, phone 2.4 s) and lets input through again", () => {
+  it("ends on the timeline (TV 5 s since v1.3.1, phone 2.4 s) and lets input through again", () => {
     const onAppKey = vi.fn();
     render(<Harness onAppKey={onAppKey} onAppClick={() => undefined} />);
     act(() => { vi.advanceTimersByTime(BEATS.tv.leave); });
@@ -89,18 +89,19 @@ describe("v1.3.0 launch intro: cannot be skipped", () => {
     expect(BEATS.m.eyes).toBe(200);
   });
 
-  it("follows the TV beat sheet", () => {
-    expect(BEATS.tv).toMatchObject({ eyes: 400, blink: 1000, face: 1500, zoom: 2000, burst: 2600, horizon: 3000, leave: 3400, done: 3600 });
+  it("follows the TV beat sheet (v1.3.1 retro film) and keeps the phone beats", () => {
+    expect(BEATS.tv).toMatchObject({ eyes: 400, blink: 1000, face: 1250, zoom: 2500, burst: 3750, horizon: 3900, leave: 4600, done: 5000 });
+    expect(BEATS.m).toEqual({ eyes: 200, blink: 600, face: 900, zoom: 1150, burst: 1500, horizon: 1850, leave: 2200, done: 2400, hard: 3000 });
   });
 });
 
 describe("v1.3.0 launch intro: hard timeout", () => {
   beforeEach(() => vi.useFakeTimers());
   afterEach(() => vi.useRealTimers());
-  it("is 4.2 s on TV and 3.0 s on phones, in every mode", () => {
-    expect(beatsFor(true, false).hard).toBe(4200);
+  it("is 6 s on TV (v1.3.1) and 3.0 s on phones, in every mode", () => {
+    expect(beatsFor(true, false).hard).toBe(6000);
     expect(beatsFor(false, false).hard).toBe(3000);
-    expect(beatsFor(true, true).hard).toBe(4200);
+    expect(beatsFor(true, true).hard).toBe(6000);
     expect(beatsFor(false, true).hard).toBe(3000);
   });
   it("still ends the intro when the timeline callbacks fail", () => {
@@ -156,9 +157,9 @@ describe("v1.3.0 launch intro: fresh start only", () => {
 describe("v1.3.0 launch intro: reduced motion", () => {
   beforeEach(() => { sessionStorage.clear(); vi.useFakeTimers(); actions.setPrefs({ reduceMotion: true }); });
   afterEach(() => { cleanup(); vi.useRealTimers(); sessionStorage.clear(); actions.setPrefs({ reduceMotion: false }); setIntroPhase("done"); });
-  it("shows a 0.6 s still frame (eyes + panda), no ribbons, then fades, and is still not skippable", () => {
+  it("shows a 0.6 s still frame (eyes + panda), no ribbons, then fades, and is still not skippable (phone)", () => {
     const onAppKey = vi.fn();
-    render(<Harness onAppKey={onAppKey} onAppClick={() => undefined} />);
+    render(<Harness tv={false} onAppKey={onAppKey} onAppClick={() => undefined} />);
     const el = overlay()!;
     expect(el.className).toContain("intro--still");
     expect(el.querySelector(".intro-face")).not.toBeNull();
@@ -182,8 +183,8 @@ describe("v1.3.0 launch intro: reduced motion", () => {
 describe("v1.3.0 launch intro: no text, palette, horizon handoff", () => {
   beforeEach(() => { sessionStorage.clear(); vi.useFakeTimers(); });
   afterEach(() => { cleanup(); vi.useRealTimers(); setIntroPhase("done"); });
-  it("renders no words, only eyes, face, ribbons and the horizon", () => {
-    render(<Harness onAppKey={() => undefined} onAppClick={() => undefined} />);
+  it("renders no words, only eyes, face, ribbons and the horizon (phone)", () => {
+    render(<Harness tv={false} onAppKey={() => undefined} onAppClick={() => undefined} />);
     expect(overlay()!.textContent).toBe("");
     expect(overlay()!.querySelectorAll(".intro-ribbons i").length).toBeGreaterThanOrEqual(5);
     expect(overlay()!.querySelector(".intro-horizon")).not.toBeNull();
@@ -257,10 +258,10 @@ describe("v1.3.0 intro score (Web Audio)", () => {
     vi.useFakeTimers();
     const { Intro: I, beatsFor: bf } = fresh;
     render(<I tv phase="show" reduce={false} beats={bf(true, false)} />);
-    await act(async () => { await vi.advanceTimersByTimeAsync(50); });
+    await act(async () => { await vi.dynamicImportSettled(); await vi.advanceTimersByTimeAsync(50); });
     expect(fake.created).toHaveLength(0);
-    // the visuals still run in full
-    expect(document.querySelector(".intro-ribbons")).not.toBeNull();
+    // the visuals still run in full (v1.3.1: the retro film on TV)
+    expect(document.querySelector(".intro-retro")).not.toBeNull();
     cleanup();
   });
 
@@ -275,22 +276,23 @@ describe("v1.3.0 intro score (Web Audio)", () => {
     expect(introSoundAllowed()).toBe(0);
   });
 
-  it("puts one deep drum hit on the burst beat, with sub, tick, swell, riser and hum around it", () => {
+  it("puts one deep drum hit on the burst beat, with sub, tick, swell, riser and hum around it (phone, unchanged)", () => {
     vi.useFakeTimers();
     const fake = fakeAudio();
     window.AudioContext = fake.Ctx as unknown as typeof AudioContext;
-    const stop = playIntroScore({ beats: BEATS.tv, start: performance.now(), volume: 1, still: false, tv: true });
+    const stop = playIntroScore({ beats: BEATS.m, start: performance.now(), volume: 1, still: false, tv: false });
     const at = (f: number) => fake.oscs.filter((o) => Math.abs(o.freq - f) < 0.5);
     const drum = at(125);
     expect(drum).toHaveLength(1);
-    expect(drum[0]!.start).toBeCloseTo(2.6 + 0.03, 1);
-    expect(at(40)[0]!.start).toBeCloseTo(2.63, 1);       // sub tail of the hit
+    expect(drum[0]!.start).toBeCloseTo(1.5 + 0.03, 1);
+    expect(at(40)[0]!.start).toBeCloseTo(1.53, 1);       // sub tail of the hit
     expect(at(36)[0]!.start).toBeCloseTo(0.03, 1);       // faint sub-rumble from the first frame
-    expect(at(170)[0]!.start).toBeGreaterThan(1.0);       // blink tick inside the blink
-    expect(at(170)[0]!.start).toBeLessThan(1.5);
-    expect(at(110).some((o) => o.type === "triangle" && Math.abs(o.start - 1.53) < 0.05)).toBe(true); // warm swell
-    expect(at(90)[0]!.start).toBeCloseTo(2.03, 1);       // riser
-    expect(at(55).some((o) => Math.abs(o.start - 3.03) < 0.05)).toBe(true); // hum after the horizon
+    expect(at(170)[0]!.start).toBeGreaterThan(0.6);       // blink tick inside the blink
+    expect(at(170)[0]!.start).toBeLessThan(0.9);
+    expect(at(110).some((o) => o.type === "triangle" && Math.abs(o.start - 0.93) < 0.05)).toBe(true); // warm swell
+    expect(at(90)[0]!.start).toBeCloseTo(1.18, 1);       // riser
+    expect(at(55).some((o) => Math.abs(o.start - 1.88) < 0.05)).toBe(true); // hum after the horizon
+    expect(at(1200)).toHaveLength(0);                    // no paper clicks on phones
     stop();
   });
 

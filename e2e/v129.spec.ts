@@ -35,7 +35,7 @@ test("Who's watching appears on a fresh start and not again after a reload", asy
   test.skip(info.project.name !== "tv-1920" && info.project.name !== "mobile-390", "one TV and one phone size");
   await open(page, "/", { fresh: true });
   // v1.3.0: the launch intro cannot be skipped; wait for it to hand off
-  await expect(page.locator("[data-intro]")).toHaveCount(0, { timeout: 6_000 });
+  await expect(page.locator("[data-intro]")).toHaveCount(0, { timeout: 8_000 }); // v1.3.1: 5 s on TV
   await expect(page.getByRole("heading", { name: "Who's watching?" })).toBeVisible({ timeout: 15_000 });
   await page.locator(".profile-btn").first().click();
   await expect(page.getByRole("heading", { name: "Who's watching?" })).toHaveCount(0);

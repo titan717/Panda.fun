@@ -18,7 +18,7 @@ async function fresh(page: Page, query = "") {
 /** Wait for the intro to appear and then hand off (it cannot be skipped). */
 async function afterIntro(page: Page) {
   await expect(page.locator("[data-intro]")).toHaveCount(1, { timeout: 5_000 });
-  await expect(page.locator("[data-intro]")).toHaveCount(0, { timeout: 6_000 });
+  await expect(page.locator("[data-intro]")).toHaveCount(0, { timeout: 7_000 });
 }
 
 test("the intro ignores keys, clicks and taps, then ends on time and hands focus to the picker", async ({ page }, info) => {
@@ -34,10 +34,11 @@ test("the intro ignores keys, clicks and taps, then ends on time and hands focus
   if (!tv) await page.touchscreen.tap(200, 400);
   await expect(intro).toBeVisible();
   // still on screen shortly before its end
-  await page.waitForTimeout(Math.max(0, (tv ? 3000 : 1900) - (Date.now() - t0)));
+  // (v1.3.1: the TV film runs 5 s with a 6 s hard timeout; phones keep 2.4 s / 3 s)
+  await page.waitForTimeout(Math.max(0, (tv ? 4400 : 1900) - (Date.now() - t0)));
   await expect(intro).toHaveCount(1);
   // and gone well within the hard timeout
-  await expect(intro).toHaveCount(0, { timeout: tv ? 4_200 : 3_000 });
+  await expect(intro).toHaveCount(0, { timeout: tv ? 2_000 : 1_400 });
   await expect(page.getByRole("heading", { name: "Who's watching?" })).toBeVisible();
   // none of those keys moved focus or picked a profile underneath
   await expect.poll(() => page.evaluate(() => document.activeElement?.id)).toBe("prof-p1");

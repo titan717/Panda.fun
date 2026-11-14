@@ -1,0 +1,11 @@
+/* ---------- v1.3.1 TV launch intro (D-181): retro stop-motion paper cutout. ---------- */
+/* The film is stepped at 12 fps by IntroTv.tsx; nothing here animates except the shared horizon line (intro.css).
+   Palette: ink, warm paper, greens, gold and blue. No crimson. */
+.intro-retro { position: absolute; inset: 0; overflow: hidden; background: #191817; contain: strict; }
+.intro-retro-svg { position: absolute; inset: 0; width: 100%; height: 100%; display: block; }
+.intro-retro-tint { position: absolute; inset: 0; background: #ffb347; mix-blend-mode: soft-light; opacity: 0.28; pointer-events: none; }
+.intro-retro-vig { position: absolute; inset: 0; background: radial-gradient(ellipse at center, transparent 45%, rgba(0, 0, 0, 0.65) 100%); pointer-events: none; }
+/* the grain tile is drawn once and jumps to a new offset every frame (compositor-only) */
+.intro-retro-grain { position: absolute; inset: -96px; background-repeat: repeat; background-size: 160px 160px; mix-blend-mode: overlay; opacity: 0.16; pointer-events: none; will-change: transform; }
+/* the horizon draws over the black frame at the end, exactly where Who's watching? puts its line */
+.intro--retro .intro-horizon { z-index: 1; }

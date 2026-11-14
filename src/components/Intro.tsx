@@ -1,11 +1,28 @@
-import { Component, useEffect, useRef, useState, type CSSProperties, type ReactNode } from "react";
+import { Component, lazy, Suspense, useEffect, useRef, useState, type CSSProperties, type ReactNode } from "react";
 import { useLiteMotion, useReducedMotion } from "../lib/hooks";
 import { getIntroPhase, introDone, introPending, setIntroPhase, type IntroPhase } from "../lib/launch";
 import { getMutedMemory, isAudioUnlocked } from "../lib/audio";
 import { getPrefs } from "../lib/store";
+import { POPS, RETRO } from "../lib/introTimeline";
+
+/**
+ * The TV film is its own chunk so phones never download it. Its first 0.4 s is darkness, which the overlay already
+ * is, and it starts from the overlay's clock, so a late chunk joins on the right frame. If the chunk cannot load the
+ * dark overlay stays until the timeline ends.
+ */
+type FilmProps = { reduce: boolean; lite: boolean; start?: number };
+const NoFilm = (_: FilmProps) => null;
+const RetroIntro = lazy(() =>
+  import("./IntroTv").then((m): { default: (p: FilmProps) => ReactNode } => ({ default: m.RetroIntro }), () => ({ default: NoFilm })),
+);
 import "../styles/intro.css";
 
 /**
+ * v1.3.1 (D-181): on TVs the launch intro is the retro stop-motion paper-cutout film in IntroTv.tsx (blue eyes in the
+ * dark, the paper panda assembles, a zoom into the left eye, a fade onto the horizon), 5 s with a 6 s hard timeout.
+ * Phones and computers keep the v1.3.0 intro below unchanged. Everything else here (no skipping, the input block,
+ * scheduleIntro and its hard timeout, IntroBoundary, sound only when unlocked, the still frame) is shared by both.
+ *
  * v1.3.0 launch intro (D-177). No text: two crimson eyes open and blink in the dark, an ivory/charcoal panda face
  * forms around them, the camera dives through the eyes into a burst of brand light ribbons, and the ribbons collapse
  * into the horizon line that Who's watching? sits on, so the handoff is seamless.
@@ -16,13 +33,17 @@ import "../styles/intro.css";
  * The score is synthesised with Web Audio in a lazy chunk (lib/introScore.ts), and only when audio is unlocked.
  */
 
-/** Beat times in ms from the first frame. Phone = the same beats compressed to 2.4 s. */
-export interface IntroBeats { eyes: number; blink: number; face: number; zoom: number; burst: number; horizon: number; leave: number; done: number; hard: number }
+/**
+ * Beat times in ms from the first frame. Phone = the v1.3.0 beats (2.4 s). TV (v1.3.1) = the retro film's beats:
+ * eyes open, blink, the panda assembles from `face` (a paper click on each of `pops`), the zoom into the left eye
+ * starts at `zoom` and the drum hit lands at `burst` as the eye fills the screen, then the horizon and the fade.
+ */
+export interface IntroBeats { eyes: number; blink: number; face: number; zoom: number; burst: number; horizon: number; leave: number; done: number; hard: number; pops?: readonly number[] }
 export const BEATS: Record<"tv" | "m" | "stillTv" | "stillM", IntroBeats> = {
-  tv: { eyes: 400, blink: 1000, face: 1500, zoom: 2000, burst: 2600, horizon: 3000, leave: 3400, done: 3600, hard: 4200 },
+  tv: { eyes: RETRO.eyeL, blink: RETRO.blink, face: RETRO.assemble, zoom: RETRO.zoom, burst: RETRO.inside, horizon: RETRO.horizon, leave: RETRO.leave, done: RETRO.done, hard: RETRO.hard, pops: POPS },
   m: { eyes: 200, blink: 600, face: 900, zoom: 1150, burst: 1500, horizon: 1850, leave: 2200, done: 2400, hard: 3000 },
   // reduced motion: a 0.6 s still frame (eyes + panda), a soft tone, then a fade. Still not skippable.
-  stillTv: { eyes: 0, blink: 0, face: 0, zoom: 0, burst: 0, horizon: 0, leave: 600, done: 850, hard: 4200 },
+  stillTv: { eyes: 0, blink: 0, face: 0, zoom: 0, burst: 0, horizon: 0, leave: 600, done: 850, hard: RETRO.hard },
   stillM: { eyes: 0, blink: 0, face: 0, zoom: 0, burst: 0, horizon: 0, leave: 600, done: 850, hard: 3000 },
 };
 export const beatsFor = (tv: boolean, reduce: boolean) => BEATS[reduce ? (tv ? "stillTv" : "stillM") : tv ? "tv" : "m"];
@@ -115,6 +136,7 @@ export function Intro({ tv, phase, reduce, beats }: { tv: boolean; phase: "show"
   useInputBlock();
   useScore(tv, reduce, beats);
   const lite = useLiteMotion();
+  const [filmStart] = useState(() => performance.now());
   const ms = (n: number) => `${n}ms`;
   const vars = {
     "--b-eyes": ms(beats.eyes), "--b-blink": ms(beats.blink), "--b-face": ms(beats.face), "--b-zoom": ms(beats.zoom),
@@ -125,7 +147,17 @@ export function Intro({ tv, phase, reduce, beats }: { tv: boolean; phase: "show"
   } as CSSProperties;
   const ribbons = lite ? RIBBONS.filter((_, i) => i % 2 === 0) : RIBBONS;
   const pos = lite ? POS.filter((_, i) => i % 2 === 0) : POS;
-  const cls = `intro intro--${tv ? "tv" : "m"}${reduce ? " intro--still" : ""}${phase === "leave" ? " is-leaving" : ""}`;
+  const cls = `intro intro--${tv ? "tv" : "m"}${tv ? " intro--retro" : ""}${reduce ? " intro--still" : ""}${phase === "leave" ? " is-leaving" : ""}`;
+  if (tv) {
+    return (
+      <div className={cls} style={vars} role="status" aria-label="Panda.fun is starting" data-intro>
+        <Suspense fallback={null}>
+          <RetroIntro reduce={reduce} lite={lite} start={filmStart} />
+        </Suspense>
+        {!reduce && <span className="intro-horizon" aria-hidden="true" />}
+      </div>
+    );
+  }
   return (
     // aria-hidden content; the status role tells screen readers the app is starting
     <div className={cls} style={vars} role="status" aria-label="Panda.fun is starting" data-intro>

@@ -2,6 +2,15 @@
 
 Measured on every release. Never regress.
 
+## v1.3.1 (retro stop-motion paper-cutout TV intro)
+
+| Metric | Value |
+|---|---|
+| Entry chunk (gzip) | 24,380 B at gzip -9 (v1.3.0 23,801 B rebuilt on the same toolchain, +579 B): only the TV beat sheet and paper-piece timeline (`lib/introTimeline.ts`, used by the timeline and the score) and the lazy loader. The film itself is a lazy `IntroTv` chunk (3,599 B JS + 348 B CSS gzip) that phones never download; its first 0.4 s is darkness, which the overlay already is, and it runs on the overlay's clock, so a late chunk joins on the right frame (D-181). |
+| Entry CSS (gzip) | 15,370 B (v1.3.0 15,370 B, unchanged): the film CSS lives in its chunk. |
+| Intro score | Lazy `introScore` chunk, 2,344 B gzip (v1.3.0 2,237 B, +107 B for the paper-click ticks), fetched only on a fresh start with sound unlocked. |
+| Intro cost (TV) | One inline SVG at 12 fps: React state changes only when the frame changes (about 60 renders for the whole film). One screen-space SVG filter pass (boil turbulence + paper shadow; the shadow switches off above 3x zoom), grain is one pre-generated canvas tile moved by `transform`. After 4 dropped drawings the film continues with lite effects. Lite mode: no boil, shadow, grain or tint. TV 5 s, hard stop 6 s; phones keep the v1.3.0 intro (2.4 s / 3.0 s). |
+
 ## v1.3.0 (non-skippable launch intro with Web Audio score, Who's watching depth)
 
 | Metric | Value |

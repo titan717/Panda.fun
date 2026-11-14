@@ -10,6 +10,9 @@
  *   zoom    a riser whose pitch accelerates; everything drops out 30 ms before the hit
  *   burst   ONE deep drum hit (pitched body, sub, skin noise, click) with a short reverb tail
  *   horizon a high shimmer settling into a low hum, which fades out by the end
+ * v1.3.1 TV (the retro paper-cutout film, 5 s): the same cue sheet on the film's beats. `face` is the start of the
+ * assembly and every paper piece that pops in gets a dry paper-click tick (`beats.pops`); the riser runs under the
+ * stepped zoom into the left eye and the deep drum hit lands at `burst`, the moment the eye fills the screen.
  * Reduced motion plays one soft tone instead. Cue times are measured from the intro's first frame, so a late chunk
  * skips what already passed instead of drifting. Every node is scheduled once; the context closes after the tail.
  */
@@ -144,6 +147,17 @@ export function playIntroScore({ beats, start, volume, still, tv }: ScoreOptions
         const bp = filter("bandpass", 1800, 4); bp.connect(cg); noiseSrc(tk, tk + 0.05, bp);
         env(cg, [[tk, 0], [tk + 0.002, 0.14], [tk + 0.03, 0.0001, true]]);
       }
+      // 2b. v1.3.1 TV: a paper click on each pop-in (filtered noise snap plus a tiny falling tick, dry)
+      (beats.pops ?? []).forEach((ms, i) => {
+        if (passed(ms)) return;
+        const tk = at(ms);
+        const cg = gain(); cg.connect(master!);
+        const bp = filter("bandpass", 2600 + (i % 3) * 650, 2.5); bp.connect(cg); noiseSrc(tk, tk + 0.04, bp);
+        env(cg, [[tk, 0], [tk + 0.001, 0.2], [tk + 0.03, 0.0001, true]]);
+        const og = gain(); og.connect(master!);
+        const o = osc("triangle", 1200, tk, tk + 0.035, og); o.frequency.exponentialRampToValueAtTime(700, tk + 0.03);
+        env(og, [[tk, 0], [tk + 0.001, 0.06], [tk + 0.028, 0.0001, true]]);
+      });
       // 3. face: a warm major swell (A major, triangles through an opening lowpass)
       if (!passed(burst)) {
         const g = gain(); g.connect(master); g.connect(verb);
