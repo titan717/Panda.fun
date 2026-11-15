@@ -10,6 +10,7 @@ import type { CategoryStats } from "../intel/learner";
  *         + 0.6 × preferred-language match         (Top 10 language, the most-watched language)
  *         + 2.0 × category engagement − its prior  (opens of titles from this rail ÷ times the rail was seen, smoothed)
  *         − 0.6 per "hide" from this rail
+ *         + 0.8 / 0.6 / 0.4 for a mood rail that suits the local time of day (session assistant)
  *         + up to 0.35 exploration                 (a per-profile, per-day jitter so the long tail gets a turn)
  *
  * then a greedy diversity pass: a rail loses 0.45 when the previous rail has the same family, 1.3 when the previous
@@ -28,6 +29,8 @@ export interface RankContext {
   seed: string;
   /** what the profile mostly watches, from onboarding */
   contentType?: "movie" | "tv" | "both";
+  /** Smart Watch Session Assistant: moods that suit the local time, strongest first (src/lib/intel/moods.ts) */
+  sessionMoods?: readonly string[];
 }
 
 const ENGAGE_PRIOR = 0.15;
@@ -61,6 +64,7 @@ export function categoryScore(c: CategoryDef, ctx: RankContext): number {
   z += 2 * engagement(s);
   if (s?.hidden) z -= 0.6 * s.hidden;
   z += 0.35 * jitter(ctx.seed, c.id);
+  if (c.mood && ctx.sessionMoods) { const i = ctx.sessionMoods.indexOf(c.mood); if (i >= 0) z += 0.8 - 0.2 * i; }
   return z;
 }
 

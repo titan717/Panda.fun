@@ -1,3 +1,4 @@
+import { MoodChips } from "../components/MoodChips";
 import { useEffect, useRef } from "react";
 import { Icon } from "../components/Icon";
 import { EmptyState, ErrorState, Skeleton } from "../components/ui";
@@ -70,11 +71,13 @@ export function TvSearch() {
           <button id="search-sort" className="tv-chip" onClick={nextSort} aria-label={`Sort: ${sortLabel}. Press to change.`} data-hover-focus><Icon name="sort" /> {sortLabel}</button>
         </section>
       )}
+      {!s.active && <MoodChips />}
       {!s.active && <TvDiscover onOpen={s.openTitle} />}
       {s.active && (
         <>
           <h2 className="tv-section-title">{`Results for “${s.debounced.trim()}”`}</h2>
           {note && <p className="tv-search-note" role="status">{note}</p>}
+          <MoodChips query={s.debounced} />
           {s.error && !s.results.length ? <ErrorState compact message={s.error.message} onRetry={s.retry} /> : null}
           {!s.loading && !s.error && !s.stale && s.results.length === 0 && (
             <EmptyState icon="search" title={`No results for “${s.debounced.trim()}”`} sub="Check the spelling or try a different title, actor or genre." />

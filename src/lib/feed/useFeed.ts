@@ -10,6 +10,7 @@ import { isKidsSafe } from "../kids";
 import { affinities, type LearnerState } from "../intel/learner";
 import { intelState, intelStatus, noteCategory, useIntelVersion } from "../intel/runtime";
 import { CATEGORY_BY_ID, categoryPath, eligible, type CategoryDef } from "./catalog";
+import { daypart, sessionMoods } from "../intel/moods";
 import { dayKey, rankCategories, type RankContext } from "./rank";
 import type { ListPayload, PageKind, PandaItem } from "../types";
 
@@ -83,9 +84,11 @@ export function buildFeedRows(batches: readonly BatchResult[][], taken: Iterable
       const c = CATEGORY_BY_ID.get(b.id);
       if (!c) continue;
       const items: PandaItem[] = [];
+      const min = c.source.kind === "discover" ? c.source.minRating : undefined;
       for (const it of b.items) {
         if (items.length >= MAX_ITEMS) break;
         if (!it?.id || seen.has(it.id) || !ok(it)) continue;
+        if (min !== undefined && (it.rating ?? 0) < min) continue;
         items.push(it);
       }
       if (items.length < MIN_ITEMS) continue;
@@ -107,7 +110,8 @@ export function useCategoryFeed(kind: PageKind, taken: readonly { items?: readon
   useIntelVersion();
   const kids = Boolean(profile?.kids);
   const pid = profile?.id ?? "none";
-  const orderKey = `${pid}|${fk}|${kids ? "k" : "a"}|${dayKey(Date.now())}`;
+  const part = daypart();
+  const orderKey = `${pid}|${fk}|${kids ? "k" : "a"}|${dayKey(Date.now())}|${part}`;
   // wait for this profile's model to load from IndexedDB (a few ms) so the frozen order includes what it learned
   const modelReady = intelStatus() !== "loading";
 
@@ -126,7 +130,8 @@ export function useCategoryFeed(kind: PageKind, taken: readonly { items?: readon
       preferredLangs: [prefs.top10Lang, topLang].filter((x): x is string => Boolean(x)),
       stats: m.stats,
       seed: `${pid}|${dayKey(Date.now())}`,
-      contentType: taste?.contentType
+      contentType: taste?.contentType,
+      sessionMoods: sessionMoods(new Date(), kids)
     };
     const ids = rankCategories(eligible(fk, kids), ctx).map((c) => c.id);
     orders.set(orderKey, ids);

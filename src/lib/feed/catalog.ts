@@ -1,4 +1,5 @@
 import type { MediaType } from "../types";
+import { MOODS } from "../intel/moods";
 
 /**
  * v1.5.0 Home category feed: every rail the infinite Home feed can show, as a query on the Panda API.
@@ -8,10 +9,10 @@ import type { MediaType } from "../types";
  * two-card rail. `genres` are canonical genre names (src/lib/reco/genres.ts) and `lang` an ISO 639-1 code: the ranker
  * matches them against the profile's onboarding answers and its on-device taste model.
  */
-export type CategoryFamily = "trending" | "genre" | "acclaimed" | "language" | "new" | "combo" | "series";
+export type CategoryFamily = "trending" | "genre" | "acclaimed" | "language" | "new" | "combo" | "series" | "mood" | "gems";
 
 export type CategorySource =
-  | { kind: "discover"; type: MediaType; genre?: number; lang?: string; sort?: "popularity.desc" | "vote_average.desc" | "primary_release_date.desc" }
+  | { kind: "discover"; type: MediaType; genre?: number | string; lang?: string; sort?: "popularity.desc" | "vote_average.desc" | "primary_release_date.desc"; page?: number; minRating?: number }
   | { kind: "trending"; type: "all" | MediaType; window: "day" | "week" };
 
 export interface CategoryDef {
@@ -26,6 +27,8 @@ export interface CategoryDef {
   kids?: boolean;
   /** a prior on how broadly appealing the rail is, before any learning */
   prior: number;
+  /** mood rails: the mood id (src/lib/intel/moods.ts), boosted by the session assistant */
+  mood?: string;
 }
 
 const MOVIE_GENRES: [number, string, string][] = [
@@ -70,6 +73,10 @@ const COMBOS: [string, number, string, string][] = [
   ["hi", 53, "Thriller", "Hindi Thrillers"], ["ml", 53, "Thriller", "Malayalam Thrillers"], ["ko", 53, "Thriller", "Korean Thrillers"],
   ["ja", 16, "Animation", "Japanese Animated Movies"], ["ta", 28, "Action", "Tamil Action Movies"], ["hi", 35, "Comedy", "Hindi Comedies"]
 ];
+const GEMS: [string, MediaType, string | undefined, string, number][] = [
+  ["gems-movies", "movie", undefined, "Hidden Gems", 6], ["gems-series", "tv", undefined, "Hidden Gem Series", 4],
+  ["gems-ml", "movie", "ml", "Malayalam Hidden Gems", 3], ["gems-ko", "movie", "ko", "Korean Hidden Gems", 3], ["gems-hi", "movie", "hi", "Hindi Hidden Gems", 3]
+];
 const KIDS_GENRES = new Set(["Animation", "Family"]);
 
 const slug = (s: string) => s.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "");
@@ -88,10 +95,15 @@ function build(): CategoryDef[] {
   for (const [lang, genre, gs, title] of LANG_SERIES) out.push({ id: `lang-tv-${lang}${genre ? `-${genre}` : ""}`, title, family: "language", source: { kind: "discover", type: "tv", lang, genre }, genres: gs, lang, prior: 0.45 });
   for (const [type, lang, title] of NEWEST) out.push({ id: `new-${type}${lang ? `-${lang}` : ""}`, title, family: "new", source: { kind: "discover", type, lang, sort: "primary_release_date.desc" }, genres: [], lang, prior: 0.5 });
   for (const [lang, genre, g, title] of COMBOS) out.push({ id: `combo-${lang}-${slug(g)}`, title, family: "combo", source: { kind: "discover", type: "movie", lang, genre }, genres: [g], lang, prior: 0.35 });
+  // moods (10): OR-joined genres, boosted by the time of day (sessionMoods)
+  for (const m of MOODS) out.push({ id: `mood-${m.id}`, title: m.rail, family: "mood", source: { kind: "discover", type: "movie", genre: m.movie }, genres: m.genres, kids: m.kids, prior: 0.42, mood: m.id });
+  // hidden gems (5): well-rated titles past the first pages of "top rated", so the obvious hits are not repeated;
+  // the feed also drops anything an earlier rail showed and anything rated under minRating
+  for (const [id, type, lang, title, page] of GEMS) out.push({ id, title, family: "gems", source: { kind: "discover", type, lang, sort: "vote_average.desc", page, minRating: 7 }, genres: [], lang, prior: 0.4 });
   return out;
 }
 
-/** All Home feed categories (74). Ids are stable: category learning and focus memory are keyed on them. */
+/** All Home feed categories (89). Ids are stable: category learning and focus memory are keyed on them. */
 export const CATEGORIES: readonly CategoryDef[] = build();
 export const CATEGORY_BY_ID: ReadonlyMap<string, CategoryDef> = new Map(CATEGORIES.map((c) => [c.id, c]));
 
@@ -103,7 +115,7 @@ export function categoryPath(c: CategoryDef, page = 1): string {
   if (s.genre !== undefined) p.set("genre", String(s.genre));
   if (s.lang) p.set("lang", s.lang);
   if (s.sort) p.set("sort", s.sort);
-  p.set("page", String(page));
+  p.set("page", String((s.page ?? 1) + page - 1));
   return `/panda/discover/${s.type}?${p.toString()}`;
 }
 

@@ -285,3 +285,9 @@ html[data-mode="tv"] .sheet-group { font-size: calc(18 * var(--tu)); margin: cal
 
 /* v1.5.0 Home feed: the point the next batch of categories loads from (no layout) */
 .feed-sentinel { height: 1px; width: 100%; pointer-events: none; }
+
+/* v1.5.0 mood chips */
+.mood-chips { flex-wrap: wrap; }
+.mood-chip { text-decoration: none; }
+.mood-chip.is-suggested { background: rgba(139, 44, 255, 0.32); box-shadow: inset 0 0 0 1px rgba(228, 214, 255, 0.45); }
+html:not([data-mode="tv"]) .mood-section .mood-chips { flex-wrap: nowrap; overflow-x: auto; scrollbar-width: none; }

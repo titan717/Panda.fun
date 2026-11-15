@@ -15,9 +15,9 @@ const ctx = (o: Partial<RankContext> = {}): RankContext => ({
 });
 
 describe("v1.5.0 feed category catalogue", () => {
-  it("has 74 categories with unique, stable ids", () => {
-    expect(CATEGORIES.length).toBe(74);
-    expect(new Set(CATEGORIES.map((c) => c.id)).size).toBe(74);
+  it("has 89 categories with unique, stable ids", () => {
+    expect(CATEGORIES.length).toBe(89);
+    expect(new Set(CATEGORIES.map((c) => c.id)).size).toBe(89);
     expect(CATEGORY_BY_ID.get("lang-tv-ko-18")?.title).toBe("Korean Dramas");
   });
   it("builds the same API paths the rest of the app uses (shared cache entries)", () => {
@@ -111,5 +111,39 @@ describe("v1.5.0 category learning is stored in the profile's model", () => {
     expect(s.categories["movie-horror"]).toMatchObject({ hidden: 1 });
     const m = contextFromModel(s);
     expect(m.stats["movie-drama"]?.shown).toBe(2);
+  });
+});
+
+describe("v1.5.0 moods, hidden gems and the session assistant", () => {
+  it("recognises moods in free-text searches and never matches inside other words", async () => {
+    const { parseMood } = await import("../lib/intel/moods");
+    expect(parseMood("something scary for tonight")?.id).toBe("scary");
+    expect(parseMood("a feel good movie")?.id).toBe("feel-good");
+    expect(parseMood("mind-bending sci fi")?.id).toBe("mind-bending");
+    expect(parseMood("the matrix")).toBeNull();
+    expect(parseMood("scaryland")).toBeNull();
+  });
+  it("suggests moods from the local clock only, kid-safe on kids profiles", async () => {
+    const { sessionMoods, daypart } = await import("../lib/intel/moods");
+    const late = new Date(2026, 10, 18, 23, 30), morning = new Date(2026, 10, 18, 8, 0), sat = new Date(2026, 10, 21, 19, 0);
+    expect(daypart(late)).toBe("late");
+    expect(sessionMoods(late)[0]).toBe("scary");
+    expect(sessionMoods(morning)[0]).toBe("feel-good");
+    expect(sessionMoods(sat)).toContain("family");
+    expect(sessionMoods(late, true)).toEqual([]);
+    expect(sessionMoods(sat, true)).toEqual(["family"]);
+  });
+  it("boosts the mood rails that suit the moment", () => {
+    const base = rankCategories(CATEGORIES, ctx()).map((c) => c.id);
+    const late = rankCategories(CATEGORIES, { ...ctx(), sessionMoods: ["scary", "mind-bending"] }).map((c) => c.id);
+    expect(late.indexOf("mood-scary")).toBeLessThan(base.indexOf("mood-scary"));
+  });
+  it("hidden gems skip the first pages of top rated and drop titles under their rating floor", () => {
+    const gems = CATEGORY_BY_ID.get("gems-movies")!;
+    expect(categoryPath(gems)).toBe("/panda/discover/movie?sort=vote_average.desc&page=6");
+    expect(categoryPath(gems, 2)).toBe("/panda/discover/movie?sort=vote_average.desc&page=7");
+    const items = Array.from({ length: 10 }, (_, i) => ({ id: `movie:${i}`, title: `T${i}`, type: "movie", rating: i < 4 ? 6.1 : 7.4 }) as never);
+    const rows = buildFeedRows([[{ id: "gems-movies", items }]], [], () => true);
+    expect(rows[0]!.items.length).toBe(6);
   });
 });

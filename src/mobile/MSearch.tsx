@@ -1,3 +1,4 @@
+import { MoodChips } from "../components/MoodChips";
 import { useEffect, useRef } from "react";
 import { Link, useSearch as useQueryString } from "wouter";
 import { Icon } from "../components/Icon";
@@ -53,6 +54,7 @@ export function MSearch() {
               </div>
             </section>
           )}
+          <MoodChips />
           <MDiscover onOpen={s.openTitle} />
         </>
       )}
@@ -73,6 +75,7 @@ export function MSearch() {
               {suggest.map((r) => <button key={r} className="m-chip" onClick={() => { s.setQuery(r); s.commit(r); }}><Icon name="clock" /> {r}</button>)}
             </div>
           )}
+          <MoodChips query={s.debounced} />
           {note && <p className="m-search-note" role="status">{note}</p>}
           {s.error && !s.results.length && <ErrorState compact message={s.error.message} onRetry={s.retry} />}
           {s.loading && <div className="m-grid">{Array.from({ length: 9 }, (_, i) => <Skeleton key={i} className="m-poster sk-poster-m" />)}</div>}

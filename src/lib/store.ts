@@ -420,7 +420,25 @@ export function continueWatching(history: Record<string, HistoryEntry>, now = Da
       out.push({ ...h, season: h.pending.season, episode: h.pending.episode, episodeTitle: null, position: 0, duration: 0, completed: false, upNext: true, newEpisode: true, pending: null, updatedAt: Math.max(h.updatedAt, Date.parse(h.pending.airDate)) });
     }
   }
-  return out.sort((a, b) => b.updatedAt - a.updatedAt);
+  const rank = new Map(out.map((h) => [h, continueScore(h, now)]));
+  return out.sort((a, b) => rank.get(b)! - rank.get(a)!);
+}
+
+const HOUR = 3600_000;
+/**
+ * v1.5.0 Smart Continue Watching: recency first, then nudged by what is most likely to be resumed. A new episode of
+ * a show you finished, the next episode of a show in progress and a movie past its halfway point move up by hours;
+ * something sampled briefly weeks ago sinks below fresher entries (it is never removed, and never counted as a
+ * dislike). Pure and local.
+ */
+export function continueScore(h: HistoryEntry, now = Date.now()): number {
+  let z = h.updatedAt;
+  if (h.newEpisode) z += 36 * HOUR;
+  else if (h.upNext) z += 12 * HOUR;
+  const p = h.duration > 0 ? h.position / h.duration : 0;
+  if (h.item.type === "movie" && p >= 0.5 && p < 0.97) z += 12 * HOUR;
+  if (!h.upNext && p > 0 && p < 0.2 && now - h.updatedAt > 21 * 24 * HOUR) z -= 30 * 24 * HOUR;
+  return z;
 }
 /** Shows/movies the profile has watched (any progress), newest first. */
 export function watchedTitles(history: Record<string, HistoryEntry>) {
