@@ -282,3 +282,6 @@ html[data-mode="tv"] .sheet-group { font-size: calc(18 * var(--tu)); margin: cal
 .src-tier--2 { color: #9fd7ff; }
 .src-tier--3 { color: #f5b83d; }
 .src-tier--4 { color: var(--danger); }
+
+/* v1.5.0 Home feed: the point the next batch of categories loads from (no layout) */
+.feed-sentinel { height: 1px; width: 100%; pointer-events: none; }

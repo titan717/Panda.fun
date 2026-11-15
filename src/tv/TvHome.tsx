@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { Icon } from "../components/Icon";
 import { Img, Skeleton, TitleArt, ErrorState } from "../components/ui";
 import { Trailer, rankTrailers } from "../components/Trailer";
@@ -13,6 +13,7 @@ import { preloadImages } from "../lib/preload";
 import { useNav } from "../lib/nav";
 import type { PageKind, PandaItem } from "../lib/types";
 import { TvContinue, TvLandscape, TvPoster } from "./TvCards";
+import { feedOpenFrom, useCategoryFeed, useFeedImpressions, useFeedSentinel } from "../lib/feed/useFeed";
 
 /* ---------------- Hero (spec 5) ---------------- */
 function TvHero({ items, kind, onFocusHero }: { items: PandaItem[]; kind: PageKind; onFocusHero: () => void }) {
@@ -129,7 +130,7 @@ function TvRow({ row, index, active, onFocusRow }: { row: HomeRow; index: number
   const focus = useCallback((item: PandaItem) => onFocusRow(index, item), [index, onFocusRow]);
   const state = active < 0 ? "" : index < active ? "is-above" : index === active ? "is-active" : "is-below";
   return (
-    <section className={`tv-row tv-row--${row.kind} ${state}`} data-row aria-labelledby={`row-${row.id}-title`} id={`row-${row.id}`}>
+    <section className={`tv-row tv-row--${row.kind} ${state}`} data-row aria-labelledby={`row-${row.id}-title`} id={`row-${row.id}`} data-feed-cat={"cat" in row ? row.cat : undefined}>
       <h2 className="tv-row-title" id={`row-${row.id}-title`}>{row.title}</h2>
       <div className="tv-row-track" data-scroll-x>
         {row.kind === "continue" && row.entries.map((h, i) => <TvContinue key={h.item.id} entry={h} id={`${row.id}-${i}`} onFocusItem={focus} />)}
@@ -142,7 +143,12 @@ function TvRow({ row, index, active, onFocusRow }: { row: HomeRow; index: number
 }
 
 export function TvHome({ kind }: { kind: PageKind }) {
-  const { rows, hero, page } = useHomeRows(kind);
+  const { rows: pageRows, hero, page } = useHomeRows(kind);
+  // v1.5.0: the category feed continues below the page's rows; new rails are only ever appended, so the focused
+  // card never moves when the feed grows
+  const feed = useCategoryFeed(kind, pageRows, Boolean(page.data));
+  const rows = useMemo<HomeRow[]>(() => (feed.rows.length ? [...pageRows, ...feed.rows] : pageRows), [pageRows, feed.rows]);
+  const sentinel = useRef<HTMLDivElement>(null);
   const [active, setActive] = useState(-1);
   const [layers, setLayers] = useState<PandaItem[]>([]);
   const backdrop = layers[layers.length - 1] ?? null;
@@ -166,6 +172,12 @@ export function TvHome({ kind }: { kind: PageKind }) {
   const rowFail = rowTrailer.onFail;
   useEffect(() => { if (rowNoKeys) rowFail(); }, [rowNoKeys, rowFail]);
   const onFocusHero = useCallback(() => setActive(-1), []);
+
+  // D-pad: three rows before the end of the feed, fetch the next batch (it lands below, out of sight)
+  const { loadMore } = feed;
+  useEffect(() => { if (active >= 0 && active >= rows.length - 3) loadMore(); }, [active, rows.length, loadMore]);
+  useFeedSentinel(sentinel, loadMore, rows.length);
+  useFeedImpressions(root, rows.length);
 
   // warm the posters/stills of the rows just below focus (and the first rows on load)
   useEffect(() => {
@@ -200,7 +212,7 @@ export function TvHome({ kind }: { kind: PageKind }) {
   if (page.error && !page.data) return <div className="tv-page tv-page--center"><ErrorState message={page.error.message} onRetry={() => page.mutate()} /></div>;
 
   return (
-    <div ref={root} className={`tv-page tv-home ${active >= 0 ? "is-rows" : ""} ${rowTrailerOn ? "is-row-trailer" : ""}`} data-scroll-y="row" data-scroll-offset="0.4">
+    <div ref={root} onClickCapture={(e) => feedOpenFrom(e.target)} className={`tv-page tv-home ${active >= 0 ? "is-rows" : ""} ${rowTrailerOn ? "is-row-trailer" : ""}`} data-scroll-y="row" data-scroll-offset="0.4">
       <div className={`tv-backdrop ${rowsActive ? "is-visible" : ""} ${lite && rowsActive ? "is-kenburns" : ""}`} aria-hidden="true">
         {layers.map((b) => <div key={b.id} className="tv-backdrop-layer"><Img src={b.backdropLarge ?? b.backdrop} alt="" title="" /></div>)}
         {rowsActive && rowStage !== "idle" && rowKeys.length > 0 && backdrop && (
@@ -213,6 +225,13 @@ export function TvHome({ kind }: { kind: PageKind }) {
         {page.data
           ? rows.map((r, i) => <TvRow key={r.id} row={r} index={i} active={active} onFocusRow={onFocusRow} />)
           : <TvRowsSkeleton />}
+        {page.data && feed.loading && (
+          <section className="tv-row tv-row--skeleton" aria-hidden="true">
+            <Skeleton className="sk-row-title" />
+            <div className="tv-row-track">{Array.from({ length: 8 }, (_, i) => <Skeleton key={i} className="sk-poster" />)}</div>
+          </section>
+        )}
+        <div ref={sentinel} className="feed-sentinel" aria-hidden="true" />
       </div>
     </div>
   );

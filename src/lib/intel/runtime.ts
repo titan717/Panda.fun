@@ -134,6 +134,21 @@ export function noteOpened(id: string) {
 }
 
 /**
+ * Category-level learning (Home feed): a rail was seen, a title was opened from it, or the viewer hid a title there.
+ * Counted per profile in the same on-device model; the feed ranks rails by these counts (src/lib/feed/rank.ts).
+ * Does not emit: the feed freezes its order for the visit, so rows never move under the D-pad focus.
+ */
+export function noteCategory(id: string, what: "shown" | "opened" | "played" | "hidden", now = Date.now()) {
+  const s = intelState();
+  if (!s || !id) return;
+  const c = s.categories[id] ?? { shown: 0, opened: 0, played: 0, completed: 0, hidden: 0, at: 0 };
+  c[what]++;
+  c.at = Math.max(c.at, now);
+  s.categories[id] = c;
+  scheduleSave();
+}
+
+/**
  * Re-rank the engine's scored list with the profile's model. The engine score stays the prior: with an untrained
  * model the order is unchanged. Adds the personal reason where a real one exists.
  */

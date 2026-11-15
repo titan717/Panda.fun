@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { Link } from "wouter";
 import { Icon } from "../components/Icon";
 import { BrandLogo } from "../components/Brand";
@@ -13,6 +13,7 @@ import { useSurfaceTrailer } from "../lib/useTrailer";
 import { useMostlyVisible } from "../lib/trailerAutoplay";
 import type { PageKind, PandaItem } from "../lib/types";
 import { MContinue, MLand, MPoster } from "./MCards";
+import { feedOpenFrom, useCategoryFeed, useFeedImpressions, useFeedSentinel } from "../lib/feed/useFeed";
 
 const TOP10_LANGS = [{ code: "ml", name: "Malayalam" }, { code: "hi", name: "Hindi" }, { code: "ta", name: "Tamil" }, { code: "te", name: "Telugu" }, { code: "kn", name: "Kannada" }, { code: "en", name: "English" }, { code: "ko", name: "Korean" }];
 
@@ -113,7 +114,7 @@ function Top10Chips() {
 
 function MRow({ row }: { row: HomeRow }) {
   return (
-    <section className={`m-row m-row--${row.kind}`} aria-label={row.title}>
+    <section className={`m-row m-row--${row.kind}`} aria-label={row.title} data-feed-cat={"cat" in row ? row.cat : undefined}>
       <div className="m-row-head">
         <h2 className="m-row-title">{row.title}</h2>
         {row.link && <Link href={row.link} className="m-row-more" aria-label={`See all ${row.title}`}><Icon name="chevronRight" /></Link>}
@@ -131,7 +132,13 @@ function MRow({ row }: { row: HomeRow }) {
 
 /** Mobile Home / TV / Movies (spec 11, 12). */
 export function MHome({ kind }: { kind: PageKind }) {
-  const { rows, hero, page } = useHomeRows(kind);
+  const { rows: pageRows, hero, page } = useHomeRows(kind);
+  const feed = useCategoryFeed(kind, pageRows, Boolean(page.data));
+  const rows = useMemo<HomeRow[]>(() => (feed.rows.length ? [...pageRows, ...feed.rows] : pageRows), [pageRows, feed.rows]);
+  const root = useRef<HTMLDivElement>(null);
+  const sentinel = useRef<HTMLDivElement>(null);
+  useFeedSentinel(sentinel, feed.loadMore, rows.length);
+  useFeedImpressions(root, rows.length);
   const [scrolled, setScrolled] = useState(false);
   useEffect(() => {
     const on = () => setScrolled(window.scrollY > 48);
@@ -143,7 +150,7 @@ export function MHome({ kind }: { kind: PageKind }) {
   const label = kind === "tv" ? "TV" : kind === "movies" ? "Movies" : kind === "new" ? "New & Hot" : "For You";
 
   return (
-    <div className="m-page m-home">
+    <div ref={root} className="m-page m-home" onClickCapture={(e) => feedOpenFrom(e.target)}>
       {kind === "home" && (
         <div className={`m-brand-pills ${scrolled ? "is-hidden" : ""}`}>
           <Link href="/" className="m-brand-pill" aria-label="Panda.fun home"><BrandLogo variant="mark" width={30} height={30} alt="" priority /><BrandLogo variant="wordmark" height={17} alt="" priority /></Link>
@@ -163,6 +170,8 @@ export function MHome({ kind }: { kind: PageKind }) {
       )}
       {page.data && hero.length > 0 && <HeroCarousel items={hero} kind={kind} />}
       {rows.map((r) => <MRow key={r.id} row={r} />)}
+      {page.data && feed.loading && <section className="m-row" aria-hidden="true"><Skeleton className="sk-row-title" /><div className="m-row-track">{[0, 1, 2, 3].map((j) => <Skeleton key={j} className="m-poster sk-poster-m" />)}</div></section>}
+      <div ref={sentinel} className="feed-sentinel" aria-hidden="true" />
     </div>
   );
 }
