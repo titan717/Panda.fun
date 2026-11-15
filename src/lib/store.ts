@@ -239,34 +239,86 @@ function safeStorage(): Storage | null {
 
 const storage = typeof window !== "undefined" ? safeStorage() : null;
 
-function load(): State {
-  const raw = storage?.getItem(`${NS}:state`);
+const AVATARS = new Set<string>(["kids", "smile", "panda", "star", "wave"]);
+const isObj = (v: unknown): v is Record<string, unknown> => typeof v === "object" && v !== null && !Array.isArray(v);
+const arr = <T,>(v: unknown, ok: (x: unknown) => boolean): T[] => (Array.isArray(v) ? (v.filter(ok) as T[]) : []);
+const isItem = (i: unknown) => isObj(i) && typeof i.id === "string" && typeof i.tmdbId === "number";
+
+/**
+ * v1.4.0: a saved profile is kept only when it is well-formed (string id and name, a known avatar). Duplicates are
+ * dropped (first wins) so one profile's data can never be read by another. Exported for tests.
+ */
+export function cleanProfiles(v: unknown): Profile[] {
+  const seen = new Set<string>();
+  const out: Profile[] = [];
+  for (const p of Array.isArray(v) ? v : []) {
+    if (!isObj(p) || typeof p.id !== "string" || !p.id || seen.has(p.id)) continue;
+    seen.add(p.id);
+    out.push({
+      id: p.id,
+      name: typeof p.name === "string" && p.name.trim() ? p.name.slice(0, 20) : "Viewer",
+      avatar: (typeof p.avatar === "string" && AVATARS.has(p.avatar) ? p.avatar : "smile") as AvatarKind,
+      kids: p.kids === true,
+      createdAt: typeof p.createdAt === "number" && Number.isFinite(p.createdAt) ? p.createdAt : 0
+    });
+  }
+  return out.slice(0, 6);
+}
+
+function cleanData(raw: unknown): ProfileData {
+  const d = { ...emptyData(), ...(isObj(raw) ? (raw as Partial<ProfileData>) : {}) };
+  d.watchlist = arr<PandaItem>(d.watchlist, isItem);
+  d.lists = arr<UserList>(d.lists, (l) => isObj(l) && typeof l.id === "string" && typeof l.name === "string" && Array.isArray(l.items));
+  d.recentTitles = arr<PandaItem>(d.recentTitles, isItem).slice(0, 12);
+  d.reminders = arr<PandaItem>(d.reminders, isItem);
+  d.recentSearches = arr<string>(d.recentSearches, (q) => typeof q === "string").slice(0, 8);
+  d.alerted = arr<string>(d.alerted, (k) => typeof k === "string");
+  d.alertsSeenAt = typeof d.alertsSeenAt === "number" && Number.isFinite(d.alertsSeenAt) ? d.alertsSeenAt : 0;
+  d.ratings = isObj(d.ratings) ? d.ratings : {};
+  const history: Record<string, HistoryEntry> = {};
+  for (const [k, h] of Object.entries(isObj(d.history) ? d.history : {})) {
+    if (!isObj(h) || !isItem(h.item)) continue;
+    const e = h as unknown as HistoryEntry;
+    history[k] = e.episodes && typeof e.episodes !== "object" ? { ...e, episodes: undefined } : e;
+  }
+  d.history = history;
+  return d;
+}
+
+/** True when this load found a usable saved state: the device has run Panda before (onboarding is not first-run). */
+export let launchedBefore = false;
+
+/**
+ * Read the saved state. Corrupted JSON, a wrong shape, broken profiles or an active profile that no longer exists are
+ * repaired instead of crashing the app: bad parts fall back to defaults, an unknown activeProfileId becomes null (so
+ * Who's watching asks once), and if no valid profile survives the device starts fresh. Exported for tests.
+ */
+export function load(raw: string | null | undefined = storage?.getItem(`${NS}:state`)): State {
+  launchedBefore = false;
   if (!raw) return defaultState();
   try {
-    const parsed = JSON.parse(raw) as Partial<State>;
-    if (!parsed.profiles?.length) return defaultState();
+    const parsed = JSON.parse(raw) as unknown;
+    if (!isObj(parsed)) return defaultState();
+    const profiles = cleanProfiles(parsed.profiles);
+    if (!profiles.length) return defaultState();
+    const savedData = isObj(parsed.data) ? parsed.data : {};
     const data: Record<string, ProfileData> = {};
-    for (const p of parsed.profiles) {
-      const d = { ...emptyData(), ...(parsed.data?.[p.id] ?? {}) };
-      d.lists = Array.isArray(d.lists) ? d.lists.filter((l) => l && typeof l.id === "string" && typeof l.name === "string" && Array.isArray(l.items)) : [];
-      d.recentTitles = Array.isArray(d.recentTitles) ? d.recentTitles.filter((i) => i && typeof i.id === "string" && typeof i.tmdbId === "number").slice(0, 12) : [];
-      d.reminders = Array.isArray(d.reminders) ? d.reminders.filter((i) => i && typeof i.id === "string" && typeof i.tmdbId === "number") : [];
-      d.alerted = Array.isArray(d.alerted) ? d.alerted.filter((k) => typeof k === "string") : [];
-      d.alertsSeenAt = typeof d.alertsSeenAt === "number" && Number.isFinite(d.alertsSeenAt) ? d.alertsSeenAt : 0;
-      for (const [k, h] of Object.entries(d.history ?? {})) if (h && h.episodes && typeof h.episodes !== "object") d.history[k] = { ...h, episodes: undefined };
-      data[p.id] = d;
-    }
-    const prefs = { ...defaultPrefs, ...(parsed.prefs ?? {}) };
+    for (const p of profiles) data[p.id] = cleanData(savedData[p.id]);
+    const savedPrefs = isObj(parsed.prefs) ? (parsed.prefs as Partial<Prefs>) : {};
+    const prefs = { ...defaultPrefs, ...savedPrefs };
     // sources outside the registry fall back to Automatic; v1.2.0 moves the old CineSrc default to Automatic once (D-116)
     // v1.4.0: there is no source picker any more; the platform registry decides (docs/SOURCES.md). Any stored pick is dropped.
     prefs.preferredSource = "auto"; prefs.sourceAuto = true;
+    const savedOwn = isObj(parsed.profilePrefs) ? parsed.profilePrefs : {};
     const profilePrefs: Record<string, Partial<Prefs>> = {};
-    for (const p of parsed.profiles) {
-      const own = { ...(parsed.profilePrefs?.[p.id] ?? {}) };
+    for (const p of profiles) {
+      const own = { ...(isObj(savedOwn[p.id]) ? (savedOwn[p.id] as Partial<Prefs>) : {}) };
       delete own.preferredSource;
       profilePrefs[p.id] = own;
     }
-    return { profiles: parsed.profiles, activeProfileId: parsed.activeProfileId ?? null, prefs, data, profilePrefs };
+    const active = typeof parsed.activeProfileId === "string" && profiles.some((p) => p.id === parsed.activeProfileId) ? parsed.activeProfileId : null;
+    launchedBefore = true;
+    return { profiles, activeProfileId: active, prefs, data, profilePrefs };
   } catch {
     return defaultState();
   }
@@ -298,7 +350,7 @@ export function flushStore() {
 if (typeof window !== "undefined") {
   window.addEventListener("pagehide", flushStore);
   window.addEventListener("storage", (e) => {
-    if (e.key === `${NS}:state`) { state = load(); listeners.forEach((l) => l()); }
+    if (e.key === `${NS}:state`) { const was = launchedBefore; state = load(); launchedBefore = was; listeners.forEach((l) => l()); }
   });
 }
 
@@ -377,7 +429,8 @@ export function watchedTitles(history: Record<string, HistoryEntry>) {
 
 /* ---------- actions ---------- */
 export const actions = {
-  selectProfile(id: string) { set({ ...state, activeProfileId: id }); },
+  /** Remembered across restarts (v1.4.0): the next cold start opens this profile's Home directly. */
+  selectProfile(id: string) { if (state.profiles.some((p) => p.id === id)) set({ ...state, activeProfileId: id }); },
   signOut() { set({ ...state, activeProfileId: null }); },
   addProfile(name: string, avatar: AvatarKind, kids: boolean) {
     const p: Profile = { id: uid(), name: name.trim().slice(0, 20) || "Viewer", avatar, kids, createdAt: Date.now() };

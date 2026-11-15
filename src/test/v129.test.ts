@@ -62,33 +62,24 @@ describe("CineSrc server memory (v1.2.9, directive §2)", () => {
   });
 });
 
-describe("Who's watching on a fresh start (v1.2.9, directive §4)", () => {
+// v1.4.0 changed this rule: the last selected profile is restored on a cold start (no more "ask on every fresh
+// start"); Who's watching shows only without a valid saved profile or after Switch profile. See v140-launch.test.ts.
+describe("Who's watching (v1.4.0 rule, was v1.2.9 directive §4)", () => {
   afterEach(() => { sessionStorage.clear(); vi.resetModules(); history.replaceState(null, "", "/"); });
-  it("is pending on a fresh session and done after a pick, without touching profiles", async () => {
-    localStorage.setItem("panda:v1:state", "{\"profiles\":[1]}");
+  it("no longer keeps a per-session 'asked' mark", async () => {
     const m = await import("../lib/launch");
-    expect(m.whoPending()).toBe(true);
-    m.whoDone();
-    expect(m.whoPending()).toBe(false);
-    expect(sessionStorage.getItem("panda:who")).toBe("1");
-    expect(localStorage.getItem("panda:v1:state")).toBe("{\"profiles\":[1]}");
-  });
-  it("is not pending when the session already started (navigation, reload)", async () => {
-    sessionStorage.setItem("panda:splash", "1");
-    const m = await import("../lib/launch");
-    expect(m.whoPending()).toBe(false);
-    expect(m.introPending()).toBe(false);
+    expect("whoPending" in m).toBe(false);
+    expect(sessionStorage.getItem("panda:who")).toBeNull();
   });
   it("treats an Android activity recreation (?resumed=1) as a continuation", async () => {
     history.replaceState(null, "", "/?resumed=1");
     const m = await import("../lib/launch");
-    expect(m.whoPending()).toBe(false);
-    expect(m.introPending()).toBe(false);
+    expect(m.resumedLaunch()).toBe(true);
     expect(mainActivity).toContain('if (savedInstanceState != null) "$WEB_ENTRY_URL?resumed=1" else WEB_ENTRY_URL');
   });
-  it("App asks with a saved profile too, and keeps the deep link", () => {
-    expect(appSrc).toContain("<ProfileSelect stay={Boolean(profile)} />");
-    expect(appSrc).toContain("<Intro tv={intro.tv}"); // v1.3.0: the layout is frozen for the intro's first frame
+  it("App asks only without a profile, keeps the deep link, and mounts the managed intro", () => {
+    expect(appSrc).toContain("if (!profile && open) return <Suspense fallback={<WhoLoading />}><ProfileSelect stay /></Suspense>;");
+    expect(appSrc).toContain("<LaunchIntro tv={mode === \"tv\"} />");
   });
 });
 
