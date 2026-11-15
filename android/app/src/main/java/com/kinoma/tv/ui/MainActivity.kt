@@ -17,6 +17,9 @@ import android.view.KeyEvent
 import android.view.View
 import android.view.ViewGroup
 import android.view.WindowManager
+import android.view.inputmethod.InputMethodManager
+import androidx.core.view.ViewCompat
+import androidx.core.view.WindowInsetsCompat
 import android.webkit.ConsoleMessage
 import android.webkit.JavascriptInterface
 import android.webkit.WebChromeClient
@@ -76,6 +79,7 @@ class MainActivity : ComponentActivity() {
     private lateinit var diagnosticContainer: LinearLayout
     private lateinit var diagnosticText: TextView
     private var pendingVerifiedUpdateUri: Uri? = null
+    private var imeVisible = false
     /** Path from a tapped notification, handed to the web app once it asks (cold start). */
     @Volatile private var launchPath: String? = null
     /** v1.2.4 phone remote (local network) and what the web app says is on screen, for the phone. */
@@ -113,6 +117,9 @@ class MainActivity : ComponentActivity() {
         // TV viewing stays immersive; phones and tablets retain their system bars.
         if (isTelevisionDevice()) {
             window.addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON)
+            // v1.3.2: the TV keyboard (Gboard / Leanback IME) overlays the bottom of the screen; never pan or resize
+            // the full-screen WebView under it (the search field sits at the top). Phones keep the manifest mode.
+            window.setSoftInputMode(WindowManager.LayoutParams.SOFT_INPUT_STATE_HIDDEN or WindowManager.LayoutParams.SOFT_INPUT_ADJUST_NOTHING)
         } else {
             window.clearFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON)
         }
@@ -188,6 +195,17 @@ class MainActivity : ComponentActivity() {
         }
 
         configureWebSettings(webView.settings)
+
+        // v1.3.2 TV text fields (src/lib/remoteInput.ts): tell the web app when the soft keyboard opens or closes, so a
+        // field closed with Back on the keyboard goes back to remote mode. WebView's own insets handling still runs.
+        ViewCompat.setOnApplyWindowInsetsListener(webView) { v, insets ->
+            val ime = insets.isVisible(WindowInsetsCompat.Type.ime())
+            if (ime != imeVisible) {
+                imeVisible = ime
+                webView.evaluateJavascript("window.__pandaIme && window.__pandaIme($ime)", null)
+            }
+            ViewCompat.onApplyWindowInsets(v, insets)
+        }
 
         // Add JavaScript bridge for TV and updater integration
         webView.addJavascriptInterface(KinomaTVBridge(this), "KinomaNative")
@@ -737,6 +755,30 @@ class MainActivity : ComponentActivity() {
         super.onDestroy()
     }
 
+    /**
+     * v1.3.2: open the soft keyboard for the focused web field. The web app has just switched the field from
+     * inputMode="none" to text/search, but Chromium only shows an IME by itself for a tap (or a focus that asks for
+     * it), never for a D-pad OK, and an IME that is already bound keeps the old "no keyboard" input type. So: give the
+     * WebView focus, wait a frame for the renderer to send the new text input state, then restart the input
+     * connection (the IME re-reads the field's type, inputmode and enterkeyhint) and show the keyboard.
+     */
+    private fun showSoftKeyboard() {
+        if (customView != null || !::webView.isInitialized) return
+        val imm = getSystemService(Context.INPUT_METHOD_SERVICE) as? InputMethodManager ?: return
+        if (!webView.hasFocus()) webView.requestFocus()
+        webView.postDelayed({
+            if (isFinishing || !webView.hasFocus()) return@postDelayed
+            imm.restartInput(webView)
+            imm.showSoftInput(webView, 0)
+        }, 64)
+    }
+
+    private fun hideSoftKeyboard() {
+        if (!::webView.isInitialized) return
+        val imm = getSystemService(Context.INPUT_METHOD_SERVICE) as? InputMethodManager ?: return
+        imm.hideSoftInputFromWindow(webView.windowToken, 0)
+    }
+
     override fun dispatchKeyEvent(event: KeyEvent): Boolean {
         // Handle Back button for TV remote
         if (event.keyCode == KeyEvent.KEYCODE_BACK) {
@@ -1128,6 +1170,20 @@ class MainActivity : ComponentActivity() {
                 runOnUiThread { startActivity(Intent.createChooser(send, "Share").addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)) }
                 true
             } catch (e: Exception) { false }
+        }
+
+        /** v1.3.2 TV text fields: OK on a field asks for the soft keyboard (see showSoftKeyboard). */
+        @JavascriptInterface
+        fun showKeyboard(key: String): Boolean {
+            if (!trusted(key)) return false
+            runOnUiThread { showSoftKeyboard() }
+            return true
+        }
+
+        @JavascriptInterface
+        fun hideKeyboard(key: String) {
+            if (!trusted(key)) return
+            runOnUiThread { hideSoftKeyboard() }
         }
 
         @JavascriptInterface

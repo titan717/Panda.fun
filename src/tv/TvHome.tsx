@@ -7,7 +7,7 @@ import { useSurfaceTrailer } from "../lib/useTrailer";
 import { useHomeRows, type HomeRow } from "../lib/rows";
 import { actions, usePrefs } from "../lib/store";
 import { detailsMeta, isNew, titlePath } from "../lib/format";
-import { focusFirst } from "../lib/focus";
+import { focusFirst, recallFocus, useFocusMemory } from "../lib/focus";
 import { whenIdle } from "../lib/lazy";
 import { preloadImages } from "../lib/preload";
 import { useNav } from "../lib/nav";
@@ -192,8 +192,10 @@ export function TvHome({ kind }: { kind: PageKind }) {
   useEffect(() => {
     if (!ready) return;
     const el = root.current;
-    if (el && !el.contains(document.activeElement)) focusFirst(el);
+    // Back from Details lands on the card you left from (history-entry focus memory); a fresh visit starts at the hero
+    if (el && !el.contains(document.activeElement) && !recallFocus(el)) focusFirst(el);
   }, [ready, kind]);
+  useFocusMemory(root);
 
   if (page.error && !page.data) return <div className="tv-page tv-page--center"><ErrorState message={page.error.message} onRetry={() => page.mutate()} /></div>;
 

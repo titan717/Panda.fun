@@ -1,8 +1,9 @@
-import { useEffect, useRef, useState } from "react";
+import { useEffect } from "react";
 import { Icon } from "../components/Icon";
 import { EmptyState, ErrorState, Skeleton } from "../components/ui";
 import { SEARCH_SORTS, useSearchState, type SearchFilter } from "../lib/useSearchState";
 import { focusEl } from "../lib/focus";
+import { useRemoteField } from "../lib/remoteInput";
 import { TvPoster } from "./TvCards";
 import { TvDiscover } from "./TvDiscover";
 
@@ -12,26 +13,16 @@ const FILTERS: { id: SearchFilter; label: string }[] = [{ id: "all", label: "All
 export function TvSearch() {
   // v1.4.0: before typing, Search is the discovery page (Panda Top Picks first, src/tv/TvDiscover.tsx)
   const s = useSearchState("all");
-  const input = useRef<HTMLInputElement>(null);
-  // Remote-friendly field (D-45): landing on Search focuses the field without popping the on-screen keyboard;
-  // OK opens it, Enter/Search on the keyboard closes it and jumps to the first result.
-  const [editing, setEditing] = useState(false);
-  useEffect(() => { focusEl(input.current); }, []);
-  const openKeyboard = () => {
-    const el = input.current;
-    if (!el) return;
-    setEditing(true);
-    requestAnimationFrame(() => { el.blur(); el.focus(); });
-  };
-  const onKey = (e: React.KeyboardEvent<HTMLInputElement>) => {
-    if (e.key !== "Enter") return;
-    e.preventDefault();
-    if (!editing && !s.query) { openKeyboard(); return; }
+  // Remote-friendly field (D-45, v1.3.2 src/lib/remoteInput.ts): landing on Search focuses the field without popping
+  // the on-screen keyboard; OK opens it (Gboard in the Android app), Enter/Search on the keyboard closes it, runs the
+  // search and moves to the first result. Down from the field reaches the filters and results.
+  const field = useRemoteField(true, () => {
     s.commit();
-    setEditing(false);
     const first = document.getElementById("res-0");
-    if (first && s.active) focusEl(first); else openKeyboard();
-  };
+    if (first && s.active) focusEl(first);
+  }, { mode: "search" });
+  const input = field.ref;
+  useEffect(() => { focusEl(input.current); }, [input]);
   const sortLabel = SEARCH_SORTS.find((x) => x.id === s.sort)?.label ?? "Best match";
   const nextSort = () => { const i = SEARCH_SORTS.findIndex((x) => x.id === s.sort); s.setSort(SEARCH_SORTS[(i + 1) % SEARCH_SORTS.length]!.id); };
   const note = s.active && !s.stale ? (s.interpreted ? `Showing ${s.interpreted}` : s.corrected ? `Showing results for “${s.corrected}”` : s.people.length ? `Including titles with ${s.people.join(", ")}` : null) : null;
@@ -45,8 +36,7 @@ export function TvSearch() {
         <label className="tv-search-field">
           <Icon name="search" />
           <input ref={input} id="search-input" type="search" value={s.query} placeholder={s.listening ? "Listening…" : "Search"} aria-label="Search movies and shows" autoComplete="off" spellCheck={false}
-            inputMode={editing ? "search" : "none"} enterKeyHint="search" onChange={(e) => s.setQuery(e.target.value)} onKeyDown={onKey}
-            onClick={() => { if (!editing) openKeyboard(); }} onBlur={() => setEditing(false)} />
+            enterKeyHint="search" onChange={(e) => s.setQuery(e.target.value)} {...field.props} />
         </label>
         {s.query && (
           <button id="search-clear" className="tv-search-clear" onClick={() => { s.setQuery(""); focusEl(input.current); }} aria-label="Clear search" data-hover-focus>

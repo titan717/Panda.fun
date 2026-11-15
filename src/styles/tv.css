@@ -44,10 +44,20 @@ html[data-mode="tv"] .state--compact .state-title { font-size: calc(28 * var(--t
 
 /* ---------- settings, updates, info, profiles on TV (17) ---------- */
 .tv-settings, .tv-settings-page { padding-top: calc(70 * var(--tu)); }
-.tv-settings-cols { display: grid; grid-template-columns: calc(620 * var(--tu)) 1fr; gap: calc(60 * var(--tu)); align-items: start; }
+/* v1.3.2: the page itself never scrolls; the section list and the panel are two sibling scrollers (no nesting) that
+ * fill the space under the header. focus.ts reveals the focused row in its own column (data-scroll-y="nearest"), and
+ * the inline/block padding keeps the focus ring and glow inside the scroller's clip. */
+.tv-settings { display: flex; flex-direction: column; overflow: hidden; padding-bottom: 0; }
+.tv-settings > .tv-page-head { flex: none; }
+.tv-settings-cols { flex: 1; min-height: 0; display: grid; grid-template-columns: calc(620 * var(--tu)) minmax(0, 1fr); gap: calc(36 * var(--tu)); align-items: stretch; }
+.tv-settings-list, .tv-settings-panel { --set-pad: calc(24 * var(--tu)); min-height: 0; overflow-x: hidden; overflow-y: auto; overscroll-behavior: contain; scrollbar-width: none; padding: var(--set-pad) var(--set-pad) var(--safe-y); margin: calc(-1 * var(--set-pad)) calc(-1 * var(--set-pad)) 0; }
+/* rows scrolled past an edge fade out instead of being cut (the focused row always stays inside the 16% margin) */
+.tv-settings-list, .tv-settings-panel { -webkit-mask-image: linear-gradient(180deg, transparent 0, #000 var(--set-pad), #000 calc(100% - var(--safe-y)), transparent 100%); mask-image: linear-gradient(180deg, transparent 0, #000 var(--set-pad), #000 calc(100% - var(--safe-y)), transparent 100%); }
+.tv-settings-list::-webkit-scrollbar, .tv-settings-panel::-webkit-scrollbar { display: none; }
 .tv-settings-list { display: flex; flex-direction: column; gap: calc(6 * var(--tu)); }
+.tv-settings-list > .set-row { flex: none; }
 .set-row--section.is-selected { background: var(--tv-focus-pill); }
-.tv-settings-panel { max-width: calc(900 * var(--tu)); }
+.tv-settings-panel { max-width: calc(900 * var(--tu) + 2 * var(--set-pad)); }
 .tv-settings-page .manage-list, .tv-settings-page .profile-form, .tv-settings-page .upd-card, .tv-settings-page .info-body { max-width: calc(1100 * var(--tu)); }
 .tv-info .info-body { padding: calc(10 * var(--tu)); border-radius: var(--r-card); }
 html[data-mode="tv"] .profiles-title { font-size: calc(56 * var(--tu)); }

@@ -35,7 +35,7 @@ function ManageList() {
     return parts.length ? parts.join(" • ") : "Nothing saved yet";
   };
   return (
-    <div ref={root} className={tv ? "tv-page tv-settings-page" : "m-page"}>
+    <div ref={root} className={tv ? "tv-page tv-settings-page" : "m-page"} data-scroll-y={tv ? "nearest" : undefined}>
       <PageHeader title="Manage Profiles" fallback="/my-space" />
       <ul className="manage-list lrud-container">
         {profiles.map((p) => (
@@ -98,7 +98,7 @@ function EditForm({ isNew }: { isNew?: boolean }) {
   };
 
   return (
-    <div ref={root} className={tv ? "tv-page tv-settings-page" : "m-page"}>
+    <div ref={root} className={tv ? "tv-page tv-settings-page" : "m-page"} data-scroll-y={tv ? "nearest" : undefined}>
       <PageHeader title={existing ? "Edit Profile" : "Add Profile"} fallback="/profiles/manage" />
       <div className="profile-form">
         <Avatar kind={avatar} className="profile-form-avatar" />

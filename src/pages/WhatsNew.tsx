@@ -66,7 +66,7 @@ export function WhatsNewPage() {
   const notes = useNotes(version);
   const tv = useIsTv();
   return (
-    <div className={tv ? "tv-page tv-settings-page tv-updates" : "m-page m-updates"}>
+    <div className={tv ? "tv-page tv-settings-page tv-updates" : "m-page m-updates"} data-scroll-y={tv ? "nearest" : undefined}>
       <PageHeader title="What's New" sub={`Version ${version}`} fallback="/settings" />
       <div className="upd-card wn-page" data-autofocus tabIndex={-1} onKeyDown={tv ? scrollKeys : undefined}><Body notes={notes} /></div>
     </div>
