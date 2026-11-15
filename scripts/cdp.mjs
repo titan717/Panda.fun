@@ -10,7 +10,8 @@ let WS = globalThis.WebSocket;
 if (!WS) { try { WS = createRequire(import.meta.url)("ws"); } catch { console.error("no WebSocket client (Node 22+ or the ws package)"); process.exit(1); } }
 
 const targets = await (await fetch(`http://127.0.0.1:${port}/json/list`)).json();
-const page = targets.find((t) => t.type === "page" && /appassets\.androidplatform\.net/.test(t.url)) ?? targets.find((t) => t.type === "page");
+const isApp = (u) => { try { return new URL(u).hostname === "appassets.androidplatform.net"; } catch { return false; } };
+const page = targets.find((t) => t.type === "page" && isApp(t.url)) ?? targets.find((t) => t.type === "page");
 if (!page) { console.error("no page target", JSON.stringify(targets)); process.exit(1); }
 
 const ws = new WS(page.webSocketDebuggerUrl);

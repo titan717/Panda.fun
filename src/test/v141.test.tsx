@@ -39,6 +39,9 @@ describe("v1.4.1 TV keyboard", () => {
     expect(mainActivity).toMatch(/\|\| imeVisible\) return@postDelayed/);
     expect(mainActivity).toContain("WindowInsetsCompat.Type.ime()");
   });
+  it("the remote's OK reaches the page as Enter, so a no-keyboard text field can react to it", () => {
+    expect(mainActivity).toMatch(/KEYCODE_DPAD_CENTER && customView == null\) \{\s*return super\.dispatchKeyEvent\(asEnter\(event\)\)/);
+  });
   it("WebView debugging is only for debug builds", () => {
     expect(mainActivity).toMatch(/FLAG_DEBUGGABLE != 0\) WebView\.setWebContentsDebuggingEnabled\(true\)/);
   });

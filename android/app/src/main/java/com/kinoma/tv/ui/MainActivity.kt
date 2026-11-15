@@ -818,9 +818,21 @@ class MainActivity : ComponentActivity() {
             return true
         }
 
+        // v1.4.1 root cause of "OK on TV Search does not open Gboard": on a focused text field the WebView handles
+        // D-pad centre itself (it would show the IME) and does not pass it to the page. The TV field is
+        // inputmode="none" until the page switches it, so nothing happened at all. OK is delivered as Enter instead,
+        // which the page sees on every element (Chromium already reports D-pad centre to the page as "Enter"
+        // elsewhere), so the field's own handler can switch to a real text field and ask for the keyboard.
+        if (event.keyCode == KeyEvent.KEYCODE_DPAD_CENTER && customView == null) {
+            return super.dispatchKeyEvent(asEnter(event))
+        }
+
         // Forward D-pad and media remote keys to WebView
         return super.dispatchKeyEvent(event)
     }
+
+    private fun asEnter(e: KeyEvent): KeyEvent =
+        KeyEvent(e.downTime, e.eventTime, e.action, KeyEvent.KEYCODE_ENTER, e.repeatCount, e.metaState, e.deviceId, e.scanCode, e.flags, e.source)
 
     private var availableUpdate: UpdateInfo? = null
 

@@ -93,10 +93,10 @@ describe("useRemoteField in the Android app", () => {
     render(<Field hook={hook} onDone={done} />);
     q().focus();
     fireEvent.keyDown(q(), { key: "Enter" });
-    await flush();
-    expect(showKeyboard).toHaveBeenCalledTimes(1);
+    // v1.4.1: the native request follows two animation frames after the field switched
+    await vi.waitFor(() => expect(showKeyboard).toHaveBeenCalledTimes(1));
     expect(seen).toEqual(["k3y", "search"]);
-    expect(document.activeElement).toBe(q()); // no blur/refocus dance in the app
+    expect(document.activeElement).toBe(q()); // the v1.4.1 refocus inside the key press keeps focus on the field
     // the IME's Search key arrives as Enter: search runs, keyboard closes
     fireEvent.keyDown(q(), { key: "Enter" });
     expect(done).toHaveBeenCalledTimes(1);
