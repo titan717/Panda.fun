@@ -28,6 +28,13 @@ export interface NativeBridge {
   resetRemote?(): string;
   setRemoteState?(json: string): void;
   shareText?(title: string, text: string): boolean;
+  /**
+   * v1.3.2 TV text fields: restart the WebView's input connection (so the IME reads the field's new inputMode) and
+   * show the soft keyboard (Gboard / the Android TV IME); hideKeyboard closes it. The app reports IME visibility
+   * changes to window.__pandaIme(visible).
+   */
+  showKeyboard?(): boolean;
+  hideKeyboard?(): void;
 }
 
 declare global {
