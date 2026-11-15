@@ -156,7 +156,8 @@ Catalogue metadata and artwork are provided through TMDB. Panda.fun is not endor
 ---
 
 <div align="center">
-  <img src="https://raw.githubusercontent.com/titan717/Panda.fun/main/public/readme-panda-footer.svg" width="100%" alt="Animated Panda.fun mascot with glowing sparkles and a playful footer message" />
+  <img src="https://raw.githubusercontent.com/titan717/titan717/main/assets/panda.webp" width="156" alt="Panda.fun panda mascot" />
+  <img src="https://raw.githubusercontent.com/titan717/Panda.fun/main/public/readme-panda-footer.svg" width="100%" alt="Animated sparkles, bamboo leaves and glowing Panda.fun footer artwork" />
   <p><strong>Find your next watch. Settle in. Enjoy.</strong></p>
   <p>
     <a href="https://pandatv2.vercel.app/">WEB APP</a>
