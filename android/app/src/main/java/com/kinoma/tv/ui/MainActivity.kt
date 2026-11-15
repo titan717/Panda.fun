@@ -82,6 +82,9 @@ class MainActivity : ComponentActivity() {
     private lateinit var diagnosticText: TextView
     private var pendingVerifiedUpdateUri: Uri? = null
     private var imeVisible = false
+    /** v1.4.1: set by the page while a TV remote text field (inputmode="none") has focus. */
+    @Volatile private var okAsEnter = false
+
     /** v1.4.1: bumps on every show/hide request so stale keyboard retries stop. */
     private var keyboardRequest = 0
     /** Path from a tapped notification, handed to the web app once it asks (cold start). */
@@ -796,6 +799,7 @@ class MainActivity : ComponentActivity() {
         keyboardRequest += 1
         val imm = getSystemService(Context.INPUT_METHOD_SERVICE) as? InputMethodManager ?: return
         imm.hideSoftInputFromWindow(webView.windowToken, 0)
+        WindowCompat.getInsetsController(window, webView).hide(WindowInsetsCompat.Type.ime())
     }
 
     override fun dispatchKeyEvent(event: KeyEvent): Boolean {
@@ -823,7 +827,9 @@ class MainActivity : ComponentActivity() {
         // inputmode="none" until the page switches it, so nothing happened at all. OK is delivered as Enter instead,
         // which the page sees on every element (Chromium already reports D-pad centre to the page as "Enter"
         // elsewhere), so the field's own handler can switch to a real text field and ask for the keyboard.
-        if (event.keyCode == KeyEvent.KEYCODE_DPAD_CENTER && customView == null) {
+        // Only while a TV remote text field has focus (the page says so through setOkAsEnter): everywhere else OK keeps
+        // its normal D-pad meaning, and the phone layout's ordinary fields keep opening the keyboard the usual way.
+        if (event.keyCode == KeyEvent.KEYCODE_DPAD_CENTER && customView == null && okAsEnter) {
             return super.dispatchKeyEvent(asEnter(event))
         }
 
@@ -1209,6 +1215,13 @@ class MainActivity : ComponentActivity() {
             if (!trusted(key)) return false
             runOnUiThread { showSoftKeyboard() }
             return true
+        }
+
+        /** v1.4.1: the page reports whether a TV remote text field has focus (OK is then delivered as Enter). */
+        @JavascriptInterface
+        fun setOkAsEnter(key: String, on: Boolean) {
+            if (!trusted(key)) return
+            okAsEnter = on
         }
 
         @JavascriptInterface

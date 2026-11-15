@@ -40,7 +40,10 @@ describe("v1.4.1 TV keyboard", () => {
     expect(mainActivity).toContain("WindowInsetsCompat.Type.ime()");
   });
   it("the remote's OK reaches the page as Enter, so a no-keyboard text field can react to it", () => {
-    expect(mainActivity).toMatch(/KEYCODE_DPAD_CENTER && customView == null\) \{\s*return super\.dispatchKeyEvent\(asEnter\(event\)\)/);
+    expect(mainActivity).toMatch(/KEYCODE_DPAD_CENTER && customView == null && okAsEnter\) \{\s*return super\.dispatchKeyEvent\(asEnter\(event\)\)/);
+    // only while a TV remote field has focus: the phone layout and every other screen keep the normal OK
+    expect(mainActivity).toMatch(/fun setOkAsEnter\(key: String, on: Boolean\) \{\s*if \(!trusted\(key\)\) return/);
+    expect(remoteInput).toMatch(/onFocus: \(\) => \{ setOkAsEnter\(true\); \}/);
   });
   it("WebView debugging is only for debug builds", () => {
     expect(mainActivity).toMatch(/FLAG_DEBUGGABLE != 0\) WebView\.setWebContentsDebuggingEnabled\(true\)/);

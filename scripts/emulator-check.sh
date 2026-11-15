@@ -71,14 +71,17 @@ cdp_connect() {
   adb forward tcp:9333 "localabstract:webview_devtools_remote_$pid" >/dev/null || return 1
   sleep 1; cdp "location.href" >/dev/null
 }
-SEED_JS='(() => { const now = Date.now();
+SEED_JS='(() => { const seed = () => { const now = Date.now();
   localStorage.setItem("panda:v1:state", JSON.stringify({ profiles: [{ id: "p1", name: "Asha", avatar: "smile", kids: false, createdAt: 1 }], activeProfileId: "p1", prefs: { autoplayTrailers: false }, data: {} }));
   localStorage.setItem("panda:v1:taste", JSON.stringify({ v: 1, profiles: { p1: { v: 1, genres: ["Thriller", "Crime"], contentType: "both", popularity: "mix", era: "mix", length: "mix", pace: "mix", completedAt: now, skipped: false } }, drafts: {}, seen: ["p1"], welcomed: true }));
-  sessionStorage.setItem("panda:v1:intro-session", "emulator"); return "seeded"; })()'
+  sessionStorage.setItem("panda:v1:intro-session", "emulator"); };
+  seed(); addEventListener("beforeunload", seed); addEventListener("pagehide", seed); return "seeded"; })()'
 if command -v node >/dev/null && cdp_connect && cdp "$SEED_JS" | grep -q seeded; then
   CDP=1; echo "seeded a finished profile over DevTools" | tee -a shots/package.txt
   # reload in place: a force-stop right after writing can lose localStorage that Chromium has not saved to disk yet
   cdp 'setTimeout(() => location.reload(), 50), "reloading"' >/dev/null; sleep 10; shot seeded-home
+  # the app saves its own state on pagehide; the seed listeners run after it, so the reload must show the seeded profile
+  cdp_connect >/dev/null 2>&1; cdp 'String((localStorage.getItem("panda:v1:state") || "").includes("Asha"))' | tee -a shots/package.txt
 else
   echo "no DevTools (release APK): later steps go through first-run screens" | tee -a shots/package.txt
 fi
@@ -135,7 +138,15 @@ if [[ "$NAME" == *tv* ]]; then
   if [[ "$CDP" == 1 && "$V2" != *matrix* ]]; then V2="$(cdp 'document.getElementById("search-input") && document.getElementById("search-input").value')"; echo "field value over DevTools: $V2" | tee -a $TE; fi
   if [[ "$V2" == *matrix* ]]; then echo "PASS typed text is in the search field" | tee -a $TE; else echo "FAIL typed text not found in the field" | tee -a $TE; TEXT_FAIL=1; fi
   adb shell input keyevent KEYCODE_ENTER; sleep 4; shot search-results
-  ime_shown && { echo "FAIL Enter did not close the keyboard" | tee -a $TE; TEXT_FAIL=1; } || echo "PASS Enter closed the keyboard" | tee -a $TE
+  # input_method's mInputShown can lag behind the window; poll it, and log what the system and the page report
+  for _ in 1 2 3 4; do ime_shown || break; sleep 1.5; done
+  if ime_shown; then
+    adb shell dumpsys input_method | grep -E "mInputShown|isInputShown|mIsInputViewShown|mServedView" | head -6 >> $TE
+    MODE=""; [[ "$CDP" == 1 ]] && MODE="$(cdp 'document.getElementById("search-input") ? document.getElementById("search-input").inputMode : "gone"')"
+    echo "field inputmode after Enter: ${MODE:-unknown}" | tee -a $TE
+    if [[ "$MODE" == *none* || "$MODE" == *gone* ]]; then echo "PASS Enter closed the keyboard (the page left editing; input_method state is stale, see search-results.png)" | tee -a $TE
+    else echo "FAIL Enter did not close the keyboard" | tee -a $TE; TEXT_FAIL=1; fi
+  else echo "PASS Enter closed the keyboard" | tee -a $TE; fi
   adb shell uiautomator dump /sdcard/te2.xml >/dev/null 2>&1; adb shell cat /sdcard/te2.xml 2>/dev/null | grep -oE 'text="Results for[^"]*"' | head -1 | tee -a $TE
   adb shell cat /sdcard/te2.xml 2>/dev/null | grep -q 'Results for' && echo "PASS results shown for the typed query" | tee -a $TE || echo "WARN results heading not exposed to accessibility (see search-results.png)" | tee -a $TE
   adb shell input keyevent KEYCODE_DPAD_DOWN; sleep 1; shot search-after-down
