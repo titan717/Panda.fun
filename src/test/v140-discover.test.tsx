@@ -9,7 +9,7 @@ import { getFeedback, resetFeedbackCacheForTest } from "../lib/reco/feedback";
 import tvSearchSrc from "../tv/TvSearch.tsx?raw";
 import mSearchSrc from "../mobile/MSearch.tsx?raw";
 
-const items = (catalog as { rails: { items: PandaItem[] }[] }).rails[0]!.items.slice(0, 8);
+const items = (catalog as unknown as { rails: { items: PandaItem[] }[] }).rails[0]!.items.slice(0, 8);
 const sections: RecoSection[] = [
   { id: "top-picks", title: "Panda Top Picks for Asha", items, reasons: { [items[0]!.id]: "You picked Thriller" }, note: "Picked for this profile from what it likes and watches" },
   { id: "trending", title: "Trending now", items: [...items].reverse() }

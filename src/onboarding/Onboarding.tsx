@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useRef, useState, type ReactNode } from "react";
-import { BRAND } from "../lib/brand";
 import { Avatar } from "../components/ui";
-import { Icon, PandaMark } from "../components/Icon";
+import { Icon } from "../components/Icon";
+import { Mascot as BrandMascot } from "../components/Brand";
 import { actions, getState, useProfile, useStore, type AvatarKind, type Profile } from "../lib/store";
 import { focusFirst, useBackHandler } from "../lib/focus";
 import { useIsTv } from "../lib/layout";
@@ -46,12 +46,11 @@ const TYPES: { id: TasteProfile["contentType"]; label: string; sub: string; icon
 const AVATARS: AvatarKind[] = ["smile", "panda", "star", "wave"];
 
 function Mascot({ mood, bump, text }: { mood: Mood; bump: number; text: ReactNode }) {
-  const [failed, setFailed] = useState(false);
   return (
     <div className={`ob-mascot ob-mascot--${mood}`}>
       <div className="ob-bubble" role="status" aria-live="polite" key={`b${bump}`}>{text}</div>
       <div className="ob-mascot-body" key={`m${bump}`} aria-hidden="true">
-        {failed ? <PandaMark size="100%" /> : <img src={BRAND.mascot} alt="" draggable={false} onError={() => setFailed(true)} />}
+        <BrandMascot pose="play" width="100%" priority />
       </div>
     </div>
   );
