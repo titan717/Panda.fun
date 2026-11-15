@@ -91,5 +91,6 @@ describe("onboarding: who gets it", () => {
     for (const s of ["Let's go", "Skip for now", "Your Panda experience is ready!", "useBackHandler", "focusFirst", "data-hover-focus", "ob-dots"]) expect(onboardingSrc).toContain(s);
     expect(settingsSrc).toContain('title="Personalize recommendations"');
     expect(settingsSrc).toContain('title="Reset personalization"');
+    expect(settingsSrc).toMatch(/clearTaste\(id\); clearFeedback\(id\)/);
   });
 });
