@@ -2,10 +2,15 @@
  * - Pages: network first (3 s), falling back to the cached shell, so a new deploy is picked up at once.
  * - /assets/*: hashed and immutable, so cache first.
  * - TMDB artwork: cache first (CORS responses only, so no opaque-response storage padding), capped at 500 images.
+ *   v1.4.0 root-cause fix: requests made by this worker are governed by the worker's own CSP `connect-src`, not by
+ *   the page's `img-src`. image.tmdb.org was missing from connect-src, so every artwork request routed through the
+ *   worker was blocked in production (HTTPS only; the worker never runs on http://localhost). vercel.json now allows
+ *   it, and if the worker still cannot fetch an image it returns a network error quickly so the <img> falls back
+ *   (Img component) instead of hanging.
  * The Android app ships its files inside the APK and does not use this worker. */
-const SHELL = "panda-shell-v1";
-const ASSETS = "panda-assets-v1";
-const IMAGES = "panda-img-v1";
+const SHELL = "panda-shell-v2";
+const ASSETS = "panda-assets-v2";
+const IMAGES = "panda-img-v2";
 const MAX_IMAGES = 500;
 
 self.addEventListener("install", (e) => {
@@ -56,5 +61,5 @@ self.addEventListener("fetch", (e) => {
   const url = new URL(req.url);
   if (req.mode === "navigate" && url.origin === self.location.origin) { e.respondWith(shell(req)); return; }
   if (url.origin === self.location.origin && url.pathname.startsWith("/assets/")) { e.respondWith(cacheFirst(ASSETS, req, false)); return; }
-  if (url.hostname === "image.tmdb.org") { e.respondWith(cacheFirst(IMAGES, req, true).catch(() => fetch(req))); }
+  if (url.hostname === "image.tmdb.org") { e.respondWith(cacheFirst(IMAGES, req, true).catch(() => Response.error())); }
 });
