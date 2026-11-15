@@ -1,23 +1,27 @@
 <!--
-  Panda.fun — the same Panda, thoughtfully designed for every screen.
+  Panda.fun — a little more fun, on every screen.
 -->
 
 <div align="center">
-  <img src="https://raw.githubusercontent.com/titan717/titan717/main/assets/panda.webp" width="144" alt="The Panda mascot from the titan717 GitHub profile" />
+  <img src="https://raw.githubusercontent.com/titan717/titan717/main/assets/panda.webp" width="148" alt="Panda.fun panda mascot" />
   <h1>Panda.fun</h1>
-  <p><strong>More cinema. Less getting in the way.</strong></p>
-  <p>A streaming experience for Android TV, phones, tablets and the web.</p>
+  <p><strong>Your next favourite thing to watch.</strong></p>
+  <p>One thoughtfully designed experience for Android TV, phones, tablets and the web.</p>
 
   <p>
-    <a href="https://pandatv2.vercel.app/"><strong>Open web app ↗</strong></a>
-    &nbsp;·&nbsp;
-    <a href="https://github.com/titan717/Panda.fun/releases/download/v1.3.1/Panda.fun-Android-TV.apk"><strong>Download Android APK ↓</strong></a>
-    &nbsp;·&nbsp;
-    <a href="https://github.com/titan717/Panda.fun/releases/tag/v1.3.1">Release notes</a>
+    <a href="https://pandatv2.vercel.app/"><img src="https://img.shields.io/badge/OPEN%20WEB%20APP-pandatv2.vercel.app-57d9a3?style=for-the-badge&logo=vercel&logoColor=111111" alt="Open Panda.fun web app" /></a>
+    &nbsp;
+    <a href="https://github.com/titan717/Panda.fun/releases/latest"><img src="https://img.shields.io/github/v/release/titan717/Panda.fun?display_name=tag&label=LATEST%20RELEASE&style=for-the-badge&color=b69cff" alt="Latest stable release" /></a>
   </p>
-  <p><sub>Latest stable · v1.3.1 · One APK for phones, tablets and Android TV</sub></p>
+  <p>
+    <a href="https://github.com/titan717/Panda.fun/releases/latest/download/Panda.fun-Android-TV.apk"><strong>↓ Download for Android</strong></a>
+    &nbsp;·&nbsp;
+    <a href="https://pandatv2.vercel.app/welcome">Install guide</a>
+    &nbsp;·&nbsp;
+    <a href="https://github.com/titan717/Panda.fun/releases/latest">Release notes</a>
+  </p>
+  <p><sub>One APK · Android TV · Android phones · Tablets</sub></p>
 </div>
-
 ---
 
 ## Made for the screen in front of you
@@ -52,32 +56,29 @@ Panda.fun brings a familiar catalogue experience to the living room and the phon
 ## Get Panda.fun
 
 <div align="center">
-  <h3>Android · v1.3.1</h3>
+  <h3>Android · Latest stable release</h3>
   <p>One signed APK for Android phones, tablets and Android TV.</p>
   <p>
-    <a href="https://github.com/titan717/Panda.fun/releases/download/v1.3.1/Panda.fun-Android-TV.apk"><strong>Download Panda.fun v1.3.1</strong></a>
+    <a href="https://github.com/titan717/Panda.fun/releases/latest/download/Panda.fun-Android-TV.apk"><img src="https://img.shields.io/badge/GET%20THE%20APK-Download-57d9a3?style=for-the-badge&logo=android&logoColor=111111" alt="Download latest Android APK" /></a>
+    &nbsp;
+    <a href="https://github.com/titan717/Panda.fun/releases/latest/download/Panda.fun-Android-TV.apk.sha256">SHA-256 checksum</a>
     &nbsp;·&nbsp;
-    <a href="https://github.com/titan717/Panda.fun/releases/download/v1.3.1/Panda.fun-Android-TV.apk.sha256">SHA-256 checksum</a>
-    &nbsp;·&nbsp;
-    <a href="https://github.com/titan717/Panda.fun/releases/latest">All releases</a>
+    <a href="https://github.com/titan717/Panda.fun/releases/latest">What's new</a>
+  </p>
+  <p>
+    <img src="https://img.shields.io/github/downloads/titan717/Panda.fun/latest/total?label=downloads%20for%20latest%20release&style=flat-square" alt="Downloads for latest release" />
   </p>
 </div>
 
-**What's new in v1.3.1**
+**The version stays current automatically.** The badge above reads the latest published GitHub Release, and the APK/checksum links always resolve to the newest release assets. There is no version number to edit in this README when you publish the next release.
 
-- A new retro paper-cutout stop-motion intro for Android TV.
-- A matching original score, timed to the animation.
-- Reduced-motion and Lite-mode alternatives.
+## Play on the web
 
-See the full [v1.3.1 release notes](https://github.com/titan717/Panda.fun/releases/tag/v1.3.1) or the [complete changelog](docs/CHANGELOG.md).
-
-### The web app
-
-Open Panda.fun in your browser—no APK required.
-
-**[Launch Panda.fun on the web ↗](https://pandatv2.vercel.app/)**
-
-The web build is deployed to Vercel from `main`. The optional download and install guide is available at [the web welcome page](https://pandatv2.vercel.app/welcome).
+<div align="center">
+  <a href="https://pandatv2.vercel.app/"><strong>Open Panda.fun in your browser ↗</strong></a>
+  <p><sub>No APK required. Play on desktop, laptop, phone or tablet.</sub></p>
+  <a href="https://pandatv2.vercel.app/welcome">Web welcome page & install guide</a>
+</div>
 
 ## Built for more than one device
 
@@ -154,9 +155,18 @@ src/
 
 Catalogue metadata and artwork are provided through TMDB. Panda.fun is not endorsed or certified by TMDB.
 
+
 ---
 
 <div align="center">
-  <img src="https://raw.githubusercontent.com/titan717/titan717/main/assets/panda.webp" width="48" alt="Panda mascot" />
-  <p><sub>Made with care by <a href="https://github.com/titan717">titan717</a>.</sub></p>
+  <img src="https://raw.githubusercontent.com/titan717/Panda.fun/main/public/readme-motion.svg" width="100%" alt="Animated icons: TV, mobile, play and repeat" />
+  <p><strong>Find your next watch. Settle in. Enjoy.</strong></p>
+  <p>
+    <a href="https://pandatv2.vercel.app/">WEB APP</a>
+    &nbsp;·&nbsp;
+    <a href="https://github.com/titan717/Panda.fun/releases/latest">LATEST RELEASE</a>
+    &nbsp;·&nbsp;
+    <a href="https://github.com/titan717">BUILT BY TITAN717</a>
+  </p>
+  <p><sub>Made with care — and a little panda energy. 🐼</sub></p>
 </div>
