@@ -2,21 +2,17 @@ import { useEffect, useRef, useState } from "react";
 import { isAudioUnlocked, onAudioUnlock, registerTrailer, stopAllTrailers } from "../lib/audio";
 
 import { loadYouTubeApi, type YTPlayer } from "../lib/youtube";
+import { REVEAL_DELAY_MS, START_SECONDS } from "../lib/trailerAutoplay";
 
-export { loadYouTubeApi };
+export { loadYouTubeApi, REVEAL_DELAY_MS, START_SECONDS };
 
 const PLAYING = 1, ENDED = 0, PAUSED = 2, BUFFERING = 3;
 /** Seconds before the end at which the trailer jumps back to the start, so YouTube's end screen never shows. */
 const LOOP_GUARD_S = 1.6;
 /** Volume ramp after the reveal (the opacity fade is `--dur-trailer-fade`, also 600 ms). */
 const FADE_MS = 600;
-/**
- * A trailer stays invisible and silent until it has been PLAYING this long: YouTube paints its title,
- * channel avatar and logo overlay over the first moments of an embed, and they are gone by then.
- */
-export const REVEAL_DELAY_MS = 2000;
-/** Background trailers start this far in, so the hidden overlay time is not spent on the first frames. */
-export const START_SECONDS = 1;
+/* REVEAL_DELAY_MS (hidden and silent for 2 s after PLAYING: YouTube's title, avatar and logo overlay are gone by
+   then) and START_SECONDS live with the rest of the autoplay rules in lib/trailerAutoplay.ts. */
 /** After a loop seek the player buffers briefly; the stall watchdog ignores that window so the frame stays visible. */
 const LOOP_GRACE_MS = 2500;
 /** Not playing for longer than this while wanted: hide, nudge playVideo, then move to the next trailer. */

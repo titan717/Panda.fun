@@ -2,13 +2,14 @@ import useSWR, { type SWRConfiguration } from "swr";
 import { useEffect, useState } from "react";
 import { keys } from "./api";
 import { usePrefs } from "./store";
+import { createTrailerManager, useTrailerAutoplay, type TrailerStage } from "./trailerAutoplay";
 import type { AnimePayload, SourceRankingPayload, CategoriesPayload, Collection, GenresPayload, ListPayload, MediaType, PagePayload, PageKind, PersonDetails, SearchPayload, SeasonDetails, SourceHealthPayload, TitleDetails, Top10Payload, WallPayload } from "./types";
 
 const slow: SWRConfiguration = { revalidateOnFocus: false, dedupingInterval: 60_000 };
 
 export const usePage = (kind: PageKind) => useSWR<PagePayload>(keys.page(kind), slow);
 export const useTitle = (type: MediaType | null, id: number | null) => useSWR<TitleDetails>(type && id ? keys.title(type, id) : null, slow);
-export const useSeason = (id: number | null, season: number | null) => useSWR<SeasonDetails>(id && season ? keys.season(id, season) : null, slow);
+export const useSeason = (id: number | null, season: number | null) => useSWR<SeasonDetails>(id && season !== null && season >= 0 ? keys.season(id, season) : null, slow);
 export const usePerson = (id: number | null) => useSWR<PersonDetails>(id ? keys.person(id) : null, slow);
 export const useCollection = (id: number | null) => useSWR<Collection>(id ? keys.collection(id) : null, slow);
 export const useTop10 = (lang: string) => useSWR<Top10Payload>(keys.top10(lang), slow);
@@ -71,20 +72,13 @@ export const useReducedMotion = () => {
 };
 
 /**
- * Trailer timing (MASTER §4.B): after `delayS` seconds of uninterrupted focus the trailer plays;
- * from `preloadS` seconds before that it is created and buffering. Any focus change resets both.
+ * Trailer timing (MASTER §4.B), kept for callers outside the shared manager: after `delayS` seconds of
+ * uninterrupted activity the trailer plays; from `preloadS` seconds before that it is created and buffering.
+ * Any key change resets both. Same state machine as lib/trailerAutoplay.ts, on a private manager instance.
  */
-export function useTrailerStage(active: boolean, delayS: number, resetKey = "", preloadS = 3): "idle" | "preload" | "play" {
-  const [stage, setStage] = useState<"idle" | "preload" | "play">("idle");
-  useEffect(() => {
-    setStage("idle");
-    if (!active) return;
-    const pre = Math.max(0, delayS - preloadS) * 1000;
-    const t1 = setTimeout(() => setStage("preload"), pre);
-    const t2 = setTimeout(() => setStage("play"), delayS * 1000);
-    return () => { clearTimeout(t1); clearTimeout(t2); };
-  }, [active, delayS, resetKey, preloadS]);
-  return stage;
+export function useTrailerStage(active: boolean, delayS: number, resetKey = "", preloadS = 3): TrailerStage {
+  const [m] = useState(() => createTrailerManager());
+  return useTrailerAutoplay("stage", active ? resetKey || "_" : null, delayS, { preloadS, manager: m }).stage;
 }
 
 /** Devices that should not run video trailers (low memory or data saver); they get a slow backdrop zoom. */
