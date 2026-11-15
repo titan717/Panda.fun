@@ -6,6 +6,7 @@ import android.app.AlertDialog
 import android.app.UiModeManager
 import android.content.Context
 import android.content.Intent
+import android.content.pm.ApplicationInfo
 import android.content.pm.PackageManager
 import android.content.res.Configuration
 import android.graphics.Color
@@ -19,6 +20,7 @@ import android.view.ViewGroup
 import android.view.WindowManager
 import android.view.inputmethod.InputMethodManager
 import androidx.core.view.ViewCompat
+import androidx.core.view.WindowCompat
 import androidx.core.view.WindowInsetsCompat
 import android.webkit.ConsoleMessage
 import android.webkit.JavascriptInterface
@@ -80,6 +82,8 @@ class MainActivity : ComponentActivity() {
     private lateinit var diagnosticText: TextView
     private var pendingVerifiedUpdateUri: Uri? = null
     private var imeVisible = false
+    /** v1.4.1: bumps on every show/hide request so stale keyboard retries stop. */
+    private var keyboardRequest = 0
     /** Path from a tapped notification, handed to the web app once it asks (cold start). */
     @Volatile private var launchPath: String? = null
     /** v1.2.4 phone remote (local network) and what the web app says is on screen, for the phone. */
@@ -95,6 +99,8 @@ class MainActivity : ComponentActivity() {
         private const val TAG = "KinomaTV"
         private const val APP_DOMAIN = "appassets.androidplatform.net"
         private const val WEB_ENTRY_URL = "https://$APP_DOMAIN/assets/web/index.html"
+        /** v1.4.1: soft keyboard attempts after OK on a field; each one is skipped once the IME is visible. */
+        private val KEYBOARD_ATTEMPTS_MS = longArrayOf(120L, 400L, 900L)
 
         /** Same policy as vercel.json (checked by src/test/v117.test.ts) for the web build: only the two providers and YouTube may be framed. */
         private val SECURITY_HEADERS = mapOf(
@@ -108,6 +114,8 @@ class MainActivity : ComponentActivity() {
     @SuppressLint("SetJavaScriptEnabled")
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        // debug builds only: lets scripts/emulator-check.sh drive the page over DevTools (never in release APKs)
+        if (applicationInfo.flags and ApplicationInfo.FLAG_DEBUGGABLE != 0) WebView.setWebContentsDebuggingEnabled(true)
 
         Log.i(TAG, "Starting Panda.fun MainActivity")
         AdShield.load(applicationContext)
@@ -756,25 +764,36 @@ class MainActivity : ComponentActivity() {
     }
 
     /**
-     * v1.3.2: open the soft keyboard for the focused web field. The web app has just switched the field from
-     * inputMode="none" to text/search, but Chromium only shows an IME by itself for a tap (or a focus that asks for
-     * it), never for a D-pad OK, and an IME that is already bound keeps the old "no keyboard" input type. So: give the
-     * WebView focus, wait a frame for the renderer to send the new text input state, then restart the input
-     * connection (the IME re-reads the field's type, inputmode and enterkeyhint) and show the keyboard.
+     * Open the soft keyboard (Gboard / the Android TV IME) for the focused web field.
+     *
+     * v1.4.1: the web app now switches the field to a real text input and refocuses it inside the OK key press, which
+     * on most TVs is enough for Chromium to show the IME itself. This is the safety net for the rest: Chromium only
+     * binds an IME to the field's new input type once the renderer has sent it, which can take a few frames on a TV
+     * box, so a single attempt 64 ms later (v1.3.2-v1.4.0) usually ran too early and the keyboard never came up.
+     * Each attempt checks whether the IME is already visible; the first one restarts the input connection (so the IME
+     * re-reads the field's type, inputmode and enterkeyhint), later ones only ask again, through both the input
+     * method manager and the window insets controller.
      */
     private fun showSoftKeyboard() {
         if (customView != null || !::webView.isInitialized) return
         val imm = getSystemService(Context.INPUT_METHOD_SERVICE) as? InputMethodManager ?: return
         if (!webView.hasFocus()) webView.requestFocus()
-        webView.postDelayed({
-            if (isFinishing || !webView.hasFocus()) return@postDelayed
-            imm.restartInput(webView)
-            imm.showSoftInput(webView, 0)
-        }, 64)
+        keyboardRequest += 1
+        val request = keyboardRequest
+        KEYBOARD_ATTEMPTS_MS.forEachIndexed { i, delay ->
+            webView.postDelayed({
+                if (request != keyboardRequest || isFinishing || !webView.hasFocus() || imeVisible) return@postDelayed
+                if (i == 0) imm.restartInput(webView)
+                imm.showSoftInput(webView, 0)
+                WindowCompat.getInsetsController(window, webView).show(WindowInsetsCompat.Type.ime())
+                Log.d(TAG, "soft keyboard requested (attempt ${i + 1})")
+            }, delay)
+        }
     }
 
     private fun hideSoftKeyboard() {
         if (!::webView.isInitialized) return
+        keyboardRequest += 1
         val imm = getSystemService(Context.INPUT_METHOD_SERVICE) as? InputMethodManager ?: return
         imm.hideSoftInputFromWindow(webView.windowToken, 0)
     }

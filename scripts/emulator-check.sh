@@ -60,6 +60,29 @@ sleep 8; shot after-ok-12s
 adb shell pidof "$PKG" >/dev/null && echo "app running" | tee -a shots/package.txt || { echo "app not running"; { adb logcat -d -b crash; echo ----; adb logcat -d | grep -iE "kinoma|AndroidRuntime|chromium|ActivityTaskManager|am_" | tail -400; } > shots/logcat.txt; exit 1; }
 adb logcat -d | grep -iE "kinoma|panda|chromium|AndroidRuntime|KinomaTVWeb" | tail -300 > shots/logcat.txt || true
 
+# v1.4.1: debug APKs (pre-release runs) enable WebView debugging. Seed a profile that has finished first-run setup,
+# the same state the e2e specs use, so the updater, Search and Connect Phone steps reach their screens instead of
+# the onboarding / Who's watching? screens that cover every route on a fresh install. Release APKs (tag runs) skip this.
+CDP=0
+cdp() { node scripts/cdp.mjs 9333 "$1" 2>>shots/cdp.txt; }
+cdp_connect() {
+  local pid; pid="$(adb shell pidof "$PKG" | tr -d '\r ')"; [[ -n "$pid" ]] || return 1
+  adb forward --remove tcp:9333 >/dev/null 2>&1 || true
+  adb forward tcp:9333 "localabstract:webview_devtools_remote_$pid" >/dev/null || return 1
+  sleep 1; cdp "location.href" >/dev/null
+}
+SEED_JS='(() => { const now = Date.now();
+  localStorage.setItem("panda:v1:state", JSON.stringify({ profiles: [{ id: "p1", name: "Asha", avatar: "smile", kids: false, createdAt: 1 }], activeProfileId: "p1", prefs: { autoplayTrailers: false }, data: {} }));
+  localStorage.setItem("panda:v1:taste", JSON.stringify({ v: 1, profiles: { p1: { v: 1, genres: ["Thriller", "Crime"], contentType: "both", popularity: "mix", era: "mix", length: "mix", pace: "mix", completedAt: now, skipped: false } }, drafts: {}, seen: ["p1"], welcomed: true }));
+  sessionStorage.setItem("panda:v1:intro-session", "emulator"); return "seeded"; })()'
+if command -v node >/dev/null && cdp_connect && cdp "$SEED_JS" | grep -q seeded; then
+  CDP=1; echo "seeded a finished profile over DevTools" | tee -a shots/package.txt
+  adb shell am force-stop "$PKG"; sleep 1
+  adb shell am start -W -n "$PKG/.ui.MainActivity" -a android.intent.action.MAIN >/dev/null; sleep 10; shot seeded-home
+else
+  echo "no DevTools (release APK): later steps go through first-run screens" | tee -a shots/package.txt
+fi
+
 # The new build's own updater (R8-shrunk release since v1.1.9: Gson models and the JS bridge must survive shrinking)
 adb shell am start -W -n "$PKG/.ui.MainActivity" --es panda_path /settings/updates >/dev/null
 sleep 12; shot updater-new
@@ -87,7 +110,10 @@ if [[ "$NAME" == *tv* ]]; then
   shot search-field
   echo "IME: $(adb shell settings get secure default_input_method)" | tee $TE
   ime_shown && echo "keyboard already open before OK (unexpected)" | tee -a $TE
+  if [[ "$CDP" == 1 ]]; then cdp_connect >/dev/null 2>&1; echo "before OK: $(cdp '({ active: document.activeElement && document.activeElement.id, mode: document.getElementById("search-input") && document.getElementById("search-input").inputMode })')" | tee -a $TE; fi
   adb shell input keyevent KEYCODE_DPAD_CENTER; sleep 3; shot search-ime-open
+  if [[ "$CDP" == 1 ]]; then echo "after OK: $(cdp '({ active: document.activeElement && document.activeElement.id, mode: document.getElementById("search-input") && document.getElementById("search-input").inputMode, editing: !!document.querySelector(".tv-search-field.is-editing") })')" | tee -a $TE; fi
+  adb logcat -d | grep -E "soft keyboard requested" | tail -5 >> $TE || true
   adb shell dumpsys input_method | grep -E "mInputShown|mCurMethodId|mCurFocusedWindowName|mServedView" | head -6 >> $TE
   if ime_shown; then echo "PASS OK on the field opened the system keyboard" | tee -a $TE; else echo "FAIL OK did not open the system keyboard" | tee -a $TE; TEXT_FAIL=1; fi
   # one key typed BY the keyboard itself (its focused key), not injected into the app
@@ -98,6 +124,7 @@ if [[ "$NAME" == *tv* ]]; then
   for _ in 1 2 3 4; do adb shell input keyevent KEYCODE_DEL; done
   adb shell input text matrix; sleep 3; shot search-typed
   V2="$(field_value)"; echo "after typing 'matrix': ${V2:-<no EditText node>}" | tee -a $TE
+  if [[ "$CDP" == 1 && "$V2" != *matrix* ]]; then V2="$(cdp 'document.getElementById("search-input") && document.getElementById("search-input").value')"; echo "field value over DevTools: $V2" | tee -a $TE; fi
   if [[ "$V2" == *matrix* ]]; then echo "PASS typed text is in the search field" | tee -a $TE; else echo "FAIL typed text not found in the field" | tee -a $TE; TEXT_FAIL=1; fi
   adb shell input keyevent KEYCODE_ENTER; sleep 4; shot search-results
   ime_shown && { echo "FAIL Enter did not close the keyboard" | tee -a $TE; TEXT_FAIL=1; } || echo "PASS Enter closed the keyboard" | tee -a $TE
