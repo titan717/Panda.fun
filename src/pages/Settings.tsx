@@ -6,7 +6,8 @@ import { useEffect, useMemo, useRef, useState, type ReactNode } from "react";
 import { Link, useParams } from "wouter";
 import { useSWRConfig } from "swr";
 import { clearPersistentCache } from "../lib/cache";
-import { Icon, PandaMark, type IconName } from "../components/Icon";
+import { Icon, type IconName } from "../components/Icon";
+import { BrandLogo } from "../components/Brand";
 import { PageHeader } from "../components/PageHeader";
 import { toast } from "../components/ui";
 import { CaptionPreview } from "../components/CaptionLayer";
@@ -525,7 +526,7 @@ export function SettingsPage() {
       </ul>
       <button className="m-switch" onClick={() => { actions.signOut(); go("/profiles", { replace: true }); }}>Switch Profile</button>
       <footer className="m-set-foot">
-        <PandaMark size={28} />
+        <BrandLogo variant="wordmark" height={22} alt="Panda.fun" />
         <p className="m-set-legal"><Link href="/privacy">Privacy Policy</Link><Link href="/terms">Terms of Use</Link></p>
         <p>App Version {installedVersion()}</p>
       </footer>

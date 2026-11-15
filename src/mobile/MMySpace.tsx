@@ -1,7 +1,8 @@
 import { useState } from "react";
 import useSWR from "swr";
 import { Link } from "wouter";
-import { Icon, PandaMark } from "../components/Icon";
+import { Icon } from "../components/Icon";
+import { BrandLogo } from "../components/Brand";
 import { Avatar, EmptyState, toast } from "../components/ui";
 import { actions, continueWatching, MAX_LISTS, useAlertsSeenAt, useHistoryMap, useLists, usePrefs, useProfile, useStore, useWatchlist } from "../lib/store";
 import { ListCard, NewListCard } from "../components/ListCard";
@@ -42,7 +43,7 @@ export function MMySpace() {
   return (
     <div className="m-page m-myspace">
       <header className="m-head is-solid">
-        <span className="m-head-left"><PandaMark size={26} /></span>
+        <span className="m-head-left"><BrandLogo variant="mark" width={28} height={28} alt="Panda.fun" /></span>
         <Link href="/settings" className="m-head-link"><Icon name="settings" /> Help & Settings</Link>
       </header>
 

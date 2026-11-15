@@ -25,7 +25,14 @@ input[type="search"]::-webkit-search-cancel-button { -webkit-appearance: none; a
 .img-fallback { width: 100%; height: 100%; display: flex; align-items: flex-end; padding: calc(8 * var(--u)); background: var(--tint-0), var(--m-raised); color: var(--text-2); font-size: calc(12 * var(--u)); font-weight: var(--fw-semibold); line-height: 1.2; overflow: hidden; }
 .title-logo { display: block; object-fit: contain; object-position: left bottom; filter: drop-shadow(0 2px 12px rgba(0, 0, 0, 0.5)); }
 .title-text { font-weight: var(--fw-heavy); line-height: 1.05; letter-spacing: -0.01em; text-shadow: 0 2px 16px rgba(0, 0, 0, 0.5); overflow-wrap: anywhere; }
-.wordmark { font-weight: var(--fw-bold); letter-spacing: -0.02em; }
+/* brand images (src/components/Brand.tsx, docs/BRAND.md) */
+.brand-img { display: block; flex: none; max-width: 100%; object-fit: contain; user-select: none; }
+/* the mark's black ears sit on dark surfaces: a faint violet rim (as in the artwork) keeps the silhouette readable */
+.brand-img--mark { filter: drop-shadow(0 0 calc(3 * var(--u, 1px)) rgba(139, 44, 255, 0.55)); }
+.state-mascot { margin-bottom: calc(4 * var(--u)); opacity: 0.92; }
+.brand-fallback { display: inline-flex; align-items: center; justify-content: center; flex: none; font-weight: var(--fw-heavy); letter-spacing: -0.02em; color: #fff; line-height: 1; white-space: nowrap; }
+.brand-fallback b { color: #b44cff; font-weight: inherit; }
+.brand-fallback--mark { border-radius: 50%; background: #000; box-shadow: inset 0 0 0 1px rgba(139, 44, 255, 0.6); font-size: 0.6em; aspect-ratio: 1; }
 .cert { display: inline-flex; align-items: center; border: 1px solid currentColor; border-radius: calc(4 * var(--u)); padding: 0 calc(5 * var(--u)); line-height: 1.5; font-size: 0.85em; }
 .progress { position: absolute; left: 0; right: 0; bottom: 0; height: calc(3 * var(--u)); background: rgba(255, 255, 255, 0.22); }
 .progress > span { display: block; height: 100%; background: var(--m-progress); }
@@ -69,9 +76,9 @@ html[data-mode="tv"] .btn { min-height: calc(44 * var(--u)); }
 /* ---------- avatars (3.4) ---------- */
 .avatar { position: relative; display: inline-grid; place-items: center; flex: none; width: calc(60 * var(--u)); height: calc(60 * var(--u)); border-radius: 50%; background: var(--avatar-gradient); color: var(--text-1); overflow: hidden; }
 .avatar svg { width: 70%; height: 70%; }
-.avatar .panda-mark { width: 62%; height: 62%; }
+.avatar .avatar-mark { width: 62%; height: 62%; filter: none; }
 .avatar--kids { background: var(--kids-gradient); }
-.avatar--panda { background: linear-gradient(135deg, #2a2d36, #0f1014); }
+.avatar--panda { background: radial-gradient(circle at 50% 40%, #3a1470 0%, #12061f 62%, #000 100%); }
 .avatar--star { background: linear-gradient(135deg, #ffb21f, #ff5a1f); }
 .avatar--wave { background: linear-gradient(135deg, #17a08c, #2f80ed); }
 .avatar--add { background: var(--tv-add-fill); font-size: calc(26 * var(--u)); }
@@ -191,6 +198,7 @@ html[data-mode="tv"] .sheet-item { font-size: calc(24 * var(--tu)); padding: cal
 .info-body a { color: var(--m-link); }
 .info-small { color: var(--text-3); font-size: calc(12 * var(--u)); }
 .about-brand { display: flex; align-items: center; gap: calc(12 * var(--u)); font-size: calc(30 * var(--u)); }
+.about-logo { width: min(calc(360 * var(--u)), 100%); height: auto; }
 
 /* ---------- player (16) ---------- */
 .pause-glyph { width: 34%; height: 38%; border-left: calc(4 * var(--u)) solid currentColor; border-right: calc(4 * var(--u)) solid currentColor; }

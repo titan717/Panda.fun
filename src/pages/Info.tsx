@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState, type ReactNode } from "react";
 import { Link } from "wouter";
-import { PandaMark, Wordmark } from "../components/Icon";
+import { BrandLogo } from "../components/Brand";
 import { PageHeader } from "../components/PageHeader";
 import { apiGet, API_BASE, keys } from "../lib/api";
 import { installedVersion } from "../lib/updates";
@@ -36,7 +36,7 @@ export function AboutPage() {
   }, []);
   return (
     <InfoShell title="About">
-      <div className="about-brand"><PandaMark size={64} /><Wordmark /></div>
+      <div className="about-brand"><BrandLogo variant="horizontal" className="about-logo" alt="Panda.fun" priority /></div>
       <p>Version {installedVersion()}</p>
       <p>Panda.fun helps you discover movies and TV shows and play them from public streaming sources, on TV, phone and computer.</p>
       <h2>Service status</h2>

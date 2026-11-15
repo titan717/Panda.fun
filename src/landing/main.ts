@@ -1,4 +1,5 @@
-// panda.fun landing page (/welcome, v1.2.9): reveals, release info, showcase and the lazy 3D hero.
+// Panda.fun landing page (/welcome, v1.2.9): reveals, release info and showcase. The hero is the brand mascot image
+// (docs/BRAND.md) — the v1.2.9 three.js panda was retired in v1.4.0, so three.js is no longer in this bundle.
 import "./landing.css";
 import { releaseInfo, type Release } from "./release";
 
@@ -125,26 +126,3 @@ if (tv && frame && !reduced) {
     if (e?.isIntersecting) t = window.setInterval(() => { imgs[k]?.classList.remove("is-on"); k = (k + 1) % imgs.length; imgs[k]?.classList.add("is-on"); }, 4200);
   }, { threshold: 0.3 }).observe(frame);
 }
-
-// ---- lazy 3D hero: after first paint, only with WebGL, never on Save-Data ----
-function webgl(): boolean {
-  try {
-    const c = document.createElement("canvas");
-    return Boolean(c.getContext("webgl2") || c.getContext("webgl"));
-  } catch { return false; }
-}
-function boot3d() {
-  const host = document.querySelector<HTMLElement>("[data-panda]");
-  const canvas = document.querySelector<HTMLCanvasElement>("[data-panda-canvas]");
-  const conn = (navigator as Navigator & { connection?: { saveData?: boolean } }).connection;
-  if (!host || !canvas || conn?.saveData || !webgl()) return;
-  import("./panda3d")
-    .then(({ mountPanda }) => mountPanda(canvas, { reduced, onReady: () => host.classList.add("is-3d") }))
-    .catch(() => { /* static SVG panda stays */ });
-}
-const idle = (cb: () => void) => {
-  if (typeof window.requestIdleCallback === "function") window.requestIdleCallback(cb, { timeout: 1500 });
-  else setTimeout(cb, 300);
-};
-if (document.readyState === "complete") idle(boot3d);
-else window.addEventListener("load", () => idle(boot3d), { once: true });

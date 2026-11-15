@@ -2,7 +2,7 @@
 """Step 1 of the brand pipeline: run the segmentation models over the PDF artwork.
 
 Writes scripts/brand/masks/<art>-<model>.png (8-bit soft masks). The masks are committed so the rest of the
-pipeline (cutout.py, icons.py) is reproducible without the ~200 MB models. Re-run only when the source art changes.
+pipeline (cutout.py, build.py) is reproducible without the ~200 MB models. Re-run only when the source art changes.
 
     pip install "rembg[cpu]"
     python3 scripts/brand/segment.py brand-src            # folder holding art-000.jpg … art-003.jpg
