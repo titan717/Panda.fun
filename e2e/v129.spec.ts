@@ -12,6 +12,7 @@ async function open(page: Page, path: string, { fresh = false } = {}) {
   await page.addInitScript(([s, f]) => {
     if (!localStorage.getItem("panda:v1:state")) localStorage.setItem("panda:v1:state", s as string);
     if (!f) sessionStorage.setItem("panda:v1:intro-session", "e2e");
+    sessionStorage.setItem("panda:v1:bumper", "off");
   }, [STATE, fresh] as const);
   await page.goto(`${path}${path.includes("?") ? "&" : "?"}layout=tv`, { waitUntil: "domcontentloaded" });
 }

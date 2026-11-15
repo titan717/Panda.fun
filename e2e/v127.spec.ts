@@ -27,7 +27,7 @@ async function open(page: Page, tv: boolean, state = STATE()) {
   });
   await page.route(/\/api\/v1\/panda\/play\/movie\/550/, (r) => r.fulfill(ok({ type: "movie", tmdbId: 550, sources: [{ id: "cinesrc", provider: "cinesrc", label: "CineSrc", url: "https://cinesrc.st/embed/movie/550", origin: "https://cinesrc.st", events: "cinesrc", supportsStart: true }] })));
   await page.route(/^https:\/\/cinesrc\.st\/embed\//, (r) => r.fulfill({ contentType: "text/html", body: FAKE_EMBED }));
-  await page.addInitScript((s) => { if (!localStorage.getItem("panda:v1:state")) localStorage.setItem("panda:v1:state", s); sessionStorage.setItem("panda:v1:intro-session", "e2e"); }, state);
+  await page.addInitScript((s) => { if (!localStorage.getItem("panda:v1:state")) localStorage.setItem("panda:v1:state", s); sessionStorage.setItem("panda:v1:intro-session", "e2e"); sessionStorage.setItem("panda:v1:bumper", "off"); }, state);
   await page.goto(`/watch/movie/550?layout=${tv ? "tv" : "mobile"}`, { waitUntil: "domcontentloaded" });
   await expect(caption(page)).toContainText("People always ask me", { timeout: 30_000 });
 }
@@ -132,7 +132,7 @@ test("The CC key (C on a keyboard) turns subtitles off and back on", async ({ pa
 test("Settings › Subtitles sets colour, background, edge, height and a second language", async ({ page }, info) => {
   const tv = Boolean(info.project.metadata.tv);
   await page.route("https://api.github.com/**", (r) => r.fulfill({ contentType: "application/json", body: JSON.stringify({ tag_name: "v0.0.1", assets: [] }) }));
-  await page.addInitScript((s) => { if (!localStorage.getItem("panda:v1:state")) localStorage.setItem("panda:v1:state", s); sessionStorage.setItem("panda:v1:intro-session", "e2e"); }, STATE());
+  await page.addInitScript((s) => { if (!localStorage.getItem("panda:v1:state")) localStorage.setItem("panda:v1:state", s); sessionStorage.setItem("panda:v1:intro-session", "e2e"); sessionStorage.setItem("panda:v1:bumper", "off"); }, STATE());
   await page.goto(`/settings/subtitles?layout=${tv ? "tv" : "mobile"}`, { waitUntil: "domcontentloaded" });
   if (tv) await page.locator("#set-subtitles").focus();
   await page.locator("#subcolor-cyan").click();
@@ -156,7 +156,7 @@ test("Kids PIN is saved as a hash, guards grown-up settings on a Kids profile an
     profiles: [{ id: "p1", name: "You", avatar: "smile", kids: false, createdAt: 1 }, { id: "k1", name: "Kid", avatar: "kids", kids: true, createdAt: 2 }],
     activeProfileId: "k1", prefs: { autoplayTrailers: false, kidsPin: "2468" }, data: {},
   });
-  await page.addInitScript((s) => { if (!localStorage.getItem("panda:v1:state")) localStorage.setItem("panda:v1:state", s); sessionStorage.setItem("panda:v1:intro-session", "e2e"); }, state);
+  await page.addInitScript((s) => { if (!localStorage.getItem("panda:v1:state")) localStorage.setItem("panda:v1:state", s); sessionStorage.setItem("panda:v1:intro-session", "e2e"); sessionStorage.setItem("panda:v1:bumper", "off"); }, state);
   await page.goto(`/profiles/manage?layout=${tv ? "tv" : "mobile"}`, { waitUntil: "domcontentloaded" });
   const input = page.locator(".pin-sheet .pin-input");
   await expect(input).toBeVisible();

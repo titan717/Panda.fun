@@ -1,11 +1,14 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { act, cleanup, fireEvent, render } from "@testing-library/react";
-import { INTRO, INTRO_KEY, introDue, markIntroSeen, planIntro, resetIntroDecision, type IntroConfig } from "../lib/intro";
+import { INTRO, INTRO_KEY, INTRO_TV_VIDEO, introDue, markIntroSeen, planIntro, resetIntroDecision, type IntroConfig } from "../lib/intro";
 import { IntroOverlay, LaunchIntro } from "../components/Intro";
 import { getIntroPhase, introActive, setIntroPhase } from "../lib/launch";
 import introSrc from "../components/Intro.tsx?raw";
 import docs from "../../docs/INTRO.md?raw";
 
+/** v1.4.2 ships the canvas IntroBumper on both platforms; the v1.4.0 video / animation paths stay supported and are
+ * tested against this config (see v142-bumper.test.tsx for the bumper itself). */
+const V140: IntroConfig = { ...INTRO, tv: INTRO_TV_VIDEO, mobile: { kind: "animation" } };
 const overlay = () => document.querySelector<HTMLElement>("[data-intro]");
 const key = (k: string, keyCode = 0) => fireEvent.keyDown(window, { key: k, keyCode });
 
@@ -58,11 +61,14 @@ describe("Intro Manager: startup rules", () => {
 });
 
 describe("Intro Manager: plans", () => {
-  it("TV plays the 1280x720 placeholder video; phones the mascot animation (≤ 2.5 s)", () => {
-    const tv = planIntro({ tv: true, reduce: false })!;
+  it("v1.4.2: phones and TVs both play the canvas bumper (4 s, hard 4.2 s)", () => {
+    for (const tv of [true, false]) expect(planIntro({ tv, reduce: false })).toMatchObject({ view: "bumper", still: false, durationMs: 4000, hardMs: 4200 });
+  });
+  it("the v1.4.0 config: TV plays the 1280x720 placeholder video; phones the mascot animation (≤ 2.5 s)", () => {
+    const tv = planIntro({ tv: true, reduce: false }, V140)!;
     expect(tv).toMatchObject({ view: "video", fit: "contain" });
     expect(tv.src).toMatch(/intro\/intro-tv\.mp4$/);
-    const m = planIntro({ tv: false, reduce: false })!;
+    const m = planIntro({ tv: false, reduce: false }, V140)!;
     expect(m.view).toBe("animation");
     expect(m.durationMs + m.leaveMs).toBeLessThanOrEqual(2500);
   });
@@ -72,17 +78,18 @@ describe("Intro Manager: plans", () => {
     const shared: IntroConfig = { ...INTRO, tv: null, shared: { kind: "animation" } };
     expect(planIntro({ tv: true, reduce: false }, shared)!.view).toBe("animation");
   });
-  it("reduced motion shows the static still, or nothing when configured to skip", () => {
-    expect(planIntro({ tv: true, reduce: true })).toMatchObject({ view: "static", durationMs: INTRO.staticMs });
+  it("reduced motion shows the static still (the bumper's final frame since v1.4.2), or nothing when configured to skip", () => {
+    expect(planIntro({ tv: true, reduce: true })).toMatchObject({ view: "bumper", still: true, durationMs: INTRO.staticMs });
+    expect(planIntro({ tv: true, reduce: true }, V140)).toMatchObject({ view: "static", durationMs: INTRO.staticMs });
     expect(planIntro({ tv: true, reduce: true }, { ...INTRO, reducedMotion: "skip" })).toBeNull();
   });
   it("hard timeout is duration + 2 s", () => {
-    for (const tv of [true, false]) { const p = planIntro({ tv, reduce: false })!; expect(p.hardMs).toBe(p.durationMs + 2000); }
+    for (const tv of [true, false]) { const p = planIntro({ tv, reduce: false }, V140)!; expect(p.hardMs).toBe(p.durationMs + 2000); }
   });
 });
 
 describe("Intro overlay", () => {
-  const plan = (tv: boolean, reduce = false) => planIntro({ tv, reduce })!;
+  const plan = (tv: boolean, reduce = false) => planIntro({ tv, reduce }, V140)!;
 
   it("preloads only the active platform's video (preload=auto, muted, inline)", () => {
     render(<IntroOverlay plan={plan(true)} tv />);

@@ -40,7 +40,7 @@ for (const adapter of ADAPTERS) {
     const seen = watch(context, page);
     await page.addInitScript((s) => {
       localStorage.setItem("panda:v1:state", s);
-      sessionStorage.setItem("panda:v1:intro-session", "e2e");
+      sessionStorage.setItem("panda:v1:intro-session", "e2e"); sessionStorage.setItem("panda:v1:bumper", "off");
     }, state(adapter.id));
 
     await page.goto(`/watch/tv/1396?s=1&e=1${tv ? "&layout=tv" : ""}`, { waitUntil: "domcontentloaded" });
@@ -80,7 +80,7 @@ for (const adapter of ADAPTERS) {
 test("ad shield: CineSrc runs in the strict sandbox and cannot take input", async ({ page }) => {
   // only CineSrc answers, so phones (which start on Vidy) also open it
   await page.route(/\/api\/v1\/panda\/play\/movie\/550/, (r) => r.fulfill({ contentType: "application/json", body: JSON.stringify({ success: true, data: { type: "movie", tmdbId: 550, sources: [{ id: "cinesrc", provider: "cinesrc", label: "CineSrc", url: "https://cinesrc.st/embed/movie/550", origin: "https://cinesrc.st", events: "cinesrc", supportsStart: true, tier: 1 }] } }) }));
-  await page.addInitScript((s) => { localStorage.setItem("panda:v1:state", s); sessionStorage.setItem("panda:v1:intro-session", "e2e"); }, state("cinesrc"));
+  await page.addInitScript((s) => { localStorage.setItem("panda:v1:state", s); sessionStorage.setItem("panda:v1:intro-session", "e2e"); sessionStorage.setItem("panda:v1:bumper", "off"); }, state("cinesrc"));
   await page.goto("/watch/movie/550", { waitUntil: "domcontentloaded" });
   const frame = page.locator("iframe.player-frame");
   await expect(frame).toHaveCount(1, { timeout: 30_000 });

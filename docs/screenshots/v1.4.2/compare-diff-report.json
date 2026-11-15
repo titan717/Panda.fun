@@ -1,0 +1,98 @@
+[
+  {
+    "size": "tv",
+    "t": 0.5,
+    "meanDiff": 0,
+    "maxDiff": 0,
+    "pxOver8": 0,
+    "pct": 0
+  },
+  {
+    "size": "tv",
+    "t": 1.6,
+    "meanDiff": 0,
+    "maxDiff": 0,
+    "pxOver8": 0,
+    "pct": 0
+  },
+  {
+    "size": "tv",
+    "t": 2.3,
+    "meanDiff": 0,
+    "maxDiff": 0,
+    "pxOver8": 0,
+    "pct": 0
+  },
+  {
+    "size": "tv",
+    "t": 3,
+    "meanDiff": 0,
+    "maxDiff": 0,
+    "pxOver8": 0,
+    "pct": 0
+  },
+  {
+    "size": "tv",
+    "t": 3.9,
+    "meanDiff": 0,
+    "maxDiff": 0,
+    "pxOver8": 0,
+    "pct": 0
+  },
+  {
+    "size": "tv",
+    "t": 3.8,
+    "meanDiff": 0,
+    "maxDiff": 0,
+    "pxOver8": 0,
+    "pct": 0
+  },
+  {
+    "size": "phone",
+    "t": 0.5,
+    "meanDiff": 0,
+    "maxDiff": 0,
+    "pxOver8": 0,
+    "pct": 0
+  },
+  {
+    "size": "phone",
+    "t": 1.6,
+    "meanDiff": 0,
+    "maxDiff": 0,
+    "pxOver8": 0,
+    "pct": 0
+  },
+  {
+    "size": "phone",
+    "t": 2.3,
+    "meanDiff": 0,
+    "maxDiff": 0,
+    "pxOver8": 0,
+    "pct": 0
+  },
+  {
+    "size": "phone",
+    "t": 3,
+    "meanDiff": 0,
+    "maxDiff": 0,
+    "pxOver8": 0,
+    "pct": 0
+  },
+  {
+    "size": "phone",
+    "t": 3.9,
+    "meanDiff": 0,
+    "maxDiff": 0,
+    "pxOver8": 0,
+    "pct": 0
+  },
+  {
+    "size": "phone",
+    "t": 3.8,
+    "meanDiff": 0,
+    "maxDiff": 0,
+    "pxOver8": 0,
+    "pct": 0
+  }
+]
