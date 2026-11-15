@@ -13,7 +13,7 @@ function InfoShell({ title, children }: { title: string; children: ReactNode }) 
   // the scroll container itself is focusable on TV so Up/Down can read long text with the remote
   useEffect(() => { if (tv && root.current) focusFirst(root.current); }, [tv]);
   return (
-    <div ref={root} className={tv ? "tv-page tv-settings-page tv-info" : "m-page m-info"}>
+    <div ref={root} className={tv ? "tv-page tv-settings-page tv-info" : "m-page m-info"} data-scroll-y={tv ? "nearest" : undefined}>
       <PageHeader title={title} fallback="/settings" />
       <article className="info-body" tabIndex={tv ? 0 : undefined} data-autofocus
         onKeyDown={(e) => {

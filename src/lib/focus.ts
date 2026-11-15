@@ -92,6 +92,35 @@ function leadRow(row: HTMLElement, anchor: HTMLElement, pad: number) {
   if (typeof requestAnimationFrame === "function") requestAnimationFrame(run); else run();
 }
 
+export interface NearestScroll {
+  scrollTop: number; clientHeight: number; scrollHeight: number;
+  /** element top in the scroller's content coordinates, and its height */
+  top: number; height: number;
+  /** space kept clear above and below the focused element (look-ahead, room for the focus glow and group titles) */
+  margin: number;
+  first: boolean; last: boolean;
+}
+
+/**
+ * Vertical scroll for lists of settings-like rows (`data-scroll-y="nearest"`, v1.3.2): the page moves only when the
+ * focused element would come closer than `margin` to an edge, and then by just enough, so Down scrolls one row at a
+ * time and Up reverses it exactly. The first focusable scrolls to the very top (its heading shows), the last to the
+ * very bottom (notes after it show). An element taller than the view lines up with its top edge.
+ * Returns the new scrollTop, or null when the element is already comfortably visible.
+ */
+export function nearestScrollTop(m: NearestScroll): number | null {
+  const max = Math.max(0, m.scrollHeight - m.clientHeight);
+  const margin = Math.max(0, Math.min(m.margin, (m.clientHeight - m.height) / 2));
+  let want: number | null = null;
+  if (m.first && m.top + m.height <= m.clientHeight - margin) want = 0;
+  else if (m.last && m.top >= max + Math.min(margin, 12)) want = max;
+  else if (m.top - margin < m.scrollTop) want = m.top - margin;
+  else if (m.top + m.height + margin > m.scrollTop + m.clientHeight) want = m.height + 2 * margin > m.clientHeight ? m.top - margin : m.top + m.height + margin - m.clientHeight;
+  if (want === null) return null;
+  want = Math.round(Math.max(0, Math.min(max, want)));
+  return Math.abs(want - m.scrollTop) > 1 ? want : null;
+}
+
 /** Keep the focused element visible inside horizontal rows and the vertical page scroller. */
 export function revealFocus(el: HTMLElement) {
   const behavior: ScrollBehavior = matchMedia("(prefers-reduced-motion: reduce)").matches ? "auto" : "smooth";
@@ -113,7 +142,17 @@ export function revealFocus(el: HTMLElement) {
     else if (over > row.scrollLeft) row.scrollTo({ left: over, behavior });
   }
   const page = el.closest<HTMLElement>("[data-scroll-y]");
-  if (page) {
+  if (page && page.dataset.scrollY === "nearest") {
+    const box = page.getBoundingClientRect(), rect = el.getBoundingClientRect();
+    const items = Array.from(page.querySelectorAll<HTMLElement>(FOCUSABLE)).filter((n) => !n.closest(".lrud-ignore, [inert]") && (n.offsetWidth > 0 || n.offsetHeight > 0));
+    const i = items.indexOf(el);
+    const top = nearestScrollTop({
+      scrollTop: page.scrollTop, clientHeight: page.clientHeight, scrollHeight: page.scrollHeight,
+      top: rect.top - box.top - page.clientTop + page.scrollTop, height: rect.height,
+      margin: Number(page.dataset.scrollMargin ?? 0.16) * page.clientHeight, first: i === 0, last: i >= 0 && i === items.length - 1
+    });
+    if (top !== null) page.scrollTo({ top, behavior });
+  } else if (page) {
     const rect = (el.closest<HTMLElement>("[data-row]") ?? el).getBoundingClientRect();
     const box = page.getBoundingClientRect();
     const offset = Number(page.dataset.scrollOffset ?? 0.18) * page.clientHeight;

@@ -18,7 +18,7 @@ import { actions, usePrefs, useProfile, useReminders, type Prefs } from "../lib/
 import { useGenres, usePage, useSourceHealth, useSourceRanking } from "../lib/hooks";
 import { reliabilityLabel, reliabilityTone, tierLabel } from "../lib/sources";
 import { HOME_SECTIONS, isCustomHome, moveSection, normalizeOrder, railKey, type HomeSection } from "../lib/homeLayout";
-import { focusEl, focusFirst } from "../lib/focus";
+import { focusEl, focusFirst, useBackHandler } from "../lib/focus";
 import { useNav } from "../lib/nav";
 import { useIsTv } from "../lib/layout";
 import { installedVersion } from "../lib/updates";
@@ -476,6 +476,16 @@ export function SettingsPage() {
     if (want) focusEl(want); else focusFirst(root.current);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [tv]);
+  // v1.3.2 TV: the two columns scroll on their own (data-scroll-y="nearest"); a new section's panel starts at its top
+  const panel = useRef<HTMLElement>(null);
+  useEffect(() => { panel.current?.scrollTo({ top: 0 }); }, [focused]);
+  /** OK or Right on a section moves into its panel (first option), never to a spatially closer row further down. */
+  const enterPanel = () => (panel.current ? focusFirst(panel.current) : false);
+  // Back inside the panel returns to the section it belongs to; Back on the list leaves Settings as before
+  useBackHandler(() => {
+    if (!panel.current?.contains(document.activeElement) || document.activeElement?.closest(".sheet, [role='dialog']")) return false;
+    return focusEl(document.getElementById(`set-${focused}`));
+  }, tv);
 
   if (!tv && current) {
     return (
@@ -491,17 +501,18 @@ export function SettingsPage() {
       <div ref={root} className="tv-page tv-settings">
         <PageHeader title="Help & Settings" sub={profile ? `Signed in as ${profile.name}` : undefined} />
         <div className="tv-settings-cols">
-          <nav className="tv-settings-list" aria-label="Settings sections">
+          <nav className="tv-settings-list" aria-label="Settings sections" data-scroll-y="nearest" data-block-exit="up down">
             {SECTIONS.map((s) => (
               <button key={s.id} id={`set-${s.id}`} className={`set-row set-row--section ${focused === s.id ? "is-selected" : ""}`} onFocus={() => setFocused(s.id)}
-                onClick={() => { if (s.id === "updates") go("/settings/updates"); else if (s.id === "whatsnew") go("/settings/whats-new"); else { const p = document.getElementById("set-panel"); if (p) focusFirst(p); } }} data-hover-focus>
+                onKeyDown={(e) => { if (e.key === "ArrowRight" && s.id !== "updates" && s.id !== "whatsnew" && enterPanel()) e.preventDefault(); }}
+                onClick={() => { if (s.id === "updates") go("/settings/updates"); else if (s.id === "whatsnew") go("/settings/whats-new"); else enterPanel(); }} data-hover-focus>
                 <Icon name={s.icon} className="set-row-icon" />
                 <span className="set-row-text"><span className="set-row-title">{s.title}</span><span className="set-row-sub">{s.sub}</span></span>
                 <Icon name="chevronRight" />
               </button>
             ))}
           </nav>
-          <section id="set-panel" className="tv-settings-panel" aria-label={SECTIONS.find((s) => s.id === focused)?.title}>
+          <section ref={panel} id="set-panel" className="tv-settings-panel" aria-label={SECTIONS.find((s) => s.id === focused)?.title} data-scroll-y="nearest" data-block-exit="up down">
             <Panel id={focused} />
           </section>
         </div>
