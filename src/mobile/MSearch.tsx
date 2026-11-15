@@ -2,9 +2,10 @@ import { useEffect, useRef } from "react";
 import { Link, useSearch as useQueryString } from "wouter";
 import { Icon } from "../components/Icon";
 import { EmptyState, ErrorState, Img, Skeleton } from "../components/ui";
-import { POPULAR_TABS, SEARCH_SORTS, useSearchState, type SearchFilter } from "../lib/useSearchState";
+import { SEARCH_SORTS, useSearchState, type SearchFilter } from "../lib/useSearchState";
 import { itemMeta, titlePath } from "../lib/format";
 import { MPoster } from "./MCards";
+import { MDiscover } from "./MDiscover";
 
 const FILTERS: { id: SearchFilter; label: string }[] = [{ id: "all", label: "All" }, { id: "movie", label: "Movies" }, { id: "tv", label: "Shows" }];
 
@@ -52,22 +53,7 @@ export function MSearch() {
               </div>
             </section>
           )}
-          <section className="m-section">
-            <h2 className="m-row-title">Popular Searches in</h2>
-            <div className="m-chips" role="tablist" aria-label="Popular searches in">
-              {POPULAR_TABS.map((tab) => (
-                <button key={tab.id} role="tab" aria-selected={s.popularTab === tab.id} className={`m-chip m-chip--tab ${s.popularTab === tab.id ? "is-selected" : ""}`} onClick={() => s.setPopularTab(tab.id)}>
-                  <Icon name={tab.icon} /> {tab.label}
-                </button>
-              ))}
-            </div>
-            {s.popularError && !s.popular.length ? <ErrorState compact message={s.popularError.message} onRetry={s.retryPopular} /> : (
-              <div className="m-mosaic" aria-busy={s.popularLoading} role="tabpanel">
-                {s.popularLoading && Array.from({ length: 9 }, (_, i) => <Skeleton key={i} className="m-poster sk-poster-m" />)}
-                {s.popular.map((it) => <MPoster key={it.id} item={it} onOpen={() => s.openTitle(it)} />)}
-              </div>
-            )}
-          </section>
+          <MDiscover onOpen={s.openTitle} />
         </>
       )}
 

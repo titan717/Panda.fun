@@ -312,3 +312,16 @@ html[data-mode="tv"] .list-card.tv-card:focus .list-collage { outline: var(--foc
 @keyframes det-in { from { opacity: 0; transform: translateY(calc(14 * var(--tu))); } }
 @media (prefers-reduced-motion: reduce) { .tv-det-col > * { animation: none !important; } }
 .tv-cast-img { box-shadow: 0 calc(8 * var(--tu)) calc(24 * var(--tu)) rgba(0, 0, 0, 0.45); }
+
+/* v1.4.0 Search discovery (Panda Top Picks first) */
+.tv-discover { margin-top: calc(18 * var(--tu)); }
+.tv-reco { margin-bottom: calc(26 * var(--tu)); }
+.tv-reco .tv-row-title { display: flex; align-items: center; gap: calc(12 * var(--tu)); margin-bottom: calc(4 * var(--tu)); }
+.tv-reco-why { margin: 0 0 calc(12 * var(--tu)); min-height: 1.3em; font-size: calc(20 * var(--tu)); color: var(--text-2); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; padding-right: var(--safe-x); }
+.tv-reco.is-first .tv-row-title { font-size: calc(var(--t-row) * 1.12); }
+.tv-reco-mark { width: calc(12 * var(--tu)); height: calc(12 * var(--tu)); border-radius: 50%; background: var(--brand-gradient); box-shadow: 0 0 14px rgba(224, 64, 160, 0.6); flex: none; }
+.tv-discover-hint { display: flex; align-items: center; gap: calc(10 * var(--tu)); color: var(--text-3, var(--text-2)); font-size: calc(19 * var(--tu)); margin: calc(8 * var(--tu)) 0 calc(40 * var(--tu)); }
+.tv-discover-hint svg { width: 1.1em; height: 1.1em; }
+.reco-diag { margin: calc(20 * var(--tu)) 0; font-size: 13px; color: var(--text-2); background: rgba(255,255,255,0.04); border-radius: 10px; padding: 10px 14px; }
+.reco-diag table { border-collapse: collapse; width: 100%; }
+.reco-diag td, .reco-diag th { padding: 2px 6px; text-align: left; border-bottom: 1px solid rgba(255,255,255,0.06); }

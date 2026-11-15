@@ -4,12 +4,13 @@ import { EmptyState, ErrorState, Skeleton } from "../components/ui";
 import { SEARCH_SORTS, useSearchState, type SearchFilter } from "../lib/useSearchState";
 import { focusEl } from "../lib/focus";
 import { TvPoster } from "./TvCards";
+import { TvDiscover } from "./TvDiscover";
 
 const FILTERS: { id: SearchFilter; label: string }[] = [{ id: "all", label: "All" }, { id: "movie", label: "Movies" }, { id: "tv", label: "Shows" }];
 
 /** TV Search (spec 8). */
 export function TvSearch() {
-  // TV: one "Popular Searches" grid of today's trending titles (spec 8.3)
+  // v1.4.0: before typing, Search is the discovery page (Panda Top Picks first, src/tv/TvDiscover.tsx)
   const s = useSearchState("all");
   const input = useRef<HTMLInputElement>(null);
   // Remote-friendly field (D-45): landing on Search focuses the field without popping the on-screen keyboard;
@@ -31,7 +32,6 @@ export function TvSearch() {
     const first = document.getElementById("res-0");
     if (first && s.active) focusEl(first); else openKeyboard();
   };
-  const grid = s.active ? s.results : s.popular;
   const sortLabel = SEARCH_SORTS.find((x) => x.id === s.sort)?.label ?? "Best match";
   const nextSort = () => { const i = SEARCH_SORTS.findIndex((x) => x.id === s.sort); s.setSort(SEARCH_SORTS[(i + 1) % SEARCH_SORTS.length]!.id); };
   const note = s.active && !s.stale ? (s.interpreted ? `Showing ${s.interpreted}` : s.corrected ? `Showing results for “${s.corrected}”` : s.people.length ? `Including titles with ${s.people.join(", ")}` : null) : null;
@@ -74,20 +74,25 @@ export function TvSearch() {
           <button id="search-sort" className="tv-chip" onClick={nextSort} aria-label={`Sort: ${sortLabel}. Press to change.`} data-hover-focus><Icon name="sort" /> {sortLabel}</button>
         </section>
       )}
-      <h2 className="tv-section-title">{s.active ? `Results for “${s.debounced.trim()}”` : "Popular Searches"}</h2>
-      {note && <p className="tv-search-note" role="status">{note}</p>}
-      {s.active && s.error && !s.results.length ? <ErrorState compact message={s.error.message} onRetry={s.retry} /> : null}
-      {s.active && !s.loading && !s.error && !s.stale && s.results.length === 0 && (
-        <EmptyState icon="search" title={`No results for “${s.debounced.trim()}”`} sub="Check the spelling or try a different title, actor or genre." />
+      {!s.active && <TvDiscover onOpen={s.openTitle} />}
+      {s.active && (
+        <>
+          <h2 className="tv-section-title">{`Results for “${s.debounced.trim()}”`}</h2>
+          {note && <p className="tv-search-note" role="status">{note}</p>}
+          {s.error && !s.results.length ? <ErrorState compact message={s.error.message} onRetry={s.retry} /> : null}
+          {!s.loading && !s.error && !s.stale && s.results.length === 0 && (
+            <EmptyState icon="search" title={`No results for “${s.debounced.trim()}”`} sub="Check the spelling or try a different title, actor or genre." />
+          )}
+          <section className={`tv-grid ${s.stale ? "is-stale" : ""}`} aria-busy={s.loading}>
+            {s.loading && Array.from({ length: 12 }, (_, i) => <Skeleton key={i} className="sk-poster" />)}
+            {s.results.map((it, i) => (
+              <div key={it.id} onClick={() => s.openTitle(it)}>
+                <TvPoster item={it} id={`res-${i}`} expand={false} />
+              </div>
+            ))}
+          </section>
+        </>
       )}
-      <section className={`tv-grid ${s.stale ? "is-stale" : ""}`} aria-busy={s.loading || s.popularLoading}>
-        {(s.loading || (!s.active && s.popularLoading)) && Array.from({ length: 12 }, (_, i) => <Skeleton key={i} className="sk-poster" />)}
-        {grid.map((it, i) => (
-          <div key={it.id} onClick={() => s.openTitle(it)}>
-            <TvPoster item={it} id={`res-${i}`} expand={false} />
-          </div>
-        ))}
-      </section>
     </div>
   );
 }
