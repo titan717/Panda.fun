@@ -1,44 +1,50 @@
-/* ---------- v1.3.0 launch intro (D-177): eyes, blink, panda, dive, ribbons, horizon. No text. ---------- */
-/* Every beat time comes from Intro.tsx (--b-* start, --d-* length), so TV (3.6 s) and phone (2.4 s) share these rules.
-   Only transform and opacity animate; filters and masks are static so a TV box stays at 60 fps. */
-.intro { --S: 46vmin; position: fixed; inset: 0; z-index: var(--z-splash); overflow: hidden; background: #050507; cursor: default; touch-action: none; user-select: none; -webkit-user-select: none; -webkit-tap-highlight-color: transparent; transition: opacity var(--d-leave, 200ms) ease-out; }
-.intro--m { --S: 64vmin; }
+/* ---------- v1.4.0 launch intro (Intro Manager): video, mascot animation or branded still, on black ---------- */
+/* Only transform, opacity and (static) filters animate, so a TV box and an old phone stay smooth. */
+.intro { position: fixed; inset: 0; z-index: var(--z-splash); overflow: hidden; background: #000; color: #fff; user-select: none; -webkit-user-select: none; -webkit-tap-highlight-color: transparent; transition: opacity var(--leave, 280ms) ease-out; }
 .intro.is-leaving { opacity: 0; }
-.intro-stage { position: absolute; inset: 0; display: grid; place-items: center; }
-/* the zoom box is centred on the point between the eyes, so scaling it dives through them */
-.intro-zoom { position: relative; width: var(--S); height: var(--S); perspective: 600px; transform-origin: 50% 50%; will-change: transform, opacity; animation: zoom-in var(--d-zoom) var(--b-zoom) cubic-bezier(.55, 0, .85, .35) both; }
-.intro-face { position: absolute; inset: 0; top: -2%; opacity: 0; will-change: transform, opacity; animation: face-in var(--d-face) var(--b-face) cubic-bezier(.2, .8, .2, 1) both, face-out var(--d-zoom) var(--b-zoom) ease-in forwards; }
-.intro-face-svg { display: block; width: 100%; height: 100%; }
-.intro-eyes { position: absolute; inset: 0; opacity: 0; will-change: transform, opacity; animation: eyes-in var(--d-eyes) var(--b-eyes) cubic-bezier(.3, .6, .3, 1) both; }
-.intro-eye { position: absolute; top: 50%; width: calc(var(--S) * 0.075); height: calc(var(--S) * 0.095); margin: calc(var(--S) * -0.0475) 0 0 calc(var(--S) * -0.0375); }
-.intro-eye--l { left: 35%; }
-.intro-eye--r { left: 65%; }
-/* rising glow: a soft crimson halo whose opacity follows the eyes in */
-.intro-eye::before { content: ""; position: absolute; inset: -160%; border-radius: 50%; background: radial-gradient(circle, rgba(255, 32, 64, 0.55) 0%, rgba(200, 0, 40, 0.22) 32%, transparent 68%); opacity: 0; animation: eyes-glow var(--d-eyes) var(--b-eyes) ease-in both; }
-.intro-eye i { position: absolute; inset: 0; border-radius: 50%; background: radial-gradient(circle at 42% 38%, #ffd2d6 0 9%, #ff2340 18%, #c4001e 58%, #5a000d 100%); box-shadow: 0 0 calc(var(--S) * 0.03) rgba(255, 30, 60, 0.9); will-change: transform; animation: eyes-blink var(--d-blink) var(--b-blink) ease-in-out both; }
-/* the dive: a crimson bloom stands in for motion blur (opacity + scale only) */
-.intro-smear { position: absolute; left: 50%; top: 50%; width: var(--S); height: var(--S); margin: calc(var(--S) / -2) 0 0 calc(var(--S) / -2); border-radius: 50%; background: radial-gradient(circle, rgba(255, 40, 70, 0.6) 0%, rgba(150, 0, 30, 0.3) 40%, transparent 70%); opacity: 0; animation: smear-in var(--d-zoom) var(--b-zoom) ease-in both; }
 
-.intro-ribbons { position: absolute; inset: 0; pointer-events: none; }
-.intro-ribbons i { position: absolute; top: 0; bottom: 0; width: 3.2vw; margin-left: -1.6vw; background: linear-gradient(180deg, transparent 0%, var(--c) 30%, #ffffff 50%, var(--c) 70%, transparent 100%); -webkit-mask-image: linear-gradient(90deg, transparent, #000 42%, #000 58%, transparent); mask-image: linear-gradient(90deg, transparent, #000 42%, #000 58%, transparent); mix-blend-mode: screen; transform-origin: 50% var(--horizon); transform: scaleY(0); opacity: 0; will-change: transform, opacity; animation: ribbon-burst calc(var(--d-burst) - 120ms) calc(var(--b-burst) + var(--i) * 30ms) cubic-bezier(.15, .9, .3, 1) both, ribbon-collapse calc(var(--d-horizon) * 0.7) var(--b-horizon) cubic-bezier(.6, 0, .9, .4) forwards; }
-.intro--m .intro-ribbons i { width: 6vw; margin-left: -3vw; }
+.intro-video { position: absolute; inset: 0; width: 100%; height: 100%; background: #000; }
+.intro-video--contain { object-fit: contain; }
+.intro-video--cover { object-fit: cover; }
 
-/* the same line, position and glow as .profiles-arc, so the picker's horizon is already there when the intro fades */
-.intro-horizon { position: absolute; left: 0; right: 0; top: var(--horizon); height: 2px; background: var(--arc-gradient); filter: drop-shadow(0 0 6px rgba(70, 130, 255, 0.85)); transform: scaleX(0); opacity: 0; will-change: transform, opacity; animation: horizon-draw var(--d-horizon) var(--b-horizon) cubic-bezier(.2, .8, .2, 1) both; }
+.intro-still, .intro-anim { position: absolute; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 2.4vmin; perspective: 900px; }
+.intro-mascot { display: block; width: 42vmin; height: 42vmin; object-fit: contain; position: relative; filter: drop-shadow(0 2vmin 5vmin rgba(139, 44, 255, 0.45)); }
+.intro--tv .intro-mascot { width: 34vmin; height: 34vmin; }
+.intro-logo { display: block; height: 7.5vmin; max-width: 72vw; object-fit: contain; position: relative; }
+.intro-text { height: auto; font-weight: 800; font-size: 7vmin; letter-spacing: -0.02em; line-height: 1; background: linear-gradient(90deg, #fff 0 55%, #d42cff); -webkit-background-clip: text; background-clip: text; color: transparent; }
+.intro-glow { position: absolute; left: 50%; top: 44%; width: 90vmin; height: 90vmin; margin: -45vmin 0 0 -45vmin; border-radius: 50%; background: radial-gradient(circle, rgba(139, 44, 255, 0.42) 0%, rgba(212, 44, 255, 0.16) 34%, transparent 66%); pointer-events: none; }
 
-@keyframes eyes-in { from { opacity: 0; transform: scale(0.85); } to { opacity: 1; transform: scale(1); } }
-@keyframes eyes-glow { from { opacity: 0; } to { opacity: 1; } }
-@keyframes eyes-blink { 0%, 30% { transform: scaleY(1); } 50% { transform: scaleY(0.1); } 70%, 100% { transform: scaleY(1); } }
-@keyframes face-in { from { opacity: 0; transform: translateZ(-200px); } to { opacity: 1; transform: translateZ(0); } }
-@keyframes face-out { 0%, 35% { opacity: 1; } 100% { opacity: 0; } }
-@keyframes zoom-in { 0% { transform: scale(1); opacity: 1; } 80% { opacity: 1; } 100% { transform: scale(14); opacity: 0; } }
-@keyframes smear-in { 0% { opacity: 0; transform: scale(0.4); } 60% { opacity: 0.9; } 100% { opacity: 0; transform: scale(2.2); } }
-@keyframes ribbon-burst { from { transform: scaleY(0); opacity: 0; } 55% { opacity: 1; } to { transform: scaleY(1); opacity: 0.9; } }
-@keyframes ribbon-collapse { from { transform: scaleY(1); opacity: 0.9; } to { transform: scaleY(0.004); opacity: 0; } }
-@keyframes horizon-draw { from { transform: scaleX(0); opacity: 0; } 30% { opacity: 1; } to { transform: scaleX(1); opacity: 1; } }
+/* the still: a soft fade in, nothing moving after that */
+.intro-still > * { animation: intro-fade 360ms ease-out both; }
 
-/* reduced motion: a still frame of the eyes and the panda, then a plain fade (no zoom, ribbons or blink) */
-.intro--still .intro-zoom, .intro--still .intro-face, .intro--still .intro-eyes, .intro--still .intro-eye::before, .intro--still .intro-eye i { animation: none !important; opacity: 1; transform: none; }
-.intro--still .intro-smear { display: none; }
-html[data-motion="reduce"] .intro { transition-duration: 250ms !important; }
-@media (prefers-reduced-motion: reduce) { .intro { transition-duration: 250ms; } }
+/* the phone animation (2.2 s): glow swells, the mascot turns in from the side in 3D, bounces, the wordmark rises */
+.intro-anim .intro-glow { animation: glow-in 900ms cubic-bezier(.2, .8, .2, 1) both, glow-pulse 1300ms 900ms ease-in-out both; }
+.intro-turn { transform-style: preserve-3d; animation: turn-in 1100ms 120ms cubic-bezier(.2, 1.25, .35, 1) both; will-change: transform, opacity; }
+.intro-anim .intro-mascot { animation: mascot-wave 900ms 1150ms ease-in-out both; transform-origin: 50% 90%; }
+.intro-anim .intro-logo { animation: logo-rise 600ms 900ms cubic-bezier(.2, .8, .2, 1) both; }
+.intro-ring { position: absolute; left: 50%; top: 42%; width: 46vmin; height: 46vmin; margin: -23vmin 0 0 -23vmin; border-radius: 50%; border: 0.5vmin solid transparent; background: linear-gradient(#000, #000) padding-box, linear-gradient(135deg, #8b2cff, #d42cff) border-box; opacity: 0; animation: ring-out 1200ms 520ms cubic-bezier(.1, .7, .3, 1) both; }
+.intro-ring--2 { animation-delay: 760ms; }
+.intro-spark { position: absolute; width: 1.4vmin; height: 1.4vmin; border-radius: 50%; background: #fff; box-shadow: 0 0 2vmin 0.6vmin rgba(212, 44, 255, 0.85); opacity: 0; animation: spark 900ms ease-out both; }
+.intro-spark--a { left: 26%; top: 30%; animation-delay: 700ms; }
+.intro-spark--b { right: 24%; top: 26%; animation-delay: 860ms; }
+.intro-spark--c { right: 30%; top: 58%; animation-delay: 1000ms; }
+
+/* Skip: top-right on phones (thumb reach + safe area), bottom-right in the TV overscan-safe margin */
+.intro-skip { position: absolute; z-index: 2; display: inline-flex; align-items: center; gap: 10px; min-height: 44px; padding: 0 18px; border-radius: 999px; border: 1px solid rgba(255, 255, 255, 0.35); background: rgba(20, 20, 24, 0.72); color: #fff; font: inherit; font-weight: 600; font-size: 15px; cursor: pointer; animation: intro-fade 240ms ease-out both; }
+.intro--m .intro-skip { top: calc(env(safe-area-inset-top, 0px) + 16px); right: 16px; }
+.intro--tv .intro-skip { bottom: 6vh; right: 5vw; min-height: 56px; padding: 0 26px; font-size: 22px; }
+.intro-skip:focus-visible, .intro--tv .intro-skip:focus { outline: none; border-color: #fff; background: #fff; color: #000; box-shadow: 0 0 0 4px rgba(139, 44, 255, 0.6); }
+.intro-skip-hint { font-size: 0.7em; font-weight: 700; padding: 2px 8px; border-radius: 6px; border: 1px solid currentColor; opacity: 0.8; }
+
+@keyframes intro-fade { from { opacity: 0; } to { opacity: 1; } }
+@keyframes glow-in { from { opacity: 0; transform: scale(0.4); } to { opacity: 1; transform: scale(1); } }
+@keyframes glow-pulse { 0%, 100% { transform: scale(1); } 50% { transform: scale(1.08); } }
+@keyframes turn-in { 0% { opacity: 0; transform: translateY(6vmin) scale(0.55) rotateY(-75deg); } 55% { opacity: 1; transform: translateY(-1vmin) scale(1.07) rotateY(12deg); } 78% { transform: translateY(0) scale(0.98) rotateY(-4deg); } 100% { opacity: 1; transform: none; } }
+@keyframes mascot-wave { 0%, 100% { transform: rotate(0); } 30% { transform: rotate(-5deg); } 65% { transform: rotate(4deg); } }
+@keyframes logo-rise { from { opacity: 0; transform: translateY(3vmin); filter: blur(4px); } to { opacity: 1; transform: none; filter: none; } }
+@keyframes ring-out { 0% { opacity: 0; transform: scale(0.6); } 25% { opacity: 0.9; } 100% { opacity: 0; transform: scale(1.9); } }
+@keyframes spark { 0% { opacity: 0; transform: scale(0); } 40% { opacity: 1; transform: scale(1); } 100% { opacity: 0; transform: scale(0.4) translateY(-3vmin); } }
+
+/* Settings › Reduce motion: the manager already picks the still; keep its fade short */
+html[data-motion="reduce"] .intro { transition-duration: 200ms !important; }
+@media (prefers-reduced-motion: reduce) { .intro-anim *, .intro-still > * { animation: none !important; } }

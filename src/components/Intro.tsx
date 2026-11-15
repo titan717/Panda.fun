@@ -1,192 +1,136 @@
-import { Component, lazy, Suspense, useEffect, useRef, useState, type CSSProperties, type ReactNode } from "react";
-import { useLiteMotion, useReducedMotion } from "../lib/hooks";
-import { getIntroPhase, introDone, introPending, setIntroPhase, type IntroPhase } from "../lib/launch";
-import { getMutedMemory, isAudioUnlocked } from "../lib/audio";
-import { getPrefs } from "../lib/store";
-import { POPS, RETRO } from "../lib/introTimeline";
-
-/**
- * The TV film is its own chunk so phones never download it. Its first 0.4 s is darkness, which the overlay already
- * is, and it starts from the overlay's clock, so a late chunk joins on the right frame. If the chunk cannot load the
- * dark overlay stays until the timeline ends.
- */
-type FilmProps = { reduce: boolean; lite: boolean; start?: number };
-const NoFilm = (_: FilmProps) => null;
-const RetroIntro = lazy(() =>
-  import("./IntroTv").then((m): { default: (p: FilmProps) => ReactNode } => ({ default: m.RetroIntro }), () => ({ default: NoFilm })),
-);
+import { Component, useCallback, useEffect, useRef, useState, type ReactNode } from "react";
+import { useReducedMotion } from "../lib/hooks";
+import { getIntroPhase, setIntroPhase, type IntroPhase } from "../lib/launch";
+import { introDue, markIntroSeen, planIntro, type IntroPlan, type IntroView } from "../lib/intro";
+import { navKey } from "../lib/keys";
+import { BRAND } from "../lib/brand";
 import "../styles/intro.css";
 
 /**
- * v1.3.1 (D-181): on TVs the launch intro is the retro stop-motion paper-cutout film in IntroTv.tsx (blue eyes in the
- * dark, the paper panda assembles, a zoom into the left eye, a fade onto the horizon), 5 s with a 6 s hard timeout.
- * Phones and computers keep the v1.3.0 intro below unchanged. Everything else here (no skipping, the input block,
- * scheduleIntro and its hard timeout, IntroBoundary, sound only when unlocked, the still frame) is shared by both.
+ * v1.4.0 launch intro, driven by the Intro Manager (lib/intro). One overlay plays whatever the config names for the
+ * platform: the TV video, the built-in mascot animation (phones until a portrait video lands) or the branded still
+ * (reduced motion, or the fallback when a video is missing, corrupt or will not start).
  *
- * v1.3.0 launch intro (D-177). No text: two crimson eyes open and blink in the dark, an ivory/charcoal panda face
- * forms around them, the camera dives through the eyes into a burst of brand light ribbons, and the ribbons collapse
- * into the horizon line that Who's watching? sits on, so the handoff is seamless.
- *
- * It cannot be skipped. While it is on screen every key, pointer, touch and wheel event is caught on window in the
- * capture phase and dropped, so nothing reaches (or moves focus in) the app that renders underneath the whole time.
- * Only the timeline ends it, and a hard timeout ends it even if animation, audio or rendering fails.
- * The score is synthesised with Web Audio in a lazy chunk (lib/introScore.ts), and only when audio is unlocked.
+ * Skippable: after `skipAfterMs` a Skip button appears; on TV OK/Enter and Back skip too. Until then keys are held
+ * back so nothing moves underneath. A hard timeout (duration + 2 s) always ends it, whatever fails.
  */
 
-/**
- * Beat times in ms from the first frame. Phone = the v1.3.0 beats (2.4 s). TV (v1.3.1) = the retro film's beats:
- * eyes open, blink, the panda assembles from `face` (a paper click on each of `pops`), the zoom into the left eye
- * starts at `zoom` and the drum hit lands at `burst` as the eye fills the screen, then the horizon and the fade.
- */
-export interface IntroBeats { eyes: number; blink: number; face: number; zoom: number; burst: number; horizon: number; leave: number; done: number; hard: number; pops?: readonly number[] }
-export const BEATS: Record<"tv" | "m" | "stillTv" | "stillM", IntroBeats> = {
-  tv: { eyes: RETRO.eyeL, blink: RETRO.blink, face: RETRO.assemble, zoom: RETRO.zoom, burst: RETRO.inside, horizon: RETRO.horizon, leave: RETRO.leave, done: RETRO.done, hard: RETRO.hard, pops: POPS },
-  m: { eyes: 200, blink: 600, face: 900, zoom: 1150, burst: 1500, horizon: 1850, leave: 2200, done: 2400, hard: 3000 },
-  // reduced motion: a 0.6 s still frame (eyes + panda), a soft tone, then a fade. Still not skippable.
-  stillTv: { eyes: 0, blink: 0, face: 0, zoom: 0, burst: 0, horizon: 0, leave: 600, done: 850, hard: RETRO.hard },
-  stillM: { eyes: 0, blink: 0, face: 0, zoom: 0, burst: 0, horizon: 0, leave: 600, done: 850, hard: 3000 },
-};
-export const beatsFor = (tv: boolean, reduce: boolean) => BEATS[reduce ? (tv ? "stillTv" : "stillM") : tv ? "tv" : "m"];
-
-/** Every input the intro swallows (phone-remote keys arrive as key events too; remote text is ignored in remote.ts). */
-export const BLOCKED_EVENTS = ["keydown", "keyup", "keypress", "pointerdown", "pointerup", "pointermove", "mousedown", "mouseup", "click", "dblclick", "auxclick", "contextmenu", "touchstart", "touchmove", "touchend", "wheel"] as const;
-
-/**
- * The intro's clock: the fade at `leave`, the end at `done`, and an independent hard timeout that ends it if anything
- * on the way failed (a throwing callback, a stalled timer queue, a broken animation). Exported for tests.
- */
-export function scheduleIntro(b: IntroBeats, leave: () => void, done: () => void) {
-  let ended = false;
-  const finish = () => {
-    if (ended) return;
-    try { done(); ended = true; } catch { /* the hard timeout tries again */ }
-  };
-  const a = setTimeout(() => { try { leave(); } catch { finish(); } }, b.leave);
-  const c = setTimeout(finish, b.done);
-  const hard = setTimeout(() => { finish(); ended = true; }, b.hard);
-  return () => { clearTimeout(a); clearTimeout(c); clearTimeout(hard); };
+/** A brand image that turns into text if the file is missing (assets ship separately). */
+function BrandImg({ src, className, text }: { src: string; className: string; text?: string }) {
+  const [failed, setFailed] = useState(false);
+  if (failed) return text ? <span className={`${className} intro-text`}>{text}</span> : null;
+  return <img className={className} src={src} alt="" draggable={false} decoding="async" onError={() => setFailed(true)} />;
 }
 
-export function useIntro(tv: boolean) {
-  const reduce = useReducedMotion();
-  const [phase, setPhase] = useState<IntroPhase>(() => {
-    const p: IntroPhase = introPending() ? "show" : "done";
-    setIntroPhase(p); // before the first render of Who's watching, which waits for the handoff
-    return p;
-  });
-  // the timeline is fixed at the first frame; a layout or preference change mid-intro never restarts it
-  const beats = useRef(beatsFor(tv, reduce)).current;
-  const still = useRef(reduce).current;
-  const frozenTv = useRef(tv).current;
-  useEffect(() => {
-    if (phase === "done") return;
-    setIntroPhase("show"); // again after a StrictMode remount
-    const cancel = scheduleIntro(beats, () => { setPhase((p) => (p === "show" ? "leave" : p)); setIntroPhase("leave"); }, () => {
-      setPhase("done"); // first: removing the overlay is the one thing that must happen
-      try { introDone(); } catch { /* storage unavailable: the intro may replay on reload */ }
-      setIntroPhase("done");
-    });
-    return () => { cancel(); if (getIntroPhase() !== "done") setIntroPhase("done"); };
-    // mount-only: the intro runs once per fresh start
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
-  return { phase, tv: frozenTv, reduce: still, beats, end: () => { try { introDone(); } catch { /* ignore */ } setIntroPhase("done"); setPhase("done"); } };
-}
-
-/** Swallows every input while mounted. Exported for tests. */
-export function useInputBlock() {
-  useEffect(() => {
-    const block = (e: Event) => {
-      try { if (e.cancelable) e.preventDefault(); e.stopImmediatePropagation(); } catch { /* never throw from an input handler */ }
-    };
-    const opts = { capture: true, passive: false } as const;
-    try { for (const t of BLOCKED_EVENTS) window.addEventListener(t, block, opts); } catch { /* ignore */ }
-    return () => { try { for (const t of BLOCKED_EVENTS) window.removeEventListener(t, block, opts); } catch { /* ignore */ } };
-  }, []);
-}
-
-/** Starts the synthesised score when sound is allowed: audio unlocked, not muted, volume above zero. */
-export function introSoundAllowed() {
-  try {
-    if (!isAudioUnlocked() || getMutedMemory()) return 0;
-    const v = Number(getPrefs().volume);
-    return Number.isFinite(v) ? Math.max(0, Math.min(1, v)) : 1;
-  } catch { return 0; }
-}
-
-function useScore(tv: boolean, reduce: boolean, beats: IntroBeats) {
-  useEffect(() => {
-    const start = performance.now();
-    const volume = introSoundAllowed();
-    if (volume <= 0) return; // locked or muted: the visuals run in full, silently
-    let stop: (() => void) | null = null;
-    let cancelled = false;
-    import("../lib/introScore")
-      .then((m) => { if (!cancelled) stop = m.playIntroScore({ beats, start, volume, still: reduce, tv }); })
-      .catch(() => undefined);
-    return () => { cancelled = true; try { stop?.(); } catch { /* ignore */ } };
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
-}
-
-const RIBBONS = ["#2b6bff", "#8c4bff", "#ff3d8b", "#39ff88", "#2bd4d6", "#8c4bff", "#2b6bff", "#ff3d8b", "#2bd4d6"];
-const POS = [8, 19, 29, 38, 50, 61, 71, 82, 92];
-
-export function Intro({ tv, phase, reduce, beats }: { tv: boolean; phase: "show" | "leave"; reduce: boolean; beats: IntroBeats }) {
-  useInputBlock();
-  useScore(tv, reduce, beats);
-  const lite = useLiteMotion();
-  const [filmStart] = useState(() => performance.now());
-  const ms = (n: number) => `${n}ms`;
-  const vars = {
-    "--b-eyes": ms(beats.eyes), "--b-blink": ms(beats.blink), "--b-face": ms(beats.face), "--b-zoom": ms(beats.zoom),
-    "--b-burst": ms(beats.burst), "--b-horizon": ms(beats.horizon), "--b-leave": ms(beats.leave),
-    "--d-eyes": ms(beats.blink - beats.eyes), "--d-blink": ms(beats.face - beats.blink), "--d-face": ms(beats.zoom - beats.face),
-    "--d-zoom": ms(beats.burst - beats.zoom), "--d-burst": ms(beats.horizon - beats.burst), "--d-horizon": ms(beats.leave - beats.horizon),
-    "--d-leave": ms(beats.done - beats.leave),
-  } as CSSProperties;
-  const ribbons = lite ? RIBBONS.filter((_, i) => i % 2 === 0) : RIBBONS;
-  const pos = lite ? POS.filter((_, i) => i % 2 === 0) : POS;
-  const cls = `intro intro--${tv ? "tv" : "m"}${tv ? " intro--retro" : ""}${reduce ? " intro--still" : ""}${phase === "leave" ? " is-leaving" : ""}`;
-  if (tv) {
-    return (
-      <div className={cls} style={vars} role="status" aria-label="Panda.fun is starting" data-intro>
-        <Suspense fallback={null}>
-          <RetroIntro reduce={reduce} lite={lite} start={filmStart} />
-        </Suspense>
-        {!reduce && <span className="intro-horizon" aria-hidden="true" />}
-      </div>
-    );
-  }
+function StillFrame() {
   return (
-    // aria-hidden content; the status role tells screen readers the app is starting
-    <div className={cls} style={vars} role="status" aria-label="Panda.fun is starting" data-intro>
-      <div className="intro-stage" aria-hidden="true">
-        <div className="intro-zoom">
-          <div className="intro-face">
-            <svg viewBox="0 0 200 200" className="intro-face-svg">
-              <circle cx="46" cy="50" r="27" fill="#1b1b20" />
-              <circle cx="154" cy="50" r="27" fill="#1b1b20" />
-              <ellipse cx="100" cy="112" rx="80" ry="74" fill="#efe9dc" />
-              <ellipse cx="70" cy="104" rx="21" ry="28" transform="rotate(28 70 104)" fill="#1b1b20" />
-              <ellipse cx="130" cy="104" rx="21" ry="28" transform="rotate(-28 130 104)" fill="#1b1b20" />
-              <path d="M90 140 q10 -7 20 0 q-4 10 -10 11 q-6 -1 -10 -11z" fill="#1b1b20" />
-              <path d="M100 151 v8 M92 162 q8 6 16 0" stroke="#1b1b20" strokeWidth="3" fill="none" strokeLinecap="round" />
-            </svg>
-          </div>
-          <div className="intro-eyes">
-            <span className="intro-eye intro-eye--l"><i /></span>
-            <span className="intro-eye intro-eye--r"><i /></span>
-          </div>
-          <span className="intro-smear" />
-        </div>
-      </div>
-      {!reduce && (
-        <div className="intro-ribbons" aria-hidden="true">
-          {ribbons.map((c, i) => <i key={i} style={{ "--c": c, "--i": i, left: `${pos[i]}%` } as CSSProperties} />)}
-        </div>
+    <div className="intro-still" aria-hidden="true">
+      <span className="intro-glow" />
+      <BrandImg className="intro-mascot" src={BRAND.mascot} />
+      <BrandImg className="intro-logo" src={BRAND.wordmark} text={BRAND.name} />
+    </div>
+  );
+}
+
+function MascotAnimation() {
+  return (
+    <div className="intro-anim" aria-hidden="true">
+      <span className="intro-glow" />
+      <span className="intro-ring" />
+      <span className="intro-ring intro-ring--2" />
+      <div className="intro-turn"><BrandImg className="intro-mascot" src={BRAND.mascot} /></div>
+      <BrandImg className="intro-logo" src={BRAND.wordmark} text={BRAND.name} />
+      <span className="intro-spark intro-spark--a" /><span className="intro-spark intro-spark--b" /><span className="intro-spark intro-spark--c" />
+    </div>
+  );
+}
+
+/** The overlay for one plan. Exported for tests. */
+export function IntroOverlay({ plan, tv, onDone }: { plan: IntroPlan; tv: boolean; onDone?: () => void }) {
+  const [view, setView] = useState<IntroView>(plan.view);
+  const [phase, setPhase] = useState<Exclude<IntroPhase, "done">>("show");
+  const [canSkip, setCanSkip] = useState(false);
+  const skipBtn = useRef<HTMLButtonElement>(null);
+  const video = useRef<HTMLVideoElement>(null);
+  const started = useRef(false);
+  const ended = useRef(false);
+  const leaving = useRef(false);
+  const timers = useRef<ReturnType<typeof setTimeout>[]>([]);
+  const at = (ms: number, f: () => void) => { timers.current.push(setTimeout(f, ms)); };
+
+  const finish = useCallback(() => {
+    if (ended.current) return;
+    ended.current = true;
+    try { markIntroSeen(plan.version); } catch { /* storage unavailable: no replay in this load anyway */ }
+    setIntroPhase("done");
+    try { onDone?.(); } catch { /* the overlay must always go */ }
+  }, [plan.version, onDone]);
+  const leave = useCallback(() => {
+    if (leaving.current || ended.current) return;
+    leaving.current = true;
+    setPhase("leave");
+    setIntroPhase("leave");
+    timers.current.push(setTimeout(finish, plan.leaveMs));
+  }, [finish, plan.leaveMs]);
+  const isStill = useRef(plan.view === "static");
+  const fallback = useCallback(() => {
+    if (leaving.current || ended.current || isStill.current) return;
+    isStill.current = true;
+    setView("static");
+    timers.current.push(setTimeout(leave, plan.staticMs));
+  }, [leave, plan.staticMs]);
+  const fns = useRef({ leave, fallback, finish });
+  fns.current = { leave, fallback, finish };
+  const canSkipRef = useRef(false);
+
+  useEffect(() => {
+    setIntroPhase("show");
+    at(plan.skipAfterMs, () => { canSkipRef.current = true; setCanSkip(true); });
+    if (plan.view === "video") at(plan.startTimeoutMs, () => { if (!started.current) fns.current.fallback(); });
+    else at(plan.durationMs, () => fns.current.leave());
+    at(plan.hardMs, () => fns.current.finish());
+    // OK/Enter and Back skip once allowed; every key is held back from the app while the intro is up
+    const onKey = (e: KeyboardEvent) => {
+      if (ended.current) return;
+      const k = navKey(e);
+      if ((k === "enter" || k === "back") && canSkipRef.current) fns.current.leave();
+      try { if (e.cancelable) e.preventDefault(); e.stopImmediatePropagation(); } catch { /* never throw from input */ }
+    };
+    window.addEventListener("keydown", onKey, true);
+    const list = timers.current;
+    return () => {
+      window.removeEventListener("keydown", onKey, true);
+      for (const t of list) clearTimeout(t);
+      list.length = 0;
+      if (getIntroPhase() !== "done") setIntroPhase("done");
+    };
+    // mount-only: one plan per cold start
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  // autoplay can be refused (no gesture yet): the video is muted, but if play() still rejects, show the still
+  useEffect(() => {
+    const v = video.current;
+    if (view !== "video" || !v) return;
+    try { const p = v.play() as Promise<void> | undefined; p?.catch?.(() => fns.current.fallback()); } catch { fns.current.fallback(); }
+  }, [view]);
+
+  useEffect(() => { if (canSkip && tv) skipBtn.current?.focus({ preventScroll: true }); }, [canSkip, tv]);
+
+  const cls = `intro intro--${tv ? "tv" : "m"} intro--${view}${phase === "leave" ? " is-leaving" : ""}`;
+  return (
+    <div className={cls} role="dialog" aria-modal="true" aria-label={`${BRAND.name} is starting`} data-intro data-view={view} style={{ ["--leave" as string]: `${plan.leaveMs}ms` }}>
+      {view === "video" && plan.src && (
+        <video ref={video} className={`intro-video intro-video--${plan.fit}`} src={plan.src} muted playsInline autoPlay preload="auto" disablePictureInPicture aria-hidden="true"
+          onPlaying={() => { started.current = true; }} onEnded={() => fns.current.leave()} onError={() => fns.current.fallback()} />
       )}
-      {!reduce && <span className="intro-horizon" aria-hidden="true" />}
+      {view === "animation" && <MascotAnimation />}
+      {view === "static" && <StillFrame />}
+      {canSkip && (
+        <button ref={skipBtn} type="button" className="intro-skip" onClick={() => fns.current.leave()} aria-label="Skip intro" data-hover-focus>
+          Skip{tv && <span className="intro-skip-hint">OK</span>}
+        </button>
+      )}
     </div>
   );
 }
@@ -197,4 +141,26 @@ export class IntroBoundary extends Component<{ children: ReactNode; onError: () 
   static getDerivedStateFromError() { return { failed: true }; }
   componentDidCatch() { try { this.props.onError(); } catch { /* ignore */ } }
   render() { return this.state.failed ? null : this.props.children; }
+}
+
+/** The plan for this cold start, fixed at the first frame (a layout or motion change mid-intro never restarts it). */
+export function useLaunchIntro(tv: boolean) {
+  const reduce = useReducedMotion();
+  const [plan] = useState<IntroPlan | null>(() => {
+    const p = introDue() ? planIntro({ tv, reduce }) : null;
+    if (!p && introDue()) markIntroSeen(); // reduced motion set to "skip": counts as played
+    setIntroPhase(p ? "show" : "done"); // before the first render of Who's watching / onboarding, which wait for it
+    return p;
+  });
+  const [frozenTv] = useState(tv);
+  const [done, setDone] = useState(!plan);
+  const end = useCallback(() => { try { markIntroSeen(); } catch { /* ignore */ } setIntroPhase("done"); setDone(true); }, []);
+  return { plan: done ? null : plan, tv: frozenTv, end };
+}
+
+/** App-level launch intro: plays once per intro version per device, then never again on rerender or navigation. */
+export function LaunchIntro({ tv }: { tv: boolean }) {
+  const intro = useLaunchIntro(tv);
+  if (!intro.plan) return null;
+  return <IntroBoundary onError={intro.end}><IntroOverlay plan={intro.plan} tv={intro.tv} onDone={intro.end} /></IntroBoundary>;
 }

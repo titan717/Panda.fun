@@ -12,7 +12,7 @@ import { PosterWall } from "../components/PosterWall";
 import { focusFirst } from "../lib/focus";
 import { useNav } from "../lib/nav";
 import { useIsTv } from "../lib/layout";
-import { useIntroPhase, whoDone } from "../lib/launch";
+import { useIntroPhase } from "../lib/launch";
 import "./profiles.css";
 
 // the PIN pad, its hash check and lockout load on demand (v1.2.7)
@@ -67,8 +67,8 @@ export function ProfileSelect({ stay = false }: { stay?: boolean }) {
       if (h) void preload(keys.title(h.type, h.tmdbId), fetcher);
     }).catch(() => undefined);
     void loadYouTubeApi().catch(() => undefined);
-    // a fresh start opened on a deep link (or a notification) stays on it; otherwise Home
-    setTimeout(() => { if (!reduce) dissolveIntoHome(); whoDone(); if (!stay) go("/", { replace: true }); }, reduce ? 0 : PUSH_MS);
+    // a start opened on a deep link (or a notification) stays on it; otherwise Home. The pick is remembered (store).
+    setTimeout(() => { if (!reduce) dissolveIntoHome(); if (!stay) go("/", { replace: true }); }, reduce ? 0 : PUSH_MS);
   };
   const choose = (p: Profile) => {
     if (current?.kids && !p.kids && getState().prefs.kidsPin) { setPinFor(p); return; }
