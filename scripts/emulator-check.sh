@@ -77,8 +77,8 @@ SEED_JS='(() => { const now = Date.now();
   sessionStorage.setItem("panda:v1:intro-session", "emulator"); return "seeded"; })()'
 if command -v node >/dev/null && cdp_connect && cdp "$SEED_JS" | grep -q seeded; then
   CDP=1; echo "seeded a finished profile over DevTools" | tee -a shots/package.txt
-  adb shell am force-stop "$PKG"; sleep 1
-  adb shell am start -W -n "$PKG/.ui.MainActivity" -a android.intent.action.MAIN >/dev/null; sleep 10; shot seeded-home
+  # reload in place: a force-stop right after writing can lose localStorage that Chromium has not saved to disk yet
+  cdp 'setTimeout(() => location.reload(), 50), "reloading"' >/dev/null; sleep 10; shot seeded-home
 else
   echo "no DevTools (release APK): later steps go through first-run screens" | tee -a shots/package.txt
 fi
@@ -107,6 +107,14 @@ if [[ "$NAME" == *tv* ]]; then
     tap_text "Skip for now" || tap_text "Skip" || tap_text "Not now" || adb shell input keyevent KEYCODE_DPAD_CENTER
     sleep 4
   done
+  # Arriving from the menu leaves focus on the menu's Search item; Right moves into the page (the field, or the mic
+  # first when voice search is available), as a user would. Stop once the field itself has focus.
+  field_focused() {
+    if [[ "$CDP" == 1 ]]; then cdp_connect >/dev/null 2>&1; cdp 'document.activeElement && document.activeElement.id' | grep -q '"search-input"'; return; fi
+    adb shell uiautomator dump /sdcard/tf.xml >/dev/null 2>&1; adb shell cat /sdcard/tf.xml 2>/dev/null | grep -oE '<node[^>]*class="android.widget.EditText"[^>]*>' | head -1 | grep -q 'focused="true"'
+  }
+  for _ in 1 2 3; do field_focused && break; adb shell input keyevent KEYCODE_DPAD_RIGHT; sleep 1.5; done
+  field_focused && echo "search field has focus" | tee -a shots/text-entry-gates.txt || echo "WARN could not confirm the search field has focus" | tee -a shots/text-entry-gates.txt
   shot search-field
   echo "IME: $(adb shell settings get secure default_input_method)" | tee $TE
   ime_shown && echo "keyboard already open before OK (unexpected)" | tee -a $TE
