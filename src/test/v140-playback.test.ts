@@ -1,33 +1,39 @@
 import { beforeEach, describe, expect, it } from "vitest";
-import { eligibleOrder, orderSources, SOURCE_POLICY, SUPPORTED_SOURCES } from "../lib/playback/registry";
+import { eligibleOrder, orderSources, SUPPORTED_SOURCES } from "../lib/playback/registry";
 import { allFailed, attemptedSources, currentSource, failureReason, FALLBACK_CONFIG, fallbackReducer, initialFallback, type FallbackEvent, type FallbackState } from "../lib/playback/fallback";
 import { clearHealth, healthStatus, HEALTH_CONFIG, isSuppressed, recordPlaybackSuccess, recordTotalFailure, resetHealthCacheForTest, suppressedSet } from "../lib/playback/health";
 import type { PlaybackSource, SourceId } from "../lib/types";
+import playerSrc from "../pages/Player.tsx?raw";
+import chromeSrc from "../tv/TvPlayerChrome.tsx?raw";
+import settingsSrc from "../pages/Settings.tsx?raw";
+import loadingSrc from "../pages/PlayerLoading.tsx?raw";
 
 const src = (id: SourceId): PlaybackSource => ({ id, provider: id, label: id, url: `https://${id}.example/e/1`, origin: `https://${id}.example`, events: id === "cinesrc" ? "cinesrc" : "vidy", supportsStart: true, tier: 1 });
 const run = (events: FallbackEvent[], s: FallbackState = initialFallback()) => events.reduce((a, e) => fallbackReducer(a, e), s);
 
 describe("v1.4.0 source registry", () => {
   it("TV uses CineSrc only, mobile Vidy → CineSrc, browser keeps both", () => {
-    expect(SOURCE_POLICY.tv.order).toEqual(["cinesrc"]);
+    expect(eligibleOrder("tv")).toEqual(["cinesrc"]);
     expect(eligibleOrder("tv", { anime: true })).toEqual(["cinesrc"]);
     expect(eligibleOrder("mobile")).toEqual(["vidy", "cinesrc"]);
     expect(eligibleOrder("mobile", { anime: true })).toEqual(["vidyanime", "vidy", "cinesrc"]);
-    expect(eligibleOrder("browser")).toEqual(["cinesrc", "vidy"]);
+    expect(eligibleOrder("browser")).toEqual(["cinesrc", "vidy", "vidlink"]);
   });
-  it("VidLink is gone from every platform", () => {
-    expect(SUPPORTED_SOURCES).not.toContain("vidlink");
-    for (const p of ["tv", "mobile", "browser"] as const) expect([...SOURCE_POLICY[p].order, ...SOURCE_POLICY[p].anime]).not.toContain("vidlink");
+  it("VidLink is gone from TV and mobile; the browser keeps it as the last resort", () => {
+    for (const p of ["tv", "mobile"] as const) expect(eligibleOrder(p, { anime: true })).not.toContain("vidlink");
+    expect(SUPPORTED_SOURCES).toContain("vidlink");
+    expect(eligibleOrder("browser", { anime: true })).toEqual(["vidyanime", "cinesrc", "vidy", "vidlink"]);
   });
   it("filters backend sources to the platform and orders them", () => {
     const list = [src("cinesrc"), src("vidy"), { ...src("vidy"), id: "vidlink" as SourceId }];
     expect(orderSources(list, "tv").map((s) => s.id)).toEqual(["cinesrc"]);
     expect(orderSources(list, "mobile").map((s) => s.id)).toEqual(["vidy", "cinesrc"]);
+    expect(orderSources(list, "browser").map((s) => s.id)).toEqual(["cinesrc", "vidy", "vidlink"]);
     expect(orderSources([src("cinesrc")], "mobile").map((s) => s.id)).toEqual(["cinesrc"]);
   });
   it("community ranking may reorder the browser list but never the mobile or TV list", () => {
-    const ranking = { sources: [{ id: "vidy" as SourceId, rank: 1 }, { id: "cinesrc" as SourceId, rank: 2 }] } as never;
-    expect(eligibleOrder("browser", { ranking })).toEqual(["vidy", "cinesrc"]);
+    const ranking = { sources: [{ id: "vidlink" as SourceId, rank: 0 }, { id: "vidy" as SourceId, rank: 1 }, { id: "cinesrc" as SourceId, rank: 2 }] } as never;
+    expect(eligibleOrder("browser", { ranking })).toEqual(["vidy", "cinesrc", "vidlink"]);
     expect(eligibleOrder("mobile", { ranking })).toEqual(["vidy", "cinesrc"]);
   });
 });
@@ -52,7 +58,7 @@ describe("v1.4.0 fallback controller", () => {
     expect(s.attempts.map((a) => a.outcome)).toEqual(["error", "playing"]);
   });
   it("timeouts move on, a sign of life extends the wait once", () => {
-    let s = run([{ kind: "start", order: ["vidy", "cinesrc"], now: t0 }]);
+    let s = run([{ kind: "start", order: ["cinesrc", "vidy"], now: t0 }]);
     const first = s.deadline!;
     s = fallbackReducer(s, { kind: "progress", now: first - 1000 });
     expect(s.deadline).toBe(first - 1000 + FALLBACK_CONFIG.progressGraceMs);
@@ -60,9 +66,18 @@ describe("v1.4.0 fallback controller", () => {
     s = fallbackReducer(s, { kind: "progress", now: extended - 10 });
     expect(s.deadline).toBe(extended);
     s = fallbackReducer(s, { kind: "tick", now: extended - 1 });
-    expect(currentSource(s)).toBe("vidy");
-    s = fallbackReducer(s, { kind: "tick", now: extended });
     expect(currentSource(s)).toBe("cinesrc");
+    s = fallbackReducer(s, { kind: "tick", now: extended });
+    expect(currentSource(s)).toBe("vidy");
+  });
+  it("embeds with their own controls get time for a tap, and each tap extends it", () => {
+    let s = run([{ kind: "start", order: ["vidy", "cinesrc"], now: t0 }, { kind: "progress", now: t0 + 1000 }]);
+    expect(s.deadline).toBe(t0 + 1000 + FALLBACK_CONFIG.manualGraceMs);
+    s = fallbackReducer(s, { kind: "interact", now: t0 + 25_000 });
+    expect(s.deadline).toBe(t0 + 25_000 + FALLBACK_CONFIG.manualGraceMs);
+    // CineSrc is driven by Panda (no tap needed): interaction does not hold it
+    const c = run([{ kind: "start", order: ["cinesrc"], now: t0 }]);
+    expect(fallbackReducer(c, { kind: "interact", now: t0 + 1 }).deadline).toBe(c.deadline);
   });
   it("all providers failing ends in failed, never loops", () => {
     const s = run([{ kind: "start", order: ["vidy", "cinesrc"], now: t0 }, { kind: "error", now: t0 + 1 }, { kind: "tick", now: t0 + 60_000 }, { kind: "tick", now: t0 + 120_000 }]);
@@ -139,5 +154,21 @@ describe("v1.4.0 playback health and temporary suppression", () => {
     localStorage.setItem("panda:v1:playhealth", JSON.stringify({ x: { v: 1, contentId: "bad" } }));
     resetHealthCacheForTest();
     expect(suppressedSet("tv", now).size).toBe(0);
+  });
+});
+
+describe("v1.4.0 no visible source selection", () => {
+  it("the player, TV chrome, loading screen and Settings offer no source choice", () => {
+    expect(playerSrc).not.toContain("pl-sources");
+    expect(playerSrc).not.toContain("pl-stall-switch");
+    expect(playerSrc).not.toContain("switchSource(");
+    expect(chromeSrc).not.toContain("tvp-s-");
+    expect(chromeSrc).not.toContain("onSource");
+    expect(settingsSrc).not.toContain("Preferred video source");
+    expect(loadingSrc).not.toContain("sourceName(");
+  });
+  it("the player records health only through the controller", () => {
+    expect(playerSrc).toContain("recordTotalFailure(");
+    expect(playerSrc).toContain("recordPlaybackSuccess(platform, type, id)");
   });
 });

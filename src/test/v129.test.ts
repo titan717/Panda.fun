@@ -50,15 +50,15 @@ describe("CineSrc server memory (v1.2.9, directive §2)", () => {
     rememberCineServer("a b/c");
     expect(lastCineServer()).toBeNull();
   });
-  it("keeps a server only after it really played, and TV series episodes use CineSrc only", () => {
+  it("keeps a server only after it really played; v1.4.0 the platform registry orders the sources", () => {
     expect(playerSrc).toContain("cineServer.current = ev.id; if (firstFrame.current) rememberCineServer(ev.id)");
-    expect(playerSrc).toContain("const cineOnly = tv && isTv;");
-    expect(playerSrc).toContain('cineOnly ? ranked.filter((x) => x.id === "cinesrc") : ranked');
-    expect(playerSrc).toContain("isAnimeTitle(details) && !cineOnly");
+    expect(playerSrc).toContain("orderSources(list, platform,");
+    expect(playerSrc).toContain('isAnimeTitle(details) && eligibleOrder(platform, { anime: true }).includes("vidyanime")');
   });
   it("shows a failure panel instead of an endless loader", () => {
     expect(playerSrc).toContain('className="player-center player-failed lrud-container"');
-    expect(playerSrc).toContain("setDead(reason)");
+    expect(playerSrc).toContain('if (fb.status === "failed" && fb.attempts.length)');
+    expect(playerSrc).toContain("setDead(");
   });
 });
 

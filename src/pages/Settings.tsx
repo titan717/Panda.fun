@@ -17,6 +17,7 @@ import "./sync.css";
 import { actions, usePrefs, useProfile, useReminders, type Prefs } from "../lib/store";
 import { useGenres, usePage, useSourceHealth, useSourceRanking } from "../lib/hooks";
 import { reliabilityLabel, reliabilityTone, tierLabel } from "../lib/sources";
+import { eligibleOrder, playbackPlatform } from "../lib/playback/registry";
 import { HOME_SECTIONS, isCustomHome, moveSection, normalizeOrder, railKey, type HomeSection } from "../lib/homeLayout";
 import { focusEl, focusFirst } from "../lib/focus";
 import { useNav } from "../lib/nav";
@@ -24,7 +25,7 @@ import { useIsTv } from "../lib/layout";
 import { installedVersion } from "../lib/updates";
 import { languageName } from "../lib/format";
 import { notifyPermission, requestNotify } from "../lib/notify";
-import type { PreferredSource, SourceId } from "../lib/types";
+import type { SourceId } from "../lib/types";
 import { ttffLabel, ttffStats } from "../lib/ttff";
 import { clearShield, COMPAT, nativeShield, SANDBOX, shieldStats, syncNative } from "../lib/shield";
 
@@ -36,7 +37,7 @@ const SECTIONS: { id: SectionId; icon: IconName; title: string; sub: string }[] 
   { id: "playback", icon: "play", title: "Playback", sub: "Quality and autoplay" },
   { id: "trailers", icon: "volume", title: "Trailers", sub: "Autoplay, sound, volume and delay" },
   { id: "subtitles", icon: "captions", title: "Subtitles", sub: "Languages, size and style for this profile" },
-  { id: "sources", icon: "globe", title: "Sources", sub: "Preferred source and live status" },
+  { id: "sources", icon: "globe", title: "Playback health", sub: "Live player status and the ad shield" },
   { id: "languages", icon: "globe", title: "App Language & Content Languages", sub: "Top 10 language and content preferences" },
   { id: "parental", icon: "lock", title: "Parental Controls", sub: "PIN for leaving Kids profiles" },
   { id: "display", icon: "tv", title: "Display", sub: "Layout, screen size, text, motion and contrast" },
@@ -61,11 +62,8 @@ export const SOURCES: { id: SourceId; label: string; note: string }[] = [
   { id: "vidlink", label: "VidLink", note: "Themed in Panda's colours, resumes where you stopped. Has popups, so it is only used when the others fail" }
 ];
 
-/** v1.2.0: "Automatic" starts with the source the community ranks most reliable. */
-const SOURCE_CHOICES: { id: PreferredSource; label: string; note: string }[] = [
-  { id: "auto", label: "Automatic", note: "Start with the source that is working best for Panda viewers right now" },
-  ...SOURCES.filter((s) => s.id !== "vidyanime")
-];
+/** v1.4.0: the providers this device may use, in the order the fallback controller tries them (read-only). */
+const platformSources = () => { const p = playbackPlatform(); return SOURCES.filter((s) => eligibleOrder(p, { anime: true }).includes(s.id)); };
 
 function Row({ id, title, sub, right, onClick, href }: { id: string; title: string; sub?: string; right?: ReactNode; onClick?: () => void; href?: string }) {
   const inner = <><span className="set-row-text"><span className="set-row-title">{title}</span>{sub && <span className="set-row-sub">{sub}</span>}</span>{right ?? <Icon name="chevronRight" />}</>;
@@ -130,20 +128,20 @@ function ago(iso: string) {
   return s < 60 ? `${s} s ago` : `${Math.round(s / 60)} min ago`;
 }
 
-/** Settings › Sources (G-7): preferred source plus the backend's live health check. */
+/** Settings › Playback health (v1.4.0): no picker; what this device plays from, live status, the ad shield. */
 function SourcesPanel() {
-  const prefs = usePrefs();
   const health = useSourceHealth();
+  const mine = useMemo(() => new Set(platformSources().map((s) => s.id as string)), []);
+  const browser = playbackPlatform() === "browser";
   return (
     <div className="set-panel">
-      <Choice id="src" title="Preferred video source" value={prefs.preferredSource === "vidyanime" ? "auto" : prefs.preferredSource} options={SOURCE_CHOICES}
-        onChange={(v) => { actions.setPrefs({ preferredSource: v }); toast(`Preferred source: ${SOURCE_CHOICES.find((s) => s.id === v)!.label}`); }} />
-      <RankingList />
+      <p className="set-note" id="sp-auto-note">Panda picks the player for you. If one can't start a title, the next one is tried automatically, at the same episode and position.</p>
+      {browser && <RankingList />}
       <p className="set-group-title">Status</p>
       <ul className="src-health" aria-live="polite">
         {health.error && !health.data && <li className="src-health-row"><span className="src-dot src-dot--down" />Status unavailable right now</li>}
         {!health.data && !health.error && <li className="src-health-row"><span className="src-dot" />Checking sources…</li>}
-        {health.data?.sources.map((h) => (
+        {health.data?.sources.filter((h) => mine.has(h.id)).map((h) => (
           <li key={h.id} className="src-health-row">
             <span className={`src-dot src-dot--${h.state}`} aria-hidden="true" />
             <span className="src-health-name">{h.label}</span>
@@ -159,7 +157,7 @@ function SourcesPanel() {
   );
 }
 
-/** Community ranking (v1.2.0): the order "Automatic" plays in, with each source's reliability. */
+/** Community ranking (v1.2.0, browser only in v1.4.0): the order the browser tries its players in. */
 function RankingList() {
   const { data, error } = useSourceRanking(true);
   return (
@@ -168,7 +166,7 @@ function RankingList() {
       <ol className="src-health src-rank" id="sp-ranking" aria-live="polite">
         {error && !data && <li className="src-health-row"><span className="src-dot src-dot--down" />Ranking unavailable right now</li>}
         {!data && !error && <li className="src-health-row"><span className="src-dot" />Loading the ranking…</li>}
-        {data?.sources.map((r) => {
+        {data?.sources.filter((r) => platformSources().some((s) => s.id === r.id)).map((r) => {
           const pct = Math.round(r.score * 100);
           return (
             <li key={r.id} className="src-health-row src-rank-row" id={`sp-rank-${r.id}`}>
@@ -199,7 +197,7 @@ function ShieldInfo() {
           <span className="src-health-name">Blocked popups</span>
           <span className="src-health-meta" id="sp-shield-count">{stats.popups} popups · {stats.navigations} redirects and app launches{nativeShield ? ` · ${stats.requests} ad requests` : ""}</span>
         </li>
-        {SOURCES.map((s) => {
+        {platformSources().map((s) => {
           const b = stats.by[s.id];
           const n = b ? b.popup + b.navigation + b.external + b.download : 0;
           return (

@@ -1,4 +1,5 @@
 import "./details.css";
+import { warmSourceHint } from "../lib/playback/registry";
 import { native } from "../lib/native";
 import { titleLink } from "../lib/remote";
 import { useEffect, useRef, useState } from "react";
@@ -112,7 +113,7 @@ function MDetailsView({ d }: { d: TitleDetails }) {
   const inList = inWatchlist || listCount > 0;
   const rating = useRating(d.id);
   // v1.1.6: warm the source connection, skip markers and season for the next Play press
-  useEffect(() => { whenIdle(() => warmPlayback({ type: d.type, tmdbId: d.tmdbId, imdbId: d.imdbId, season: history?.season, episode: history?.episode }, prefs.preferredSource), 1500); }, [d.id]); // eslint-disable-line react-hooks/exhaustive-deps
+  useEffect(() => { whenIdle(() => warmPlayback({ type: d.type, tmdbId: d.tmdbId, imdbId: d.imdbId, season: history?.season, episode: history?.episode }, warmSourceHint()), 1500); }, [d.id]); // eslint-disable-line react-hooks/exhaustive-deps
   const { go, back } = useNav();
   const [rateOpen, setRateOpen] = useState(false);
   const [video, setVideo] = useState<{ key: string; name: string } | null>(null);

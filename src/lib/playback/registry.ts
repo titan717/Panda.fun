@@ -9,9 +9,11 @@ import type { PlaybackSource, SourceId, SourceRankingPayload } from "../types";
  *  - TV (Android TV app, TV browsers):  CineSrc only.
  *  - Mobile (Android phone/tablet app, touch browsers):  Vidy → CineSrc  (Vidy Anime, Vidy's AniList catalogue,
  *    is tried first for Japanese animation because it is the Vidy route for those titles).
- *  - Desktop browser:  CineSrc → Vidy (community ranking may swap the two; never applies the TV restriction).
+ *  - Desktop browser:  CineSrc → Vidy → VidLink. This is the existing v1.3 browser behaviour, preserved on purpose:
+ *    the community ranking may swap CineSrc and Vidy, VidLink stays the last resort (it opens popups, and a desktop
+ *    browser has no native popup firewall). The TV and mobile restrictions are never applied to the browser.
  *
- * VidLink was removed in v1.4.0 on every platform (docs/SOURCES.md).
+ * VidLink is removed from TV and mobile in v1.4.0 (docs/SOURCES.md).
  */
 export type PlaybackPlatform = "tv" | "mobile" | "browser";
 
@@ -22,16 +24,18 @@ export interface PlatformPolicy {
   anime: SourceId[];
   /** Whether the community ranking may reorder `order` (never adds or removes a provider). */
   rankable: boolean;
+  /** Tried only after every provider in `order` failed; never reordered by the ranking. */
+  lastResort?: SourceId[];
 }
 
 export const SOURCE_POLICY: Record<PlaybackPlatform, PlatformPolicy> = {
   tv: { order: ["cinesrc"], anime: [], rankable: false },
   mobile: { order: ["vidy", "cinesrc"], anime: ["vidyanime"], rankable: false },
-  browser: { order: ["cinesrc", "vidy"], anime: ["vidyanime"], rankable: true }
+  browser: { order: ["cinesrc", "vidy"], anime: ["vidyanime"], rankable: true, lastResort: ["vidlink"] }
 };
 
 /** Every provider any platform may use (used to validate stored data and backend payloads). */
-export const SUPPORTED_SOURCES: readonly SourceId[] = ["cinesrc", "vidy", "vidyanime"];
+export const SUPPORTED_SOURCES: readonly SourceId[] = ["cinesrc", "vidy", "vidyanime", "vidlink"];
 
 function coarseOnly() {
   if (typeof window === "undefined" || typeof window.matchMedia !== "function") return false;
@@ -55,7 +59,8 @@ export function eligibleOrder(platform: PlaybackPlatform, o: { anime?: boolean; 
     const rank = new Map(o.ranking.sources.map((s) => [s.id, s.rank] as const));
     order = order.map((id, i) => ({ id, i, r: rank.get(id) ?? 99 })).sort((a, b) => a.r - b.r || a.i - b.i).map((x) => x.id);
   }
-  return o.anime ? [...p.anime.filter((x) => !order.includes(x)), ...order] : order;
+  if (o.anime) order = [...p.anime.filter((x) => !order.includes(x)), ...order];
+  return [...order, ...(p.lastResort ?? []).filter((x) => !order.includes(x))];
 }
 
 /** The backend's sources, filtered to what the platform allows and put in the platform's order. */
@@ -67,4 +72,10 @@ export function orderSources(list: readonly PlaybackSource[], platform: Playback
     if (s && !out.some((x) => x.id === s.id)) out.push(s);
   }
   return out;
+}
+
+/** What Details pre-connects to before Play: the platform's first provider, or "auto" where the ranking decides. */
+export function warmSourceHint(platform: PlaybackPlatform = playbackPlatform()): "auto" | "cinesrc" | "vidy" {
+  if (SOURCE_POLICY[platform].rankable) return "auto";
+  return SOURCE_POLICY[platform].order[0] === "vidy" ? "vidy" : "cinesrc";
 }

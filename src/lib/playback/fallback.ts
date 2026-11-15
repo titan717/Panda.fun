@@ -46,12 +46,18 @@ export interface FallbackConfig {
   progressGraceMs: number;
   /** Seconds the clock must advance (or a resume position must be reached) to count as playing. */
   minAdvanceS: number;
+  /** Providers that draw their own controls and may wait for a tap before playing (autoplay can be blocked). */
+  manualStart: SourceId[];
+  /** Start window for those once their page has loaded, and after each tap into the embed. */
+  manualGraceMs: number;
 }
 
 export const FALLBACK_CONFIG: FallbackConfig = {
   startTimeoutMs: { default: 15_000, cinesrc: 18_000, vidy: 14_000, vidyanime: 14_000 },
   progressGraceMs: 10_000,
-  minAdvanceS: 0.4
+  minAdvanceS: 0.4,
+  manualStart: ["vidy", "vidyanime", "vidlink"],
+  manualGraceMs: 30_000
 };
 
 export type FallbackEvent =
@@ -59,6 +65,7 @@ export type FallbackEvent =
   | { kind: "progress"; now: number }
   | { kind: "time"; position: number; now: number; resumeAt?: number }
   | { kind: "play"; now: number }
+  | { kind: "interact"; now: number }
   | { kind: "error"; now: number; init?: boolean }
   | { kind: "missing"; now: number }
   | { kind: "tick"; now: number }
@@ -118,7 +125,15 @@ export function fallbackReducer(s: FallbackState, e: FallbackEvent, c: FallbackC
       const last = attempts[attempts.length - 1];
       if (!last || last.progressed) return s;
       attempts[attempts.length - 1] = { ...last, progressed: true };
-      return { ...s, attempts, deadline: Math.max(s.deadline ?? 0, e.now + c.progressGraceMs) };
+      const grace = c.manualStart.includes(last.source) ? c.manualGraceMs : c.progressGraceMs;
+      return { ...s, attempts, deadline: Math.max(s.deadline ?? 0, e.now + grace) };
+    }
+    case "interact": {
+      // the viewer tapped into an embed with its own controls: give that tap time to start the stream (repeatable)
+      if (s.status !== "loading") return s;
+      const cur = s.order[s.index];
+      if (!cur || !c.manualStart.includes(cur)) return s;
+      return { ...s, deadline: Math.max(s.deadline ?? 0, e.now + c.manualGraceMs) };
     }
     case "play":
       // "play" alone is intent, not proof (autoplay can be blocked); it counts as a sign of life

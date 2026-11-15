@@ -173,7 +173,6 @@ export interface State {
 }
 
 /** v1.2.0: "auto" (community ranking) joins the fixed choices; anything else falls back to auto. */
-const VALID_SOURCES = new Set<string>(["auto", "cinesrc", "vidy", "vidyanime", "vidlink"]);
 
 const defaultPrefs: Prefs = {
   preferredSource: "auto",
@@ -259,12 +258,12 @@ function load(): State {
     }
     const prefs = { ...defaultPrefs, ...(parsed.prefs ?? {}) };
     // sources outside the registry fall back to Automatic; v1.2.0 moves the old CineSrc default to Automatic once (D-116)
-    if (!VALID_SOURCES.has(prefs.preferredSource)) prefs.preferredSource = "auto";
-    if (!parsed.prefs?.sourceAuto) { if (prefs.preferredSource === "cinesrc") prefs.preferredSource = "auto"; prefs.sourceAuto = true; }
+    // v1.4.0: there is no source picker any more; the platform registry decides (docs/SOURCES.md). Any stored pick is dropped.
+    prefs.preferredSource = "auto"; prefs.sourceAuto = true;
     const profilePrefs: Record<string, Partial<Prefs>> = {};
     for (const p of parsed.profiles) {
       const own = { ...(parsed.profilePrefs?.[p.id] ?? {}) };
-      if (own.preferredSource && !VALID_SOURCES.has(own.preferredSource)) delete own.preferredSource;
+      delete own.preferredSource;
       profilePrefs[p.id] = own;
     }
     return { profiles: parsed.profiles, activeProfileId: parsed.activeProfileId ?? null, prefs, data, profilePrefs };

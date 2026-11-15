@@ -5,7 +5,7 @@ import { ExtraIcon } from "../components/ExtraIcons";
 import { setRemoteTitle } from "../lib/remote";
 import "../styles/spoilers.css";
 import "../lib/validateLazy"; // validators for this page's payloads, loaded with the page
-import { Suspense, useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { Suspense, useCallback, useEffect, useMemo, useReducer, useRef, useState } from "react";
 import { useParams, useSearch } from "wouter";
 import useSWR from "swr";
 import { Icon } from "../components/Icon";
@@ -18,7 +18,10 @@ import { clockAt, isCcKey, offsetLabel, subLangName, subLook } from "../lib/capt
 import { KidsGate } from "../components/KidsGate";
 import { keys } from "../lib/api";
 import { useSeason, useSourceRanking, useTitle } from "../lib/hooks";
-import { ISSUES, isAnimeTitle, rankOf, reliabilityLabel, reliabilityTone, sourceOrder, tierLabel } from "../lib/sources";
+import { ISSUES, isAnimeTitle } from "../lib/sources";
+import { eligibleOrder, orderSources, playbackPlatform } from "../lib/playback/registry";
+import { attemptedSources, currentSource, failureReason, fallbackReducer, initialFallback, type FallbackEvent, type FallbackState } from "../lib/playback/fallback";
+import { recordPlaybackSuccess, recordTotalFailure } from "../lib/playback/health";
 import { actions, getPrefs, useHistoryEntry, usePrefs, useStore } from "../lib/store";
 import { stopAllTrailers } from "../lib/audio";
 import { useBackHandler, focusEl, focusFirst } from "../lib/focus";
@@ -29,8 +32,8 @@ import { navKey } from "../lib/keys";
 import type { TvChromeProps } from "../tv/TvPlayerChrome";
 import { lazyNamed } from "../lib/lazy";
 import { api } from "../lib/api";
-import { ADAPTERS, embedUrl, parseMessage, READY_TIMEOUT_MS, rememberCineServer, sendCommand, sourceName, SOURCE_ORDER } from "../lib/player";
-import { COMPAT, lastResortOnly, nativeShield, rankSources, recordPlay, SANDBOX, setShieldSource, shieldStats, syncNative } from "../lib/shield";
+import { ADAPTERS, embedUrl, parseMessage, rememberCineServer, sendCommand } from "../lib/player";
+import { COMPAT, nativeShield, recordPlay, SANDBOX, setShieldSource, shieldStats, syncNative } from "../lib/shield";
 import { episodeRow, hideSpoiler, nextEpisodeOf, prevEpisodeOf } from "../lib/watch";
 import { airsLater, playClock, pluralEps, runtime, titlePath, watchPath } from "../lib/format";
 import { PlayerLoading } from "./PlayerLoading";
@@ -45,8 +48,6 @@ const PlayerOptionsSheet = lazyNamed(loadPrompts, "PlayerOptionsSheet");
 export const loadSubOptions = () => import("../components/SubtitleOptions");
 const SubtitleOptions = lazyNamed(loadSubOptions, "SubtitleOptions");
 import type { SkipSegments, MediaType, PlaybackPayload, PlaybackSource, SourceId, TitleDetails } from "../lib/types";
-
-const SHORT: Record<SourceId, string> = { cinesrc: sourceName("cinesrc"), vidy: sourceName("vidy"), vidyanime: sourceName("vidyanime"), vidlink: sourceName("vidlink") };
 
 export function PlayerPage() {
   const params = useParams<{ type: string; id: string }>();
@@ -92,34 +93,32 @@ function Player({ type, id, season, episode, start }: { type: MediaType; id: num
   const seasonData = useSeason(isTv ? id : null, isTv ? ep.s : null).data;
   const play = useSWR<PlaybackPayload>(keys.play(type, id, isTv ? { s: season, e: episode, t: start || undefined } : { t: start || undefined }), { revalidateOnFocus: false, revalidateIfStale: false, dedupingInterval: 0 });
 
-  // v1.2.0: anime titles also ask the backend for Vidy's AniList-keyed anime player
-  // v1.2.9: on the TV app CineSrc is the only player for series episodes, so the anime catalogue is not asked for
-  const cineOnly = tv && isTv;
-  const anime = isAnimeTitle(details) && !cineOnly;
+  // v1.4.0: the platform Source Registry decides which providers may play here and in what order; the Playback
+  // Fallback Controller walks that list by itself. There is no source picker (docs/SOURCES.md).
+  const platform = useMemo(playbackPlatform, []);
+  // anime titles also ask the backend for Vidy's AniList-keyed player where the platform allows it
+  const anime = isAnimeTitle(details) && eligibleOrder(platform, { anime: true }).includes("vidyanime");
   const animePlay = useSWR<PlaybackPayload>(anime ? keys.play(type, id, isTv ? { s: season, e: episode, t: start || undefined, anime: 1 } : { t: start || undefined, anime: 1 }) : null, { revalidateOnFocus: false, revalidateIfStale: false, dedupingInterval: 0 });
   // the start order is frozen when the sources arrive, so a late ranking never swaps a loading source
   const rankingSwr = useSourceRanking();
   const ranking = rankingSwr.data;
   const rankingNow = useRef(ranking);
   rankingNow.current = ranking;
-  // Automatic waits up to 1.5 s for the ranking (usually warmed on Details) before it picks a source
-  const [rankWait, setRankWait] = useState(() => getPrefs().preferredSource === "auto");
+  // only the browser lets the community ranking reorder providers: wait up to 1.5 s for it there
+  const [rankWait, setRankWait] = useState(() => eligibleOrder(platform).length > 1 && platform === "browser");
   useEffect(() => { if (!rankWait) return; const t = setTimeout(() => setRankWait(false), 1500); return () => clearTimeout(t); }, [rankWait]);
   useEffect(() => { if (ranking || rankingSwr.error) setRankWait(false); }, [ranking, rankingSwr.error]);
-  const playData = rankWait ? undefined : play.data;
-  const order = useMemo(() => (playData ? sourceOrder(getPrefs().preferredSource, rankingNow.current) : SOURCE_ORDER), [playData]);
+  const animeSettled = !anime || Boolean(animePlay.data || animePlay.error);
+  const playData = rankWait || !animeSettled ? undefined : play.data;
   const sources = useMemo(() => {
     const list = [...(playData?.sources ?? [])];
-    for (const s of animePlay.data?.sources ?? []) if (!list.some((x) => x.id === s.id)) list.push(s);
-    const ranked = rankSources(list, order, { tv });
-    return cineOnly ? ranked.filter((x) => x.id === "cinesrc") : ranked;
-  }, [playData, animePlay.data, order, tv, cineOnly]);
-  const rankingFor = ranking;
-  // an explicit preference is honoured as before (the ad-shield rules still apply, D-94); Automatic picks the first ranked source
-  const [sourceId, setSourceId] = useState<SourceId | null>(() => { const p = getPrefs().preferredSource; return p === "auto" ? null : p; });
-  const tried = useRef(new Set<SourceId>());
-  // a compatibility source is never the first pick on a TV browser (ad shield §C.5)
-  const source: PlaybackSource | undefined = sources.find((x) => x.id === sourceId && !(lastResortOnly(x.id, tv, x.tier) && !tried.current.size && sources.length > 1)) ?? sources[0];
+    for (const x of animePlay.data?.sources ?? []) if (!list.some((y) => y.id === x.id)) list.push(x);
+    return orderSources(list, platform, { anime: list.some((x) => x.id === "vidyanime"), ranking: rankingNow.current });
+  }, [playData, animePlay.data, platform]);
+  const [fb, dispatch] = useReducer((st: FallbackState, ev: FallbackEvent) => fallbackReducer(st, ev), undefined, initialFallback);
+  useEffect(() => { if (playData && fb.status === "idle") dispatch({ kind: "start", order: sources.map((x) => x.id), now: Date.now() }); }, [playData, sources, fb.status]);
+  const activeId = currentSource(fb);
+  const source: PlaybackSource | undefined = activeId ? sources.find((x) => x.id === activeId) : undefined;
   const [nativeControls, setNativeControls] = useState(false);
   // The TV PLAYER blueprint chrome is drawn over every source that can hide its own controls, on TV
   // and touch alike: the iframe then never receives a click or tap (§6, §20, ad shield layer 1).
@@ -229,22 +228,21 @@ function Player({ type, id, season, episode, start }: { type: MediaType; id: num
     }
   }, []);
   useEffect(() => {
-    const onBlur = () => setTimeout(() => { if (customChrome) reclaimFocus(); }, 0);
+    // focus moving into the embed = the viewer tapped its own controls (the fallback controller gives that tap time)
+    const onBlur = () => setTimeout(() => { if (document.activeElement === frame.current) dispatch({ kind: "interact", now: Date.now() }); if (customChrome) reclaimFocus(); }, 0);
     window.addEventListener("blur", onBlur);
     return () => window.removeEventListener("blur", onBlur);
   }, [customChrome, reclaimFocus]);
   useEffect(() => {
     if (!source) return;
     setShieldSource(source.id);
-    if (COMPAT[source.id]) toast(nativeShield ? `${SHORT[source.id]} uses its own controls. Panda blocks its popups and redirects` : `${SHORT[source.id]} uses its own controls. Popups are blocked where your browser allows it`, 4200);
+    if (COMPAT[source.id]) toast(nativeShield ? "This player uses its own controls. Panda blocks its popups and redirects" : "This player uses its own controls. Popups are blocked where your browser allows it", 4200);
     // compatibility sources run unsandboxed on the web: ask before anything navigates the app away
     if (!COMPAT[source.id] || nativeShield) return;
     const guard = (e: BeforeUnloadEvent) => { e.preventDefault(); e.returnValue = ""; };
     window.addEventListener("beforeunload", guard);
     return () => window.removeEventListener("beforeunload", guard);
   }, [source?.id]); // eslint-disable-line react-hooks/exhaustive-deps
-  // pin the first pick so a source added later (Vidy Anime) never replaces the one that is loading
-  useEffect(() => { if (source && !sourceId) setSourceId(source.id); }, [source?.id, sourceId]); // eslint-disable-line react-hooks/exhaustive-deps
   useEffect(() => { if (ready && source) recordPlay(source.id); }, [ready, source?.id]); // eslint-disable-line react-hooks/exhaustive-deps
   /* ---- community ranking signal (v1.2.0): one "ok" per source per play once real playback starts ---- */
   const okSent = useRef(new Set<SourceId>());
@@ -270,31 +268,53 @@ function Player({ type, id, season, episode, start }: { type: MediaType; id: num
   const epRef = useRef(ep);
   epRef.current = ep;
 
-  /* ---- source readiness + automatic fallback (spec 16.4) ---- */
-  const fallback = useCallback((reason: string) => {
-    if (!source) return;
-    tried.current.add(source.id);
-    // a source that never started is a "noplay" signal for the community ranking
-    void api.report({ type, tmdbId: id, season: isTv ? epRef.current.s : undefined, episode: isTv ? epRef.current.e : undefined, source: source.id, issue: "noplay", position: 0 }).catch(() => undefined);
-    const nextSrc = sources.find((x) => !tried.current.has(x.id));
-    if (nextSrc) {
-      toast(`Switched to ${SHORT[nextSrc.id]}`);
-      setReloadAt(pos.current.position);
-      setReady(false);
-      setSourceId(nextSrc.id);
-    } else {
-      // v1.2.9: every source has been tried: say so on screen instead of leaving the loading card up
-      setDead(reason);
-    }
-  }, [source, sources, type, id, isTv]);
-
+  /* ---- v1.4.0 automatic fallback: the controller decides, the Player only feeds it events and arms one timer ---- */
+  const now = () => Date.now();
   useEffect(() => {
-    if (!source || ready) return;
+    if (fb.deadline === null) return;
+    const t = setTimeout(() => dispatch({ kind: "tick", now: now() }), Math.max(0, fb.deadline - now()) + 20);
+    return () => clearTimeout(t);
+  }, [fb.deadline]);
+  useEffect(() => {
+    const off = () => dispatch({ kind: "offline", now: now() });
+    const on = () => dispatch({ kind: "online", now: now() });
+    window.addEventListener("offline", off); window.addEventListener("online", on);
+    return () => { window.removeEventListener("offline", off); window.removeEventListener("online", on); };
+  }, []);
+  // a new attempt: reload at the same position; the attempt that ended without playing is a community "noplay" signal
+  const attemptsSeen = useRef(0);
+  useEffect(() => {
+    const n = fb.attempts.length;
+    if (n <= attemptsSeen.current) { attemptsSeen.current = n; return; }
+    for (let i = Math.max(0, attemptsSeen.current - 1); i < n; i++) {
+      const a = fb.attempts[i];
+      if (a && a.outcome && a.outcome !== "playing" && a.outcome !== "cancelled" && a.outcome !== "network") void api.report({ type, tmdbId: id, season: isTv ? epRef.current.s : undefined, episode: isTv ? epRef.current.e : undefined, source: a.source, issue: "noplay", position: 0 }).catch(() => undefined);
+    }
+    if (attemptsSeen.current > 0) { setReloadAt(pos.current.position || null); setReady(false); }
+    attemptsSeen.current = n;
     loadedAt.current = Date.now();
     ticks.current.reset(); firstFrame.current = false; setBuffering(false); setStall(null);
-    const timer = setTimeout(() => fallback("No source could start playback. Try again later."), READY_TIMEOUT_MS);
-    return () => clearTimeout(timer);
-  }, [source, ready, fallback]);
+  }, [fb.attempts]); // eslint-disable-line react-hooks/exhaustive-deps
+  // the end of a round: real playback clears any suppression; every eligible provider failing is recorded once
+  useEffect(() => {
+    if (fb.status === "playing") recordPlaybackSuccess(platform, type, id);
+    if (fb.status === "failed" && fb.attempts.length) {
+      const last = fb.attempts[fb.attempts.length - 1];
+      if (last?.outcome === "playing") return;
+      // a failed round that was cut by the connection is not the title's fault (recordTotalFailure ignores "network")
+      recordTotalFailure({ platform, type, id, season: isTv ? epRef.current.s : undefined, episode: isTv ? epRef.current.e : undefined, attempted: attemptedSources(fb), reason: navigator.onLine === false ? "network" : failureReason(fb), profileId: profileId ?? null });
+      setDead(navigator.onLine === false ? "You're offline. Check your connection and try again." : "This title won't start right now. Panda tried every player it has for it.");
+    }
+  }, [fb.status]); // eslint-disable-line react-hooks/exhaustive-deps
+  /** Try the other providers first (report / stall recovery), keeping the title, episode and position. */
+  const otherProvidersFirst = () => {
+    const cur = source?.id;
+    const others = sources.map((x) => x.id).filter((x) => x !== cur);
+    if (!others.length) return false;
+    save();
+    dispatch({ kind: "start", order: [...others, ...(cur ? [cur] : [])], now: now() });
+    return true;
+  };
 
   // buffering shows only after the source's own update rhythm stops (≥ 400 ms); 12 s of stall opens recovery
   useEffect(() => {
@@ -308,7 +328,7 @@ function Player({ type, id, season, episode, start }: { type: MediaType; id: num
   }, [ready, paused, source?.id, pip]); // eslint-disable-line react-hooks/exhaustive-deps
   useEffect(() => {
     if (stall === null) return;
-    if (stall <= 0) { setStall(null); stallSwitch(); return; }
+    if (stall <= 0) { setStall(null); stallRecover(); return; }
     const t = setTimeout(() => setStall((x) => (x === null ? null : x - 1)), 1000);
     return () => clearTimeout(t);
   }, [stall]); // eslint-disable-line react-hooks/exhaustive-deps
@@ -344,6 +364,7 @@ function Player({ type, id, season, episode, start }: { type: MediaType; id: num
       }
       switch (ev.kind) {
         case "ready":
+          dispatch({ kind: "progress", now: Date.now() });
           setReady(true);
           lastTime.current = null;
           break;
@@ -351,10 +372,11 @@ function Player({ type, id, season, episode, start }: { type: MediaType; id: num
         case "rate": break;
         // v1.2.9: keep the server only once it really plays (below), so a server that fails is never preferred
         case "server": cineServer.current = ev.id; if (firstFrame.current) rememberCineServer(ev.id); break;
-        case "play": setReady(true); setPaused(false); reportOk(); caps.clock.current = { ...caps.clock.current, at: performance.now(), playing: true }; break;
+        case "play": dispatch({ kind: "play", now: Date.now() }); setReady(true); setPaused(false); reportOk(); caps.clock.current = { ...caps.clock.current, at: performance.now(), playing: true }; break;
         case "pause": setPaused(true); caps.clock.current = { ...caps.clock.current, position: clockAt(caps.clock.current, performance.now()), at: performance.now(), playing: false }; break;
         case "volume": setMuted(ev.muted); break;
         case "time":
+          dispatch({ kind: "time", position: ev.position, now: Date.now(), resumeAt: reloadAt ?? start });
           setReady(true); setPaused(false);
           ticks.current.tick(performance.now());
           if (buffering) setBuffering(false);
@@ -386,7 +408,7 @@ function Player({ type, id, season, episode, start }: { type: MediaType; id: num
           if (ev.internal) { save(); setEp({ s: ev.season, e: ev.episode }); setIntroSkipped(false); setNextDismissed(false); lastTime.current = null; pos.current = { position: 0, duration: 0, dirty: false }; }
           break;
         case "close": exit(); break;
-        case "error": if (!ready) fallback(`${SHORT[source.id]} couldn't play this title.`); break;
+        case "error": dispatch({ kind: "error", now: Date.now(), init: !ready }); break;
       }
     };
     window.addEventListener("message", onMsg);
@@ -506,17 +528,16 @@ function Player({ type, id, season, episode, start }: { type: MediaType; id: num
     exit();
   }, !customChrome);
 
-  const nextSource = () => sources.find((x) => x.id !== source?.id && !tried.current.has(x.id)) ?? sources.find((x) => x.id !== source?.id);
   /** Stall recovery: reload the same source where it stopped. */
   const retryStall = () => {
     setStall(null); setBuffering(false); ticks.current.reset();
     setReloadAt(pos.current.position); setReady(false); setNonce((n) => n + 1);
   };
-  function stallSwitch() {
-    const n = nextSource();
+  /** A stall that did not clear: count it, then try the platform's other provider silently (or reload this one). */
+  function stallRecover() {
     if (!source) return;
     void api.report({ type, tmdbId: id, season: isTv ? ep.s : undefined, episode: isTv ? ep.e : undefined, source: source.id, issue: "noplay", position: Math.floor(pos.current.position) }).catch(() => undefined);
-    if (n) switchSource(n.id); else retryStall();
+    if (!otherProvidersFirst()) retryStall();
   }
   const failed = !play.error && Boolean(dead || (playData && !sources.length));
   useEffect(() => { setDead(null); }, [playData]);
@@ -524,8 +545,9 @@ function Player({ type, id, season, episode, start }: { type: MediaType; id: num
   useEffect(() => { if (failed) requestAnimationFrame(() => focusEl(root.current?.querySelector<HTMLElement>(".player-failed button"))); }, [failed]);
   /** v1.2.9 failure panel: start over from the first source. */
   const retryAll = () => {
-    tried.current.clear(); setDead(null); setStall(null); setBuffering(false); ticks.current.reset();
-    setReloadAt(pos.current.position || null); setReady(false); setSourceId(sources[0]?.id ?? null); setNonce((n) => n + 1);
+    setDead(null); setStall(null); setBuffering(false); ticks.current.reset();
+    setReloadAt(pos.current.position || null); setReady(false); setNonce((n) => n + 1);
+    dispatch({ kind: "start", order: sources.map((x) => x.id), now: Date.now() });
   };
   const startOver = () => {
     setResumeAsk(false);
@@ -534,17 +556,6 @@ function Player({ type, id, season, episode, start }: { type: MediaType; id: num
     setReloadAt(0); setReady(false); setNonce((n) => n + 1);
   };
 
-  const switchSource = (sid: SourceId) => {
-    if (sid === source?.id) return;
-    save();
-    tried.current.clear();
-    setReloadAt(pos.current.position);
-    setReady(false);
-    setSourceId(sid);
-    // a fixed preference follows the last pick; "Automatic" stays automatic (this play only)
-    if (getPrefs().preferredSource !== "auto") actions.setPrefs({ preferredSource: sid });
-    toast(`Playing from ${SHORT[sid]}`);
-  };
   const setVolume = (delta: number) => {
     const v = Math.round(Math.max(0, Math.min(1, getPrefs().volume + delta)) * 10) / 10;
     actions.setPrefs({ volume: v });
@@ -667,8 +678,7 @@ function Player({ type, id, season, episode, start }: { type: MediaType; id: num
   /** Report an Issue (§20.9, phone and TV): counted by the community ranking, then the fix the issue calls for. */
   function report(issue: (typeof ISSUES)[number]) {
     void api.report({ type, tmdbId: id, season: isTv ? ep.s : undefined, episode: isTv ? ep.e : undefined, source: source?.id ?? null, issue: issue.id, position: Math.round(pos.current.position) }).catch(() => undefined);
-    const other = sources.find((x) => x.id !== source?.id && !tried.current.has(x.id)) ?? sources.find((x) => x.id !== source?.id);
-    if (issue.switchSource && other) { switchSource(other.id); toast(`Thanks for the report. Trying ${SHORT[other.id]}`); }
+    if (issue.switchSource && otherProvidersFirst()) toast("Thanks for the report. Trying another player");
     else if (issue.id === "subs" && captionsOk && details?.imdbId && !customChrome) { setSubsSheet(true); toast("Thanks for the report. Pick another subtitle track"); }
     else if (issue.id === "subs" && captionsOk && details?.imdbId) toast("Thanks for the report. Pick another track in Audio & Subtitles");
     else if (issue.id === "subs" && customChrome) { reloadEmbed(); setNativeControls(true); toast("Thanks for the report. Pick subtitles in the source player"); }
@@ -701,7 +711,7 @@ function Player({ type, id, season, episode, start }: { type: MediaType; id: num
       onSeek: seekTo, onTogglePlay: togglePlay,
       quality: prefs.quality,
       onQuality: (q) => { if (q === prefs.quality) return; reloadEmbed(); actions.setPrefs({ quality: q }); toast(q === "auto" ? "Quality: Auto" : `Quality: ${q === "480" ? "Data Saver" : q === "2160" ? "4K" : `${q}p`}`); },
-      sources, sourceId: source?.id, onSource: switchSource, ranking: rankingFor,
+      sourceId: source?.id,
       onReport: report,
       nativeControls, onNativeControls: (on) => {
         if (on === nativeControls) return;
@@ -749,15 +759,15 @@ function Player({ type, id, season, episode, start }: { type: MediaType; id: num
       {play.error && !play.data && <div className="player-center"><ErrorState message={play.error.message} onRetry={() => play.mutate()} /></div>}
       {failed && (
         <div className="player-center player-failed lrud-container" role="alertdialog" aria-label="Playback problem">
-          <ErrorState message={dead ?? (cineOnly ? "CineSrc has no stream for this episode right now." : "No source has this title right now.")} onRetry={sources.length ? retryAll : () => { void play.mutate(); }} />
+          <ErrorState message={dead ?? (isTv ? "There's no stream for this episode right now." : "There's no stream for this title right now.")} onRetry={sources.length ? retryAll : () => { void play.mutate(); }} />
           <button id="pl-failed-back" className="btn" data-hover-focus onClick={exit}><Icon name="back" /> Back</button>
         </div>
       )}
       {src && source && (
-        <iframe key={frameKey} ref={frame} className={`player-frame ${isolated ? "is-isolated" : ""}`} src={src} style={scale.x !== 1 || scale.y !== 1 ? { transform: `scale(${scale.x.toFixed(4)}, ${scale.y.toFixed(4)})` } : undefined} title={`${title} — ${SHORT[source.id]}`}
+        <iframe key={frameKey} ref={frame} className={`player-frame ${isolated ? "is-isolated" : ""}`} src={src} style={scale.x !== 1 || scale.y !== 1 ? { transform: `scale(${scale.x.toFixed(4)}, ${scale.y.toFixed(4)})` } : undefined} title={`${title} — video player`}
           {...(SANDBOX[source.id]?.attr ? { sandbox: SANDBOX[source.id]!.attr! } : {})} data-sandbox={SANDBOX[source.id]?.id ?? "none"}
           allow="autoplay; fullscreen; encrypted-media; picture-in-picture" allowFullScreen referrerPolicy="origin" tabIndex={isolated || (tv && !nativeControls) ? -1 : 0}
-          onLoad={() => { if (source.events !== "cinesrc") setReady(true); if (isolated) reclaimFocus(); }} />
+          onLoad={() => { dispatch({ kind: "progress", now: Date.now() }); if (source.events !== "cinesrc") setReady(true); if (isolated) reclaimFocus(); }} />
       )}
       {brightness < 1 && !tv && (
         <div className="player-dim" style={{ opacity: Math.round((1 - brightness) * 0.85 * 100) / 100 }} aria-hidden="true" />
@@ -770,11 +780,10 @@ function Player({ type, id, season, episode, start }: { type: MediaType; id: num
       )}
       {stall !== null && source && (
         <div className="player-stall" id="pl-stall" role="alertdialog" aria-labelledby="pl-stall-title">
-          <p id="pl-stall-title" className="player-stall-title">{SHORT[source.id]} stopped playing</p>
-          <p className="player-stall-sub" aria-live="polite">{nextSource() ? `Switching to ${SHORT[nextSource()!.id]} in ${stall} s` : `Trying again in ${stall} s`}</p>
+          <p id="pl-stall-title" className="player-stall-title">Playback stopped</p>
+          <p className="player-stall-sub" aria-live="polite">{`Trying again in ${stall} s`}</p>
           <div className="player-stall-actions lrud-container">
             <button id="pl-stall-retry" className="btn btn--primary" data-autofocus data-hover-focus onClick={retryStall}><Icon name="refresh" /> Retry</button>
-            {nextSource() && <button id="pl-stall-switch" className="btn" data-hover-focus onClick={() => { setStall(null); switchSource(nextSource()!.id); }}>Switch source</button>}
             <button id="pl-stall-report" className="btn" data-hover-focus onClick={() => { setStall(null); setReportSheet(true); }}>Report</button>
           </div>
         </div>
@@ -793,14 +802,6 @@ function Player({ type, id, season, episode, start }: { type: MediaType; id: num
       <div className="player-top lrud-container">
         <button id="pl-back" className="pl-btn" onClick={exit} aria-label="Back" data-hover-focus><Icon name="back" /></button>
         <div className="pl-title"><strong>{title}</strong><span>{subtitle}</span></div>
-        <div className="pl-sources" role="radiogroup" aria-label="Video source">
-          {sources.map((x) => (
-            <button key={x.id} id={`pl-src-${x.id}`} role="radio" aria-checked={x.id === source?.id} className={`pl-pill ${x.id === source?.id ? "is-active" : ""}`} onClick={() => switchSource(x.id)} data-hover-focus
-              title={[tierLabel(x.id, rankOf(ranking, x.id)).label, reliabilityLabel(rankOf(ranking, x.id))].filter(Boolean).join(" · ")}>
-              <span className={`src-rel-dot src-rel--${reliabilityTone(rankOf(ranking, x.id))}`} aria-hidden="true" />{SHORT[x.id]}
-            </button>
-          ))}
-        </div>
       </div>
       <div className="player-bottom lrud-container">
         {tv && source && ADAPTERS[source.id]?.commands && (
@@ -848,13 +849,13 @@ function Player({ type, id, season, episode, start }: { type: MediaType; id: num
       </Suspense>
       {reportSheet && (
         <Sheet title="Report an Issue" onClose={() => setReportSheet(false)} className="sheet--report">
-          <p className="report-lead">Reports from every Panda viewer rank the sources, so the most reliable one plays first.{source ? ` Now playing from ${SHORT[source.id]}.` : ""}</p>
+          <p className="report-lead">Reports from every Panda viewer help Panda start the most reliable player first, automatically.</p>
           <div className="report-list lrud-container" role="list">
             {ISSUES.map((i, n) => (
               <button key={i.id} id={`pl-issue-${i.id}`} className="report-row" role="listitem" data-autofocus={n === 0 ? true : undefined} data-hover-focus
                 onClick={() => { setReportSheet(false); report(i); }}>
                 <ExtraIcon name="warning" /><span>{i.label}</span>
-                {i.switchSource && sources.length > 1 && <small>Tries another source</small>}
+                {i.switchSource && sources.length > 1 && <small>Panda tries another player</small>}
               </button>
             ))}
           </div>

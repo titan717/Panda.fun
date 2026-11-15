@@ -1,4 +1,5 @@
 import "./details.css";
+import { warmSourceHint } from "../lib/playback/registry";
 import { setRemoteTitle } from "../lib/remote";
 import { useEffect, useRef, useState } from "react";
 import { Icon } from "../components/Icon";
@@ -64,7 +65,7 @@ function TvDetailsView({ d, initialTab }: { d: TitleDetails; initialTab?: Tab })
     ...(people.length ? [{ id: "cast" as Tab, label: "Cast" }] : [])
   ];
   // v1.1.6: warm the source connection, skip markers and season for the next Play press
-  useEffect(() => { whenIdle(() => warmPlayback({ type: d.type, tmdbId: d.tmdbId, imdbId: d.imdbId, season: history?.season, episode: history?.episode }, prefs.preferredSource), 1500); }, [d.id]); // eslint-disable-line react-hooks/exhaustive-deps
+  useEffect(() => { whenIdle(() => warmPlayback({ type: d.type, tmdbId: d.tmdbId, imdbId: d.imdbId, season: history?.season, episode: history?.episode }, warmSourceHint()), 1500); }, [d.id]); // eslint-disable-line react-hooks/exhaustive-deps
   const [tab, setTab] = useState<Tab | null>(tabs.find((t) => t.id === initialTab)?.id ?? tabs[0]?.id ?? null);
   const [rateOpen, setRateOpen] = useState(false);
   const [video, setVideo] = useState<{ key: string; name: string } | null>(null);

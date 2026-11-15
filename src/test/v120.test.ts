@@ -56,15 +56,15 @@ describe("source adapters and community ranking (v1.2.0)", () => {
     expect(airingLabel({ episode: 7, at: new Date(now - 1000).toISOString() }, now)).toBeNull();
     expect(animeCaption(p.rows[0]!.items[0] as AnimeCard, now)).toBe("★ 8.7 · Toei Animation");
   });
-  it("moves the old CineSrc default to Automatic once and keeps explicit choices", async () => {
+  it("v1.4.0: drops every stored source pick (there is no picker; the platform registry decides)", async () => {
     localStorage.setItem("panda:v1:state", JSON.stringify({ profiles: [{ id: "p1", name: "A", avatar: "panda", kids: false }], activeProfileId: "p1", prefs: { preferredSource: "cinesrc" }, data: {}, profilePrefs: { p1: { preferredSource: "vidy" } } }));
     vi.resetModules();
     const store = await import("../lib/store");
     expect(store.getState().prefs.preferredSource).toBe("auto");
-    expect(store.getPrefs().preferredSource).toBe("vidy");
+    expect(store.getPrefs().preferredSource).toBe("auto");
     localStorage.setItem("panda:v1:state", JSON.stringify({ profiles: [{ id: "p1", name: "A", avatar: "panda", kids: false }], activeProfileId: "p1", prefs: { preferredSource: "cinesrc", sourceAuto: true }, data: {} }));
     vi.resetModules();
     const again = await import("../lib/store");
-    expect(again.getState().prefs.preferredSource).toBe("cinesrc");
+    expect(again.getState().prefs.preferredSource).toBe("auto");
   });
 });
