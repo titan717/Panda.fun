@@ -9,22 +9,31 @@ import docs from "../../docs/INTRO.md?raw";
 const overlay = () => document.querySelector<HTMLElement>("[data-intro]");
 const key = (k: string, keyCode = 0) => fireEvent.keyDown(window, { key: k, keyCode });
 
-beforeEach(() => { localStorage.clear(); resetIntroDecision(); setIntroPhase("done"); vi.useFakeTimers(); history.replaceState(null, "", "/"); });
+beforeEach(() => { localStorage.clear(); sessionStorage.clear(); resetIntroDecision(); setIntroPhase("done"); vi.useFakeTimers(); history.replaceState(null, "", "/"); });
 afterEach(() => { cleanup(); vi.useRealTimers(); });
 
-describe("Intro Manager: once per version per device", () => {
-  it("is due on a cold start, then never again for that version", () => {
+describe("Intro Manager: startup rules", () => {
+  it("defaults to playing on every cold start, but not again in the same tab or process", () => {
+    expect(INTRO.replay).toBe("every-cold-start");
     expect(introDue()).toBe(true);
-    expect(introDue()).toBe(true); // stable within the load (StrictMode, rerender)
     markIntroSeen();
+    resetIntroDecision(); // reload / deep link in the same tab
     expect(introDue()).toBe(false);
-    resetIntroDecision(); // next cold start
-    expect(introDue()).toBe(false);
+    sessionStorage.clear(); resetIntroDecision(); // app process restarted
+    expect(introDue()).toBe(true);
+  });
+  it("in once-per-version mode is due on a cold start, then never again for that version", () => {
+    expect(introDue(INTRO.version, "once-per-version")).toBe(true);
+    expect(introDue(INTRO.version, "once-per-version")).toBe(true); // stable within the load (StrictMode, rerender)
+    markIntroSeen();
+    expect(introDue(INTRO.version, "once-per-version")).toBe(false);
+    sessionStorage.clear(); resetIntroDecision(); // next cold start
+    expect(introDue(INTRO.version, "once-per-version")).toBe(false);
     expect(JSON.parse(localStorage.getItem(INTRO_KEY)!).seen[INTRO.version]).toBeTypeOf("number");
   });
   it("plays again once when the version is bumped", () => {
-    markIntroSeen("old"); resetIntroDecision();
-    expect(introDue("new")).toBe(true);
+    markIntroSeen("old"); sessionStorage.clear(); resetIntroDecision();
+    expect(introDue("new", "once-per-version")).toBe(true);
   });
   it("does not play on an Android activity recreation (?resumed=1)", () => {
     history.replaceState(null, "", "/?resumed=1");

@@ -129,10 +129,15 @@ export function explain(c: Candidate, parts: Record<ScorePart, number>, genres: 
       return { kind: "similar", text: `Because ${verb} ${s.seedTitle}`, seedId: s.seedId };
     }
     if (k === "genre") {
-      const g = genres.filter((x) => (m.genres.get(x) ?? 0) > 0).sort((a, b) => (m.genres.get(b) ?? 0) - (m.genres.get(a) ?? 0))[0];
+      const liked = genres.filter((x) => (m.genres.get(x) ?? 0) > 0).sort((a, b) => (m.genres.get(b) ?? 0) - (m.genres.get(a) ?? 0));
+      const g = liked[0];
       if (!g) continue;
       const w = m.genreWhy.get(g);
-      const text = w === "picked" ? `You picked ${g}` : w === "rated" ? `You rate ${g} highly` : w === "saved" ? `You save a lot of ${g}` : `You watch a lot of ${g}`;
+      // When the title matches a second liked genre for the same reason, name both: still true, and it tells
+      // neighbouring cards apart instead of repeating one genre down the whole row.
+      const g2 = liked.find((x) => x !== g && m.genreWhy.get(x) === w);
+      const gs = g2 ? `${g} and ${g2}` : g;
+      const text = w === "picked" ? `You picked ${gs}` : w === "rated" ? `You rate ${gs} highly` : w === "saved" ? `You save a lot of ${gs}` : `You watch a lot of ${gs}`;
       return { kind: "genre", text, genre: g };
     }
     if (k === "popularity" && c.origins.has("trending")) return { kind: "trending", text: "Trending now" };

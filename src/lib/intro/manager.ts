@@ -3,11 +3,18 @@ import { INTRO, type IntroAsset, type IntroConfig } from "./config";
 
 /**
  * v1.4.0 Intro Manager rules (pure, tested in src/test/intro.test.tsx):
- * - plays once per intro version per device, on a cold start only (not on ?resumed=1, rerender or navigation);
+ * - plays on a cold start only (not on ?resumed=1, rerender, remount or navigation): every cold start, or once per
+ *   intro version per device, per `INTRO.replay`;
  * - reduced motion shows the branded still (or nothing, per config);
  * - the app is never blocked longer than duration + hardPadMs.
  */
 export const INTRO_KEY = "panda:v1:intro";
+/** Per-tab / per-process mark: this launch already played (or skipped) the intro. */
+export const INTRO_SESSION_KEY = "panda:v1:intro-session";
+
+function playedThisSession(version: string) {
+  try { return sessionStorage.getItem(INTRO_SESSION_KEY) === version; } catch { return false; }
+}
 
 export type IntroView = "video" | "animation" | "static";
 export interface IntroPlan {
@@ -37,14 +44,15 @@ function readSeen(): Record<string, number> {
 let due: boolean | null = null;
 
 /** Whether this cold start should play `version` (stable for the whole page load). */
-export function introDue(version = INTRO.version) {
-  if (due === null) due = !resumedLaunch() && !(version in readSeen());
+export function introDue(version = INTRO.version, replay = INTRO.replay) {
+  if (due === null) due = !resumedLaunch() && !playedThisSession(version) && (replay === "every-cold-start" || !(version in readSeen()));
   return due;
 }
 
-/** The intro finished or was skipped: never play this version again on this device. */
+/** The intro finished or was skipped: not again in this launch, nor (in "once-per-version" mode) on this device. */
 export function markIntroSeen(version = INTRO.version, now = Date.now()) {
   due = false;
+  try { sessionStorage.setItem(INTRO_SESSION_KEY, version); } catch { /* in-memory flag covers this load */ }
   try {
     // keep the last few versions only
     const seen = Object.entries({ ...readSeen(), [version]: now }).sort((a, b) => b[1] - a[1]).slice(0, 5);

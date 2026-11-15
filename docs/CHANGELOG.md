@@ -2,6 +2,18 @@
 
 Every stable release of Panda.fun. The same notes ship in each GitHub Release and in Settings › What's New.
 
+## 1.4.0
+
+- **The official Panda.fun brand everywhere**: the mascot and wordmark from the brand kit now appear in the app header, launcher icons, the Android TV banner, the splash screen, favicons and the landing page. Every brand image comes from one place, so a future logo change is one edit.
+- **A launch intro on TVs and phones**: TVs play the Panda.fun intro video and phones a short animated mascot greeting. It plays when the app starts, can be skipped after one second (OK or Back on the remote), never replays while you move around the app, and shows a calm still picture when Reduce motion is on or the video cannot play. It is a temporary intro; the final film will replace it without code changes.
+- **A friendly first-run setup, no account needed**: Panda walks you through a few quick, skippable questions (genres, movies or series, popular or hidden gems, new or classic, length and pace) so Home and Search are picked for you from the start. Everything stays on the device, per profile. Redo it or reset it in Settings › Profiles & Account.
+- **Back to your profile**: restarting the app opens the profile you last used instead of asking every time. Who's watching? appears on first run, after Switch profile, or if the saved profile is gone.
+- **Panda Top Picks**: Search now opens with picks for the current profile, followed by Recommended for you, Trending, Because you watched…, Hidden gems and genre rows. Each pick shows a short, true reason (for example "Because you watched Dune" or "You picked Thriller"), or none when there is no clear one. Hold OK on TV (or long-press / ⋮ on phones) for More like this, Not interested, Hide from recommendations and Already watched, with Undo. The ranking runs on the device; there is no AI service behind it.
+- **No more source picker**: playback chooses the source for you and falls back automatically. Android TV uses CineSrc only; phones try Vidy (Vidy Anime for anime) then CineSrc, and VidLink is gone from phones; computer browsers keep CineSrc and Vidy with VidLink as a last resort. A source only counts as working once the video actually starts moving. Settings › Playback health lists problems recorded on this device, and a problem is recorded only when every source failed.
+- **TV remote fixes**: Settings now scrolls with the focused option so nothing is hidden off screen; Back from a title returns focus to the card you came from; the Search field opens the Android TV keyboard (Gboard) on OK and types for real.
+- **Cleaner seasons and episodes**: seasons are labelled Season 1, Season 2… (with Specials kept separate), without "Arc" labels or renumbering, and trailers on title pages follow one autoplay manager that respects your Trailers settings.
+- **Fixes**: artwork on the website could stay blank in production because the offline cache was blocked by the security policy; it now loads. Hidden and Not interested titles also stay out of Home's personal rows.
+
 ## 1.3.1
 
 - **A new TV launch intro: a retro paper-cutout film**: on TVs the app now opens with a stop-motion short drawn like cut paper, moving in the stepped 12 frames a second of hand-made animation, with boiling edges, film grain, scratches and a corner cue mark. Two glowing blue eyes with gold rims open in the dark, the picture irises in while the panda pops together piece by piece (headphones, tinted shades that catch a glint, a lopsided smirk and a bamboo stick), the camera zooms into its left eye and the picture fades onto the Who's watching? horizon. About 5 s, with no text. Phones and computers keep the v1.3.0 intro.

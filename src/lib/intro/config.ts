@@ -9,9 +9,18 @@ export type IntroAsset =
   | { kind: "video"; src: string; width: number; height: number; fit: "cover" | "contain" }
   | { kind: "animation" };
 
+/**
+ * When the intro plays (never on ?resumed=1 Android recreation, rerenders or in-app navigation in either mode):
+ * - "every-cold-start": each time the app process (or a new browser tab) starts. A reload or a deep link in the same
+ *   tab is not a cold start: the per-tab sessionStorage mark stops a replay.
+ * - "once-per-version": only the first cold start after install or after `version` changes.
+ */
+export type IntroReplay = "every-cold-start" | "once-per-version";
+
 export interface IntroConfig {
-  /** Bump to replay the intro once on every device (each version plays once per device, on a cold start). */
+  /** Bump to replay the intro once on every device, even in "once-per-version" mode. */
   version: string;
+  replay: IntroReplay;
   tv: IntroAsset | null;
   mobile: IntroAsset | null;
   /** Used by a platform whose own asset is null. */
@@ -36,6 +45,7 @@ const base = (typeof import.meta !== "undefined" && import.meta.env?.BASE_URL) |
 
 export const INTRO: IntroConfig = {
   version: "2026.11-1",
+  replay: "every-cold-start",
   tv: { kind: "video", src: `${base}intro/intro-tv.mp4`, width: 1280, height: 720, fit: "contain" },
   // until the final portrait video lands: the built-in mascot animation. Later: { kind: "video", src: `${base}intro/intro-mobile.mp4`, width: 1080, height: 1920, fit: "cover" }
   mobile: { kind: "animation" },

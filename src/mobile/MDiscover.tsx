@@ -36,6 +36,13 @@ export function MDiscover({ onOpen }: { onOpen: (item: PandaItem) => void }) {
   );
 }
 
+/**
+ * Rows reorder while the remaining sources load. With scroll snapping Chrome keeps the previously snapped card in
+ * view, which left rows scrolled to the middle on first paint. Remounting the track when the order changes starts
+ * it at the first card again.
+ */
+const trackKey = (s: RecoSection) => s.items.map((i) => i.id).join("|");
+
 type RowProps = { section: RecoSection; onOpen: (i: PandaItem) => void; onMenu: (i: PandaItem) => void };
 
 function TopPicks({ section, onOpen, onMenu }: RowProps) {
@@ -43,7 +50,7 @@ function TopPicks({ section, onOpen, onMenu }: RowProps) {
     <section className="m-section m-reco m-reco--top" aria-labelledby="reco-top-title">
       <div className="m-row-head"><h2 className="m-row-title" id="reco-top-title"><span className="m-reco-mark" aria-hidden="true" />{section.title}</h2></div>
       {section.note && <p className="m-reco-note">{section.note}</p>}
-      <div className="m-row-track m-reco-top-track">
+      <div className="m-row-track m-reco-top-track" key={trackKey(section)}>
         {section.items.map((it) => (
           <div key={it.id} className="m-reco-top-card">
             <Link href={titlePath(it)} className="m-reco-top-link" aria-label={`${it.title}${section.reasons?.[it.id] ? `. ${section.reasons[it.id]}` : ""}`}
@@ -65,7 +72,7 @@ function Row({ section, onOpen, onMenu }: RowProps) {
     <section className="m-section m-reco" aria-labelledby={`reco-${section.id}-title`}>
       <div className="m-row-head"><h2 className="m-row-title" id={`reco-${section.id}-title`}>{section.title}</h2></div>
       {section.note && <p className="m-reco-note">{section.note}</p>}
-      <div className="m-row-track">
+      <div className="m-row-track" key={trackKey(section)}>
         {section.items.map((it) => (
           <Link key={it.id} href={titlePath(it)} className="m-poster m-reco-poster" aria-label={`${it.title}${section.reasons?.[it.id] ? `. ${section.reasons[it.id]}` : ""}`}
             onPointerDown={() => prefetchItem(it)} onClick={() => onOpen(it)} onContextMenu={(e) => { e.preventDefault(); onMenu(it); }}>

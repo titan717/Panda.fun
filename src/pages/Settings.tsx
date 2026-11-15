@@ -2,7 +2,7 @@ import "./settings.css";
 import "../lib/validateLazy"; // validators for this page's payloads, loaded with the page
 import { forgetIntros, SPEEDS, speedLabel, STILL_AFTER } from "../lib/player2";
 import { nativePipSupported } from "../lib/pip";
-import { useEffect, useMemo, useRef, useState, type ReactNode } from "react";
+import { useEffect, useMemo, useRef, useState, useSyncExternalStore, type ReactNode } from "react";
 import { Link, useParams } from "wouter";
 import { useSWRConfig } from "swr";
 import { clearPersistentCache } from "../lib/cache";
@@ -21,6 +21,7 @@ import { clearFeedback } from "../lib/reco/feedback";
 import { useGenres, usePage, useSourceHealth, useSourceRanking } from "../lib/hooks";
 import { reliabilityLabel, reliabilityTone, tierLabel } from "../lib/sources";
 import { eligibleOrder, playbackPlatform } from "../lib/playback/registry";
+import { allHealthRecords, clearHealth, healthVersion, subscribeHealth } from "../lib/playback/health";
 import { HOME_SECTIONS, isCustomHome, moveSection, normalizeOrder, railKey, type HomeSection } from "../lib/homeLayout";
 import { focusEl, focusFirst, useBackHandler } from "../lib/focus";
 import { useNav } from "../lib/nav";
@@ -155,8 +156,37 @@ function SourcesPanel() {
       <button id="sp-src-refresh" className="set-row" data-hover-focus onClick={() => void health.mutate()}>
         <span className="set-row-text"><span className="set-row-title">Check again</span></span><Icon name="refresh" />
       </button>
+      <DeviceHealth />
       <ShieldInfo />
     </div>
+  );
+}
+
+/**
+ * This device's own playback records (lib/playback/health.ts): titles where every source failed. They are kept out
+ * of recommendations for a while and re-checked automatically; Clear forgets them.
+ */
+function DeviceHealth() {
+  const v = useSyncExternalStore(subscribeHealth, healthVersion, healthVersion);
+  const platform = playbackPlatform();
+  const recs = useMemo(() => { void v; return allHealthRecords().filter((r) => r.platform === platform); }, [v, platform]);
+  const now = Date.now();
+  const hidden = recs.filter((r) => r.recovery === "suppressed" && r.suppressedUntil > now).length;
+  const recovered = recs.filter((r) => r.recovery === "recovered").length;
+  return (
+    <>
+      <p className="set-group-title">On this device</p>
+      <p className="set-note" id="sp-device-health">
+        {recs.length === 0
+          ? "No playback problems recorded. A title is only noted here when every player failed to start it."
+          : `${recs.length} ${recs.length === 1 ? "title" : "titles"} failed on every player recently${hidden ? `; ${hidden} kept out of recommendations for now and checked again later` : ""}${recovered ? `; ${recovered} played again since` : ""}.`}
+      </p>
+      {recs.length > 0 && (
+        <button id="sp-health-clear" className="set-row" data-hover-focus onClick={() => { clearHealth(); toast("Playback problems cleared"); }}>
+          <span className="set-row-text"><span className="set-row-title">Clear playback problems</span><span className="set-row-sub">Show those titles in recommendations again</span></span><Icon name="refresh" />
+        </button>
+      )}
+    </>
   );
 }
 

@@ -2,12 +2,12 @@
 
 Measured on every release. Never regress.
 
-## v1.4.0 (Intro Manager, onboarding, profile restore)
+## v1.4.0 (brand, Intro Manager, onboarding, profile restore, playback fallback, recommendations)
 
 | Metric | Value |
 |---|---|
-| Entry chunk (gzip) | 25,574 B at gzip -9 (v1.3.1 24,380 B, +1,194 B): the Intro Manager (config + once-per-version manager + overlay with static fallback) and `lib/tasteProfile.ts` (validation/migration, needed before first paint to decide whether onboarding runs). The paper-cutout film, its timeline and the Web Audio score were deleted (`IntroTv`, `introTimeline`, `introScore` chunks are gone); the TV intro is now a 1 MB H.264 MP4 that only TVs request. |
-| Entry CSS (gzip) | 15,389 B (v1.3.1 15,370 B, +19 B). |
+| Entry chunk (gzip) | 28,525 B at gzip -9 for the final 1.4.0 build (v1.3.1 24,380 B, +4,145 B). Measured after each merge: 25,574 B with the Intro Manager (config + startup-rule manager + overlay with static fallback) and `lib/tasteProfile.ts` (needed before first paint to decide whether onboarding runs); the rest is the platform playback registry and source order, the brand asset map, the TV keyboard bridge (`lib/remoteInput.ts`) and D-pad focus memory, which every screen uses. The recommendation engine, Search discovery rows and playback health records are not in the entry (lazy Search, Player and Settings chunks). The paper-cutout film, its timeline and the Web Audio score were deleted; the TV intro is now a 1 MB H.264 MP4 that only TVs request. This is a regression against "never regress", accepted for the release and listed as a follow-up. |
+| Entry CSS (gzip) | 15,873 B (v1.3.1 15,370 B, +503 B): brand header and intro still styles. |
 | Onboarding | Lazy `onboarding` chunk, 4,218 B JS + 3,400 B CSS gzip, fetched (prefetched) only when onboarding is due or from Settings › Personalize. Genre art reuses the cached TMDB trending row. |
 
 ## v1.3.1 (retro stop-motion paper-cutout TV intro)

@@ -1,14 +1,18 @@
 # Launch intro (Intro Manager, v1.4.0)
 
 The launch intro is configured in one place: `src/lib/intro/config.ts` (`INTRO`). The overlay that plays it is
-`src/components/Intro.tsx`; the rules (once per version, reduced motion, fallback, timeouts) live in
+`src/components/Intro.tsx`; the rules (startup replay, reduced motion, fallback, timeouts) live in
 `src/lib/intro/manager.ts` and are tested in `src/test/v140-intro.test.tsx`.
 
 ## Rules
 
-- Plays **once per intro `version` per device**, on a cold start only. Completion (or Skip) is saved in
-  localStorage under `panda:v1:intro`. It never replays on rerender, navigation or an Android activity recreation
-  (`?resumed=1`).
+- Plays on a **cold start only**, following `replay` in the config:
+  - `"every-cold-start"` (the shipped default): every time the app process starts on a TV or phone, or a new browser
+    tab opens. Finishing or skipping writes a per-tab/per-process mark (sessionStorage `panda:v1:intro-session`), so
+    a reload, a deep link in the same tab, coming back from the background, rerenders and in-app navigation never
+    replay it. An Android activity recreation (`?resumed=1`, e.g. rotation or theme change) never plays it.
+  - `"once-per-version"`: only the first cold start after install or after `version` changes. Completion is kept in
+    localStorage under `panda:v1:intro` (also written in the default mode, so switching modes is seamless).
 - **Skippable** after `skipAfterMs` (1 s): a Skip button appears (focused on TV); OK/Enter and Back skip on TV.
   Until then keys are held back so nothing moves underneath.
 - **Reduced motion** (system setting or Settings › Display › Reduce motion): `reducedMotion: "static"` shows the
@@ -61,8 +65,9 @@ ffmpeg -i master-portrait.mov -an -c:v libx264 -profile:v high -level 4.1 -pix_f
    - Phone video: change **one line** to
      `mobile: { kind: "video", src: \`${base}intro/intro-mobile.mp4\`, width: 1080, height: 1920, fit: "cover" }`.
    - Set `durationMs.tv` / `durationMs.mobile` to the real lengths (the hard timeout is this + 2 s).
-3. **Bump `version`** (e.g. `"2026.12-1"`) so every device plays the new intro once. Without a bump, devices that
-   already saw the previous version will not see the new one.
+3. **Bump `version`** (e.g. `"2026.12-1"`). With the default `replay: "every-cold-start"` the new file plays on the next
+   app start anyway; with `"once-per-version"` the bump is what makes devices that saw the old intro play the new
+   one once.
 4. `npm run typecheck && npm run lint && npm test && npm run build`, then check on a TV/emulator and a phone.
 
 Brand images used by the still and the phone animation come only from `src/lib/brand.ts` (`BRAND.mascot`,

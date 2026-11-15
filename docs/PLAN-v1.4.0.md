@@ -29,6 +29,8 @@ Baseline: `main` at f7f9dd0 (v1.3.1). On 2026-11-15, typecheck, lint, 311 unit t
 - [x] Playback registry, automatic fallback and health records (`PLAYBACK_HEALTH.md`, `SOURCES.md`)
 - [x] Recommendation engine and the redesigned Search (`RECOMMENDATIONS.md`)
 - [x] Seasons and trailer autoplay (`DETAILS.md`, `TRAILERS.md`)
-- [x] Tests for every module; full gate (typecheck, lint, unit, build, Android build)
-- [x] Independent design review ≥ 9/10 (`docs/REVIEW-v1.4.0.md`)
-- [x] Release: version 1.4.0, changelog, release notes, GitHub Release, Vercel deploy
+- [x] Tests for every module; web gate (typecheck, lint, unit, build)
+- [ ] Android build (CI `build-apk.yml`; no Android SDK in the dev sandbox) and emulator check (`emulator-check.yml`)
+- [ ] Independent design review ≥ 9/10 (`docs/REVIEW-v1.4.0.md`)
+- [x] Version 1.4.0, changelog, release notes
+- [ ] GitHub Release, Vercel production deploy and production verification

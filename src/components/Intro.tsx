@@ -158,7 +158,7 @@ export function useLaunchIntro(tv: boolean) {
   return { plan: done ? null : plan, tv: frozenTv, end };
 }
 
-/** App-level launch intro: plays once per intro version per device, then never again on rerender or navigation. */
+/** App-level launch intro: plays on a cold start per INTRO.replay (lib/intro/config.ts), never on rerender or navigation. */
 export function LaunchIntro({ tv }: { tv: boolean }) {
   const intro = useLaunchIntro(tv);
   if (!intro.plan) return null;
