@@ -3,13 +3,13 @@
 -->
 
 <div align="center">
-  <img src="public/pwa-512x512.png" width="104" alt="Panda.fun mascot" />
+  <img src="https://raw.githubusercontent.com/titan717/titan717/main/assets/panda.webp" width="144" alt="The Panda mascot from the titan717 GitHub profile" />
   <h1>Panda.fun</h1>
   <p><strong>More cinema. Less getting in the way.</strong></p>
   <p>A streaming experience for Android TV, phones, tablets and the web.</p>
 
   <p>
-    <a href="https://mypanda.vercel.app/"><strong>Open web app ↗</strong></a>
+    <a href="https://pandatv2.vercel.app/"><strong>Open web app ↗</strong></a>
     &nbsp;·&nbsp;
     <a href="https://github.com/titan717/Panda.fun/releases/download/v1.3.1/Panda.fun-Android-TV.apk"><strong>Download Android APK ↓</strong></a>
     &nbsp;·&nbsp;
@@ -25,15 +25,15 @@
 Panda.fun brings a familiar catalogue experience to the living room and the phone. On TV, everything is built around the remote. On mobile, it is made for touch. On the web, open it straight in your browser.
 
 <div align="center">
-  <img src="docs/screenshots/tv-home.jpg" width="68%" alt="Panda.fun on Android TV" />
+  <img src="src/landing/shots/tv-home.webp" width="68%" alt="Panda.fun on Android TV" />
   <br />
   <sub>THE LIVING ROOM · ANDROID TV</sub>
   <br /><br />
-  <img src="docs/screenshots/mobile-home.jpg" width="24%" alt="Panda.fun on mobile" />
+  <img src="src/landing/shots/m-home.webp" width="24%" alt="Panda.fun on mobile" />
   &nbsp;&nbsp;
-  <img src="docs/screenshots/mobile-details.jpg" width="24%" alt="Panda.fun title details on mobile" />
+  <img src="src/landing/shots/m-details.webp" width="24%" alt="Panda.fun title details on mobile" />
   &nbsp;&nbsp;
-  <img src="docs/screenshots/mobile-search.jpg" width="24%" alt="Panda.fun search on mobile" />
+  <img src="src/landing/shots/m-search.webp" width="24%" alt="Panda.fun search on mobile" />
   <br />
   <sub>ON THE GO · MOBILE</sub>
 </div>
@@ -75,9 +75,9 @@ See the full [v1.3.1 release notes](https://github.com/titan717/Panda.fun/releas
 
 Open Panda.fun in your browser—no APK required.
 
-**[Launch Panda.fun on the web ↗](https://mypanda.vercel.app/)**
+**[Launch Panda.fun on the web ↗](https://pandatv2.vercel.app/)**
 
-The web build is deployed to Vercel from `main`. The optional download and install guide is available at [the web welcome page](https://mypanda.vercel.app/welcome).
+The web build is deployed to Vercel from `main`. The optional download and install guide is available at [the web welcome page](https://pandatv2.vercel.app/welcome).
 
 ## Built for more than one device
 
@@ -157,6 +157,6 @@ Catalogue metadata and artwork are provided through TMDB. Panda.fun is not endor
 ---
 
 <div align="center">
-  <img src="public/icon.svg" width="40" alt="" />
+  <img src="https://raw.githubusercontent.com/titan717/titan717/main/assets/panda.webp" width="48" alt="Panda mascot" />
   <p><sub>Made with care by <a href="https://github.com/titan717">titan717</a>.</sub></p>
 </div>
