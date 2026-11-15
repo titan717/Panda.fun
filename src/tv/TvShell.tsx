@@ -1,7 +1,8 @@
 import "./shell.css";
 import { Suspense, useEffect, useRef, useState, type CSSProperties, type ReactNode } from "react";
 import { Link, useLocation } from "wouter";
-import { Icon, PandaMark, type IconName } from "../components/Icon";
+import { Icon, type IconName } from "../components/Icon";
+import { BrandLogo } from "../components/Brand";
 import { ExtraIcon } from "../components/ExtraIcons";
 import { Avatar } from "../components/ui";
 import { useProfile } from "../lib/store";
@@ -119,7 +120,7 @@ export function TvShell({ children }: { children: ReactNode }) {
         onMouseLeave={() => { if (!nav.current?.contains(document.activeElement)) setOpen(false); }}>
         <div className="rail-panel" aria-hidden="true" />
         <div className="rail-top">
-          <PandaMark size="100%" className="rail-mark" />
+          <BrandLogo variant="mark" className="rail-mark" alt="Panda.fun" priority />
           <Link href="/settings/updates" id="rail-update" className={`rail-update ${updateReady ? "has-update" : ""}`} data-hover-focus aria-label={updateReady ? "Update available. Check for Updates" : "Check for Updates"}>UPDATE</Link>
         </div>
         <div className="rail-list">{LIST.map(row)}</div>

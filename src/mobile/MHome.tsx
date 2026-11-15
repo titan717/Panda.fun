@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from "react";
 import { Link } from "wouter";
-import { Icon, PandaMark, Wordmark } from "../components/Icon";
+import { Icon } from "../components/Icon";
+import { BrandLogo } from "../components/Brand";
 import { ErrorState, Img, Skeleton, TitleArt, toast } from "../components/ui";
 import { useHomeRows, type HomeRow } from "../lib/rows";
 import { actions, useInWatchlist, usePrefs } from "../lib/store";
@@ -145,12 +146,12 @@ export function MHome({ kind }: { kind: PageKind }) {
     <div className="m-page m-home">
       {kind === "home" && (
         <div className={`m-brand-pills ${scrolled ? "is-hidden" : ""}`}>
-          <Link href="/" className="m-brand-pill" aria-label="Panda home"><PandaMark size={22} /><Wordmark /></Link>
+          <Link href="/" className="m-brand-pill" aria-label="Panda.fun home"><BrandLogo variant="mark" width={30} height={30} alt="" priority /><BrandLogo variant="wordmark" height={17} alt="" priority /></Link>
           <Link href="/new" className="m-hot-pill"><Icon name="flame" filled /> NEW & HOT</Link>
         </div>
       )}
       <header className={`m-head ${scrolled || kind !== "home" ? "is-solid" : ""}`}>
-        {scrolled || kind !== "home" ? <span className="m-head-left"><PandaMark size={26} />{kind !== "home" && <span className="m-head-title">{label}</span>}</span> : <h1 className="m-head-title">{label}</h1>}
+        {scrolled || kind !== "home" ? <span className="m-head-left"><BrandLogo variant="mark" width={28} height={28} alt="Panda.fun" />{kind !== "home" && <span className="m-head-title">{label}</span>}</span> : <h1 className="m-head-title">{label}</h1>}
         <Link href="/settings/updates" className="m-whats-new">WHAT'S NEW</Link>
       </header>
       {page.error && !page.data && <ErrorState message={page.error.message} onRetry={() => page.mutate()} />}

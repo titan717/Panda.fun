@@ -1,5 +1,6 @@
 import { Component, useEffect, useRef, useState, useSyncExternalStore, type CSSProperties, type ReactNode } from "react";
-import { Icon, PandaMark } from "./Icon";
+import { Icon } from "./Icon";
+import { BrandLogo, Mascot } from "./Brand";
 import { sizedImage } from "../lib/imageTier";
 import type { AvatarKind } from "../lib/store";
 
@@ -56,7 +57,7 @@ export function Spinner({ label }: { label?: string }) {
 export function ErrorState({ message, onRetry, compact }: { message?: string; onRetry?: () => void; compact?: boolean }) {
   return (
     <div className={`state ${compact ? "state--compact" : ""}`} role="alert">
-      <Icon name="info" size={compact ? 28 : 44} />
+      {compact ? <Icon name="info" size={28} /> : <Mascot pose="peek" width={96} className="state-mascot" />}
       <p className="state-title">Something went wrong</p>
       {message && <p className="state-sub">{message}</p>}
       {onRetry && <button className="btn btn--secondary" data-autofocus onClick={onRetry}><Icon name="refresh" /> Retry</button>}
@@ -64,10 +65,10 @@ export function ErrorState({ message, onRetry, compact }: { message?: string; on
   );
 }
 
-export function EmptyState({ icon = "sparkle", title, sub, action }: { icon?: Parameters<typeof Icon>[0]["name"]; title: string; sub?: string; action?: ReactNode }) {
+export function EmptyState({ icon = "sparkle", title, sub, action, mascot }: { icon?: Parameters<typeof Icon>[0]["name"]; title: string; sub?: string; action?: ReactNode; mascot?: boolean }) {
   return (
     <div className="state">
-      <Icon name={icon} size={44} />
+      {mascot ? <Mascot pose="peek" width={112} className="state-mascot" /> : <Icon name={icon} size={44} />}
       <p className="state-title">{title}</p>
       {sub && <p className="state-sub">{sub}</p>}
       {action}
@@ -84,7 +85,7 @@ export function Avatar({ kind, name, size, className }: { kind: AvatarKind; name
       {kind === "smile" && (
         <svg viewBox="0 0 40 40" aria-hidden="true"><circle cx="14" cy="16" r="2.6" fill="#fff" /><circle cx="26" cy="16" r="2.6" fill="#fff" /><path d="M12 24c4.5 5 11.5 5 16 0" stroke="#fff" strokeWidth="2.8" fill="none" strokeLinecap="round" /></svg>
       )}
-      {kind === "panda" && <PandaMark size="62%" />}
+      {kind === "panda" && <BrandLogo variant="mark" width="62%" height="62%" alt="" className="avatar-mark" />}
       {kind === "star" && <Icon name="star" size="50%" />}
       {kind === "wave" && (
         <svg viewBox="0 0 40 40" aria-hidden="true"><path d="M8 22c4-6 8-6 12 0s8 6 12 0" stroke="#fff" strokeWidth="3" fill="none" strokeLinecap="round" /><circle cx="15" cy="14" r="2.4" fill="#fff" /><circle cx="25" cy="14" r="2.4" fill="#fff" /></svg>

@@ -67,25 +67,3 @@ export function Icon({ name, size, className, filled, style, strokeWidth = 2 }: 
     </svg>
   );
 }
-
-/** The Panda mark: a white panda face, own artwork replacing the blueprint's star mark (DECISIONS D-001). */
-export function PandaMark({ size = 32, className }: { size?: number | string; className?: string }) {
-  return (
-    <svg className={`panda-mark ${className ?? ""}`} viewBox="0 0 64 64" width={size} height={size} role="img" aria-label="Panda">
-      <circle cx="16" cy="15" r="10" fill="#171820" stroke="#f7f5ff" strokeWidth="2.5" />
-      <circle cx="48" cy="15" r="10" fill="#171820" stroke="#f7f5ff" strokeWidth="2.5" />
-      <rect x="11" y="12" width="42" height="42" rx="20" fill="#f7f5ff" />
-      <ellipse cx="22" cy="30" rx="8" ry="11" transform="rotate(28 22 30)" fill="#171820" />
-      <ellipse cx="42" cy="30" rx="8" ry="11" transform="rotate(-28 42 30)" fill="#171820" />
-      <circle cx="24" cy="29" r="2.4" fill="#f7f5ff" />
-      <circle cx="40" cy="29" r="2.4" fill="#f7f5ff" />
-      <path d="M29 39c1.8-2.2 4.2-2.2 6 0-1 3.4-5 4.1-6 0Z" fill="#171820" />
-      <circle cx="18" cy="40" r="3" fill="#d9ccff" />
-      <circle cx="46" cy="40" r="3" fill="#d9ccff" />
-    </svg>
-  );
-}
-
-export function Wordmark({ className }: { className?: string }) {
-  return <span className={`wordmark ${className ?? ""}`}>Panda</span>;
-}

@@ -32,4 +32,16 @@ export const BRAND = {
   ogImage: at("brand/og-image.png")
 } as const;
 
+/** Intrinsic pixel sizes of the files above (scripts/brand/build.py). Used for width/height attributes so images never shift layout. */
+export const BRAND_SIZE = {
+  mascot: [785, 800],
+  mascotWave: [779, 800],
+  mascotPeek: [640, 609],
+  mark: [256, 256],
+  logoHorizontal: [1200, 377],
+  logoVertical: [796, 800],
+  wordmark: [1000, 177],
+  ogImage: [1200, 630]
+} as const satisfies Record<string, readonly [number, number]>;
+
 export type BrandAsset = Exclude<keyof typeof BRAND, "name" | "shortName" | "tagline" | "colors">;

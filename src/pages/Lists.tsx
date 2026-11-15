@@ -201,7 +201,7 @@ export function NotFoundPage() {
   const ref = useAutoFocus(true);
   return (
     <div ref={ref} className="page-center">
-      <EmptyState icon="info" title="Page not found" sub="The link may be broken or the page may have moved." action={<button className="btn btn--primary" data-autofocus onClick={() => go("/", { replace: true })}>Go to Home</button>} />
+      <EmptyState mascot title="Page not found" sub="The link may be broken or the page may have moved." action={<button className="btn btn--primary" data-autofocus onClick={() => go("/", { replace: true })}>Go to Home</button>} />
     </div>
   );
 }

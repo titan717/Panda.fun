@@ -51,7 +51,7 @@
   --focus-glow: 0 0 0 1px rgba(8, 12, 20, 0.6), 0 12px 30px rgba(0, 0, 0, 0.5), 0 0 18px rgba(226, 232, 242, 0.2);
 
   /* 1.6 / 1.7 / 1.8 buttons */
-  --brand-gradient: linear-gradient(90deg, #1b5fd6 0%, #2f6fe0 45%, #7a3fd0 78%, #d2337e 100%);
+  --brand-gradient: linear-gradient(90deg, #4d1cff 0%, #6f22ff 40%, #8b2cff 70%, #d42cff 100%);
   --m-cta-bg: #f4f9ff;
   --m-cta-fg: #0f1014;
   --m-glass: rgba(255, 255, 255, 0.1);
@@ -60,12 +60,12 @@
   --badge-gradient: linear-gradient(90deg, #c2187a, #7b2ff7);
   --top10-tag: linear-gradient(180deg, #ff3d8b, #c2187a);
   --hot-pill: linear-gradient(90deg, #ff1f3d 0%, #ff5a1f 60%, #ffb21f 100%);
-  --brand-pill-bg: #0b1640;
-  --brand-pill-border: #3b6cff;
+  --brand-pill-bg: #0a0710;
+  --brand-pill-border: rgba(139, 44, 255, 0.55);
   --arc-gradient: linear-gradient(90deg, transparent 0%, #2b6bff 30%, #8c4bff 60%, #ff3d8b 85%, transparent 100%);
   --kids-gradient: linear-gradient(135deg, #ff5fa2 0%, #b04bff 55%, #5b7cff 100%);
   --avatar-gradient: radial-gradient(circle at 35% 30%, #7cc4ff 0%, #2e7bff 55%, #1747c9 100%);
-  --splash-gradient: linear-gradient(160deg, #0b2a6b 0%, #13306e 48%, #3a1d5a 72%, #7a1430 100%);
+  --splash-gradient: radial-gradient(ellipse at 50% 42%, #1f0a3a 0%, #07020d 55%, #000 100%);
 
   /* 1.9 radii */
   --r-poster-m: 6px;

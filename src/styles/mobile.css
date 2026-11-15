@@ -13,7 +13,7 @@ html[data-mode="mobile"] body { background: var(--m-bg); }
 .m-nav-item > span:last-child { opacity: 0; height: 13px; transition: opacity var(--dur-focus); }
 .m-nav-item.is-active { color: var(--text-1); }
 .m-nav-item.is-active > span:last-child { opacity: 1; }
-.m-nav-item.is-active > svg, .m-nav-item.is-active > .avatar { filter: drop-shadow(0 0 8px rgba(120, 170, 255, 0.85)); }
+.m-nav-item.is-active > svg, .m-nav-item.is-active > .avatar, .m-nav-item.is-active > .m-nav-mark { filter: drop-shadow(0 0 8px rgba(120, 170, 255, 0.85)); }
 .m-nav-avatar { width: 26px !important; height: 26px !important; }
 .m-nav-avatar svg { width: 80%; height: 80%; }
 
@@ -31,8 +31,7 @@ html[data-mode="mobile"] body { background: var(--m-bg); }
 .m-brand-pills { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; padding: 12px var(--m-gutter) 4px; transition: opacity var(--dur-focus), transform var(--dur-focus); }
 .m-brand-pills.is-hidden { opacity: 0; transform: translateY(-8px); pointer-events: none; }
 .m-brand-pill, .m-hot-pill { display: flex; align-items: center; justify-content: center; gap: 8px; height: var(--m-pill-h); border-radius: var(--r-pill-m); }
-.m-brand-pill { background: var(--brand-pill-bg); border: 2px solid var(--brand-pill-border); box-shadow: 0 0 14px rgba(59, 108, 255, 0.35) inset; }
-.m-brand-pill .wordmark { font-size: 19px; }
+.m-brand-pill { background: var(--brand-pill-bg); border: 1.5px solid var(--brand-pill-border); box-shadow: 0 0 14px rgba(139, 44, 255, 0.22) inset; }
 .m-hot-pill { background: var(--hot-pill); font-weight: var(--fw-heavy); font-style: italic; font-size: 18px; letter-spacing: 0.02em; }
 .m-hot-pill .icon { width: 18px; height: 18px; }
 .m-head { position: sticky; top: 0; z-index: calc(var(--z-rail) - 1); display: flex; align-items: center; justify-content: space-between; min-height: 48px; padding: calc(6px + env(safe-area-inset-top) * 0) var(--m-gutter); transition: background var(--dur-focus); }
@@ -285,7 +284,6 @@ html[data-mode="mobile"] .set-panel, html[data-mode="mobile"] .upd-card, html[da
 /* small phones */
 @media (max-width: 370px) {
   .m-hot-pill { font-size: 16px; }
-  .m-brand-pill .wordmark { font-size: 17px; }
   .m-float-pill > a, .m-float-pill > button { padding: 0 10px; }
 }
 /* landscape phones: hero shorter */
