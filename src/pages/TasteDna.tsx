@@ -69,8 +69,14 @@ export function TasteDnaPage() {
   const [confirm, setConfirm] = useState(false);
   const groups = useMemo(() => (s ? tasteGroups(s) : []), [s, s?.updatedAt, s?.n, JSON.stringify(s?.overrides ?? {})]); // eslint-disable-line react-hooks/exhaustive-deps
   const memory = useMemo(() => (s ? memoryEntries(s) : []), [s, s?.log.length, s?.updatedAt]); // eslint-disable-line react-hooks/exhaustive-deps
-  const ready = Boolean(s);
-  useEffect(() => { if (tv && root.current) focusFirst(root.current); }, [tv, ready]);
+  // TV: start on the first learned item once it is there (the model loads from IndexedDB, then trains in idle time)
+  const hasItems = groups.length > 0;
+  useEffect(() => {
+    const el = root.current;
+    if (!tv || !el) return;
+    const a = document.activeElement as HTMLElement | null;
+    if (!a || !el.contains(a) || (hasItems && !a.classList.contains("taste-btn") && !a.closest(".taste-memory"))) focusFirst(el);
+  }, [tv, hasItems]);
   useEffect(() => { if (!confirm) return; const t = setTimeout(() => setConfirm(false), 6000); return () => clearTimeout(t); }, [confirm]);
 
   const status = intelStatus();

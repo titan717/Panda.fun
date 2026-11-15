@@ -2,6 +2,17 @@
 
 Every stable release of Panda.fun. The same notes ship in each GitHub Release and in Settings › What's New.
 
+## 1.5.0
+
+- **Panda Intelligence, on your device**: each profile now has its own small recommendation model that learns from what you finish, binge, rate, save and skip, and re-ranks Panda Top Picks and the other personal rows. It is trained and stored only on this device (per profile), is never uploaded, and starts out exactly like 1.4.0 until it has something to learn from. Pausing, a quick try, an accidental exit or a title that would not play never count against a title.
+- **A Home that keeps going**: after the usual rows, Home, Movies and Shows keep adding rails as you scroll, picked from 89 categories (genres, languages, acclaimed, new releases, moods and hidden gems) and ordered for the profile. Rails never repeat a title shown higher up and never appear half-empty, and Panda learns which kinds of rails you open. On TV, focus stays on your card while new rails load.
+- **Moods and Surprise me**: Search opens with "In the mood for…" (Feel-good, Scary, Mind-bending, Date night and more), listing the ones that suit the time of day first, and recognises a mood when you type one ("something scary"). Surprise me opens a well-rated title Panda thinks you will like and that you have not opened yet.
+- **Hidden Gems rails**: well-rated titles beyond the obvious hits, including Malayalam, Korean and Hindi picks.
+- **Taste DNA and Entertainment Memory**: Settings › Profiles & Account › Taste DNA shows the genres, languages, people, franchises and eras Panda learned for the profile, lets you ask for More or Less of each, forget single titles, or reset what it learned.
+- **Smarter Continue Watching**: new episodes, the next episode of a show and movies past the halfway point come first; something you only tried weeks ago moves down (it is never removed).
+
+The model's quality was measured only on synthetic test profiles (docs/RECOMMENDATIONS.md); real-world accuracy has not been measured. Testing for this release was done with unit tests, and end-to-end tests in desktop Chromium in the TV (1920 × 1080) and phone layouts with remote-key simulation. It was not checked on a physical Android TV or phone.
+
 ## 1.4.1
 
 - **The TV keyboard opens from Search**: pressing OK on the Search field in the TV layout now opens the Android TV keyboard (Gboard) reliably. Before, the field changed to a text field a moment after the key press and the app asked for the keyboard too early, so on many TVs nothing appeared (the phone layout on the same TV was not affected). The field now switches inside the OK press itself, the app asks again until the keyboard is really on screen, and pressing Search on the keyboard runs the search and closes it.
