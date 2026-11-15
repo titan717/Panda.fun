@@ -7,7 +7,7 @@ import { ListCard, NewListCard } from "../components/ListCard";
 import { NewListSheet, QuickActions, type ActionContext } from "../components/QuickActions";
 import type { PandaItem } from "../lib/types";
 import { actions, continueWatching, MAX_LISTS, useAlertsSeenAt, useHistoryMap, useLists, useProfile, useStore, useWatchlist } from "../lib/store";
-import { focusFirst } from "../lib/focus";
+import { focusFirst, recallFocus, useFocusMemory } from "../lib/focus";
 import { useNav } from "../lib/nav";
 import { installedVersion } from "../lib/updates";
 import { TvContinue, TvPoster } from "./TvCards";
@@ -36,7 +36,8 @@ export function TvMySpace({ initialTab = "watchlist" }: { initialTab?: Tab }) {
   useEffect(() => { setMode(null); }, [tab]);
   const { go } = useNav();
   const root = useRef<HTMLDivElement>(null);
-  useEffect(() => { if (root.current) focusFirst(root.current); }, []);
+  useEffect(() => { if (root.current && !recallFocus(root.current)) focusFirst(root.current); }, []);
+  useFocusMemory(root);
 
   return (
     <div ref={root} className="tv-page tv-myspace" data-scroll-y="row" data-scroll-offset="0.12">

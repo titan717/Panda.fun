@@ -7,11 +7,12 @@ import { isUpcoming, titlePath, watchPath } from "../lib/format";
 import { continueHref } from "../tv/TvCards";
 import { useNav } from "../lib/nav";
 import type { PandaItem } from "../lib/types";
+import { getFeedback, recordFeedback, undoFeedback, type FeedbackKind } from "../lib/reco/feedback";
 
 export const LIST_SUGGESTIONS = ["Weekend", "Date Night", "Family Time", "Rewatch", "Must See"];
 
 /** Where the sheet was opened from, so it can offer "Move to top" / "Remove from …" for that list. */
-export type ActionContext = { kind: "watchlist" } | { kind: "list"; listId: string } | { kind: "continue"; entry: HistoryEntry } | null;
+export type ActionContext = { kind: "watchlist" } | { kind: "list"; listId: string } | { kind: "continue"; entry: HistoryEntry } | { kind: "reco" } | null;
 
 /**
  * Quick actions for one title (Watchlist 2.0): play, details, Watchlist and every custom list as
@@ -26,6 +27,9 @@ export function QuickActions({ item, context = null, onClose }: { item: PandaIte
   const resume = entry && !entry.completed && (entry.position > 30 || entry.upNext) ? entry : null;
   const upcoming = isUpcoming(item);
   const contextList = context?.kind === "list" ? lists.find((l) => l.id === context.listId) ?? null : null;
+  const profileId = useStore((s) => s.activeProfileId);
+  const feedback = (kind: FeedbackKind) => recordFeedback(profileId, { id: item.id, type: item.type, kind, genres: item.genres, title: item.title });
+  const undoable = context?.kind === "reco" && getFeedback(profileId).some((e) => e.id === item.id && e.kind !== "open" && e.kind !== "play");
 
   if (naming) return <NewListSheet first={item} onClose={() => setNaming(false)} onDone={onClose} />;
 
@@ -46,7 +50,15 @@ export function QuickActions({ item, context = null, onClose }: { item: PandaIte
       ))}
       {lists.length < MAX_LISTS && <SheetItem icon={<Icon name="plus" />} label="New list…" onClick={() => setNaming(true)} />}
       <p className="sheet-group">More</p>
-      {!upcoming && <SheetItem icon={<Icon name="check" />} label="Mark as watched" onClick={() => { actions.markWatched(item); toast(`Marked ${item.title} as watched`); onClose(); }} />}
+      {!upcoming && <SheetItem icon={<Icon name="check" />} label={context?.kind === "reco" ? "Already watched" : "Mark as watched"} onClick={() => { actions.markWatched(item); if (context?.kind === "reco") feedback("watched"); toast(`Marked ${item.title} as watched`); onClose(); }} />}
+      {context?.kind === "reco" && (
+        <>
+          <SheetItem icon={<Icon name="thumbUp" />} label="More like this" onClick={() => { feedback("more"); toast(`Panda will show more like ${item.title}`); onClose(); }} />
+          <SheetItem icon={<Icon name="thumbDown" />} label="Not interested" onClick={() => { feedback("not-interested"); toast("Got it. Panda will show fewer like this", 2600); onClose(); }} />
+          <SheetItem icon={<Icon name="close" />} label="Hide from recommendations" onClick={() => { feedback("hide"); toast(`${item.title} won't be recommended`, 2600); onClose(); }} />
+          {undoable && <SheetItem icon={<Icon name="back" />} label="Undo my last choice for this title" onClick={() => { undoFeedback(profileId, item.id); toast("Undone"); onClose(); }} />}
+        </>
+      )}
       {contextList && (
         <SheetItem icon={<Icon name="trash" />} label={`Remove from ${contextList.name}`} danger onClick={() => { actions.toggleInList(contextList.id, item); toast(`Removed from ${contextList.name}`); onClose(); }} />
       )}

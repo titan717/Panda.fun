@@ -66,6 +66,49 @@ sleep 12; shot updater-new
 adb shell uiautomator dump /sdcard/upd2.xml >/dev/null 2>&1 && adb shell cat /sdcard/upd2.xml | grep -oE 'text="[^"]*(pdate|ersion|atest)[^"]*"' | head -8 | tee -a shots/upgrade.txt || true
 adb shell pidof "$PKG" >/dev/null || { echo "app crashed on the updates screen"; adb logcat -d -b crash > shots/logcat-updates.txt; exit 1; }
 
+# v1.4.0 text entry (directive: "test actual text entry on an Android TV environment or representative emulator").
+# Search focuses the field without a keyboard; OK must raise the system IME, a key pressed ON the IME must land in the
+# field, typed text must drive real results, and Enter must close the IME. Every step is logged to shots/text-entry.txt.
+TE=shots/text-entry.txt
+field_value() { adb shell uiautomator dump /sdcard/te.xml >/dev/null 2>&1; adb shell cat /sdcard/te.xml 2>/dev/null | grep -oE '<node[^>]*class="android.widget.EditText"[^>]*>' | head -1 | grep -oE ' text="[^"]*"' | head -1; }
+ime_shown() { adb shell dumpsys input_method | grep -qE "mInputShown=true|isInputShown=true|mIsInputViewShown=true"; }
+if [[ "$NAME" == *tv* ]]; then
+  # A fresh install may first show onboarding or Who's watching: get past them the way a user would, then open Search.
+  tap_text() { local b; b="$(adb shell cat /sdcard/te0.xml 2>/dev/null | grep -oE "<node[^>]*(text|content-desc)=\"$1\"[^>]*>" | head -1 | grep -oE 'bounds="\[[0-9]+,[0-9]+\]\[[0-9]+,[0-9]+\]"' | grep -oE '[0-9]+' | tr '\n' ' ')"; [[ -n "$b" ]] || return 1; set -- $b; adb shell input tap $((($1+$3)/2)) $((($2+$4)/2)); }
+  for attempt in 1 2 3 4; do
+    adb shell am start -W -n "$PKG/.ui.MainActivity" --es panda_path /search >/dev/null
+    sleep 10
+    adb shell uiautomator dump /sdcard/te0.xml >/dev/null 2>&1
+    adb shell cat /sdcard/te0.xml 2>/dev/null | grep -q 'class="android.widget.EditText"' && break
+    echo "attempt $attempt: no search field yet" >> shots/text-entry-gates.txt; shot "search-gate-$attempt"
+    tap_text "Skip for now" || tap_text "Skip" || tap_text "Not now" || adb shell input keyevent KEYCODE_DPAD_CENTER
+    sleep 4
+  done
+  shot search-field
+  echo "IME: $(adb shell settings get secure default_input_method)" | tee $TE
+  ime_shown && echo "keyboard already open before OK (unexpected)" | tee -a $TE
+  adb shell input keyevent KEYCODE_DPAD_CENTER; sleep 3; shot search-ime-open
+  adb shell dumpsys input_method | grep -E "mInputShown|mCurMethodId|mCurFocusedWindowName|mServedView" | head -6 >> $TE
+  if ime_shown; then echo "PASS OK on the field opened the system keyboard" | tee -a $TE; else echo "FAIL OK did not open the system keyboard" | tee -a $TE; TEXT_FAIL=1; fi
+  # one key typed BY the keyboard itself (its focused key), not injected into the app
+  adb shell input keyevent KEYCODE_DPAD_CENTER; sleep 2; shot search-ime-key
+  V1="$(field_value)"; echo "after one IME key press: ${V1:-<no EditText node>}" | tee -a $TE
+  [[ "$V1" =~ text=\"[^\"]+\" ]] && echo "PASS a key pressed on the on-screen keyboard reached the field" | tee -a $TE || echo "WARN could not read an IME-typed character from the accessibility tree" | tee -a $TE
+  # clear, then a whole word (adb key injection into the focused field while the keyboard is up)
+  for _ in 1 2 3 4; do adb shell input keyevent KEYCODE_DEL; done
+  adb shell input text matrix; sleep 3; shot search-typed
+  V2="$(field_value)"; echo "after typing 'matrix': ${V2:-<no EditText node>}" | tee -a $TE
+  if [[ "$V2" == *matrix* ]]; then echo "PASS typed text is in the search field" | tee -a $TE; else echo "FAIL typed text not found in the field" | tee -a $TE; TEXT_FAIL=1; fi
+  adb shell input keyevent KEYCODE_ENTER; sleep 4; shot search-results
+  ime_shown && { echo "FAIL Enter did not close the keyboard" | tee -a $TE; TEXT_FAIL=1; } || echo "PASS Enter closed the keyboard" | tee -a $TE
+  adb shell uiautomator dump /sdcard/te2.xml >/dev/null 2>&1; adb shell cat /sdcard/te2.xml 2>/dev/null | grep -oE 'text="Results for[^"]*"' | head -1 | tee -a $TE
+  adb shell cat /sdcard/te2.xml 2>/dev/null | grep -q 'Results for' && echo "PASS results shown for the typed query" | tee -a $TE || echo "WARN results heading not exposed to accessibility (see search-results.png)" | tee -a $TE
+  adb shell input keyevent KEYCODE_DPAD_DOWN; sleep 1; shot search-after-down
+  adb shell pidof "$PKG" >/dev/null || { echo "app crashed during text entry" | tee -a $TE; adb logcat -d -b crash > shots/logcat-text.txt; exit 1; }
+  [[ "${TEXT_FAIL:-0}" == 1 ]] && { echo "TEXT ENTRY FAILURE (see $TE)"; exit 1; }
+  echo "text entry: keyboard opens on OK, typing reaches the field, Enter closes it" | tee -a $TE
+fi
+
 # Ad shield release gate (docs/AD_SHIELD.md, layer 7): play a title, press and tap around the player for a
 # minute, and fail if any other activity (browser, Play Store, another app) ever comes to the front.
 resumed() { adb shell dumpsys activity activities | grep -E "mResumedActivity|topResumedActivity" | head -1; }

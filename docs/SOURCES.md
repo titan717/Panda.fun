@@ -1,5 +1,7 @@
 # Playback sources
 
+> **v1.4.0 policy.** There is no source picker anywhere. TV uses CineSrc only. Mobile uses Vidy, then CineSrc (VidLink removed). The desktop browser keeps CineSrc and Vidy, ordered by the ranking below, with VidLink only as a last resort. Fallback, success detection and failure records are described in [PLAYBACK_HEALTH.md](PLAYBACK_HEALTH.md). The tier labels below are still measured, but they are no longer shown in the player or Settings.
+
 Panda uses only documented, publicly offered embed players. It never extracts, downloads or proxies streams. Order of use: ad tier first, then the community ranking inside a tier (D-136).
 
 ## Tiers
@@ -31,5 +33,5 @@ Notes, honestly: Vidy's anime streams carry a burned-in "YIFY-TORRENTS" text in 
 ## In the app
 
 - `src/lib/shield.ts` `rankSources`: tier first (effective tier: unshielded tier ≥ 3 → 4), then community score; `lastResortOnly` keeps tier 4 out of automatic picks.
-- Settings › Playback › Community ranking lists every source with its tier badge and measured popups/ad requests; the TV player's source panel and the phone source pills show the tier label.
+- Settings › Playback health shows the providers used on this device. The ranking list is shown only in the desktop browser, the only platform where ranking changes the order. (v1.3's TV source panel and phone source pills were removed in v1.4.0.)
 - VidLink parameters: `autoplay`, `title=false`, `poster`, theme colours, `startAt` (resume), `sub_file`/`sub_label` (Panda's cleaned subtitle, HTTPS only) — from the [VidLink documentation](https://vidlink.pro).

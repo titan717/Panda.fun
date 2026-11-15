@@ -18,8 +18,8 @@ import { useOnline } from "./lib/hooks";
 import { takeUpdateNotice } from "./lib/updates";
 import { ErrorBoundary, OfflineBanner, Toasts, toast } from "./components/ui";
 import { lazyNamed, whenIdle } from "./lib/lazy";
-import { useWhoPending, whoPending } from "./lib/launch";
-import { Intro, IntroBoundary, useIntro } from "./components/Intro";
+import { LaunchIntro } from "./components/Intro";
+import { needsOnboarding, useNeedsOnboarding } from "./lib/tasteProfile";
 import type { MediaType, PageKind } from "./lib/types";
 
 const loadTv = () => import("./tv");
@@ -37,11 +37,17 @@ const loadLists = () => import("./pages/Lists");
 const loadProfileEditor = () => import("./pages/ProfileEditor");
 
 const lz = lazyNamed;
-// v1.3.0 (D-180): Who's watching is a lazy chunk. A fresh start fetches it at once, so it is ready long before the
-// launch intro hands off; the intro covers the download, and the entry stays within its budget.
+// v1.3.0 (D-180): Who's watching is a lazy chunk, fetched at once when there is no saved profile to restore, so it is
+// ready long before the launch intro hands off. v1.4.0: onboarding is its own chunk too, fetched only when due.
 const loadProfiles = () => import("./pages/Profiles");
 const ProfileSelect = lazyNamed(loadProfiles, "ProfileSelect");
-if (typeof window !== "undefined" && (whoPending() || !getState().activeProfileId)) void loadProfiles().catch(() => undefined);
+const loadOnboarding = () => import("./onboarding");
+const Onboarding = lazyNamed(loadOnboarding, "Onboarding");
+if (typeof window !== "undefined") {
+  const active = getState().activeProfileId;
+  if (needsOnboarding(active)) void loadOnboarding().catch(() => undefined);
+  else if (!active) void loadProfiles().catch(() => undefined);
+}
 const WhoLoading = () => <div className="profiles-loading" aria-hidden="true" />;
 const TvShell = lz(loadTv, "TvShell");
 const TvHome = lz(loadTv, "TvHome");
@@ -230,11 +236,14 @@ function Routes({ mode }: { mode: LayoutMode }) {
   useEffect(() => { if (profile && launch.current) { const p = launch.current; launch.current = null; navigate(p); } }, [profile, navigate]);
 
   const [notice, setNotice] = useState<string | null>(takeUpdateNotice);
-  const askWho = useWhoPending();
-  const hasProfiles = useStore((s) => s.profiles.length > 0);
-  const needsProfile = (!profile || (askWho && hasProfiles)) && !PUBLIC_PATHS.includes(location) && !location.startsWith("/profiles");
-  // v1.2.9: a fresh start asks "Who's watching?" first and then opens the screen it was started on
-  if (needsProfile) return <Suspense fallback={<WhoLoading />}><ProfileSelect stay={Boolean(profile)} /></Suspense>;
+  const onboard = useNeedsOnboarding();
+  const open = !PUBLIC_PATHS.includes(location) && !location.startsWith("/profiles");
+  // v1.4.0: first run (or a new profile) gets mascot-led onboarding, which includes Who's watching
+  if (onboard && open && !location.startsWith("/watch/")) return <Suspense fallback={<WhoLoading />}><Onboarding /></Suspense>;
+  if (location === "/personalize" && profile) return <Suspense fallback={<WhoLoading />}><Onboarding revisit /></Suspense>;
+  // v1.4.0: the last profile is restored on a cold start; Who's watching asks only when there is no valid one
+  // (first run, deleted profile, corrupted state) or after Switch profile, and then opens the screen it started on
+  if (!profile && open) return <Suspense fallback={<WhoLoading />}><ProfileSelect stay /></Suspense>;
 
   if (location.startsWith("/watch/")) {
     return (
@@ -297,7 +306,6 @@ function Routes({ mode }: { mode: LayoutMode }) {
 export function App() {
   const mode = useLayoutMode();
   useDisplayPrefs(mode);
-  const intro = useIntro(mode === "tv");
   useReleaseNotifications();
   useEpisodeAlerts();
   const routerProps = BUILD_TARGET === "android" ? { hook: useHashLocation } : {};
@@ -310,7 +318,7 @@ export function App() {
           </Router>
           <Toasts />
           <ReconnectRecovery />
-          {intro.phase !== "done" && <IntroBoundary onError={intro.end}><Intro tv={intro.tv} phase={intro.phase} reduce={intro.reduce} beats={intro.beats} /></IntroBoundary>}
+          <LaunchIntro tv={mode === "tv"} />
         </div>
       </LayoutContext.Provider>
     </SWRConfig>

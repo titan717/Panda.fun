@@ -40,7 +40,7 @@ test("background trailers are sandboxed, hidden until playing and open nothing",
   await page.route("https://api.github.com/**", (r) => r.fulfill({ contentType: "application/json", body: JSON.stringify({ tag_name: "v0.0.1", assets: [] }) }));
   await page.route("https://www.youtube.com/iframe_api", (r) => r.fulfill({ contentType: "text/javascript", body: FAKE_API }));
   await page.route(/^https:\/\/www\.youtube-nocookie\.com\/embed\//, (r) => r.fulfill({ contentType: "text/html", body: FAKE_EMBED }));
-  await page.addInitScript((s) => { localStorage.setItem("panda:v1:state", s); sessionStorage.setItem("panda:splash", "1"); }, STATE);
+  await page.addInitScript((s) => { localStorage.setItem("panda:v1:state", s); sessionStorage.setItem("panda:v1:intro-session", "e2e"); }, STATE);
   await page.goto("/title/movie/550?layout=tv", { waitUntil: "domcontentloaded" });
 
   const frame = page.locator(".trailer iframe").first();
@@ -90,7 +90,7 @@ test("TV focus trailer starts after 5 s of focus and shows 2 s after it plays", 
   await fakeYouTube(page);
   // default profile prefs: trailer delay 5 s
   const state = JSON.stringify({ profiles: [{ id: "p1", name: "You", avatar: "smile", kids: false, createdAt: 1 }], activeProfileId: "p1", prefs: { trailerAutoplay: true, trailerSound: false }, data: {} });
-  await page.addInitScript((s) => { localStorage.setItem("panda:v1:state", s); sessionStorage.setItem("panda:splash", "1"); }, state);
+  await page.addInitScript((s) => { localStorage.setItem("panda:v1:state", s); sessionStorage.setItem("panda:v1:intro-session", "e2e"); }, state);
   await page.goto("/title/movie/550?layout=tv", { waitUntil: "domcontentloaded" });
   const t0 = await page.evaluate(() => performance.now());
   const box = page.locator(".trailer").first();
@@ -104,7 +104,7 @@ test("full-screen trailer viewer opens, plays and closes with Back", async ({ pa
   test.setTimeout(90_000);
   await fakeYouTube(page);
   const state = JSON.stringify({ profiles: [{ id: "p1", name: "You", avatar: "smile", kids: false, createdAt: 1 }], activeProfileId: "p1", prefs: { trailerAutoplay: false, trailerSound: false }, data: {} });
-  await page.addInitScript((s) => { localStorage.setItem("panda:v1:state", s); sessionStorage.setItem("panda:splash", "1"); }, state);
+  await page.addInitScript((s) => { localStorage.setItem("panda:v1:state", s); sessionStorage.setItem("panda:v1:intro-session", "e2e"); }, state);
   await page.goto("/title/movie/550?layout=tv", { waitUntil: "domcontentloaded" });
   const tab = page.locator("#tab-trailers");
   await expect(tab).toBeAttached({ timeout: 40_000 });

@@ -3,17 +3,17 @@
 .coll-backdrop { position: absolute; inset: 0; width: 100% !important; height: 100% !important; object-fit: cover; object-position: 50% 20%; }
 .coll-scrim { position: absolute; inset: 0; background: linear-gradient(90deg, rgba(0, 0, 0, 0.92) 0%, rgba(0, 0, 0, 0.7) 38%, rgba(0, 0, 0, 0.1) 75%), linear-gradient(0deg, #000 0%, rgba(0, 0, 0, 0) 45%); }
 .coll-text { position: relative; display: flex; flex-direction: column; align-items: flex-start; }
-.coll-kicker { text-transform: uppercase; letter-spacing: 0.14em; font-weight: var(--fw-bold); color: var(--tv-ice, #8FD3FF); }
+.coll-kicker { text-transform: uppercase; letter-spacing: 0.14em; font-weight: var(--fw-bold); color: var(--tv-ice, #E2C6FF); }
 .coll-name { font-weight: var(--fw-bold); line-height: 1.08; }
 .coll-facts { color: var(--text-2); font-weight: var(--fw-medium); }
-.coll-done { color: var(--tv-ice, #8FD3FF); }
+.coll-done { color: var(--tv-ice, #E2C6FF); }
 .coll-overview { color: var(--tv-body, rgba(255, 255, 255, 0.8)); line-height: 1.5; display: -webkit-box; -webkit-line-clamp: 4; -webkit-box-orient: vertical; overflow: hidden; }
 .coll-actions { display: flex; flex-wrap: wrap; }
 .coll-btn { max-width: 100%; overflow: hidden; text-overflow: ellipsis; }
 .coll-part { display: flex; flex-direction: column; min-width: 0; }
 .coll-part-label { color: var(--text-2); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .coll-progress { display: block; background: rgba(255, 255, 255, 0.18); border-radius: 999px; overflow: hidden; }
-.coll-progress > span { display: block; height: 100%; background: var(--progress, #3BA0FF); }
+.coll-progress > span { display: block; height: 100%; background: var(--progress, var(--m-progress)); }
 .coll-hero-sk { display: block; width: 100%; }
 
 .tv-collection { padding-top: 0; }

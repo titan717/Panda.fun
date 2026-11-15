@@ -2,11 +2,12 @@ import "./settings.css";
 import "../lib/validateLazy"; // validators for this page's payloads, loaded with the page
 import { forgetIntros, SPEEDS, speedLabel, STILL_AFTER } from "../lib/player2";
 import { nativePipSupported } from "../lib/pip";
-import { useEffect, useMemo, useRef, useState, type ReactNode } from "react";
+import { useEffect, useMemo, useRef, useState, useSyncExternalStore, type ReactNode } from "react";
 import { Link, useParams } from "wouter";
 import { useSWRConfig } from "swr";
 import { clearPersistentCache } from "../lib/cache";
-import { Icon, PandaMark, type IconName } from "../components/Icon";
+import { Icon, type IconName } from "../components/Icon";
+import { BrandLogo } from "../components/Brand";
 import { PageHeader } from "../components/PageHeader";
 import { toast } from "../components/ui";
 import { CaptionPreview } from "../components/CaptionLayer";
@@ -14,17 +15,22 @@ import { SUB_BGS, SUB_COLORS, SUB_EDGES, SUB_HEIGHTS, SUB_LANGS, SUB_MODES, SUB_
 import { ParentLock, PinSetup } from "../components/PinDialog";
 import { SyncPanel } from "./SyncSettings";
 import "./sync.css";
-import { actions, usePrefs, useProfile, useReminders, type Prefs } from "../lib/store";
+import { actions, getState, usePrefs, useProfile, useReminders, type Prefs } from "../lib/store";
+import { clearTaste } from "../lib/tasteProfile";
+import { clearFeedback } from "../lib/reco/feedback";
+import { clearRecoMetrics } from "../lib/reco/metrics";
 import { useGenres, usePage, useSourceHealth, useSourceRanking } from "../lib/hooks";
 import { reliabilityLabel, reliabilityTone, tierLabel } from "../lib/sources";
+import { eligibleOrder, playbackPlatform } from "../lib/playback/registry";
+import { allHealthRecords, clearHealth, healthVersion, subscribeHealth } from "../lib/playback/health";
 import { HOME_SECTIONS, isCustomHome, moveSection, normalizeOrder, railKey, type HomeSection } from "../lib/homeLayout";
-import { focusEl, focusFirst } from "../lib/focus";
+import { focusEl, focusFirst, useBackHandler } from "../lib/focus";
 import { useNav } from "../lib/nav";
 import { useIsTv } from "../lib/layout";
 import { installedVersion } from "../lib/updates";
 import { languageName } from "../lib/format";
 import { notifyPermission, requestNotify } from "../lib/notify";
-import type { PreferredSource, SourceId } from "../lib/types";
+import type { SourceId } from "../lib/types";
 import { ttffLabel, ttffStats } from "../lib/ttff";
 import { clearShield, COMPAT, nativeShield, SANDBOX, shieldStats, syncNative } from "../lib/shield";
 
@@ -36,7 +42,7 @@ const SECTIONS: { id: SectionId; icon: IconName; title: string; sub: string }[] 
   { id: "playback", icon: "play", title: "Playback", sub: "Quality and autoplay" },
   { id: "trailers", icon: "volume", title: "Trailers", sub: "Autoplay, sound, volume and delay" },
   { id: "subtitles", icon: "captions", title: "Subtitles", sub: "Languages, size and style for this profile" },
-  { id: "sources", icon: "globe", title: "Sources", sub: "Preferred source and live status" },
+  { id: "sources", icon: "shield", title: "Playback health", sub: "Live player status and the ad shield" },
   { id: "languages", icon: "globe", title: "App Language & Content Languages", sub: "Top 10 language and content preferences" },
   { id: "parental", icon: "lock", title: "Parental Controls", sub: "PIN for leaving Kids profiles" },
   { id: "display", icon: "tv", title: "Display", sub: "Layout, screen size, text, motion and contrast" },
@@ -61,11 +67,8 @@ export const SOURCES: { id: SourceId; label: string; note: string }[] = [
   { id: "vidlink", label: "VidLink", note: "Themed in Panda's colours, resumes where you stopped. Has popups, so it is only used when the others fail" }
 ];
 
-/** v1.2.0: "Automatic" starts with the source the community ranks most reliable. */
-const SOURCE_CHOICES: { id: PreferredSource; label: string; note: string }[] = [
-  { id: "auto", label: "Automatic", note: "Start with the source that is working best for Panda viewers right now" },
-  ...SOURCES.filter((s) => s.id !== "vidyanime")
-];
+/** v1.4.0: the providers this device may use, in the order the fallback controller tries them (read-only). */
+const platformSources = () => { const p = playbackPlatform(); return SOURCES.filter((s) => eligibleOrder(p, { anime: true }).includes(s.id)); };
 
 function Row({ id, title, sub, right, onClick, href }: { id: string; title: string; sub?: string; right?: ReactNode; onClick?: () => void; href?: string }) {
   const inner = <><span className="set-row-text"><span className="set-row-title">{title}</span>{sub && <span className="set-row-sub">{sub}</span>}</span>{right ?? <Icon name="chevronRight" />}</>;
@@ -130,20 +133,20 @@ function ago(iso: string) {
   return s < 60 ? `${s} s ago` : `${Math.round(s / 60)} min ago`;
 }
 
-/** Settings › Sources (G-7): preferred source plus the backend's live health check. */
+/** Settings › Playback health (v1.4.0): no picker; what this device plays from, live status, the ad shield. */
 function SourcesPanel() {
-  const prefs = usePrefs();
   const health = useSourceHealth();
+  const mine = useMemo(() => new Set(platformSources().map((s) => s.id as string)), []);
+  const browser = playbackPlatform() === "browser";
   return (
     <div className="set-panel">
-      <Choice id="src" title="Preferred video source" value={prefs.preferredSource === "vidyanime" ? "auto" : prefs.preferredSource} options={SOURCE_CHOICES}
-        onChange={(v) => { actions.setPrefs({ preferredSource: v }); toast(`Preferred source: ${SOURCE_CHOICES.find((s) => s.id === v)!.label}`); }} />
-      <RankingList />
+      <p className="set-note" id="sp-auto-note">Panda picks the player for you. If one can't start a title, the next one is tried automatically, at the same episode and position.</p>
+      {browser && <RankingList />}
       <p className="set-group-title">Status</p>
       <ul className="src-health" aria-live="polite">
         {health.error && !health.data && <li className="src-health-row"><span className="src-dot src-dot--down" />Status unavailable right now</li>}
         {!health.data && !health.error && <li className="src-health-row"><span className="src-dot" />Checking sources…</li>}
-        {health.data?.sources.map((h) => (
+        {health.data?.sources.filter((h) => mine.has(h.id)).map((h) => (
           <li key={h.id} className="src-health-row">
             <span className={`src-dot src-dot--${h.state}`} aria-hidden="true" />
             <span className="src-health-name">{h.label}</span>
@@ -154,12 +157,41 @@ function SourcesPanel() {
       <button id="sp-src-refresh" className="set-row" data-hover-focus onClick={() => void health.mutate()}>
         <span className="set-row-text"><span className="set-row-title">Check again</span></span><Icon name="refresh" />
       </button>
+      <DeviceHealth />
       <ShieldInfo />
     </div>
   );
 }
 
-/** Community ranking (v1.2.0): the order "Automatic" plays in, with each source's reliability. */
+/**
+ * This device's own playback records (lib/playback/health.ts): titles where every source failed. They are kept out
+ * of recommendations for a while and re-checked automatically; Clear forgets them.
+ */
+function DeviceHealth() {
+  const v = useSyncExternalStore(subscribeHealth, healthVersion, healthVersion);
+  const platform = playbackPlatform();
+  const recs = useMemo(() => { void v; return allHealthRecords().filter((r) => r.platform === platform); }, [v, platform]);
+  const now = Date.now();
+  const hidden = recs.filter((r) => r.recovery === "suppressed" && r.suppressedUntil > now).length;
+  const recovered = recs.filter((r) => r.recovery === "recovered").length;
+  return (
+    <>
+      <p className="set-group-title">On this device</p>
+      <p className="set-note" id="sp-device-health">
+        {recs.length === 0
+          ? "No playback problems recorded. A title is only noted here when every player failed to start it."
+          : `${recs.length} ${recs.length === 1 ? "title" : "titles"} failed on every player recently${hidden ? `; ${hidden} kept out of recommendations for now and checked again later` : ""}${recovered ? `; ${recovered} played again since` : ""}.`}
+      </p>
+      {recs.length > 0 && (
+        <button id="sp-health-clear" className="set-row" data-hover-focus onClick={() => { clearHealth(); toast("Playback problems cleared"); }}>
+          <span className="set-row-text"><span className="set-row-title">Clear playback problems</span><span className="set-row-sub">Show those titles in recommendations again</span></span><Icon name="refresh" />
+        </button>
+      )}
+    </>
+  );
+}
+
+/** Community ranking (v1.2.0, browser only in v1.4.0): the order the browser tries its players in. */
 function RankingList() {
   const { data, error } = useSourceRanking(true);
   return (
@@ -168,7 +200,7 @@ function RankingList() {
       <ol className="src-health src-rank" id="sp-ranking" aria-live="polite">
         {error && !data && <li className="src-health-row"><span className="src-dot src-dot--down" />Ranking unavailable right now</li>}
         {!data && !error && <li className="src-health-row"><span className="src-dot" />Loading the ranking…</li>}
-        {data?.sources.map((r) => {
+        {data?.sources.filter((r) => platformSources().some((s) => s.id === r.id)).map((r) => {
           const pct = Math.round(r.score * 100);
           return (
             <li key={r.id} className="src-health-row src-rank-row" id={`sp-rank-${r.id}`}>
@@ -199,7 +231,7 @@ function ShieldInfo() {
           <span className="src-health-name">Blocked popups</span>
           <span className="src-health-meta" id="sp-shield-count">{stats.popups} popups · {stats.navigations} redirects and app launches{nativeShield ? ` · ${stats.requests} ad requests` : ""}</span>
         </li>
-        {SOURCES.map((s) => {
+        {platformSources().map((s) => {
           const b = stats.by[s.id];
           const n = b ? b.popup + b.navigation + b.external + b.download : 0;
           return (
@@ -328,6 +360,8 @@ function Panel({ id }: { id: SectionId }) {
         <div className="set-panel">
           <Row id="sp-manage" title="Manage Profiles" sub="Edit names, avatars and Kids profiles" href="/profiles/manage" />
           <Row id="sp-switch" title="Switch Profile" sub="Go back to Who's watching?" onClick={() => { actions.signOut(); go("/profiles", { replace: true }); }} />
+          <Row id="sp-personalize" title="Personalize recommendations" sub="Tell Panda which genres and kinds of titles you like" href="/personalize" />
+          <Row id="sp-reset-taste" title="Reset personalization" sub="Forget this profile's taste answers and recommendation feedback" right={<span />} onClick={() => { const id = getState().activeProfileId; if (id) { clearTaste(id); clearFeedback(id); clearRecoMetrics(id); toast("Personalization reset for this profile"); } }} />
         </div>
       );
     case "home":
@@ -476,6 +510,16 @@ export function SettingsPage() {
     if (want) focusEl(want); else focusFirst(root.current);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [tv]);
+  // v1.3.2 TV: the two columns scroll on their own (data-scroll-y="nearest"); a new section's panel starts at its top
+  const panel = useRef<HTMLElement>(null);
+  useEffect(() => { panel.current?.scrollTo({ top: 0 }); }, [focused]);
+  /** OK or Right on a section moves into its panel (first option), never to a spatially closer row further down. */
+  const enterPanel = () => (panel.current ? focusFirst(panel.current) : false);
+  // Back inside the panel returns to the section it belongs to; Back on the list leaves Settings as before
+  useBackHandler(() => {
+    if (!panel.current?.contains(document.activeElement) || document.activeElement?.closest(".sheet, [role='dialog']")) return false;
+    return focusEl(document.getElementById(`set-${focused}`));
+  }, tv);
 
   if (!tv && current) {
     return (
@@ -489,19 +533,20 @@ export function SettingsPage() {
   if (tv) {
     return (
       <div ref={root} className="tv-page tv-settings">
-        <PageHeader title="Help & Settings" sub={profile ? `Signed in as ${profile.name}` : undefined} />
+        <PageHeader title="Help & Settings" sub={profile ? `Watching as ${profile.name}` : undefined} />
         <div className="tv-settings-cols">
-          <nav className="tv-settings-list" aria-label="Settings sections">
+          <nav className="tv-settings-list" aria-label="Settings sections" data-scroll-y="nearest" data-block-exit="up down">
             {SECTIONS.map((s) => (
               <button key={s.id} id={`set-${s.id}`} className={`set-row set-row--section ${focused === s.id ? "is-selected" : ""}`} onFocus={() => setFocused(s.id)}
-                onClick={() => { if (s.id === "updates") go("/settings/updates"); else if (s.id === "whatsnew") go("/settings/whats-new"); else { const p = document.getElementById("set-panel"); if (p) focusFirst(p); } }} data-hover-focus>
+                onKeyDown={(e) => { if (e.key === "ArrowRight" && s.id !== "updates" && s.id !== "whatsnew" && enterPanel()) e.preventDefault(); }}
+                onClick={() => { if (s.id === "updates") go("/settings/updates"); else if (s.id === "whatsnew") go("/settings/whats-new"); else enterPanel(); }} data-hover-focus>
                 <Icon name={s.icon} className="set-row-icon" />
                 <span className="set-row-text"><span className="set-row-title">{s.title}</span><span className="set-row-sub">{s.sub}</span></span>
                 <Icon name="chevronRight" />
               </button>
             ))}
           </nav>
-          <section id="set-panel" className="tv-settings-panel" aria-label={SECTIONS.find((s) => s.id === focused)?.title}>
+          <section ref={panel} id="set-panel" className="tv-settings-panel" aria-label={SECTIONS.find((s) => s.id === focused)?.title} data-scroll-y="nearest" data-block-exit="up down">
             <Panel id={focused} />
           </section>
         </div>
@@ -525,7 +570,7 @@ export function SettingsPage() {
       </ul>
       <button className="m-switch" onClick={() => { actions.signOut(); go("/profiles", { replace: true }); }}>Switch Profile</button>
       <footer className="m-set-foot">
-        <PandaMark size={28} />
+        <BrandLogo variant="wordmark" height={22} alt="Panda.fun" />
         <p className="m-set-legal"><Link href="/privacy">Privacy Policy</Link><Link href="/terms">Terms of Use</Link></p>
         <p>App Version {installedVersion()}</p>
       </footer>

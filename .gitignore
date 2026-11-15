@@ -16,3 +16,4 @@ android/app/build/
 android/build/
 android/local.properties
 dist-android/
+__pycache__/

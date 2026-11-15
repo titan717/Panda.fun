@@ -7,11 +7,10 @@ import { useBackHandler, useFocusScope, focusEl } from "../lib/focus";
 import { navKey } from "../lib/keys";
 import { useSeason } from "../lib/hooks";
 import { languageName, runtime } from "../lib/format";
-import { capabilityLabels, sourceName } from "../lib/player";
-import { ISSUES, rankOf, reliabilityLabel, reliabilityTone, tierLabel } from "../lib/sources";
+import { ISSUES } from "../lib/sources";
 import type { Prefs } from "../lib/store";
 import { BRIGHT_MIN, chapterAt, FIT_OPTIONS, type FitMode, episodeLine, MARKER_LABEL, type SeekMarker, classifyDrag, dragLevel, dragSeek, HOLD_MS, SLEEP_OPTIONS, SPEEDS, speedLabel, type DragKind, type SleepMode } from "../lib/player2";
-import type { Episode, PandaItem, PlaybackSource, SourceId, SourceRankingPayload, SubtitleTrack, TitleDetails } from "../lib/types";
+import type { Episode, PandaItem, SourceId, SubtitleTrack, TitleDetails } from "../lib/types";
 import { offsetLabel, subLangName } from "../lib/captions";
 import { lazyNamed } from "../lib/lazy";
 import { HoldButton } from "../components/HoldButton";
@@ -46,19 +45,6 @@ export const QUALITIES: { id: Prefs["quality"]; label: string; note?: string }[]
 ];
 
 export { ISSUES };
-
-/** Capabilities and community reliability under a source name (v1.2.0). */
-export function SourceMeta({ id, ranking }: { id: SourceId; ranking?: SourceRankingPayload }) {
-  const r = rankOf(ranking, id);
-  const rel = reliabilityLabel(r);
-  return (
-    <small className="src-meta">
-      <span className={`src-tier src-tier--${tierLabel(id, r).tier}`}>{tierLabel(id, r).label}</span>
-      {rel && <span className={`src-rel src-rel--${reliabilityTone(r)}`}><span className="src-rel-dot" aria-hidden="true" />{rel}</span>}
-      <span className="src-caps">{capabilityLabels(id).join(" · ")}</span>
-    </small>
-  );
-}
 
 /** HH:MM:SS (blueprint shows the remaining time this way, §20.4). */
 export function clock(sec: number) {
@@ -107,11 +93,8 @@ export interface TvChromeProps {
   onTogglePlay: () => void;
   quality: Prefs["quality"];
   onQuality: (q: Prefs["quality"]) => void;
-  sources: PlaybackSource[];
-  /** Community ranking (v1.2.0) for the reliability note on each source row. */
-  ranking?: SourceRankingPayload;
+  /** The provider playing now (v1.4.0: chosen automatically, never shown as a choice). */
   sourceId: SourceId | undefined;
-  onSource: (id: SourceId) => void;
   onReport: (issue: (typeof ISSUES)[number]) => void;
   nativeControls: boolean;
   onNativeControls: (on: boolean) => void;
@@ -325,7 +308,7 @@ export function TvPlayerChrome(p: TvChromeProps) {
         <div className="tvp-bottom-row lrud-container">
           <button id="tvp-next" className="tvp-pill" onClick={() => setPanel("next")} data-hover-focus><Icon name="episodes" /> Watch Next</button>
           <button id="tvp-sleep" className={`tvp-pill ${p.sleepMode !== "off" ? "is-on" : ""}`} onClick={() => setPanel("sleep")} data-hover-focus><Icon name="clock" /> {p.sleepLabel}</button>
-          {!p.controllable && <span className="tvp-hint">{p.nativeControls ? "Using the source player's controls" : `${p.sourceId ? sourceName(p.sourceId) : "This source"} uses its own controls`}</span>}
+          {!p.controllable && <span className="tvp-hint">{p.nativeControls ? "Using the player's own controls" : "This player uses its own controls"}</span>}
         </div>
       </div>
 
@@ -341,21 +324,6 @@ export function TvPlayerChrome(p: TvChromeProps) {
               </button>
             ))}
           </div>
-          {p.sources.length > 1 && (
-            <>
-              <p className="tvp-group">Source</p>
-              <div className="tvp-list lrud-container" role="radiogroup" aria-label="Source">
-                {p.sources.map((s) => (
-                  <button key={s.id} id={`tvp-s-${s.id}`} role="radio" aria-checked={p.sourceId === s.id} className={`tvp-row ${p.sourceId === s.id ? "is-selected" : ""}`}
-                    onClick={() => { p.onSource(s.id); setPanel(null); }} data-hover-focus>
-                    <span className="tvp-check" aria-hidden="true">{p.sourceId === s.id && <Icon name="check" />}</span>
-                    <strong>{sourceName(s.id)}</strong>
-                    <SourceMeta id={s.id} ranking={p.ranking} />
-                  </button>
-                ))}
-              </div>
-            </>
-          )}
           {p.controllable && (
             <>
               <p className="tvp-group">Speed</p>
@@ -431,7 +399,7 @@ export function TvPlayerChrome(p: TvChromeProps) {
                   onOptions={(t) => { setSubTab(t); setPanel("subs"); }} />
                 <button id="tvp-sub-src" role="radio" aria-checked={p.nativeControls} className={`tvp-row ${p.nativeControls ? "is-selected" : ""}`} onClick={() => { p.onNativeControls(true); setPanel(null); }} data-hover-focus>
                   <span className="tvp-check" aria-hidden="true">{p.nativeControls && <Icon name="check" />}</span>
-                  <span className="tvp-row-text"><strong>Choose in source player</strong><small>Opens {p.sourceId ? sourceName(p.sourceId) : "the source"}'s subtitle and audio menu</small></span>
+                  <span className="tvp-row-text"><strong>Choose in the player</strong><small>Opens the player's own subtitle and audio menu</small></span>
                 </button>
               </div>
             </div>

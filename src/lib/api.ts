@@ -105,7 +105,7 @@ export const keys = {
   top10: (lang: string) => `/panda/top10/${lang}`,
   genres: () => `/panda/genres`,
   categories: () => `/panda/categories`,
-  play: (type: MediaType, id: number, o: { s?: number; e?: number; t?: number; quality?: string; anime?: 1 } = {}) => `/panda/play/${type}/${id}${qs({ ...o, color: "1f80e0" })}`,
+  play: (type: MediaType, id: number, o: { s?: number; e?: number; t?: number; quality?: string; anime?: 1 } = {}) => `/panda/play/${type}/${id}${qs({ ...o, color: "8b2cff" })}`,
   sourceHealth: () => `/panda/sources/health`,
   sourceRanking: () => `/panda/sources/ranking`,
   anime: () => `/panda/anime`,

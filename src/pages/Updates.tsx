@@ -67,7 +67,7 @@ export function UpdatesPage() {
   const apk = release?.apkUrl ?? null;
 
   return (
-    <div ref={root} className={tv ? "tv-page tv-settings-page tv-updates" : "m-page m-updates"}>
+    <div ref={root} className={tv ? "tv-page tv-settings-page tv-updates" : "m-page m-updates"} data-scroll-y={tv ? "nearest" : undefined}>
       <PageHeader title="Check for Updates" fallback="/settings" />
       <div className="upd-card" aria-live="polite">
         <p className="upd-current">Installed version <strong>{current}</strong>{!isAndroidApp && current === WEB_VERSION ? " (web app)" : ""}</p>

@@ -5,7 +5,7 @@ const STATE = JSON.stringify({ profiles: [{ id: "pa", name: "Ana", avatar: "smil
 
 async function boot(page: Page, layout: "tv" | "mobile") {
   await page.route("https://api.github.com/**", (r) => r.fulfill({ contentType: "application/json", body: JSON.stringify({ tag_name: "v0.0.1", assets: [] }) }));
-  await page.addInitScript((s) => { localStorage.setItem("panda:v1:state", s); sessionStorage.setItem("panda:splash", "1"); }, STATE);
+  await page.addInitScript((s) => { localStorage.setItem("panda:v1:state", s); sessionStorage.setItem("panda:v1:intro-session", "e2e"); }, STATE);
   await page.goto(`/?layout=${layout}`, { waitUntil: "domcontentloaded" });
 }
 

@@ -1,6 +1,7 @@
 import { Suspense, useState, type ReactNode } from "react";
 import { Link, useLocation } from "wouter";
-import { Icon, PandaMark } from "../components/Icon";
+import { Icon } from "../components/Icon";
+import { BrandLogo } from "../components/Brand";
 import { Avatar } from "../components/ui";
 import { Sheet } from "../components/Sheet";
 import { finePointer } from "../lib/device";
@@ -23,7 +24,7 @@ function BottomNav({ path }: { path: string }) {
   return (
     <nav className="m-nav" aria-label="Main">
       <Link href="/" className={`m-nav-item ${isHome ? "is-active" : ""}`} aria-current={isHome ? "page" : undefined}>
-        <PandaMark size={26} /><span>Home</span>
+        <BrandLogo variant="mark" width={26} height={26} alt="" className="m-nav-mark" /><span>Home</span>
       </Link>
       <Link href="/search" className={`m-nav-item ${isSearch ? "is-active" : ""}`} aria-current={isSearch ? "page" : undefined}>
         <Icon name="search" size={24} /><span>Search</span>

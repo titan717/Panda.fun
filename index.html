@@ -4,21 +4,30 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
     <title>Panda.fun — Movies & TV Shows</title>
-    <meta name="description" content="Panda.fun is a fast, ad-free way to discover and watch movies and TV shows on your TV, phone or computer." />
+    <meta name="description" content="Panda.fun — movies, shows and anime, picked for you. A fast, ad-free way to discover and watch on your TV, phone or computer." />
     <meta name="application-name" content="Panda.fun" />
     <meta name="referrer" content="strict-origin-when-cross-origin" />
     <meta name="google-site-verification" content="nQRj_ggV0-290-hOU9VYKcegvfIZWP5EVxphvxdCUCA" />
-    <meta name="theme-color" content="#0F1014" />
+    <meta name="theme-color" content="#000000" />
     <meta name="color-scheme" content="dark" />
     <meta property="og:title" content="Panda.fun — Movies & TV Shows" />
     <meta property="og:description" content="Discover and watch movies and TV shows on Panda.fun." />
     <meta property="og:type" content="website" />
-    <meta property="og:image" content="/pwa-512x512.png" />
+    <meta property="og:image" content="/brand/og-image.png" />
+    <meta property="og:image:width" content="1200" />
+    <meta property="og:image:height" content="630" />
+    <meta property="og:image:alt" content="Panda.fun — the waving panda mascot and wordmark" />
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:title" content="Panda.fun — Movies & TV Shows" />
+    <meta name="twitter:description" content="Discover and watch movies and TV shows on Panda.fun." />
+    <meta name="twitter:image" content="/brand/og-image.png" />
     <meta property="og:site_name" content="Panda.fun" />
     <meta name="mobile-web-app-capable" content="yes" />
     <meta name="apple-mobile-web-app-capable" content="yes" />
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
     <meta name="apple-mobile-web-app-title" content="Panda.fun" />
+    <link rel="icon" href="./favicon.ico" sizes="16x16 32x32 48x48" />
+    <link rel="icon" type="image/png" sizes="32x32" href="./favicon-32x32.png" />
     <link rel="icon" type="image/svg+xml" href="./icon.svg" />
     <link rel="apple-touch-icon" href="./apple-touch-icon.png" />
     <link rel="manifest" href="./manifest.webmanifest" />
@@ -26,23 +35,14 @@
     <link rel="preconnect" href="https://apikinoma.vercel.app" crossorigin />
     <link rel="dns-prefetch" href="https://cinesrc.st" />
     <style>
-      /* Boot splash (BLUEPRINT_SPEC §2): painted before any JavaScript; React replaces #root on first render. */
+      /* Boot splash: painted before any JavaScript; React replaces #root on first render. Brand mark on black (docs/BRAND.md). */
       html, body { margin: 0; background: #000; }
-      .boot { position: fixed; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 2.2vmin; background: linear-gradient(160deg, #0b2a6b 0%, #13306e 48%, #3a1d5a 72%, #7a1430 100%); }
-      .boot svg { width: 16.6vmin; height: 16.6vmin; }
-      .boot b { font: 500 7.8vmin "Inter Variable", Inter, system-ui, -apple-system, "Segoe UI", Roboto, sans-serif; color: #cfe3f2; letter-spacing: -0.01em; }
+      .boot { position: fixed; inset: 0; display: flex; align-items: center; justify-content: center; background: radial-gradient(ellipse at 50% 46%, #1f0a3a 0%, #07020d 42%, #000 72%); }
+      .boot img { width: 22vmin; height: 22vmin; object-fit: contain; }
     </style>
   </head>
   <body>
-    <div id="root"><div class="boot" aria-hidden="true"><svg viewBox="0 0 64 64">
-<circle cx="16" cy="15" r="10" fill="#171820" stroke="#f7f5ff" stroke-width="2.5"/>
-<circle cx="48" cy="15" r="10" fill="#171820" stroke="#f7f5ff" stroke-width="2.5"/>
-<rect x="11" y="12" width="42" height="42" rx="20" fill="#f7f5ff"/>
-<ellipse cx="22" cy="30" rx="8" ry="11" transform="rotate(28 22 30)" fill="#171820"/>
-<ellipse cx="42" cy="30" rx="8" ry="11" transform="rotate(-28 42 30)" fill="#171820"/>
-<circle cx="24" cy="29" r="2.4" fill="#f7f5ff"/><circle cx="40" cy="29" r="2.4" fill="#f7f5ff"/>
-<path d="M29 39c1.8-2.2 4.2-2.2 6 0-1 3.4-5 4.1-6 0Z" fill="#171820"/>
-<circle cx="18" cy="40" r="3" fill="#d9ccff"/><circle cx="46" cy="40" r="3" fill="#d9ccff"/></svg><b>Panda</b></div></div>
+    <div id="root"><div class="boot" aria-hidden="true"><img src="./brand/mark.webp" width="256" height="256" alt="" decoding="async" fetchpriority="high" /></div></div>
     <noscript>Panda.fun needs JavaScript to run.</noscript>
     <script type="module" src="/src/main.tsx"></script>
   </body>

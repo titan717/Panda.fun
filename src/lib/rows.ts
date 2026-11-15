@@ -6,6 +6,7 @@ import { languageName } from "./format";
 import { useCalendarItems } from "./badges";
 import { arrangeHome, railKey, type HomeSection } from "./homeLayout";
 import type { PageKind, PandaItem } from "./types";
+import { useHiddenRecoIds } from "./reco/useHidden";
 
 export type HomeRow =
   | { id: string; kind: "poster" | "landscape"; title: string; items: PandaItem[]; link: string | null }
@@ -27,6 +28,8 @@ export function useHomeRows(kind: PageKind) {
   const watchlist = useWatchlist();
   const ratings = useRatings();
   const calendar = useCalendarItems();
+  // v1.4.0: "Not interested" / "Hide" feedback and titles that failed on every player here stay out of personal rows
+  const recoHidden = useHiddenRecoIds();
 
   // Personal rows only on Home for grown-up profiles; seed details load after the page so they never delay it.
   const personal = kind === "home" && !kids;
@@ -36,10 +39,11 @@ export function useHomeRows(kind: PageKind) {
   const s0 = useSeedTitle(seeds[0], ready), s1 = useSeedTitle(seeds[1], ready), s2 = useSeedTitle(seeds[2], ready), s3 = useSeedTitle(seeds[3], ready), s4 = useSeedTitle(seeds[4], ready);
   const mine = useMemo(() => {
     const exclude = new Set<string>([...Object.keys(history), ...watchlist.map((i) => i.id)]);
+    for (const id of recoHidden) exclude.add(id);
     return buildPersonalRows(seeds, [s0, s1, s2, s3, s4], exclude, ratings);
     // seedKey stands in for seeds
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [seedKey, s0, s1, s2, s3, s4, history, watchlist, ratings]);
+  }, [seedKey, s0, s1, s2, s3, s4, history, watchlist, ratings, recoHidden]);
 
   const rows = useMemo<HomeRow[]>(() => {
     const b: Partial<Record<HomeSection, HomeRow[]>> = {};

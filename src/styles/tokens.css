@@ -25,47 +25,47 @@
   --text-3: #7d8598;
   --m-meta: #c8ceda;
   --m-body: #8f98ab;
-  --m-link: #4da3ff;
-  --m-progress: #1f80e0;
+  --m-link: #c792ff;
+  --m-progress: #b14dff;
   --m-gold: #e2b455;
 
   /* 1.3 / 1.5 TV surfaces, ice accent and focus */
   --tv-bg: #000000;
   --tv-bg-deep: #000000;
   --tv-bg-gradient: #000000;
-  --tv-ice: #bfe6ff;
+  --tv-ice: #e4d6ff;
   /* v1.2.9 focus edge: the blueprint's soft silver rim (tvnewblueprint p6–p12), not a bright white or blue line */
   --tv-ice-strong: rgba(222, 228, 237, 0.84);
-  --tv-ice-soft: rgba(120, 175, 215, 0.35);
+  --tv-ice-soft: rgba(170, 120, 230, 0.35);
   --tv-meta: #e6ecf5;
   --tv-body: #c8d1e0;
   --tv-body-2: #d5dce8;
   --tv-label: #c9d3e6;
-  --tv-glass: rgba(12, 24, 42, 0.78);
-  --tv-glass-badge: rgba(20, 30, 48, 0.72);
+  --tv-glass: rgba(18, 10, 32, 0.78);
+  --tv-glass-badge: rgba(26, 16, 44, 0.72);
   --tv-translucent: rgba(255, 255, 255, 0.14);
-  --tv-search-fill: rgba(70, 140, 200, 0.45);
-  --tv-chip-fill: rgba(90, 160, 210, 0.35);
-  --tv-divider: rgba(190, 225, 255, 0.25);
+  --tv-search-fill: rgba(122, 63, 208, 0.3);
+  --tv-chip-fill: rgba(139, 44, 255, 0.28);
+  --tv-divider: rgba(220, 200, 255, 0.22);
   --focus-border: 2px solid var(--tv-ice-strong);
   --focus-glow: 0 0 0 1px rgba(8, 12, 20, 0.6), 0 12px 30px rgba(0, 0, 0, 0.5), 0 0 18px rgba(226, 232, 242, 0.2);
 
   /* 1.6 / 1.7 / 1.8 buttons */
-  --brand-gradient: linear-gradient(90deg, #1b5fd6 0%, #2f6fe0 45%, #7a3fd0 78%, #d2337e 100%);
+  --brand-gradient: linear-gradient(90deg, #4d1cff 0%, #6f22ff 40%, #8b2cff 70%, #d42cff 100%);
   --m-cta-bg: #f4f9ff;
   --m-cta-fg: #0f1014;
   --m-glass: rgba(255, 255, 255, 0.1);
   --m-glass-border: rgba(255, 255, 255, 0.1);
-  --update-gradient: linear-gradient(90deg, #2f80ed, #56ccf2);
+  --update-gradient: linear-gradient(90deg, #6f22ff, #d42cff);
   --badge-gradient: linear-gradient(90deg, #c2187a, #7b2ff7);
   --top10-tag: linear-gradient(180deg, #ff3d8b, #c2187a);
-  --hot-pill: linear-gradient(90deg, #ff1f3d 0%, #ff5a1f 60%, #ffb21f 100%);
-  --brand-pill-bg: #0b1640;
-  --brand-pill-border: #3b6cff;
-  --arc-gradient: linear-gradient(90deg, transparent 0%, #2b6bff 30%, #8c4bff 60%, #ff3d8b 85%, transparent 100%);
+  --hot-pill: linear-gradient(90deg, #8b2cff 0%, #d42cff 55%, #ff3d8b 100%);
+  --brand-pill-bg: #0a0710;
+  --brand-pill-border: rgba(139, 44, 255, 0.55);
+  --arc-gradient: linear-gradient(90deg, transparent 0%, #6f22ff 30%, #8c4bff 60%, #ff3d8b 85%, transparent 100%);
   --kids-gradient: linear-gradient(135deg, #ff5fa2 0%, #b04bff 55%, #5b7cff 100%);
-  --avatar-gradient: radial-gradient(circle at 35% 30%, #7cc4ff 0%, #2e7bff 55%, #1747c9 100%);
-  --splash-gradient: linear-gradient(160deg, #0b2a6b 0%, #13306e 48%, #3a1d5a 72%, #7a1430 100%);
+  --avatar-gradient: radial-gradient(circle at 35% 30%, #d3a8ff 0%, #8b2cff 55%, #4d1cff 100%);
+  --splash-gradient: radial-gradient(ellipse at 50% 42%, #1f0a3a 0%, #07020d 55%, #000 100%);
 
   /* 1.9 radii */
   --r-poster-m: 6px;
@@ -104,29 +104,29 @@
   --m-hit: 44px;
   /* v1.2.5 Top 10 numerals (spec 6.4 / 12.4): outlined, gradient fill; shared by TV and phone */
   --rank-stroke: rgba(255, 255, 255, 0.75);
-  --rank-fill: linear-gradient(180deg, rgba(255, 255, 255, 0.05), rgba(150, 190, 230, 0.55));
+  --rank-fill: linear-gradient(180deg, rgba(255, 255, 255, 0.05), rgba(190, 150, 240, 0.55));
   --rank-tracking: -0.06em;
   --rank-tracking-wide: -0.09em;
 
   /* extra surfaces sampled in 14.7, 15.2, 7.10, 11.6, 4.3, 3.4 */
   --m-pill-dark: #22252e;
   --m-card: #1a1d27;
-  --m-float-bg: rgba(28, 32, 58, 0.92);
-  --m-float-border: rgba(120, 140, 255, 0.35);
-  --m-nav-arc: radial-gradient(60% 6px at 50% 0, #2d7bff, transparent);
-  --m-search-btn: linear-gradient(135deg, #2f80ed, #1b5fd6);
+  --m-float-bg: rgba(30, 18, 52, 0.92);
+  --m-float-border: rgba(170, 110, 255, 0.35);
+  --m-nav-arc: radial-gradient(60% 6px at 50% 0, #8b2cff, transparent);
+  --m-search-btn: linear-gradient(135deg, #6f22ff, #c42cff);
   --tv-ep-body: #c5cedd;
   --tv-rail-icon: rgba(212, 220, 236, 0.7);
   --tv-rail-panel: linear-gradient(180deg, #0d111c 0%, #06080e 100%);
-  --tv-rail-edge: rgba(190, 215, 255, 0.16);
-  --tv-rail-glow: rgba(64, 120, 255, 0.45);
+  --tv-rail-edge: rgba(215, 190, 255, 0.16);
+  --tv-rail-glow: rgba(139, 44, 255, 0.45);
   --tv-hero-border: rgba(222, 228, 237, 0.72);
   --tv-hero-scrim: linear-gradient(0deg, rgba(5, 10, 20, 0.92) 0%, rgba(5, 10, 20, 0.55) 35%, transparent 65%);
   --tv-hero-scrim-left: linear-gradient(90deg, rgba(5, 10, 20, 0.7) 0%, transparent 55%);
   --tv-det-scrim: linear-gradient(90deg, #000000 0%, rgba(0, 0, 0, 0.92) 30%, rgba(0, 0, 0, 0.4) 55%, transparent 75%);
   --tv-det-scrim-bottom: linear-gradient(0deg, #000000 0%, rgba(0, 0, 0, 0.6) 22%, transparent 45%);
-  --tv-mic-fill: rgba(180, 210, 240, 0.25);
-  --tv-add-fill: rgba(120, 140, 190, 0.35);
+  --tv-mic-fill: rgba(200, 170, 255, 0.22);
+  --tv-add-fill: rgba(150, 120, 200, 0.35);
   --tv-dot: rgba(255, 255, 255, 0.35);
   --tv-focus-pill: rgba(255, 255, 255, 0.1);
   --tv-badge-border: rgba(255, 255, 255, 0.18);
@@ -137,7 +137,7 @@
   --skeleton-shine: rgba(255, 255, 255, 0.12);
   --danger: #ff5a6a;
   --success: #3ccf8e;
-  --splash-word: #cfe3f2;
+  --splash-word: #e6d8ff;
   --black: #000000;
   --tint-0: linear-gradient(135deg, rgba(47, 111, 224, 0.55), rgba(0, 0, 0, 0.2));
   --tint-1: linear-gradient(135deg, rgba(122, 63, 208, 0.55), rgba(0, 0, 0, 0.2));

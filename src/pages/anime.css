@@ -1,17 +1,17 @@
 /* Anime page (v1.2.0, D-117): AniList rows, Collection-style hero. Loaded with the lazy page chunk. */
-.anime-hero { position: relative; overflow: hidden; display: flex; align-items: flex-end; --anime-accent: #8FD3FF; }
+.anime-hero { position: relative; overflow: hidden; display: flex; align-items: flex-end; --anime-accent: #E2C6FF; }
 .anime-backdrop { position: absolute; inset: 0; width: 100% !important; height: 100% !important; object-fit: cover; object-position: 50% 20%; }
 .anime-scrim { position: absolute; inset: 0; background: linear-gradient(90deg, rgba(0, 0, 0, 0.92) 0%, rgba(0, 0, 0, 0.7) 38%, rgba(0, 0, 0, 0.1) 75%), linear-gradient(0deg, #000 0%, rgba(0, 0, 0, 0) 45%); }
 .anime-text { position: relative; display: flex; flex-direction: column; align-items: flex-start; }
-.anime-kicker { text-transform: uppercase; letter-spacing: 0.14em; font-weight: var(--fw-bold); color: var(--tv-ice, #8FD3FF); }
+.anime-kicker { text-transform: uppercase; letter-spacing: 0.14em; font-weight: var(--fw-bold); color: var(--tv-ice, #E2C6FF); }
 .anime-name { font-weight: var(--fw-bold); line-height: 1.08; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
 .anime-facts { color: var(--text-2); font-weight: var(--fw-medium); }
-.anime-airing { white-space: nowrap; color: var(--tv-ice, #8FD3FF); }
+.anime-airing { white-space: nowrap; color: var(--tv-ice, #E2C6FF); }
 .anime-overview { color: var(--tv-body, rgba(255, 255, 255, 0.8)); line-height: 1.5; display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden; }
 .anime-actions { display: flex; flex-wrap: wrap; }
 .anime-card { display: flex; flex-direction: column; flex: none; min-width: 0; }
 .anime-cap { color: var(--text-2); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-.anime-cap.is-airing { color: var(--tv-ice, #8FD3FF); font-weight: var(--fw-semibold); }
+.anime-cap.is-airing { color: var(--tv-ice, #E2C6FF); font-weight: var(--fw-semibold); }
 .anime-credit { color: var(--text-3, rgba(255, 255, 255, 0.55)); }
 .anime-hero-sk { display: block; width: 100%; }
 .anime-sk-row { display: flex; overflow: hidden; }

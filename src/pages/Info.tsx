@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState, type ReactNode } from "react";
 import { Link } from "wouter";
-import { PandaMark, Wordmark } from "../components/Icon";
+import { BrandLogo } from "../components/Brand";
 import { PageHeader } from "../components/PageHeader";
 import { apiGet, API_BASE, keys } from "../lib/api";
 import { installedVersion } from "../lib/updates";
@@ -13,7 +13,7 @@ function InfoShell({ title, children }: { title: string; children: ReactNode }) 
   // the scroll container itself is focusable on TV so Up/Down can read long text with the remote
   useEffect(() => { if (tv && root.current) focusFirst(root.current); }, [tv]);
   return (
-    <div ref={root} className={tv ? "tv-page tv-settings-page tv-info" : "m-page m-info"}>
+    <div ref={root} className={tv ? "tv-page tv-settings-page tv-info" : "m-page m-info"} data-scroll-y={tv ? "nearest" : undefined}>
       <PageHeader title={title} fallback="/settings" />
       <article className="info-body" tabIndex={tv ? 0 : undefined} data-autofocus
         onKeyDown={(e) => {
@@ -36,7 +36,7 @@ export function AboutPage() {
   }, []);
   return (
     <InfoShell title="About">
-      <div className="about-brand"><PandaMark size={64} /><Wordmark /></div>
+      <div className="about-brand"><BrandLogo variant="horizontal" className="about-logo" alt="Panda.fun" priority /></div>
       <p>Version {installedVersion()}</p>
       <p>Panda.fun helps you discover movies and TV shows and play them from public streaming sources, on TV, phone and computer.</p>
       <h2>Service status</h2>

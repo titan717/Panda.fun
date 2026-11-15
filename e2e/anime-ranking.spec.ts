@@ -31,7 +31,7 @@ async function open(page: Page, path: string, tv: boolean, state = STATE) {
   await page.route("https://api.github.com/**", (r) => r.fulfill({ contentType: "application/json", body: JSON.stringify({ tag_name: "v0.0.1", assets: [] }) }));
   await page.route(/\/api\/v1\/panda\/anime$/, (r) => r.fulfill(ok(ANIME)));
   await page.route(/\/api\/v1\/panda\/sources\/ranking/, (r) => r.fulfill(ok(RANKING)));
-  await page.addInitScript((s) => { if (!localStorage.getItem("panda:v1:state")) localStorage.setItem("panda:v1:state", s); sessionStorage.setItem("panda:splash", "1"); }, state);
+  await page.addInitScript((s) => { if (!localStorage.getItem("panda:v1:state")) localStorage.setItem("panda:v1:state", s); sessionStorage.setItem("panda:v1:intro-session", "e2e"); }, state);
   await page.goto(`${path}${path.includes("?") ? "&" : "?"}layout=${tv ? "tv" : "mobile"}`, { waitUntil: "domcontentloaded" });
 }
 
@@ -47,16 +47,23 @@ test("Anime page shows the AniList hero and rows, and cards open the title", asy
   await expect(page).toHaveURL(/\/title\/tv\/9002/);
 });
 
-test("Settings › Sources defaults to Automatic and shows the community ranking", async ({ page }, info) => {
+test("Settings › Playback health has no source picker; the ranking only shows in a computer browser", async ({ page }, info) => {
   const tv = Boolean(info.project.metadata.tv);
+  // the tv-* projects run desktop Chromium with ?layout=tv, so their playback platform is "browser";
+  // the phone/tablet projects are touch-only, so their platform is "mobile" (src/lib/playback/registry.ts)
+  const browser = !info.project.use.hasTouch;
   await open(page, "/settings/sources", tv);
   if (tv) await page.locator("#set-sources").focus();
-  await expect(page.locator("#src-auto")).toHaveAttribute("aria-checked", "true");
-  await expect(page.locator("#sp-ranking")).toBeVisible();
-  await expect(page.locator("#sp-ranking li").first()).toContainText("Vidy");
-  await expect(page.locator("#sp-rank-cinesrc")).toContainText("Reported 5× today");
-  await page.locator("#src-cinesrc").click();
-  await expect.poll(() => page.evaluate(() => { const s = JSON.parse(localStorage.getItem("panda:v1:state") ?? "{}"); return { ...s.prefs, ...(s.profilePrefs?.[s.activeProfileId] ?? {}) }.preferredSource; })).toBe("cinesrc");
+  await expect(page.locator("#sp-auto-note")).toBeVisible();
+  await expect(page.locator("#sp-device-health")).toBeVisible();
+  // v1.4 (directive §5): there is no visible source-selection interface anywhere
+  await expect(page.locator("#src-auto, [role=radio][id^=src-], [role=menuitemradio][id^=src-]")).toHaveCount(0);
+  if (browser) {
+    await expect(page.locator("#sp-ranking")).toBeVisible();
+    await expect(page.locator("#sp-rank-cinesrc")).toContainText("Reported 5× today");
+  } else {
+    await expect(page.locator("#sp-ranking")).toHaveCount(0);
+  }
 });
 
 test("Report an Issue on a source with its own controls sends the report to the ranking", async ({ page }, info) => {
@@ -69,7 +76,6 @@ test("Report an Issue on a source with its own controls sends the report to the 
   const frame = page.locator("iframe.player-frame");
   await expect(frame).toHaveCount(1, { timeout: 30_000 });
   expect(new URL((await frame.getAttribute("src"))!).hostname).toMatch(/vidy\.st$/);
-  await expect(page.locator("#pl-src-vidy .src-rel-dot.src-rel--good")).toBeAttached();
   await page.locator("#pl-report").click();
   await expect(page.locator(".sheet--report")).toBeVisible();
   await expect(page.locator("#pl-issue-subs")).toBeVisible();

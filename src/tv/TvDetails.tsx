@@ -1,22 +1,25 @@
 import "./details.css";
+import { warmSourceHint } from "../lib/playback/registry";
 import { setRemoteTitle } from "../lib/remote";
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { Icon } from "../components/Icon";
 import { ExtraIcon } from "../components/ExtraIcons";
 import "../styles/spoilers.css";
 import { Link } from "wouter";
 import { ErrorState, Img, Skeleton, TitleArt, toast } from "../components/ui";
-import { Trailer, rankTrailers } from "../components/Trailer";
+import { Trailer, pickTrailer, rankTrailers } from "../components/Trailer";
 import { RatePopover, rateLabel } from "../components/RatePopover";
 import { RateEmoji } from "../components/RateEmoji";
 import { VideoOverlay } from "../components/VideoOverlay";
 import { warmPlayback } from "../lib/prefetch";
 import { whenIdle } from "../lib/lazy";
-import { useLiteMotion, useSeason, useTitle, useTrailerStage } from "../lib/hooks";
+import { useLiteMotion, useSeason, useTitle } from "../lib/hooks";
+import { useSurfaceTrailer } from "../lib/useTrailer";
+import { episodeCountLabel, episodeLabel, initialSeason, isUnaired, lastWatched, missingEpisodes, seasonEpisodes, seasonLabel, seasonOptions } from "../lib/seasons";
 import { actions, useHasReminder, useHasLists, useHistoryEntry, useInWatchlist, useListCount, usePrefs, useRating } from "../lib/store";
 import { SaveToSheet } from "../components/QuickActions";
 import { toggleReminder } from "../components/Remind";
-import { castAndCrew, detailsMeta, languageName, voteLabel, pluralEps, runtime, shortDate, airsLater } from "../lib/format";
+import { castAndCrew, detailsMeta, languageName, voteLabel, pluralEps, runtime, shortDate } from "../lib/format";
 import { detailsCtas, episodeRow, hideSpoiler, SPOILER_NOTE } from "../lib/watch";
 import { focusEl, focusFirst, useBackHandler } from "../lib/focus";
 import { useNav } from "../lib/nav";
@@ -57,22 +60,24 @@ function TvDetailsView({ d, initialTab }: { d: TitleDetails; initialTab?: Tab })
   const [zone, setZone] = useState<"main" | "tabs">(initialTab ? "tabs" : "main");
   const people = castAndCrew(d);
   const tabs: { id: Tab; label: string }[] = [
-    ...(d.type === "tv" && d.seasons.some((s) => s.number > 0) ? [{ id: "episodes" as Tab, label: "Episodes" }] : []),
+    ...(d.type === "tv" && seasonOptions(d.seasons).length > 0 ? [{ id: "episodes" as Tab, label: "Episodes" }] : []),
     ...(d.moreLikeThis.length ? [{ id: "more" as Tab, label: "More Like This" }] : []),
     ...(d.collection ? [{ id: "collection" as Tab, label: "Collection" }] : []),
     ...(d.videos.length ? [{ id: "trailers" as Tab, label: "Trailers & More" }] : []),
     ...(people.length ? [{ id: "cast" as Tab, label: "Cast" }] : [])
   ];
   // v1.1.6: warm the source connection, skip markers and season for the next Play press
-  useEffect(() => { whenIdle(() => warmPlayback({ type: d.type, tmdbId: d.tmdbId, imdbId: d.imdbId, season: history?.season, episode: history?.episode }, prefs.preferredSource), 1500); }, [d.id]); // eslint-disable-line react-hooks/exhaustive-deps
+  useEffect(() => { whenIdle(() => warmPlayback({ type: d.type, tmdbId: d.tmdbId, imdbId: d.imdbId, season: history?.season, episode: history?.episode }, warmSourceHint()), 1500); }, [d.id]); // eslint-disable-line react-hooks/exhaustive-deps
   const [tab, setTab] = useState<Tab | null>(tabs.find((t) => t.id === initialTab)?.id ?? tabs[0]?.id ?? null);
   const [rateOpen, setRateOpen] = useState(false);
   const [video, setVideo] = useState<{ key: string; name: string } | null>(null);
-  const [trailerOn, setTrailerOn] = useState(false);
-  const [trailerDone, setTrailerDone] = useState(false);
   const lite = useLiteMotion();
   const trailerKeys = rankTrailers(d.videos);
-  const stage = useTrailerStage(!video && zone === "main" && prefs.trailerAutoplay && !lite && trailerKeys.length > 0 && !trailerDone, prefs.trailerDelay, d.id);
+  const fullTrailer = pickTrailer(d.videos);
+  // Trailer Autoplay Manager: starts after the profile's delay while the main zone is in view and no video is open
+  const trailer = useSurfaceTrailer("tv-details", trailerKeys.length > 0 ? d.id : null, !video && zone === "main");
+  const stage = trailer.stage;
+  const trailerOn = trailer.shown;
   const root = useRef<HTMLDivElement>(null);
   const cta = useRef<HTMLAnchorElement>(null);
   const { primary, secondary } = detailsCtas(d, history);
@@ -85,7 +90,6 @@ function TvDetailsView({ d, initialTab }: { d: TitleDetails; initialTab?: Tab })
     // focus once on mount
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
-  useEffect(() => { if (stage === "idle") setTrailerOn(false); }, [stage]);
 
   useBackHandler(() => { setZone("main"); focusEl(cta.current); }, zone === "tabs");
 
@@ -105,7 +109,7 @@ function TvDetailsView({ d, initialTab }: { d: TitleDetails; initialTab?: Tab })
         <Img src={d.backdropLarge ?? d.backdrop} alt="" title="" eager className={trailerOn ? "is-hidden" : ""} />
         {stage !== "idle" && trailerKeys.length > 0 && (
           <Trailer keys={trailerKeys} play={stage === "play"} sound={prefs.trailerSound} volume={prefs.trailerVolume} className="tv-det-trailer"
-            onPlaying={() => setTrailerOn(true)} onFail={() => { setTrailerOn(false); setTrailerDone(true); }} />
+            onPlaying={trailer.onPlaying} onFail={trailer.onFail} />
         )}
         <span className="tv-det-scrim" />
       </div>
@@ -139,6 +143,11 @@ function TvDetailsView({ d, initialTab }: { d: TitleDetails; initialTab?: Tab })
               <button id="det-list" className={`tv-square ${inList ? "is-on" : ""}`} onClick={toggleList} aria-pressed={inList} aria-label={hasLists ? `Save to a list${inList ? ", saved" : ""}` : inList ? "Remove from Watchlist" : "Add to Watchlist"} data-hover-focus>
                 <Icon name={inList ? "check" : "plus"} />
               </button>
+              {fullTrailer && (
+                <button id="det-trailer" className="tv-square" onClick={() => setVideo({ key: fullTrailer, name: `${d.title} — Trailer` })} aria-label="Watch trailer" title="Watch trailer" data-hover-focus>
+                  <Icon name="movie" />
+                </button>
+              )}
               <div className="tv-rate-wrap">
                 <button id="det-rate" className={`tv-square ${rating ? "is-on" : ""}`} onClick={() => setRateOpen(true)} aria-label={rating ? `Rated ${rateLabel(rating)}` : "Rate"} aria-haspopup="menu" aria-expanded={rateOpen} data-hover-focus>
                   {rating ? <RateEmoji kind={rating} /> : <Icon name="heart" />}
@@ -205,49 +214,115 @@ function TvDetailsView({ d, initialTab }: { d: TitleDetails; initialTab?: Tab })
   );
 }
 
+/** True right after a key press (D-pad), false for mouse hover focus on desktop. */
+let lastKeyAt = 0;
+if (typeof window !== "undefined") window.addEventListener("keydown", () => { lastKeyAt = performance.now(); }, { capture: true, passive: true });
+const keyNav = () => performance.now() - lastKeyAt < 400;
+
+/**
+ * Seasons & episodes (v1.3.2): a D-pad season rail ("Season 1", "Season 2"… and "Specials"; never the backend's
+ * arc names), a season header with the episode count and a Resume shortcut, and uniform episode cards.
+ */
 function EpisodesTab({ d }: { d: TitleDetails }) {
   const history = useHistoryEntry(d.id);
   const prefs = usePrefs();
-  const seasons = d.seasons.filter((s) => s.number > 0);
-  const [season, setSeason] = useState(history?.season ?? seasons[0]?.number ?? 1);
+  const options = useMemo(() => seasonOptions(d.seasons), [d.seasons]);
+  const [season, setSeason] = useState(() => initialSeason(options, history) ?? 1);
+  const opt = options.find((o) => o.number === season);
   const { data, error, mutate } = useSeason(d.tmdbId, season);
+  const eps = useMemo(() => (data?.number === season ? seasonEpisodes(season, data.episodes) : null), [data, season]);
+  const last = lastWatched(history);
+  const gaps = eps ? missingEpisodes(eps) : [];
   const { go } = useNav();
+  const list = useRef<HTMLDivElement>(null);
+  const rail = useRef<HTMLElement>(null);
+
+  // the rail opens scrolled to the selected season (long anime runs have 20+ seasons)
+  useEffect(() => {
+    const r = rail.current, el = document.getElementById(`season-${season}`);
+    if (r && el) r.scrollTop = Math.max(0, el.offsetTop - r.offsetTop - r.clientHeight / 3);
+    // once on mount
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+  // a new season starts at the top; the last-watched season opens at that episode (scroll only, focus stays)
+  useEffect(() => {
+    const l = list.current;
+    if (!l || !eps) return;
+    const el = last && last.season === season ? document.getElementById(`ep-${season}-${last.episode}`) : null;
+    l.scrollTop = el ? Math.max(0, el.offsetTop - l.offsetTop - 12) : 0;
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [eps, season]);
+
+  const resume = last?.action ? episodeRow(history, d.tmdbId, last.season, last.episode) : null;
+  const year = opt?.airDate?.slice(0, 4);
   return (
     <div className="tv-eps">
-      <nav className="tv-seasons" aria-label="Seasons" data-scroll-y="item">
-        {seasons.map((s) => (
-          <button key={s.number} id={`season-${s.number}`} className={`tv-season ${s.number === season ? "is-selected" : ""}`} onFocus={() => setSeason(s.number)} onClick={() => setSeason(s.number)} data-hover-focus>
-            <span>{s.name || `Season ${s.number}`}</span><span className="tv-season-eps">{pluralEps(s.episodeCount)}</span>
+      <nav ref={rail} className="tv-seasons" aria-label="Seasons" data-scroll-y="item" onFocus={(e) => {
+        // D-pad entry from the tab bar or episode list lands on the selected season, not the nearest one
+        const from = e.relatedTarget as Node | null;
+        if (!keyNav() || !from || rail.current?.contains(from)) return;
+        const sel = document.getElementById(`season-${season}`);
+        if (sel && e.target !== sel) { e.stopPropagation(); focusEl(sel); }
+      }}>
+        {options.map((s) => (
+          <button key={s.number} id={`season-${s.number}`} className={`tv-season ${s.number === season ? "is-selected" : ""} ${s.upcoming ? "is-upcoming" : ""}`} aria-current={s.number === season ? "true" : undefined}
+            data-autofocus={s.number === season ? "" : undefined} onFocus={() => setSeason(s.number)} onClick={() => setSeason(s.number)} data-hover-focus>
+            <span className="tv-season-name">{s.label}</span>
+            {last?.season === s.number && <span className="tv-season-dot" aria-label="Last watched" />}
+            <span className="tv-season-eps">{s.upcoming && !s.episodeCount ? "Soon" : pluralEps(s.episodeCount)}</span>
           </button>
         ))}
       </nav>
-      <section className="tv-ep-list" data-scroll-y="item" data-scroll-offset="0.1" aria-live="polite">
-        {error && !data && <ErrorState compact message={error.message} onRetry={() => mutate()} />}
-        {!data && !error && Array.from({ length: 3 }, (_, i) => (
-          <div key={i} className="tv-ep"><Skeleton className="tv-ep-still" /><div className="tv-ep-text"><Skeleton className="sk-line" /><Skeleton className="sk-line sk-line--short" /></div></div>
-        ))}
-        {data?.number === season && data.episodes.map((ep) => {
-          const row = episodeRow(history, d.tmdbId, ep.season, ep.number);
-          const href = row.href;
-          const soon = airsLater(ep.airDate);
-          const pct = row.pct;
-          const spoil = hideSpoiler(prefs.hideSpoilers, row.done, pct);
-          return (
-            <a key={ep.id} id={`ep-${ep.season}-${ep.number}`} href={href} className={`tv-ep ${soon ? "is-upcoming" : ""} ${row.done ? "is-watched" : ""} ${row.badge ? "is-current" : ""}`} aria-current={row.badge ? "step" : undefined} aria-disabled={soon || undefined} data-hover-focus
-              onClick={(e) => { e.preventDefault(); if (soon) toast(`Episode ${ep.number} arrives ${shortDate(ep.airDate)}`); else go(href); }}>
-              <span className={`tv-ep-still ${spoil ? "is-spoiler" : ""}`}><Img src={ep.still} alt="" title={`Episode ${ep.number}`} />{spoil && <ExtraIcon name="eyeOff" className="spoiler-mark" />}{!soon && <Icon name="play" className="tv-ep-play" />}
-                {row.badge && <span className={`ep-badge ep-badge--${row.badge}`}>{row.badge === "next" ? "Up next" : "Continue"}</span>}
-                {row.done && <span className="ep-done" aria-label="Watched"><Icon name="check" /></span>}
-                {!soon && ep.runtime ? <span className="ep-runtime">{runtime(ep.runtime)}</span> : null}
-                {pct > 0 && <span className="progress"><span style={{ width: `${pct}%` }} /></span>}</span>
-              <span className="tv-ep-text">
-                <span className="tv-ep-title">{ep.number}. {ep.title}</span>
-                <span className="tv-ep-meta">{soon ? `Coming ${shortDate(ep.airDate)}` : [`S${ep.season} E${ep.number}`, row.done ? null : shortDate(ep.airDate), row.left ? `${row.left}m left` : runtime(ep.runtime)].filter(Boolean).join(" • ")}{row.done && <span className="ep-watched"><Icon name="check" /> Watched</span>}</span>
-                {ep.overview && <span className={`tv-ep-overview ${spoil ? "is-spoiler-note" : ""}`}>{spoil ? SPOILER_NOTE : ep.overview}</span>}
-              </span>
+      <section className="tv-ep-pane" aria-label={opt?.label ?? seasonLabel(season)}>
+        <header className="tv-ep-head">
+          <div className="tv-ep-head-text">
+            <h3 className="tv-ep-head-title">{opt?.label ?? seasonLabel(season)}</h3>
+            <p className="tv-ep-head-meta">
+              {[eps ? episodeCountLabel(eps.length) : opt ? episodeCountLabel(opt.episodeCount) : null, year].filter(Boolean).join(" · ")}
+              {gaps.length > 0 && <span className="tv-ep-gaps"> · {gaps.length === 1 ? `Episode ${gaps[0]} isn't listed` : `${gaps.length} episodes aren't listed`}</span>}
+            </p>
+          </div>
+          {last && resume && (
+            <a id="ep-resume" href={resume.href} className="tv-ep-resume" data-hover-focus onClick={(e) => { e.preventDefault(); go(resume.href); }}>
+              <Icon name="play" /> {last.action}
             </a>
-          );
-        })}
+          )}
+          {last && !resume && <span className="tv-ep-last">{last.label}</span>}
+        </header>
+        <div ref={list} className="tv-ep-list" data-scroll-y="item" data-scroll-offset="0.1" aria-live="polite">
+          {error && !data && <ErrorState compact message={error.message} onRetry={() => mutate()} />}
+          {!data && !error && Array.from({ length: 3 }, (_, i) => (
+            <div key={i} className="tv-ep"><Skeleton className="tv-ep-still" /><div className="tv-ep-text"><Skeleton className="sk-line" /><Skeleton className="sk-line sk-line--short" /></div></div>
+          ))}
+          {eps && eps.length === 0 && (
+            <p className="tv-ep-empty">{opt?.upcoming ? `${opt.label} hasn't aired yet${opt.airDate ? `. It premieres ${shortDate(opt.airDate)}.` : "."}` : `Episodes for ${opt?.label ?? seasonLabel(season)} aren't available yet.`}</p>
+          )}
+          {eps?.map((ep) => {
+            const row = episodeRow(history, d.tmdbId, ep.season, ep.number);
+            const href = row.href;
+            const soon = isUnaired(ep);
+            const pct = row.pct;
+            const spoil = hideSpoiler(prefs.hideSpoilers, row.done, pct);
+            const isLast = !!last && last.season === ep.season && last.episode === ep.number;
+            const badge = row.badge === "next" ? "Up next" : row.badge === "current" ? "Continue" : isLast ? "Last watched" : null;
+            const meta = soon ? [`Coming ${shortDate(ep.airDate) ?? "soon"}`] : [row.left ? `${row.left}m left` : runtime(ep.runtime), row.done ? null : shortDate(ep.airDate)];
+            return (
+              <a key={ep.id} id={`ep-${ep.season}-${ep.number}`} href={href} className={`tv-ep ${soon ? "is-upcoming" : ""} ${row.done ? "is-watched" : ""} ${row.badge || isLast ? "is-current" : ""}`} aria-current={isLast ? "step" : undefined} aria-disabled={soon || undefined} data-hover-focus
+                onClick={(e) => { e.preventDefault(); if (soon) toast(`Episode ${ep.number} arrives ${shortDate(ep.airDate)}`); else go(href); }}>
+                <span className={`tv-ep-still ${spoil ? "is-spoiler" : ""}`}><Img src={ep.still} alt="" title={`E${ep.number}`} />{spoil && <ExtraIcon name="eyeOff" className="spoiler-mark" />}{!soon && <Icon name="play" className="tv-ep-play" />}
+                  {badge && <span className={`ep-badge ep-badge--${row.badge ?? "last"}`}>{badge}</span>}
+                  {row.done && <span className="ep-done" aria-label="Watched"><Icon name="check" /></span>}
+                  {!soon && ep.runtime ? <span className="ep-runtime">{runtime(ep.runtime)}</span> : null}
+                  {pct > 0 && <span className="progress"><span style={{ width: `${pct}%` }} /></span>}</span>
+                <span className="tv-ep-text">
+                  <span className="tv-ep-title">{episodeLabel(ep)}</span>
+                  <span className="tv-ep-meta">{meta.filter(Boolean).join(" · ")}{row.done && <span className="ep-watched"><Icon name="check" /> Watched</span>}</span>
+                  {ep.overview && <span className={`tv-ep-overview ${spoil ? "is-spoiler-note" : ""}`}>{spoil ? SPOILER_NOTE : ep.overview}</span>}
+                </span>
+              </a>
+            );
+          })}
+        </div>
       </section>
     </div>
   );

@@ -2,7 +2,6 @@ import { useEffect, useRef, useState } from "react";
 import { Icon } from "../components/Icon";
 import { Img } from "../components/ui";
 import { bufferPct, TTFF_DEFAULT_MS } from "../lib/player2";
-import { sourceName } from "../lib/player";
 import { ttffStats } from "../lib/ttff";
 import type { SourceId } from "../lib/types";
 
@@ -37,10 +36,9 @@ export function PlayerLoading({ backdrop, title, line, sourceId, ready, touch, o
         <div className="pll-title"><strong>{title}</strong>{line && <span>{line}</span>}</div>
       </div>
       <div className="pll-center" role="progressbar" aria-valuemin={0} aria-valuemax={100} aria-valuenow={pct} aria-label="Buffering the first seconds">
-        <p className="pll-label">{sourceId ? "Buffering the first seconds…" : "Finding the best source…"}</p>
+        <p className="pll-label">{sourceId ? "Buffering the first seconds…" : "Getting it ready…"}</p>
         <p className="pll-pct">{pct}%</p>
         <span className="pll-bar" aria-hidden="true"><span style={{ transform: `scaleX(${pct / 100})` }} /></span>
-        {sourceId && <p className="pll-src">from {sourceName(sourceId)}</p>}
       </div>
     </div>
   );

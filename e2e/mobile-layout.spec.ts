@@ -26,7 +26,7 @@ test.beforeAll(async ({ request }) => {
 
 async function prepare(page: Page) {
   await page.route("https://api.github.com/**", (r) => r.fulfill({ contentType: "application/json", body: JSON.stringify({ tag_name: "v1.0.0", body: "", assets: [] }) }));
-  await page.addInitScript((s) => { localStorage.setItem("panda:v1:state", s); sessionStorage.setItem("panda:splash", "1"); }, seeded);
+  await page.addInitScript((s) => { localStorage.setItem("panda:v1:state", s); sessionStorage.setItem("panda:v1:intro-session", "e2e"); }, seeded);
 }
 
 async function audit(page: Page) {

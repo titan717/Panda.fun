@@ -1,6 +1,6 @@
 import { expect, test, type Page } from "@playwright/test";
 
-/** v1.2.9: D-pad Down from Details actions, Who's watching on a fresh start, and the /welcome landing page. */
+/** v1.2.9: D-pad Down from Details actions, launch rules (updated for v1.4.0 profile restore), and the /welcome landing page. */
 const STATE = JSON.stringify({ profiles: [{ id: "p1", name: "You", avatar: "smile", kids: false, createdAt: 1 }], activeProfileId: "p1", prefs: { autoplayTrailers: false }, data: {} });
 const RELEASE = { tag_name: "v1.2.8", published_at: "2026-11-10T10:00:00Z", assets: [
   { name: "Panda.fun-Android-TV.apk", size: 4586086, browser_download_url: "https://github.com/titan717/Panda.fun/releases/download/v1.2.8/Panda.fun-Android-TV.apk" },
@@ -11,7 +11,7 @@ async function open(page: Page, path: string, { fresh = false } = {}) {
   await page.route("https://api.github.com/**", (r) => r.fulfill({ contentType: "application/json", body: JSON.stringify({ tag_name: "v0.0.1", assets: [] }) }));
   await page.addInitScript(([s, f]) => {
     if (!localStorage.getItem("panda:v1:state")) localStorage.setItem("panda:v1:state", s as string);
-    if (!f) sessionStorage.setItem("panda:splash", "1");
+    if (!f) sessionStorage.setItem("panda:v1:intro-session", "e2e");
   }, [STATE, fresh] as const);
   await page.goto(`${path}${path.includes("?") ? "&" : "?"}layout=tv`, { waitUntil: "domcontentloaded" });
 }
@@ -31,13 +31,11 @@ test("Down from the Details actions moves into the tabs, never the side rail", a
   await expect.poll(() => page.evaluate(() => Boolean(document.activeElement?.closest(".tv-tabs, .tv-det-panel, [role=tabpanel]")) || document.activeElement?.getAttribute("role") === "tab")).toBe(true);
 });
 
-test("Who's watching appears on a fresh start and not again after a reload", async ({ page }, info) => {
+test("a cold start restores the last profile instead of asking again (v1.4.0)", async ({ page }, info) => {
   test.skip(info.project.name !== "tv-1920" && info.project.name !== "mobile-390", "one TV and one phone size");
   await open(page, "/", { fresh: true });
-  // v1.3.0: the launch intro cannot be skipped; wait for it to hand off
-  await expect(page.locator("[data-intro]")).toHaveCount(0, { timeout: 8_000 }); // v1.3.1: 5 s on TV
-  await expect(page.getByRole("heading", { name: "Who's watching?" })).toBeVisible({ timeout: 15_000 });
-  await page.locator(".profile-btn").first().click();
+  await expect(page.locator("[data-intro]")).toHaveCount(0, { timeout: 9_000 });
+  await page.waitForTimeout(800);
   await expect(page.getByRole("heading", { name: "Who's watching?" })).toHaveCount(0);
   await page.reload({ waitUntil: "domcontentloaded" });
   await page.waitForTimeout(1500);
