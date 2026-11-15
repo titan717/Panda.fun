@@ -14,7 +14,8 @@ import { SUB_BGS, SUB_COLORS, SUB_EDGES, SUB_HEIGHTS, SUB_LANGS, SUB_MODES, SUB_
 import { ParentLock, PinSetup } from "../components/PinDialog";
 import { SyncPanel } from "./SyncSettings";
 import "./sync.css";
-import { actions, usePrefs, useProfile, useReminders, type Prefs } from "../lib/store";
+import { actions, getState, usePrefs, useProfile, useReminders, type Prefs } from "../lib/store";
+import { clearTaste } from "../lib/tasteProfile";
 import { useGenres, usePage, useSourceHealth, useSourceRanking } from "../lib/hooks";
 import { reliabilityLabel, reliabilityTone, tierLabel } from "../lib/sources";
 import { eligibleOrder, playbackPlatform } from "../lib/playback/registry";
@@ -326,6 +327,8 @@ function Panel({ id }: { id: SectionId }) {
         <div className="set-panel">
           <Row id="sp-manage" title="Manage Profiles" sub="Edit names, avatars and Kids profiles" href="/profiles/manage" />
           <Row id="sp-switch" title="Switch Profile" sub="Go back to Who's watching?" onClick={() => { actions.signOut(); go("/profiles", { replace: true }); }} />
+          <Row id="sp-personalize" title="Personalize recommendations" sub="Tell Panda which genres and kinds of titles you like" href="/personalize" />
+          <Row id="sp-reset-taste" title="Reset personalization" sub="Forget this profile's genre and taste answers" right={<span />} onClick={() => { const id = getState().activeProfileId; if (id) { clearTaste(id); toast("Personalization reset for this profile"); } }} />
         </div>
       );
     case "home":
