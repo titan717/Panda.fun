@@ -60,7 +60,7 @@ jobs:
         run: |
           set -euo pipefail
           SDKM="$(command -v sdkmanager || echo "$ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager")"
-          yes | "$SDKM" "platforms;android-34" "build-tools;34.0.0" >/dev/null
+          (yes || true) | "$SDKM" "platforms;android-34" "build-tools;34.0.0" >/dev/null
           npm ci --no-audit --no-fund
           npm run build:android
           rm -rf android/app/src/main/assets/web && mkdir -p android/app/src/main/assets/web
