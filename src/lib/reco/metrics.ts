@@ -1,5 +1,6 @@
 import { useEffect, type RefObject } from "react";
 import { getState } from "../store";
+import { noteOpened, noteShown } from "../intel/runtime";
 
 /**
  * On-device recommendation metrics (directive §8). Nothing leaves the device and there is no backend: these
@@ -50,12 +51,14 @@ const pidOf = (p?: string | null) => p ?? getState().activeProfileId ?? "_";
 export function logShown(id: string, surface: string, profileId?: string | null, at = Date.now()) {
   const pid = pidOf(profileId);
   const cur = read()[pid]?.shown[id];
+  noteShown(id);
   if (cur && cur.surface === surface) return;
   update(pid, (l) => ({ ...l, shown: { ...l.shown, [id]: { at, surface } } }));
 }
 
 /** An open from a recommendation row. The surface is the row the title was last seen in. */
 export function logOpened(id: string, profileId?: string | null, at = Date.now()) {
+  noteOpened(id);
   const pid = pidOf(profileId);
   const surface = read()[pid]?.shown[id]?.surface ?? "unknown";
   update(pid, (l) => ({ ...l, opened: { ...l.opened, [id]: { at, surface } } }));

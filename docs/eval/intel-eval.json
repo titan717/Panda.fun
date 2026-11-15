@@ -1,0 +1,210 @@
+{
+  "note": "Synthetic users over a captured catalogue snapshot; compares ranking methods on identical data. Not real-world accuracy.",
+  "users": 60,
+  "catalogue": 683,
+  "k": 10,
+  "all": {
+    "popularity": {
+      "precision": 0.003,
+      "recall": 0.007,
+      "ndcg": 0.005,
+      "hit": 0.033,
+      "diversity": 0.79,
+      "novelty": 0,
+      "coverage": 0.016,
+      "genres": 9.983
+    },
+    "engine": {
+      "precision": 0.1,
+      "recall": 0.2,
+      "ndcg": 0.188,
+      "hit": 0.667,
+      "diversity": 0.624,
+      "novelty": 0.873,
+      "coverage": 0.249,
+      "genres": 8.8
+    },
+    "intelListOnly": {
+      "precision": 0.147,
+      "recall": 0.293,
+      "ndcg": 0.273,
+      "hit": 0.767,
+      "diversity": 0.429,
+      "novelty": 0.955,
+      "coverage": 0.417,
+      "genres": 6.45
+    },
+    "intelWithDetails": {
+      "precision": 0.165,
+      "recall": 0.33,
+      "ndcg": 0.318,
+      "hit": 0.867,
+      "diversity": 0.53,
+      "novelty": 0.958,
+      "coverage": 0.329,
+      "genres": 8.033
+    }
+  },
+  "byKind": {
+    "genre": {
+      "engine": {
+        "precision": 0.092,
+        "recall": 0.183,
+        "ndcg": 0.124,
+        "hit": 0.667,
+        "diversity": 0.587,
+        "novelty": 0.908,
+        "coverage": 0.113,
+        "genres": 8.25
+      },
+      "intelListOnly": {
+        "precision": 0.117,
+        "recall": 0.233,
+        "ndcg": 0.176,
+        "hit": 0.667,
+        "diversity": 0.384,
+        "novelty": 0.983,
+        "coverage": 0.133,
+        "genres": 6.417
+      },
+      "intelWithDetails": {
+        "precision": 0.125,
+        "recall": 0.25,
+        "ndcg": 0.222,
+        "hit": 0.833,
+        "diversity": 0.479,
+        "novelty": 0.983,
+        "coverage": 0.127,
+        "genres": 7.917
+      }
+    },
+    "language": {
+      "engine": {
+        "precision": 0.142,
+        "recall": 0.283,
+        "ndcg": 0.248,
+        "hit": 0.75,
+        "diversity": 0.651,
+        "novelty": 0.9,
+        "coverage": 0.104,
+        "genres": 9.667
+      },
+      "intelListOnly": {
+        "precision": 0.217,
+        "recall": 0.433,
+        "ndcg": 0.394,
+        "hit": 0.917,
+        "diversity": 0.55,
+        "novelty": 0.95,
+        "coverage": 0.149,
+        "genres": 7.333
+      },
+      "intelWithDetails": {
+        "precision": 0.242,
+        "recall": 0.483,
+        "ndcg": 0.455,
+        "hit": 1,
+        "diversity": 0.56,
+        "novelty": 0.975,
+        "coverage": 0.143,
+        "genres": 8.417
+      }
+    },
+    "auteur": {
+      "engine": {
+        "precision": 0.083,
+        "recall": 0.167,
+        "ndcg": 0.16,
+        "hit": 0.583,
+        "diversity": 0.622,
+        "novelty": 0.825,
+        "coverage": 0.089,
+        "genres": 8.417
+      },
+      "intelListOnly": {
+        "precision": 0.117,
+        "recall": 0.233,
+        "ndcg": 0.232,
+        "hit": 0.75,
+        "diversity": 0.367,
+        "novelty": 0.942,
+        "coverage": 0.13,
+        "genres": 6
+      },
+      "intelWithDetails": {
+        "precision": 0.117,
+        "recall": 0.233,
+        "ndcg": 0.203,
+        "hit": 0.833,
+        "diversity": 0.494,
+        "novelty": 0.908,
+        "coverage": 0.104,
+        "genres": 8
+      }
+    },
+    "franchise": {
+      "engine": {
+        "precision": 0.117,
+        "recall": 0.233,
+        "ndcg": 0.241,
+        "hit": 0.833,
+        "diversity": 0.658,
+        "novelty": 0.858,
+        "coverage": 0.086,
+        "genres": 8.917
+      },
+      "intelListOnly": {
+        "precision": 0.183,
+        "recall": 0.367,
+        "ndcg": 0.367,
+        "hit": 0.917,
+        "diversity": 0.412,
+        "novelty": 0.95,
+        "coverage": 0.151,
+        "genres": 6.333
+      },
+      "intelWithDetails": {
+        "precision": 0.2,
+        "recall": 0.4,
+        "ndcg": 0.412,
+        "hit": 0.917,
+        "diversity": 0.539,
+        "novelty": 0.95,
+        "coverage": 0.139,
+        "genres": 8.167
+      }
+    },
+    "mixed": {
+      "engine": {
+        "precision": 0.067,
+        "recall": 0.133,
+        "ndcg": 0.165,
+        "hit": 0.5,
+        "diversity": 0.601,
+        "novelty": 0.875,
+        "coverage": 0.083,
+        "genres": 8.75
+      },
+      "intelListOnly": {
+        "precision": 0.1,
+        "recall": 0.2,
+        "ndcg": 0.195,
+        "hit": 0.583,
+        "diversity": 0.434,
+        "novelty": 0.95,
+        "coverage": 0.135,
+        "genres": 6.167
+      },
+      "intelWithDetails": {
+        "precision": 0.142,
+        "recall": 0.283,
+        "ndcg": 0.299,
+        "hit": 0.75,
+        "diversity": 0.578,
+        "novelty": 0.975,
+        "coverage": 0.12,
+        "genres": 7.667
+      }
+    }
+  }
+}

@@ -8,6 +8,7 @@ import "./styles/mobile.css";
 import { App } from "./App";
 import { flushStore } from "./lib/store";
 import { hydrateCache } from "./lib/cache";
+import { startIntel } from "./lib/intel/runtime";
 import { installAudioUnlock, stopAllTrailers } from "./lib/audio";
 import { registerServiceWorker } from "./lib/sw";
 
@@ -23,4 +24,6 @@ void hydrateCache().then(() => {
       <App />
     </StrictMode>
   );
+  // Panda Intelligence loads the profile's on-device model after the first paint, in idle time.
+  setTimeout(startIntel, 0);
 });
