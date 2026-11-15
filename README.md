@@ -24,7 +24,7 @@
 </div>
 ---
 
-## Made for the screen in front of you
+<h2><img src="https://raw.githubusercontent.com/titan717/Panda.fun/main/public/readme-icons/screen.svg" width="26" height="26" align="absmiddle" alt="" />&nbsp;&nbsp;Made for the screen in front of you</h2>
 
 Panda.fun brings a familiar catalogue experience to the living room and the phone. On TV, everything is built around the remote. On mobile, it is made for touch. On the web, open it straight in your browser.
 
@@ -42,7 +42,7 @@ Panda.fun brings a familiar catalogue experience to the living room and the phon
   <sub>ON THE GO · MOBILE</sub>
 </div>
 
-## The details matter
+<h2><img src="https://raw.githubusercontent.com/titan717/Panda.fun/main/public/readme-icons/sparkle.svg" width="26" height="26" align="absmiddle" alt="" />&nbsp;&nbsp;The details matter</h2>
 
 | | |
 |---|---|
@@ -53,10 +53,10 @@ Panda.fun brings a familiar catalogue experience to the living room and the phon
 | **Discover naturally** | Home recommendations, categories, search, trailers and title details. |
 | **No noisy tracking** | No analytics or tracking. Profiles, lists and progress are stored on your device. |
 
-## Get Panda.fun
+<h2><img src="https://raw.githubusercontent.com/titan717/Panda.fun/main/public/readme-icons/download.svg" width="26" height="26" align="absmiddle" alt="" />&nbsp;&nbsp;Get Panda.fun</h2>
 
 <div align="center">
-  <h3>Android · Latest stable release</h3>
+  <h3><img src="https://raw.githubusercontent.com/titan717/Panda.fun/main/public/readme-icons/android.svg" width="26" height="26" align="absmiddle" alt="" />&nbsp;&nbsp;Android · Latest stable release</h3>
   <p>One signed APK for Android phones, tablets and Android TV.</p>
   <p>
     <a href="https://github.com/titan717/Panda.fun/releases/latest/download/Panda.fun-Android-TV.apk"><img src="https://img.shields.io/badge/GET%20THE%20APK-Download-57d9a3?style=for-the-badge&logo=android&logoColor=111111" alt="Download latest Android APK" /></a>
@@ -69,7 +69,7 @@ Panda.fun brings a familiar catalogue experience to the living room and the phon
 
 **The version stays current automatically.** The badge above reads the latest published GitHub Release, and the APK/checksum links always resolve to the newest release assets. There is no version number to edit in this README when you publish the next release.
 
-## Play on the web
+<h2><img src="https://raw.githubusercontent.com/titan717/Panda.fun/main/public/readme-icons/globe.svg" width="26" height="26" align="absmiddle" alt="" />&nbsp;&nbsp;Play on the web</h2>
 
 <div align="center">
   <a href="https://pandatv2.vercel.app/"><strong>Open Panda.fun in your browser ↗</strong></a>
@@ -77,7 +77,7 @@ Panda.fun brings a familiar catalogue experience to the living room and the phon
   <a href="https://pandatv2.vercel.app/welcome">Web welcome page & install guide</a>
 </div>
 
-## Built for more than one device
+<h2><img src="https://raw.githubusercontent.com/titan717/Panda.fun/main/public/readme-icons/devices.svg" width="26" height="26" align="absmiddle" alt="" />&nbsp;&nbsp;Built for more than one device</h2>
 
 | Platform | Experience |
 |---|---|
@@ -87,11 +87,11 @@ Panda.fun brings a familiar catalogue experience to the living room and the phon
 
 The TV player uses CineSrc. The phone and web experiences retain their own layouts and controls.
 
-## For developers
+<h2><img src="https://raw.githubusercontent.com/titan717/Panda.fun/main/public/readme-icons/code.svg" width="26" height="26" align="absmiddle" alt="" />&nbsp;&nbsp;For developers</h2>
 
 Panda.fun is built with React, TypeScript and Vite. The Android app is a lightweight Kotlin WebView shell around the shared web application.
 
-### Run locally
+<h3><img src="https://raw.githubusercontent.com/titan717/Panda.fun/main/public/readme-icons/terminal.svg" width="26" height="26" align="absmiddle" alt="" />&nbsp;&nbsp;Run locally</h3>
 
 **Requirements:** Node.js 20+
 
@@ -104,7 +104,7 @@ npm run dev
 
 Open [http://localhost:5173](http://localhost:5173). Append `?layout=tv` to force the TV layout.
 
-### Useful commands
+<h3><img src="https://raw.githubusercontent.com/titan717/Panda.fun/main/public/readme-icons/commands.svg" width="26" height="26" align="absmiddle" alt="" />&nbsp;&nbsp;Useful commands</h3>
 
 | Command | Description |
 |---|---|
@@ -116,7 +116,7 @@ Open [http://localhost:5173](http://localhost:5173). Append `?layout=tv` to forc
 | `npm test` | Run unit tests |
 | `npm run e2e` | Run Playwright smoke tests |
 
-### Configuration
+<h3><img src="https://raw.githubusercontent.com/titan717/Panda.fun/main/public/readme-icons/sliders.svg" width="26" height="26" align="absmiddle" alt="" />&nbsp;&nbsp;Configuration</h3>
 
 Copy `.env.example` to `.env.local` to override defaults.
 
@@ -125,7 +125,7 @@ Copy `.env.example` to `.env.local` to override defaults.
 | `VITE_API_BASE` | `https://apikinoma.vercel.app/api/v1` | Panda catalogue API |
 | `VITE_RELEASES_REPO` | `titan717/Panda.fun` | GitHub repository used for Android updates |
 
-### Project map
+<h3><img src="https://raw.githubusercontent.com/titan717/Panda.fun/main/public/readme-icons/folder.svg" width="26" height="26" align="absmiddle" alt="" />&nbsp;&nbsp;Project map</h3>
 
 ```text
 android/                 Kotlin Android / Android TV wrapper
@@ -142,7 +142,7 @@ src/
 .github/workflows/       CI and signed Android release builds
 ```
 
-## Project notes
+<h2><img src="https://raw.githubusercontent.com/titan717/Panda.fun/main/public/readme-icons/book.svg" width="26" height="26" align="absmiddle" alt="" />&nbsp;&nbsp;Project notes</h2>
 
 - [Changelog](docs/CHANGELOG.md)
 - [Player notes](docs/PLAYER.md)
@@ -156,7 +156,7 @@ Catalogue metadata and artwork are provided through TMDB. Panda.fun is not endor
 ---
 
 <div align="center">
-  <img src="https://raw.githubusercontent.com/titan717/Panda.fun/main/public/readme-motion.svg" width="100%" alt="Animated icons: TV, mobile, play and repeat" />
+  <img src="https://raw.githubusercontent.com/titan717/Panda.fun/main/public/readme-panda-footer.svg" width="100%" alt="Animated Panda.fun mascot with glowing sparkles and a playful footer message" />
   <p><strong>Find your next watch. Settle in. Enjoy.</strong></p>
   <p>
     <a href="https://pandatv2.vercel.app/">WEB APP</a>
