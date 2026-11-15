@@ -29,6 +29,7 @@ const loadSettings = () => import("./pages/Settings");
 const loadUpdates = () => import("./pages/Updates");
 const loadInfo = () => import("./pages/Info");
 const loadWhatsNew = () => import("./pages/WhatsNew");
+const loadTasteDna = () => import("./pages/TasteDna");
 const loadPerson = () => import("./pages/Person");
 const loadCollection = () => import("./pages/Collection");
 const loadAnime = () => import("./pages/Anime");
@@ -70,6 +71,7 @@ const PrivacyPage = lz(loadInfo, "PrivacyPage");
 const TermsPage = lz(loadInfo, "TermsPage");
 const WhatsNewPage = lz(loadWhatsNew, "WhatsNewPage");
 const WhatsNewSheet = lz(loadWhatsNew, "WhatsNewSheet");
+const TasteDnaPage = lz(loadTasteDna, "TasteDnaPage");
 const PersonPage = lz(loadPerson, "PersonPage");
 const CollectionPage = lz(loadCollection, "CollectionPage");
 const AnimePage = lz(loadAnime, "AnimePage");
@@ -287,6 +289,7 @@ function Routes({ mode }: { mode: LayoutMode }) {
             <Route path="/profiles/edit/:id"><ProfileEdit /></Route>
             <Route path="/settings/updates"><UpdatesPage /></Route>
             <Route path="/settings/whats-new"><WhatsNewPage /></Route>
+            <Route path="/taste-dna"><TasteDnaPage /></Route>
             <Route path="/settings/:section"><SettingsPage /></Route>
             <Route path="/settings"><SettingsPage /></Route>
             <Route path="/about"><AboutPage /></Route>
