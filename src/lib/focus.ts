@@ -230,3 +230,34 @@ export function installKeyHandling(tv: boolean) {
 export function setTvNavigation(tv: boolean) { tvEnabled = tv; }
 /** TV navigation state for the lazy desktop-mouse module (v1.2.8): is spatial navigation on, and the innermost focus scope. */
 export function tvNavigation() { return { enabled: tvEnabled, scope: scopeStack[scopeStack.length - 1] ?? null }; }
+
+/**
+ * Focus memory per history entry (v1.3.2): the id of the last focused element inside a screen is kept in
+ * history.state, so returning with Back (Details -> Home) lands on the card you left from, while a fresh visit
+ * (new history entry) starts at the top. Only elements with an id are remembered.
+ */
+export const FOCUS_MEMORY_KEY = "pandaFocus";
+
+export function useFocusMemory(ref: React.RefObject<HTMLElement | null>) {
+  useEffect(() => {
+    const el = ref.current;
+    if (!el) return;
+    const onFocusIn = (e: FocusEvent) => {
+      const t = e.target as HTMLElement | null;
+      if (!t?.id) return;
+      const state = (history.state ?? {}) as Record<string, unknown>;
+      if (state[FOCUS_MEMORY_KEY] === t.id) return;
+      try { history.replaceState({ ...state, [FOCUS_MEMORY_KEY]: t.id }, ""); } catch { /* sandboxed history */ }
+    };
+    el.addEventListener("focusin", onFocusIn);
+    return () => el.removeEventListener("focusin", onFocusIn);
+  }, [ref]);
+}
+
+/** Focus the element remembered for this history entry, if it is still inside `scope`. */
+export function recallFocus(scope: HTMLElement | null | undefined) {
+  const id = (history.state as Record<string, unknown> | null)?.[FOCUS_MEMORY_KEY];
+  if (!scope || typeof id !== "string") return false;
+  const el = document.getElementById(id);
+  return el && scope.contains(el) ? focusEl(el) : false;
+}

@@ -2,7 +2,7 @@ import { useEffect, useRef, useState } from "react";
 import { Link } from "wouter";
 import { ErrorState, Img, Skeleton } from "../components/ui";
 import { useAnime, useCategories, usePage } from "../lib/hooks";
-import { focusFirst } from "../lib/focus";
+import { focusFirst, recallFocus, useFocusMemory } from "../lib/focus";
 import { browseHref } from "../lib/format";
 
 interface Tile { id: string; label: string; image: string | null; href: string; tint: number }
@@ -14,7 +14,8 @@ export function TvCategories() {
   const anime = useAnime().data;
   const [art, setArt] = useState<string | null>(null);
   const root = useRef<HTMLDivElement>(null);
-  useEffect(() => { if (data && root.current) focusFirst(root.current); }, [data]);
+  useEffect(() => { if (data && root.current && !recallFocus(root.current)) focusFirst(root.current); }, [data]);
+  useFocusMemory(root);
 
   if (error && !data) return <div className="tv-page tv-page--center"><ErrorState message={error.message} onRetry={() => mutate()} /></div>;
 
