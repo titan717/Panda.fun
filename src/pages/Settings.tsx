@@ -18,6 +18,7 @@ import "./sync.css";
 import { actions, getState, usePrefs, useProfile, useReminders, type Prefs } from "../lib/store";
 import { clearTaste } from "../lib/tasteProfile";
 import { clearFeedback } from "../lib/reco/feedback";
+import { clearRecoMetrics } from "../lib/reco/metrics";
 import { useGenres, usePage, useSourceHealth, useSourceRanking } from "../lib/hooks";
 import { reliabilityLabel, reliabilityTone, tierLabel } from "../lib/sources";
 import { eligibleOrder, playbackPlatform } from "../lib/playback/registry";
@@ -41,7 +42,7 @@ const SECTIONS: { id: SectionId; icon: IconName; title: string; sub: string }[] 
   { id: "playback", icon: "play", title: "Playback", sub: "Quality and autoplay" },
   { id: "trailers", icon: "volume", title: "Trailers", sub: "Autoplay, sound, volume and delay" },
   { id: "subtitles", icon: "captions", title: "Subtitles", sub: "Languages, size and style for this profile" },
-  { id: "sources", icon: "globe", title: "Playback health", sub: "Live player status and the ad shield" },
+  { id: "sources", icon: "shield", title: "Playback health", sub: "Live player status and the ad shield" },
   { id: "languages", icon: "globe", title: "App Language & Content Languages", sub: "Top 10 language and content preferences" },
   { id: "parental", icon: "lock", title: "Parental Controls", sub: "PIN for leaving Kids profiles" },
   { id: "display", icon: "tv", title: "Display", sub: "Layout, screen size, text, motion and contrast" },
@@ -360,7 +361,7 @@ function Panel({ id }: { id: SectionId }) {
           <Row id="sp-manage" title="Manage Profiles" sub="Edit names, avatars and Kids profiles" href="/profiles/manage" />
           <Row id="sp-switch" title="Switch Profile" sub="Go back to Who's watching?" onClick={() => { actions.signOut(); go("/profiles", { replace: true }); }} />
           <Row id="sp-personalize" title="Personalize recommendations" sub="Tell Panda which genres and kinds of titles you like" href="/personalize" />
-          <Row id="sp-reset-taste" title="Reset personalization" sub="Forget this profile's taste answers and recommendation feedback" right={<span />} onClick={() => { const id = getState().activeProfileId; if (id) { clearTaste(id); clearFeedback(id); toast("Personalization reset for this profile"); } }} />
+          <Row id="sp-reset-taste" title="Reset personalization" sub="Forget this profile's taste answers and recommendation feedback" right={<span />} onClick={() => { const id = getState().activeProfileId; if (id) { clearTaste(id); clearFeedback(id); clearRecoMetrics(id); toast("Personalization reset for this profile"); } }} />
         </div>
       );
     case "home":
@@ -532,7 +533,7 @@ export function SettingsPage() {
   if (tv) {
     return (
       <div ref={root} className="tv-page tv-settings">
-        <PageHeader title="Help & Settings" sub={profile ? `Signed in as ${profile.name}` : undefined} />
+        <PageHeader title="Help & Settings" sub={profile ? `Watching as ${profile.name}` : undefined} />
         <div className="tv-settings-cols">
           <nav className="tv-settings-list" aria-label="Settings sections" data-scroll-y="nearest" data-block-exit="up down">
             {SECTIONS.map((s) => (

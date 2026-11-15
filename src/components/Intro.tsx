@@ -1,3 +1,4 @@
+import { focusFirst } from "../lib/focus";
 import { Component, useCallback, useEffect, useRef, useState, type ReactNode } from "react";
 import { useReducedMotion } from "../lib/hooks";
 import { getIntroPhase, setIntroPhase, type IntroPhase } from "../lib/launch";
@@ -115,7 +116,19 @@ export function IntroOverlay({ plan, tv, onDone }: { plan: IntroPlan; tv: boolea
     try { const p = v.play() as Promise<void> | undefined; p?.catch?.(() => fns.current.fallback()); } catch { fns.current.fallback(); }
   }, [view]);
 
-  useEffect(() => { if (canSkip && tv) skipBtn.current?.focus({ preventScroll: true }); }, [canSkip, tv]);
+  // TV: Skip keeps focus while the intro is up, even if the screen underneath autofocuses something as it loads
+  // (the remote keys are captured above either way; this keeps the focus ring where the viewer expects it).
+  useEffect(() => {
+    if (!canSkip || !tv) return;
+    skipBtn.current?.focus({ preventScroll: true });
+    const keep = (e: FocusEvent) => {
+      if (ended.current) return;
+      const t = e.target as Element | null;
+      if (t && !t.closest("[data-intro]")) skipBtn.current?.focus({ preventScroll: true });
+    };
+    document.addEventListener("focusin", keep, true);
+    return () => document.removeEventListener("focusin", keep, true);
+  }, [canSkip, tv]);
 
   const cls = `intro intro--${tv ? "tv" : "m"} intro--${view}${phase === "leave" ? " is-leaving" : ""}`;
   return (
@@ -154,8 +167,22 @@ export function useLaunchIntro(tv: boolean) {
   });
   const [frozenTv] = useState(tv);
   const [done, setDone] = useState(!plan);
-  const end = useCallback(() => { try { markIntroSeen(); } catch { /* ignore */ } setIntroPhase("done"); setDone(true); }, []);
+  const end = useCallback(() => {
+    try { markIntroSeen(); } catch { /* ignore */ }
+    setIntroPhase("done"); setDone(true);
+    // The Skip button had focus; once the overlay is gone, hand focus to the screen underneath instead of <body>
+    // (on TV a body focus would make the first D-pad press land in the side rail).
+    if (frozenTv) requestAnimationFrame(() => requestAnimationFrame(() => handOffFocus()));
+  }, [frozenTv]);
   return { plan: done ? null : plan, tv: frozenTv, end };
+}
+
+/** After the intro: focus the first item of the visible screen, unless something (a dialog, the picker) already has it. */
+export function handOffFocus() {
+  const a = document.activeElement;
+  if (a && a !== document.body && a !== document.documentElement && a.isConnected) return;
+  const scope = document.querySelector(".profiles, .onboarding, [role=dialog]:not([data-intro]), .tv-page, main");
+  if (scope) focusFirst(scope);
 }
 
 /** App-level launch intro: plays on a cold start per INTRO.replay (lib/intro/config.ts), never on rerender or navigation. */

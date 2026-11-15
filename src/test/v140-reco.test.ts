@@ -171,6 +171,32 @@ describe("v1.4.0 offline evaluation vs baseline (catalogue snapshot, synthetic p
     }
     console.info(`[reco eval] with history\n${rows.join("\n")}`);
   });
+  it("leave-one-out: the specific held-out title (not any title of the genre) is found more often than by the baselines", () => {
+    // Relevance here is one exact title the profile watched and that was hidden from the model, so a list cannot
+    // score just by being full of the right genre. Histories are still synthetic (five titles of one genre family).
+    const rows: string[] = [];
+    let eng = 0, v13 = 0, pop = 0, n = 0;
+    for (const p of profiles) {
+      const pool = released.filter((i) => has(i, p.genres)).filter((_, k) => k % 2 === 0).slice(0, 5);
+      let he = 0, hb = 0, hp = 0;
+      for (const out of pool) {
+        const watched = pool.filter((i) => i !== out);
+        const rel = new Set([out.id]);
+        const signals: ProfileSignals = { ...empty, history: hist(watched) };
+        const m = buildModel(signals);
+        const similar = m.seeds.map((seed) => ({ seed, items: similarTo(seed.item) }));
+        const top = buildSections({ model: m, suppressed: new Set(), similar, trending, popular, rails, now: NOW }).sections.find((s) => s.id === "top-picks")!.items;
+        const seeds = pickSeeds(signals.history, [], {});
+        const base = buildPersonalRows(seeds, seeds.map((s) => ({ moreLikeThis: similarTo(s.item) }) as never), new Set(watched.map((i) => i.id)), {}).topPicks;
+        const popTop = popularityBaseline.filter((i) => !watched.includes(i));
+        he += precisionAtK(top, rel) > 0 ? 1 : 0; hb += precisionAtK(base, rel) > 0 ? 1 : 0; hp += precisionAtK(popTop, rel) > 0 ? 1 : 0;
+      }
+      rows.push(`${p.name}: HR@10 ${he}/${pool.length} engine, ${hb}/${pool.length} v1.3, ${hp}/${pool.length} popularity`);
+      eng += he; v13 += hb; pop += hp; n += pool.length;
+    }
+    console.info(`[reco eval] leave-one-out\n${rows.join("\n")}\ntotal HR@10 engine ${eng}/${n}, v1.3 ${v13}/${n}, popularity ${pop}/${n}`);
+    expect(eng).toBeGreaterThanOrEqual(pop);
+  });
 });
 
 describe("v1.4.0 sections", () => {

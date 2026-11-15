@@ -25,31 +25,35 @@ async function open(page: Page, path: string, tv: boolean, sources: unknown[], s
   let loads = 0;
   await page.route(/^https:\/\/cinesrc\.st\/embed\//, (r) => { loads++; return r.fulfill({ contentType: "text/html", body: embed(loads === 1 ? stopAt : 0) }); });
   await page.route(/^https:\/\/(vidlink\.pro|www\.vidy\.st)\//, (r) => r.fulfill({ contentType: "text/html", body: "<!doctype html><body style='background:#422'></body>" }));
-  await page.addInitScript((s) => { if (!localStorage.getItem("panda:v1:state")) localStorage.setItem("panda:v1:state", s); sessionStorage.setItem("panda:splash", "1"); }, STATE());
+  await page.addInitScript((s) => { if (!localStorage.getItem("panda:v1:state")) localStorage.setItem("panda:v1:state", s); sessionStorage.setItem("panda:v1:intro-session", "e2e"); }, STATE());
   await page.goto(`${path}${path.includes("?") ? "&" : "?"}layout=${tv ? "tv" : "mobile"}`, { waitUntil: "domcontentloaded" });
   return { loads: () => loads };
 }
 
-test("the ad tier outranks the order the backend sent: CineSrc (tier 1) plays before VidLink", async ({ page }, info) => {
+test("the platform policy, not the backend order, decides the first player (VidLink never first)", async ({ page }, info) => {
   await open(page, "/watch/movie/550", Boolean(info.project.metadata.tv), [vidlink, vidy, cinesrc]);
   const frame = page.locator("iframe.player-frame");
   await expect(frame).toHaveCount(1, { timeout: 30_000 });
-  expect(new URL((await frame.getAttribute("src"))!).hostname).toBe("cinesrc.st");
-  // time to first frame is measured and kept per source
-  await expect.poll(() => page.evaluate(() => JSON.parse(localStorage.getItem("panda:ttff") ?? "{}").cinesrc?.length ?? 0), { timeout: 20_000 }).toBeGreaterThan(0);
+  // v1.4 policy (docs/PLAYBACK.md): phones start on Vidy; a computer browser starts on CineSrc (tier 1)
+  const phone = Boolean(info.project.use.hasTouch);
+  expect(new URL((await frame.getAttribute("src"))!).hostname).toBe(phone ? "www.vidy.st" : "cinesrc.st");
+  if (!phone) await expect.poll(() => page.evaluate(() => JSON.parse(localStorage.getItem("panda:ttff") ?? "{}").cinesrc?.length ?? 0), { timeout: 20_000 }).toBeGreaterThan(0);
 });
 
-test("a stall shows the buffering ring, then a recovery card that retries or switches", async ({ page }, info) => {
+test("a stall shows the buffering ring, then a recovery card that retries (no source switcher)", async ({ page }, info) => {
   test.setTimeout(90_000);
   const tv = Boolean(info.project.metadata.tv);
+  test.skip(!tv, "phones start on Vidy, whose stall path is covered in v140-playback.test.ts");
   const h = await open(page, "/watch/movie/550", tv, [cinesrc, vidy], 3);
   await expect(page.locator("#pl-buffering")).toBeVisible({ timeout: 20_000 });
   await expect(page.locator("#pl-stall")).toBeVisible({ timeout: 30_000 });
-  await expect(page.locator("#pl-stall")).toContainText("CineSrc stopped playing");
-  await expect(page.locator("#pl-stall")).toContainText(/Switching to Vidy in \d+ s/);
-  await expect(page.locator("#pl-stall-switch")).toBeVisible();
+  await expect(page.locator("#pl-stall")).toContainText("Playback stopped");
+  await expect(page.locator("#pl-stall")).toContainText(/Trying again in \d+ s/);
+  // directive §5: no visible provider names or switch buttons
+  await expect(page.locator("#pl-stall")).not.toContainText(/CineSrc|Vidy|Switch/);
+  await expect(page.locator("#pl-stall-switch")).toHaveCount(0);
   await expect(page.locator("#pl-stall-report")).toBeVisible();
-  if (tv) await expect(page.locator("#pl-stall-retry")).toBeFocused();
+  await expect(page.locator("#pl-stall-retry")).toBeFocused();
   await page.locator("#pl-stall-retry").click();
   await expect(page.locator("#pl-stall")).toHaveCount(0);
   await expect.poll(() => h.loads()).toBe(2);

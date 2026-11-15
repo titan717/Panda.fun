@@ -31,6 +31,8 @@ export interface FailureRecord {
   /** Verified total failures in a row. */
   failures: number;
   lastVerified: "failed" | "playing";
+  /** Series only: distinct "season:episode" pairs that failed on every provider (newest last, at most 8). */
+  episodes?: string[];
   suppressedUntil: number;
   recovery: RecoveryStatus;
 }
@@ -80,12 +82,18 @@ export function recordTotalFailure(f: TotalFailure, now = Date.now(), c: HealthC
   const s = { ...read() };
   const k = healthKey(f.platform, f.type, f.id);
   const prev = s[k];
-  const failures = prev && prev.lastVerified === "failed" ? prev.failures + 1 : 1;
+  // Escalate only on a failure verified after the previous cooldown ended (a re-check). Retrying straight away, or
+  // several tries in one evening, is the same incident: it refreshes the record but never lengthens the cooldown.
+  const active = prev && prev.lastVerified === "failed" && prev.recovery !== "recovered";
+  const failures = !active ? 1 : prev.suppressedUntil <= now ? prev.failures + 1 : prev.failures;
   const span = Math.min(c.maxMs, c.initialMs * Math.pow(c.factor, failures - 1));
+  const ep = f.type === "tv" && f.season != null && f.episode != null ? `${f.season}:${f.episode}` : null;
+  const episodes = ep ? [...new Set([...(active ? prev.episodes ?? [] : []), ep])].slice(-8) : undefined;
   const rec: FailureRecord = {
     v: 1, contentId: f.id, contentType: f.type, platform: f.platform, profileId: f.profileId ?? null,
     season: f.season, episode: f.episode, attempted: [...new Set(f.attempted)], reason: f.reason,
-    failedAt: now, failures, lastVerified: "failed", suppressedUntil: now + span, recovery: "suppressed"
+    failedAt: now, failures, lastVerified: "failed", suppressedUntil: Math.max(active ? prev.suppressedUntil : 0, now + span), recovery: "suppressed",
+    ...(episodes ? { episodes } : {})
   };
   s[k] = rec;
   write(s, now, c);
@@ -101,11 +109,21 @@ export function recordPlaybackSuccess(platform: PlaybackPlatform, type: MediaTyp
   write({ ...s, [k]: { ...prev, lastVerified: "playing", failures: 0, suppressedUntil: 0, recovery: "recovered" } }, now, c);
 }
 
+/**
+ * A series is kept out of recommendations only when what a recommendation would open is broken: its first episode
+ * failed, two different episodes failed, or the record has no episode. One broken later episode only marks that
+ * episode (the record stays for diagnostics) and the show remains recommendable.
+ */
+function blocksTitle(r: FailureRecord) {
+  if (r.contentType !== "tv" || !r.episodes?.length) return true;
+  return r.episodes.length >= 2 || r.episodes.includes("1:1");
+}
+
 export function healthStatus(platform: PlaybackPlatform, type: MediaType, id: number, now = Date.now()): RecoveryStatus | null {
   const r = read()[healthKey(platform, type, id)];
   if (!r) return null;
   if (r.recovery === "recovered") return "recovered";
-  return r.suppressedUntil > now ? "suppressed" : "revalidating";
+  return r.suppressedUntil > now && blocksTitle(r) ? "suppressed" : "revalidating";
 }
 
 /** True while a title must not be recommended on this platform. */
@@ -114,7 +132,7 @@ export const isSuppressed = (platform: PlaybackPlatform, type: MediaType, id: nu
 /** Set of "type:id" keys suppressed right now on a platform (fast filter for the recommendation engine). */
 export function suppressedSet(platform: PlaybackPlatform, now = Date.now()): Set<string> {
   const out = new Set<string>();
-  for (const r of Object.values(read())) if (r.platform === platform && r.recovery !== "recovered" && r.suppressedUntil > now) out.add(`${r.contentType}:${r.contentId}`);
+  for (const r of Object.values(read())) if (r.platform === platform && r.recovery !== "recovered" && r.suppressedUntil > now && blocksTitle(r)) out.add(`${r.contentType}:${r.contentId}`);
   return out;
 }
 

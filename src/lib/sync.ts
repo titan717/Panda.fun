@@ -9,6 +9,7 @@
 import { API_BASE } from "./api";
 import { DEVICE_PREFS, getState, replaceState, subscribeStore, type HistoryEntry, type Prefs, type Profile, type ProfileData, type Rating, type State, type UserList } from "./store";
 import type { PandaItem } from "./types";
+import { markOnboardingSeen, markWelcomed } from "./tasteProfile";
 
 /* ---------------- the code ---------------- */
 
@@ -411,6 +412,10 @@ export function restoreFromCode(input: string): Promise<{ added: number; profile
     const link: Link = { code: formatCode(code), id: keys.id, version: 0, lastSync: 0, conflicts: 0, clock: readLink()?.id === keys.id ? readLink()!.clock : emptyClock() };
     try {
       const r = await runSync(link, keys, { restoring: true });
+      // Restoring a backup means a returning viewer: the restored profiles skip first-run onboarding (they can
+      // still open it from Settings › Personalize recommendations).
+      markWelcomed();
+      markOnboardingSeen(getState().profiles.map((p) => p.id));
       clearFailures();
       startAutoSync();
       return { added: r.added, profiles: getState().profiles.length };

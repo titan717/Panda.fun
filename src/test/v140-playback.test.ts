@@ -129,14 +129,29 @@ describe("v1.4.0 playback health and temporary suppression", () => {
     expect(recordTotalFailure({ platform: "tv", type: "movie", id: 8, attempted: [], reason: "timeout" }, now)).toBeNull();
     expect(isSuppressed("tv", "movie", 8, now)).toBe(false);
   });
-  it("repeated verified failures extend the cooldown, capped", () => {
-    const a = recordTotalFailure({ platform: "tv", type: "tv", id: 9, attempted: ["cinesrc"], reason: "error" }, now)!;
-    const b = recordTotalFailure({ platform: "tv", type: "tv", id: 9, attempted: ["cinesrc"], reason: "error" }, now + 1)!;
-    expect(b.failures).toBe(2);
-    expect(b.suppressedUntil - (now + 1)).toBe(HEALTH_CONFIG.initialMs * 3);
-    let c = b; for (let i = 0; i < 6; i++) c = recordTotalFailure({ platform: "tv", type: "tv", id: 9, attempted: ["cinesrc"], reason: "error" }, now + 2 + i)!;
-    expect(c.suppressedUntil - (now + 7)).toBe(HEALTH_CONFIG.maxMs);
+  it("only a failure verified after the cooldown ended extends it, capped", () => {
+    const a = recordTotalFailure({ platform: "tv", type: "movie", id: 9, attempted: ["cinesrc"], reason: "error" }, now)!;
+    // Retry straight away: same incident, the cooldown does not grow
+    const b = recordTotalFailure({ platform: "tv", type: "movie", id: 9, attempted: ["cinesrc"], reason: "error" }, now + 60_000)!;
+    expect(b.failures).toBe(1);
+    expect(b.suppressedUntil).toBe(now + 60_000 + HEALTH_CONFIG.initialMs);
+    // re-checked after the cooldown and still broken: 3x longer
+    let t = b.suppressedUntil + 1;
+    const c = recordTotalFailure({ platform: "tv", type: "movie", id: 9, attempted: ["cinesrc"], reason: "error" }, t)!;
+    expect(c.failures).toBe(2);
+    expect(c.suppressedUntil - t).toBe(HEALTH_CONFIG.initialMs * 3);
+    let d = c; for (let i = 0; i < 6; i++) { t = d.suppressedUntil + 1; d = recordTotalFailure({ platform: "tv", type: "movie", id: 9, attempted: ["cinesrc"], reason: "error" }, t)!; }
+    expect(d.suppressedUntil - t).toBe(HEALTH_CONFIG.maxMs);
     expect(a.failures).toBe(1);
+  });
+  it("one broken later episode does not hide the whole show; the first episode or two episodes do", () => {
+    recordTotalFailure({ platform: "mobile", type: "tv", id: 11, season: 2, episode: 5, attempted: ["vidy", "cinesrc"], reason: "error" }, now);
+    expect(isSuppressed("mobile", "tv", 11, now + 1)).toBe(false);
+    expect(suppressedSet("mobile", now + 1).has("tv:11")).toBe(false);
+    recordTotalFailure({ platform: "mobile", type: "tv", id: 11, season: 2, episode: 6, attempted: ["vidy", "cinesrc"], reason: "error" }, now + 2);
+    expect(isSuppressed("mobile", "tv", 11, now + 3)).toBe(true);
+    recordTotalFailure({ platform: "mobile", type: "tv", id: 12, season: 1, episode: 1, attempted: ["vidy", "cinesrc"], reason: "error" }, now);
+    expect(isSuppressed("mobile", "tv", 12, now + 1)).toBe(true);
   });
   it("a successful revalidation restores eligibility at once", () => {
     recordTotalFailure({ platform: "browser", type: "movie", id: 10, attempted: ["cinesrc", "vidy"], reason: "timeout" }, now);

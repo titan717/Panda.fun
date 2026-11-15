@@ -66,8 +66,35 @@ Method (`src/test/v140-reco.test.ts`, the "evaluation" block): a snapshot of the
 Caveats, honestly:
 - These are **synthetic** profiles on one catalogue snapshot, with genre-match relevance. They show that the engine follows stated and observed taste much better than the baselines. They do not show that real viewers will watch more. No live A/B test was run.
 - Precision rises and **diversity (ILD) falls** compared with v1.3, because v1.3's list was mostly popular titles across all genres. MMR limits the drop. λ is the knob if Top Picks feels too narrow.
+- The weights in the two tables above are **hand-set** from the intent of each signal and checked against this offline evaluation. They were not learned from viewing data, because Panda has none: there is no analytics backend and no real-user CTR, completion or retention numbers exist for v1.4.0.
+- The genre-match relevance above is partly circular (the engine scores genres, and relevance is defined by genre). The **leave-one-out** test below avoids that by asking for one exact hidden title instead.
 - The catalogue is whatever the backend returns (Home rails, trending, discover, More Like This). The engine cannot recommend what those lists never contain.
+
+### Leave-one-out hit rate
+
+Each synthetic profile watched five titles of its genre family. Each title in turn is hidden from the model, the other four are the history, and the test checks whether the hidden title itself is in the top 10 (HR@10). Results on the same snapshot (`v140-reco.test.ts`, "leave-one-out"):
+
+| Profile | Engine | v1.3 Top Picks | Popularity |
+|---|---|---|---|
+| Horror & thriller | 4/5 | 2/5 | 3/5 |
+| Animation | 2/5 | 0/5 | 0/5 |
+| Romance & comedy | 1/5 | 1/5 | 1/5 |
+| Crime | 5/5 | 3/5 | 1/5 |
+| Sci-fi | 5/5 | 3/5 | 2/5 |
+| **Total** | **17/25** | **9/25** | **7/25** |
+
+This is still synthetic: the histories are built from one genre family and the More Like This lists in the test are a deterministic stand-in, so it shows the ranking works as designed, not that viewers will watch more.
+
+## On-device metrics
+
+`metrics.ts` keeps a small per-profile log on the device (`localStorage["panda:v1:recometrics"]`, at most 400 titles per list):
+
+- **Impression**: a recommended card was at least 60 % on screen in a row (IntersectionObserver), once per title per row.
+- **Open**: the viewer opened a recommended title from a row.
+- **Watch start / completion**: read from the profile's own watch history, credited only if it happened after the open (more than 60 s watched, or marked finished).
+
+The diagnostics panel shows, per row and in total: shown, opened, CTR, started, start rate, completed and completion rate. "Reset personalization" in Settings clears it with the rest of the profile's taste data. Nothing is uploaded, so these numbers describe one device. They are there to sanity-check tuning on real use, not to support claims about all viewers.
 
 ## Developer diagnostics
 
-Dev builds, or `localStorage.setItem("panda:recodebug", "1")` on any build, show a collapsed "Recommendation diagnostics" panel under the rows. It lists the model (genre affinities and their origin, seeds, type, era) and the top 25 scored candidates with every score part and the chosen reason. It is hidden from viewers by default.
+Dev builds, or `localStorage.setItem("panda:recodebug", "1")` on any build, show a collapsed "Recommendation diagnostics" panel under the rows. It lists the on-device funnel above, the model (genre affinities and their origin, seeds, type, era) and the top 25 scored candidates with every score part and the chosen reason. It is hidden from viewers by default.

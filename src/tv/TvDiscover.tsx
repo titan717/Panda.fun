@@ -1,14 +1,16 @@
-import { useCallback, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { Icon } from "../components/Icon";
 import { ErrorState, Skeleton } from "../components/ui";
 import { QuickActions } from "../components/QuickActions";
 import { RecoDiagnostics, recoDebug } from "../components/RecoDiagnostics";
 import { useRecommendations } from "../lib/reco/useRecommendations";
 import { recordFeedback } from "../lib/reco/feedback";
+import { logOpened, useRecoImpressions } from "../lib/reco/metrics";
 import { getState } from "../lib/store";
 import type { RecoSection } from "../lib/reco/sections";
 import type { PandaItem } from "../lib/types";
 import { TvPoster } from "./TvCards";
+import { focusEl } from "../lib/focus";
 
 const HOLD_MS = 550;
 
@@ -30,12 +32,58 @@ export function TvDiscover({ onOpen }: { onOpen: (item: PandaItem) => void }) {
   };
   const open = useCallback((item: PandaItem) => {
     recordFeedback(getState().activeProfileId, { id: item.id, type: item.type, kind: "open", genres: item.genres, title: item.title });
+    logOpened(item.id);
     onOpen(item);
   }, [onOpen]);
+  const rootRef = useRef<HTMLDivElement>(null);
+  useRecoImpressions(rootRef, r.sections);
+
+  // The OK key-up that follows a long press can land inside the menu (or nowhere), so a pending hold is also
+  // cleared on any window key-up and whenever the menu closes; otherwise the next OK would be swallowed.
+  useEffect(() => {
+    const clear = (e: KeyboardEvent) => { if (e.key === "Enter" && hold.current?.fired) { clearTimeout(hold.current.t); hold.current = null; } };
+    window.addEventListener("keyup", clear, true);
+    return () => window.removeEventListener("keyup", clear, true);
+  }, []);
+  const closeSheet = useCallback(() => {
+    if (hold.current) { clearTimeout(hold.current.t); hold.current = null; }
+    setSheet(null);
+  }, []);
+
+  // Up/Down between rows: each row remembers the card it was left on (Netflix-style), otherwise the card nearest
+  // the current one horizontally. Up from the first row and Down from the last fall through to the page.
+  const rowMemory = useRef(new Map<string, string>());
+  const onFocusCapture = (e: React.FocusEvent) => {
+    const t = e.target as HTMLElement;
+    const row = t.closest<HTMLElement>("[data-row]");
+    if (row && t.id) rowMemory.current.set(row.id, t.id);
+  };
+  const moveRow = (from: HTMLElement, dir: 1 | -1) => {
+    const row = from.closest<HTMLElement>("[data-row]");
+    const rows = [...(row?.parentElement?.querySelectorAll<HTMLElement>(":scope > [data-row]") ?? [])];
+    const next = row ? rows[rows.indexOf(row) + dir] : undefined;
+    if (!next) return false;
+    const remembered = rowMemory.current.get(next.id);
+    let target = remembered ? document.getElementById(remembered) : null;
+    if (!target || !next.contains(target)) {
+      const x = from.getBoundingClientRect().left;
+      let best = Infinity;
+      for (const c of next.querySelectorAll<HTMLElement>("[id^=reco-], #res-0")) {
+        if (!c.matches("a, button, [tabindex]")) continue;
+        const d = Math.abs(c.getBoundingClientRect().left - x);
+        if (d < best) { best = d; target = c; }
+      }
+    }
+    return target ? focusEl(target) : false;
+  };
 
   const onKeyDown = (e: React.KeyboardEvent) => {
     const item = itemFor(e.target as Element);
     if (!item) return;
+    if ((e.key === "ArrowDown" || e.key === "ArrowUp") && !e.altKey && !e.ctrlKey && !e.metaKey) {
+      if (moveRow(e.target as HTMLElement, e.key === "ArrowDown" ? 1 : -1)) { e.preventDefault(); e.stopPropagation(); }
+      return;
+    }
     if (e.key === "ContextMenu" || e.key === "m" || e.key === "M") { e.preventDefault(); setSheet(item); return; }
     if (e.key !== "Enter") return;
     e.preventDefault();
@@ -52,14 +100,14 @@ export function TvDiscover({ onOpen }: { onOpen: (item: PandaItem) => void }) {
   };
 
   return (
-    <div className="tv-discover" onKeyDown={onKeyDown} onKeyUp={onKeyUp}
+    <div className="tv-discover" ref={rootRef} onKeyDown={onKeyDown} onKeyUp={onKeyUp} onFocus={onFocusCapture}
       onContextMenu={(e) => { const item = itemFor(e.target as Element); if (item) { e.preventDefault(); setSheet(item); } }}>
       {r.loading && <DiscoverSkeleton />}
       {r.error && !r.sections.length && <ErrorState compact message={r.error.message} onRetry={r.retry} />}
       {r.sections.map((s, n) => <DiscoverRow key={s.id} section={s} first={n === 0} onOpen={open} />)}
       {r.sections.length > 0 && <p className="tv-discover-hint"><Icon name="info" /> Hold OK on a title for More like this, Not interested or Hide</p>}
       {recoDebug() && <RecoDiagnostics ranked={r.ranked} model={r.model} />}
-      {sheet && <QuickActions item={sheet} context={{ kind: "reco" }} onClose={() => setSheet(null)} />}
+      {sheet && <QuickActions item={sheet} context={{ kind: "reco" }} onClose={closeSheet} />}
     </div>
   );
 }
@@ -68,7 +116,7 @@ function DiscoverRow({ section, first, onOpen }: { section: RecoSection; first: 
   const [focused, setFocused] = useState<PandaItem | null>(null);
   const reason = focused ? section.reasons?.[focused.id] : undefined;
   return (
-    <section className={`tv-row tv-row--poster tv-reco ${first ? "is-first" : ""} tv-reco--${section.id.split("-")[0]}`} data-row aria-labelledby={`reco-${section.id}-title`} id={`reco-${section.id}`}>
+    <section className={`tv-row tv-row--poster tv-reco ${first ? "is-first" : ""} tv-reco--${section.id.split("-")[0]}`} data-row data-reco-surface={section.id} aria-labelledby={`reco-${section.id}-title`} id={`reco-${section.id}`}>
       <h2 className="tv-row-title" id={`reco-${section.id}-title`}>
         {section.id === "top-picks" && <span className="tv-reco-mark" aria-hidden="true" />}
         {section.title}

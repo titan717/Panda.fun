@@ -155,9 +155,16 @@ export function revealFocus(el: HTMLElement) {
   } else if (page) {
     const rect = (el.closest<HTMLElement>("[data-row]") ?? el).getBoundingClientRect();
     const box = page.getBoundingClientRect();
-    const offset = Number(page.dataset.scrollOffset ?? 0.18) * page.clientHeight;
+    // v1.4.0: a scroller taller than the screen (the TV episode list) only counts its visible part
+    const visTop = Math.max(box.top, 0), visBottom = Math.min(box.bottom, window.innerHeight);
+    const offset = Number(page.dataset.scrollOffset ?? 0.18) * Math.min(page.clientHeight, visBottom - visTop || page.clientHeight);
     const top = rect.top - box.top + page.scrollTop;
-    if (page.dataset.scrollY === "row" || rect.top < box.top + 8 || rect.bottom > box.bottom - 8) page.scrollTo({ top: Math.max(0, top - offset), behavior });
+    const out = rect.top < visTop + 8 || rect.bottom > visBottom - 8;
+    if (page.dataset.scrollY === "row" || out) {
+      if (page.scrollHeight > page.clientHeight + 1) page.scrollTo({ top: Math.max(0, top - offset), behavior });
+      // the scroller cannot move (its content fits it): scroll the page instead, honouring scroll-margin
+      else if (out && !row) el.scrollIntoView({ block: "nearest", inline: "nearest", behavior });
+    }
   }
 }
 
@@ -260,4 +267,30 @@ export function recallFocus(scope: HTMLElement | null | undefined) {
   if (!scope || typeof id !== "string") return false;
   const el = document.getElementById(id);
   return el && scope.contains(el) ? focusEl(el) : false;
+}
+
+/**
+ * Like recallFocus, for screens whose content arrives after mount (Search discovery rows): if this history entry
+ * remembers a focused id, wait up to `timeoutMs` for it to appear and focus it. Returns a cleanup function.
+ * `fallback` runs immediately when nothing is remembered (or once the wait gives up and focus is still on <body>).
+ */
+export function recallFocusWhenReady(scope: HTMLElement | null, fallback: () => void, timeoutMs = 4000) {
+  const id = (history.state as Record<string, unknown> | null)?.[FOCUS_MEMORY_KEY];
+  if (!scope || typeof id !== "string") { fallback(); return () => undefined; }
+  if (recallFocus(scope)) return () => undefined;
+  fallback();
+  let done = false;
+  const stop = () => { done = true; mo.disconnect(); clearTimeout(t); };
+  const mo = new MutationObserver(() => {
+    if (done) return;
+    const el = document.getElementById(id);
+    // only take over while the user has not moved on from the fallback
+    if (el && scope.contains(el)) { stop(); if (!userMoved) focusEl(el); }
+  });
+  let userMoved = false;
+  const onKey = () => { userMoved = true; };
+  window.addEventListener("keydown", onKey, { once: true, capture: true });
+  mo.observe(scope, { childList: true, subtree: true });
+  const t = setTimeout(stop, timeoutMs);
+  return () => { stop(); window.removeEventListener("keydown", onKey, true); };
 }

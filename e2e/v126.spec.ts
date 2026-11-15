@@ -24,7 +24,7 @@ async function open(page: Page, path: string, tv: boolean, delay = 0) {
   await page.route(/\/api\/v1\/panda\/play\/movie\/550/, (r) => r.fulfill(ok({ type: "movie", tmdbId: 550, sources: [cinesrc("movie", 550)] })));
   await page.route(/\/api\/v1\/panda\/play\/tv\/1396/, (r) => r.fulfill(ok({ type: "tv", tmdbId: 1396, sources: [cinesrc("tv", 1396)] })));
   await page.route(/^https:\/\/cinesrc\.st\/embed\//, (r) => r.fulfill({ contentType: "text/html", body: embed(delay) }));
-  await page.addInitScript((s) => { if (!localStorage.getItem("panda:v1:state")) localStorage.setItem("panda:v1:state", s); sessionStorage.setItem("panda:splash", "1"); }, STATE);
+  await page.addInitScript((s) => { if (!localStorage.getItem("panda:v1:state")) localStorage.setItem("panda:v1:state", s); sessionStorage.setItem("panda:v1:intro-session", "e2e"); }, STATE);
   await page.goto(`${path}${path.includes("?") ? "&" : "?"}layout=${tv ? "tv" : "mobile"}`, { waitUntil: "domcontentloaded" });
 }
 

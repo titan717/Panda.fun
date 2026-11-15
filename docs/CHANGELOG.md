@@ -12,7 +12,9 @@ Every stable release of Panda.fun. The same notes ship in each GitHub Release an
 - **No more source picker**: playback chooses the source for you and falls back automatically. Android TV uses CineSrc only; phones try Vidy (Vidy Anime for anime) then CineSrc, and VidLink is gone from phones; computer browsers keep CineSrc and Vidy with VidLink as a last resort. A source only counts as working once the video actually starts moving. Settings › Playback health lists problems recorded on this device, and a problem is recorded only when every source failed.
 - **TV remote fixes**: Settings now scrolls with the focused option so nothing is hidden off screen; Back from a title returns focus to the card you came from; the Search field opens the Android TV keyboard (Gboard) on OK and types for real.
 - **Cleaner seasons and episodes**: seasons are labelled Season 1, Season 2… (with Specials kept separate), without "Arc" labels or renumbering, and trailers on title pages follow one autoplay manager that respects your Trailers settings.
-- **Fixes**: artwork on the website could stay blank in production because the offline cache was blocked by the security policy; it now loads. Hidden and Not interested titles also stay out of Home's personal rows.
+- **Brand colours throughout**: the last blue and orange accents (Search field, microphone, Who's watching?, links, progress bars, the NEW & HOT pill) now use the Panda.fun purple and magenta.
+- **Fixes**: artwork on the website could stay blank in production because the offline cache was blocked by the security policy; it now loads. Hidden and Not interested titles also stay out of Home's personal rows. Restoring a sync code no longer sends restored profiles through first-run setup. One broken episode no longer hides a whole series from recommendations.
+- **For developers**: on-device recommendation metrics (impressions, opens, watch starts, completions) in the diagnostics panel, and a leave-one-out offline evaluation (docs/RECOMMENDATIONS.md).
 
 ## 1.3.1
 

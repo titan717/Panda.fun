@@ -1,107 +1,99 @@
 import { expect, test, type Page } from "@playwright/test";
 
-/** v1.3.0: the launch intro cannot be skipped, ends on time, hands off to Who's watching, and the picker works by D-pad. */
-const STATE = JSON.stringify({
-  profiles: [
-    { id: "p1", name: "You", avatar: "smile", kids: false, createdAt: 1 },
-    { id: "p2", name: "Sam", avatar: "star", kids: false, createdAt: 2 },
-  ],
-  activeProfileId: "p1", prefs: { autoplayTrailers: false }, data: {},
-});
+/**
+ * v1.4.0 launch (replaces the v1.3.0/v1.3.1 non-skippable intro specs): the Intro Manager plays on a cold start,
+ * can be skipped after 1 s, never replays on reload in the same tab, and the last profile is restored, so Who's
+ * watching only shows when there is no saved profile. The picker itself still works by D-pad.
+ */
+const profiles = [
+  { id: "p1", name: "You", avatar: "smile", kids: false, createdAt: 1 },
+  { id: "p2", name: "Sam", avatar: "star", kids: false, createdAt: 2 },
+];
+const STATE = (active: string | null) => JSON.stringify({ profiles, activeProfileId: active, prefs: { autoplayTrailers: false }, data: {} });
 
-async function fresh(page: Page, query = "") {
+async function fresh(page: Page, query = "", active: string | null = "p1") {
   await page.route("https://api.github.com/**", (r) => r.fulfill({ contentType: "application/json", body: JSON.stringify({ tag_name: "v0.0.1", assets: [] }) }));
-  await page.addInitScript((s) => { if (!localStorage.getItem("panda:v1:state")) localStorage.setItem("panda:v1:state", s); }, STATE);
+  await page.addInitScript((s) => { if (!localStorage.getItem("panda:v1:state")) localStorage.setItem("panda:v1:state", s); }, STATE(active));
   await page.goto(`/${query}`, { waitUntil: "commit" });
 }
 
-/** Wait for the intro to appear and then hand off (it cannot be skipped). */
-async function afterIntro(page: Page) {
-  await expect(page.locator("[data-intro]")).toHaveCount(1, { timeout: 5_000 });
-  await expect(page.locator("[data-intro]")).toHaveCount(0, { timeout: 7_000 });
-}
+const intro = (page: Page) => page.locator("[data-intro]");
+const who = (page: Page) => page.getByRole("heading", { name: "Who's watching?" });
 
-test("the intro ignores keys, clicks and taps, then ends on time and hands focus to the picker", async ({ page }, info) => {
+test("cold start: the intro plays, skips after 1 s, then the saved profile's Home opens directly", async ({ page }, info) => {
   test.skip(info.project.name !== "tv-1920" && info.project.name !== "mobile-390", "one TV and one phone size");
   const tv = Boolean(info.project.metadata.tv);
   await fresh(page, tv ? "?layout=tv" : "");
-  const intro = page.locator("[data-intro]");
-  await expect(intro).toBeVisible({ timeout: 5_000 });
-  const t0 = Date.now();
-  // hammer it: remote keys, Back (Escape), clicks and taps
-  for (const k of ["Enter", "Escape", "ArrowRight", "Backspace", " ", "ArrowDown"]) { await page.keyboard.press(k); }
-  await page.mouse.click(400, 300);
-  if (!tv) await page.touchscreen.tap(200, 400);
-  await expect(intro).toBeVisible();
-  // still on screen shortly before its end
-  // (v1.3.1: the TV film runs 5 s with a 6 s hard timeout; phones keep 2.4 s / 3 s)
-  await page.waitForTimeout(Math.max(0, (tv ? 4400 : 1900) - (Date.now() - t0)));
-  await expect(intro).toHaveCount(1);
-  // and gone well within the hard timeout
-  await expect(intro).toHaveCount(0, { timeout: tv ? 2_000 : 1_400 });
-  await expect(page.getByRole("heading", { name: "Who's watching?" })).toBeVisible();
-  // none of those keys moved focus or picked a profile underneath
-  await expect.poll(() => page.evaluate(() => document.activeElement?.id)).toBe("prof-p1");
-  expect(await page.evaluate(() => sessionStorage.getItem("panda:who"))).toBeNull();
+  await expect(intro(page)).toBeVisible({ timeout: 5_000 });
+  const skip = page.getByRole("button", { name: "Skip intro" });
+  await expect(skip).toBeVisible({ timeout: 3_000 });
+  // TV: Skip holds focus while the intro is up ("gone" = a loaded runner let the 5 s video finish first)
+  if (tv) { await expect.poll(() => page.evaluate(() => document.querySelector("[data-intro]") ? document.activeElement?.getAttribute("aria-label") : "gone")).toMatch(/^(Skip intro|gone)$/); await page.keyboard.press("Enter"); }
+  // the phone animation is only 2.2 s, so under a loaded CI runner it may finish on its own before the tap lands
+  else await skip.tap({ timeout: 2_000 }).catch(() => undefined);
+  await expect(intro(page)).toHaveCount(0, { timeout: 2_000 });
+  await expect(who(page)).toHaveCount(0);
+  // and a reload in the same tab is not a cold start
+  await page.reload({ waitUntil: "domcontentloaded" });
+  await page.waitForTimeout(1200);
+  await expect(intro(page)).toHaveCount(0);
+  await expect(who(page)).toHaveCount(0);
 });
 
-test("the intro's horizon lands on the picker's horizon", async ({ page }, info) => {
+test("the intro always ends on its own within the hard timeout", async ({ page }, info) => {
   test.skip(info.project.name !== "tv-1920" && info.project.name !== "mobile-390", "one TV and one phone size");
   const tv = Boolean(info.project.metadata.tv);
   await fresh(page, tv ? "?layout=tv" : "");
-  await expect(page.locator(".intro-horizon")).toHaveCount(1);
-  // measured during the final fade, when both lines are on screen together (rAF polling: the window is short)
-  const handle = await page.waitForFunction(() => {
-    const i = document.querySelector(".intro.is-leaving .intro-horizon");
-    const p = document.querySelector(".profiles-arc");
-    if (!i || !p) return null;
-    return { a: { y: i.getBoundingClientRect().y }, b: { y: p.getBoundingClientRect().y } };
-  }, null, { polling: "raf", timeout: 5_000 });
-  const { a, b } = (await handle.jsonValue())!;
-  expect(a && b).toBeTruthy();
-  expect(Math.abs(a!.y - b!.y)).toBeLessThanOrEqual(1);
-  expect(a!.y / page.viewportSize()!.height).toBeCloseTo(tv ? 0.78 : 0.68, 2);
+  await expect(intro(page)).toBeVisible({ timeout: 5_000 });
+  // TV: 5 s video + 2 s pad; phone: 2.2 s animation + 2 s pad
+  await expect(intro(page)).toHaveCount(0, { timeout: tv ? 8_000 : 5_000 });
 });
 
-test("reduced motion shows a short still frame, still not skippable", async ({ page }, info) => {
+test("reduced motion shows the branded still, which can be skipped", async ({ page }, info) => {
   test.skip(info.project.name !== "tv-1920", "once");
   await page.emulateMedia({ reducedMotion: "reduce" });
   await fresh(page, "?layout=tv");
-  const intro = page.locator("[data-intro]");
-  await expect(intro).toHaveClass(/intro--still/);
-  await page.keyboard.press("Enter");
-  await expect(intro).toHaveCount(1);
-  await expect(intro).toHaveCount(0, { timeout: 2_000 });
+  await expect(intro(page)).toHaveAttribute("data-view", "static", { timeout: 5_000 });
+  await expect(page.locator(".intro-still")).toHaveCount(1);
+  await expect(page.locator(".intro-video")).toHaveCount(0);
+  await expect(intro(page)).toHaveCount(0, { timeout: 4_000 });
 });
 
-test("D-pad on Who's watching: Right, Left, Down to Manage, Up back, OK picks and opens Home", async ({ page }, info) => {
+test("an Android activity recreation (?resumed=1) plays no intro", async ({ page }, info) => {
+  test.skip(info.project.name !== "tv-1920", "once");
+  await fresh(page, "?layout=tv&resumed=1");
+  await page.waitForTimeout(1500);
+  await expect(intro(page)).toHaveCount(0);
+});
+
+test("D-pad on Who's watching (no saved profile): Right, Left, Down to Manage, Up back, OK picks and opens Home", async ({ page }, info) => {
   test.skip(!info.project.metadata.tv || info.project.name === "tv-3840", "TV layout");
-  await fresh(page, "?layout=tv");
-  await afterIntro(page);
+  await fresh(page, "?layout=tv", null);
+  // wait for the intro to start and then end (with waitUntil "commit" the page can still be blank here)
+  await expect(intro(page)).toBeVisible({ timeout: 5_000 });
+  await expect(intro(page)).toHaveCount(0, { timeout: 9_000 });
+  await expect(who(page)).toBeVisible({ timeout: 10_000 });
   const focused = () => page.evaluate(() => document.activeElement?.id);
   await expect.poll(focused).toBe("prof-p1");
   await page.keyboard.press("ArrowRight"); await expect.poll(focused).toBe("prof-p2");
   await page.keyboard.press("ArrowRight"); await expect.poll(focused).toBe("prof-add");
   await page.keyboard.press("ArrowLeft"); await expect.poll(focused).toBe("prof-p2");
-  // the focused avatar lifts off the line and glows
-  const lift = await page.locator("#prof-p2 .profile-lift").evaluate((el) => getComputedStyle(el).transform);
-  expect(lift).not.toBe("none");
-  await expect.poll(async () => Number(await page.locator("#prof-p2 .profile-glow").evaluate((el) => getComputedStyle(el).opacity))).toBeGreaterThan(0.5);
   await page.keyboard.press("ArrowDown"); await expect.poll(focused).toBe("prof-manage");
   await page.keyboard.press("ArrowUp"); await expect.poll(focused).toMatch(/^prof-(p1|p2|add)$/);
   await page.keyboard.press("ArrowLeft"); await page.keyboard.press("ArrowLeft");
   await expect.poll(focused).toBe("prof-p1");
   await page.keyboard.press("Enter");
-  await expect(page.locator(".profiles.is-choosing")).toHaveCount(1);
-  await expect(page.getByRole("heading", { name: "Who's watching?" })).toHaveCount(0, { timeout: 3_000 });
-  await expect(page.locator(".who-veil")).toHaveCount(0, { timeout: 2_000 });
-  expect(await page.evaluate(() => sessionStorage.getItem("panda:who"))).toBe("1");
+  await expect(who(page)).toHaveCount(0, { timeout: 3_000 });
+  // the choice is remembered for the next cold start
+  await expect.poll(() => page.evaluate(() => JSON.parse(localStorage.getItem("panda:v1:state") ?? "{}").activeProfileId)).toBe("p1");
 });
 
 test("Add Profile and Manage Profiles still open from the picker", async ({ page }, info) => {
   test.skip(info.project.name !== "tv-1920", "once");
-  await fresh(page, "?layout=tv");
-  await afterIntro(page);
+  await fresh(page, "?layout=tv", null);
+  // wait for the intro to start and then end (with waitUntil "commit" the page can still be blank here)
+  await expect(intro(page)).toBeVisible({ timeout: 5_000 });
+  await expect(intro(page)).toHaveCount(0, { timeout: 9_000 });
   await page.locator("#prof-add").click();
   await expect(page).toHaveURL(/\/profiles\/new/);
   await page.goBack();

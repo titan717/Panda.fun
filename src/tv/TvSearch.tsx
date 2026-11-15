@@ -1,8 +1,8 @@
-import { useEffect } from "react";
+import { useEffect, useRef } from "react";
 import { Icon } from "../components/Icon";
 import { EmptyState, ErrorState, Skeleton } from "../components/ui";
 import { SEARCH_SORTS, useSearchState, type SearchFilter } from "../lib/useSearchState";
-import { focusEl } from "../lib/focus";
+import { focusEl, recallFocusWhenReady, useFocusMemory } from "../lib/focus";
 import { useRemoteField } from "../lib/remoteInput";
 import { TvPoster } from "./TvCards";
 import { TvDiscover } from "./TvDiscover";
@@ -22,13 +22,17 @@ export function TvSearch() {
     if (first && s.active) focusEl(first);
   }, { mode: "search" });
   const input = field.ref;
-  useEffect(() => { focusEl(input.current); }, [input]);
+  // Back from a title returns to the card it was opened from (focus memory per history entry, v1.4.0); a fresh
+  // visit starts in the field. Discovery rows load after mount, so the remembered card is awaited briefly.
+  const root = useRef<HTMLDivElement>(null);
+  useFocusMemory(root);
+  useEffect(() => recallFocusWhenReady(root.current, () => focusEl(input.current)), [input]);
   const sortLabel = SEARCH_SORTS.find((x) => x.id === s.sort)?.label ?? "Best match";
   const nextSort = () => { const i = SEARCH_SORTS.findIndex((x) => x.id === s.sort); s.setSort(SEARCH_SORTS[(i + 1) % SEARCH_SORTS.length]!.id); };
   const note = s.active && !s.stale ? (s.interpreted ? `Showing ${s.interpreted}` : s.corrected ? `Showing results for “${s.corrected}”` : s.people.length ? `Including titles with ${s.people.join(", ")}` : null) : null;
 
   return (
-    <div className="tv-page tv-search" data-scroll-y="item" data-scroll-offset="0.3">
+    <div ref={root} className="tv-page tv-search" data-scroll-y="item" data-scroll-offset="0.3">
       <section className="tv-search-bar">
         {s.voiceSupported && (
           <button id="search-mic" className={`tv-mic ${s.listening ? "is-listening" : ""}`} onClick={s.startVoice} aria-label="Search by voice" data-hover-focus><Icon name="mic" /></button>

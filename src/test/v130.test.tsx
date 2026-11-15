@@ -37,8 +37,8 @@ describe("v1.3.0 Who's watching", () => {
     expect(profilesCss).toMatch(/\.poster-wall-layer--far img \{[^}]*filter: blur/);
     expect(profilesCss).toMatch(/\.poster-wall-layer--mid img \{[^}]*filter: blur/);
     expect(profilesCss).not.toMatch(/\.poster-wall-layer--near img \{[^}]*filter/);
-    expect(profilesCss).toContain("color: #A9DCFF");
-    expect(profilesCss).toContain("color: #7FA6C9");
+    expect(profilesCss).toContain("color: #E6D6FF");
+    expect(profilesCss).toContain("color: #B9A6DA");
     expect(tvCss).toContain("top: calc(var(--horizon) - 6 * var(--u) - 60 * var(--tu))");
     expect(profilesCss).toContain(".profile-btn:focus .profile-lift");
   });

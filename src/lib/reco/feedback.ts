@@ -7,7 +7,7 @@ import type { MediaType } from "../types";
  *  - hide:            removed from recommendations, no taste change.
  *  - watched:         "Already watched": removed, counts as a light positive signal.
  *  - open / play:     implicit: opened or played from a recommendation row (small positive signal).
- * No impressions are stored, and nothing leaves the device.
+ * Impressions live in metrics.ts (they do not change the model). Nothing leaves the device.
  */
 export type FeedbackKind = "more" | "not-interested" | "hide" | "watched" | "open" | "play";
 export interface FeedbackEvent { id: string; type: MediaType; kind: FeedbackKind; at: number; genres?: string[]; title?: string }

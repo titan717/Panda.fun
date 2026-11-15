@@ -21,7 +21,7 @@ async function open(page: Page, path: string, tv: boolean, state: string, script
   await page.route(/\/api\/v1\/panda\/play\/movie\/550/, (r) => r.fulfill(ok({ type: "movie", tmdbId: 550, sources: [cinesrc("movie", 550)] })));
   await page.route(/\/api\/v1\/panda\/play\/tv\/1396/, (r) => r.fulfill(ok({ type: "tv", tmdbId: 1396, sources: [cinesrc("tv", 1396)] })));
   await page.route(/^https:\/\/cinesrc\.st\/embed\//, (r) => r.fulfill({ contentType: "text/html", body: embed(script) }));
-  await page.addInitScript((s) => { if (!localStorage.getItem("panda:v1:state")) localStorage.setItem("panda:v1:state", s); sessionStorage.setItem("panda:splash", "1"); }, state);
+  await page.addInitScript((s) => { if (!localStorage.getItem("panda:v1:state")) localStorage.setItem("panda:v1:state", s); sessionStorage.setItem("panda:v1:intro-session", "e2e"); }, state);
   await page.goto(`${path}${path.includes("?") ? "&" : "?"}layout=${tv ? "tv" : "mobile"}`, { waitUntil: "domcontentloaded" });
 }
 const prefsOf = (page: Page) => page.evaluate(() => { const s = JSON.parse(localStorage.getItem("panda:v1:state") ?? "{}"); return { ...s.prefs, ...(s.profilePrefs?.[s.activeProfileId] ?? {}) }; });

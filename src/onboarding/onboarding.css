@@ -44,7 +44,7 @@
 .ob-btn--ghost { background: transparent; border: 1.5px solid rgba(255, 255, 255, 0.32); box-shadow: none; color: #f1edf8; }
 
 /* genres */
-.ob-genre-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; }
+.ob-genre-grid { padding-bottom: 12px; display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; }
 .ob-genre { position: relative; display: flex; align-items: flex-end; height: 84px; padding: 12px; border-radius: 14px; overflow: hidden; text-align: left; isolation: isolate;
   background: linear-gradient(135deg, var(--g1), var(--g2)); box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.12); transition: transform 180ms var(--ease-out), box-shadow 180ms; }
 .ob-genre::after { content: ""; position: absolute; inset: 0; z-index: -1; background: linear-gradient(180deg, rgba(0, 0, 0, 0) 20%, rgba(0, 0, 0, 0.72) 100%); }

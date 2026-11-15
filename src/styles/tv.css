@@ -79,7 +79,7 @@ html[data-mode="tv"] .profiles-list { gap: calc(56 * var(--tu)); top: calc(var(-
 /* Watch Next (§20.8) */
 
 .tv-ep.is-upcoming .tv-ep-still, .tv-ep.is-upcoming .tv-ep-overview { opacity: 0.55; }
-.tv-ep.is-upcoming .tv-ep-meta { color: #8fb0ff; font-weight: var(--fw-semibold); }
+.tv-ep.is-upcoming .tv-ep-meta { color: #d3b0ff; font-weight: var(--fw-semibold); }
 
 /* ---------- Player 2.0 on TV (v1.1.5) ---------- */
 

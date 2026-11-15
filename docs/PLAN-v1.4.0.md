@@ -13,7 +13,7 @@ Baseline: `main` at f7f9dd0 (v1.3.1). On 2026-11-15, typecheck, lint, 311 unit t
 | B5 | P1 | Playback | VidLink reachable on mobile; non-CineSrc providers reachable on TV through the stored preference | Preference honoured on every platform | Fixed (`SOURCE_POLICY`, preference forced to auto) |
 | B6 | P1 | Details | TV season list shows TMDB arc names ("East Blue", "Wano Country Arc") | Season `name` rendered as is | Fixed (always "Season N", Specials only for season 0) |
 | B7 | P1 | Profiles | Every app start asked "Who's watching?" and did not restore the last profile | v1.2.9 rule | Fixed (wip/onboarding: last profile restored on restart; fresh install still asks) |
-| B8 | P1 | Intro | Different intros per platform; no single place to replace the asset | Intro code spread over several modules | Fixed (Intro Manager, `public/intro/intro-tv.mp4` on TV and mobile) |
+| B8 | P1 | Intro | Different intros per platform; no single place to replace the asset | Intro code spread over several modules | Fixed (Intro Manager in `src/lib/intro/config.ts`: `public/intro/intro-tv.mp4` on TV, the built-in mascot animation on phones until a portrait video is supplied) |
 | B9 | P2 | Reco | Top Picks were mostly popularity with genre weights; no feedback controls; no cold start | Simple heuristic in `personal.ts` | Replaced by `src/lib/reco/` |
 | B10 | P2 | Trailers | Trailer autoplay was implemented separately on each surface; two could start at once | No central manager | Fixed (`trailerAutoplay.ts`) |
 | B11 | P3 | Build | `panda3d` chunk over 500 KB | three.js on /welcome only, lazy-loaded | Not changed; the chunk is lazy-loaded and does not affect the app shell |

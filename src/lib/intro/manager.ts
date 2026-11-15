@@ -12,8 +12,8 @@ export const INTRO_KEY = "panda:v1:intro";
 /** Per-tab / per-process mark: this launch already played (or skipped) the intro. */
 export const INTRO_SESSION_KEY = "panda:v1:intro-session";
 
-function playedThisSession(version: string) {
-  try { return sessionStorage.getItem(INTRO_SESSION_KEY) === version; } catch { return false; }
+function playedThisSession() {
+  try { return sessionStorage.getItem(INTRO_SESSION_KEY) !== null; } catch { return false; }
 }
 
 export type IntroView = "video" | "animation" | "static";
@@ -45,7 +45,7 @@ let due: boolean | null = null;
 
 /** Whether this cold start should play `version` (stable for the whole page load). */
 export function introDue(version = INTRO.version, replay = INTRO.replay) {
-  if (due === null) due = !resumedLaunch() && !playedThisSession(version) && (replay === "every-cold-start" || !(version in readSeen()));
+  if (due === null) due = !resumedLaunch() && !playedThisSession() && (replay === "every-cold-start" || !(version in readSeen()));
   return due;
 }
 

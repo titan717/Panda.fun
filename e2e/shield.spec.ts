@@ -32,12 +32,15 @@ for (const adapter of ADAPTERS) {
   test(`ad shield: ${adapter.id} play flow opens no popups and never leaves the app`, async ({ page, context }, info) => {
     const tv = Boolean(info.project.metadata.tv);
     // TV browsers only fall back to compatibility sources (D-94), so Vidy is gated on touch layouts.
-    test.skip(tv && adapter.id === "vidy", "Vidy is a last-resort source on TV browsers");
+    // v1.4 playback policy (docs/PLAYBACK.md): TV plays CineSrc only; phones start on Vidy and fall back to CineSrc.
+    // There is no source picker any more, so each adapter is checked on the layout where it plays first.
+    test.skip(tv && adapter.id === "vidy", "TV plays CineSrc only");
+    test.skip(!tv && adapter.id === "cinesrc", "phones start on Vidy; CineSrc is covered by the TV layouts");
     test.setTimeout(150_000);
     const seen = watch(context, page);
     await page.addInitScript((s) => {
       localStorage.setItem("panda:v1:state", s);
-      sessionStorage.setItem("panda:splash", "1");
+      sessionStorage.setItem("panda:v1:intro-session", "e2e");
     }, state(adapter.id));
 
     await page.goto(`/watch/tv/1396?s=1&e=1${tv ? "&layout=tv" : ""}`, { waitUntil: "domcontentloaded" });
@@ -75,7 +78,9 @@ for (const adapter of ADAPTERS) {
 }
 
 test("ad shield: CineSrc runs in the strict sandbox and cannot take input", async ({ page }) => {
-  await page.addInitScript((s) => { localStorage.setItem("panda:v1:state", s); sessionStorage.setItem("panda:splash", "1"); }, state("cinesrc"));
+  // only CineSrc answers, so phones (which start on Vidy) also open it
+  await page.route(/\/api\/v1\/panda\/play\/movie\/550/, (r) => r.fulfill({ contentType: "application/json", body: JSON.stringify({ success: true, data: { type: "movie", tmdbId: 550, sources: [{ id: "cinesrc", provider: "cinesrc", label: "CineSrc", url: "https://cinesrc.st/embed/movie/550", origin: "https://cinesrc.st", events: "cinesrc", supportsStart: true, tier: 1 }] } }) }));
+  await page.addInitScript((s) => { localStorage.setItem("panda:v1:state", s); sessionStorage.setItem("panda:v1:intro-session", "e2e"); }, state("cinesrc"));
   await page.goto("/watch/movie/550", { waitUntil: "domcontentloaded" });
   const frame = page.locator("iframe.player-frame");
   await expect(frame).toHaveCount(1, { timeout: 30_000 });

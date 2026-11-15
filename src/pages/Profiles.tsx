@@ -52,7 +52,15 @@ export function ProfileSelect({ stay = false }: { stay?: boolean }) {
   const introPhase = useIntroPhase();
   const [arrive] = useState(() => introPhase !== "done");
   const waiting = introPhase === "show";
-  useEffect(() => { if (root.current) focusFirst(root.current); }, []);
+  // Focus the remembered profile once the picker is actually shown (it is hidden while the launch intro plays, and
+  // a hidden button cannot take focus). Leave focus alone if the viewer already moved it inside the picker.
+  useEffect(() => {
+    if (waiting || !root.current) return;
+    const place = () => { const r = root.current; if (r && !r.contains(document.activeElement)) focusFirst(r); };
+    place();
+    const t = window.setTimeout(place, 120);
+    return () => clearTimeout(t);
+  }, [waiting]);
 
   const enter = (p: Profile) => {
     // The press is the user gesture that unlocks trailer sound (§4.B).
