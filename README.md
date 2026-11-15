@@ -11,7 +11,7 @@
   <p>
     <a href="https://pandatv2.vercel.app/"><img src="https://img.shields.io/badge/OPEN%20WEB%20APP-pandatv2.vercel.app-57d9a3?style=for-the-badge&logo=vercel&logoColor=111111" alt="Open Panda.fun web app" /></a>
     &nbsp;
-    <a href="https://github.com/titan717/Panda.fun/releases/latest"><img src="https://img.shields.io/github/v/release/titan717/Panda.fun?display_name=tag&label=LATEST%20RELEASE&style=for-the-badge&color=b69cff" alt="Latest stable release" /></a>
+    <a href="https://github.com/titan717/Panda.fun/releases/latest"><img src="https://img.shields.io/github/v/release/titan717/Panda.fun?display_name=tag&label=LATEST%20RELEASE&style=for-the-badge&color=b69cff&cacheSeconds=300" alt="Latest stable release" /></a>
   </p>
   <p>
     <a href="https://github.com/titan717/Panda.fun/releases/latest/download/Panda.fun-Android-TV.apk"><strong>↓ Download for Android</strong></a>
@@ -64,9 +64,6 @@ Panda.fun brings a familiar catalogue experience to the living room and the phon
     <a href="https://github.com/titan717/Panda.fun/releases/latest/download/Panda.fun-Android-TV.apk.sha256">SHA-256 checksum</a>
     &nbsp;·&nbsp;
     <a href="https://github.com/titan717/Panda.fun/releases/latest">What's new</a>
-  </p>
-  <p>
-    <img src="https://img.shields.io/github/downloads/titan717/Panda.fun/latest/total?label=downloads%20for%20latest%20release&style=flat-square" alt="Downloads for latest release" />
   </p>
 </div>
 
