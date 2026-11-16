@@ -4,7 +4,8 @@ import { useNav } from "../lib/nav";
 import { useIntel } from "../lib/intel/runtime";
 import { pickSurprise, surprisePath } from "../lib/intel/surprise";
 import { useHiddenRecoIds } from "../lib/reco/useHidden";
-import { useHistoryMap } from "../lib/store";
+import { useHistoryMap, useWatchlist } from "../lib/store";
+import { parseIntent } from "../lib/intel/intent";
 import { useIsTv } from "../lib/layout";
 import { useProfile } from "../lib/store";
 import { MOODS, MOOD_BY_ID, moodHref, parseMood, sessionLabel, sessionMoods } from "../lib/intel/moods";
@@ -21,9 +22,21 @@ export function MoodChips({ query }: { query?: string }) {
   const intel = useIntel();
   const hidden = useHiddenRecoIds();
   const history = useHistoryMap();
+  const watchlist = useWatchlist();
   const { go } = useNav();
   if (query !== undefined) {
+    // typed requests are read on the device into real catalogue browses ("dark korean thrillers", "like Interstellar")
+    const known = [...Object.values(history).map((h) => h.item), ...watchlist, ...Object.values(intel?.features ?? {})];
+    const intent = parseIntent(query, { state: intel, known, kids });
     const m = parseMood(query);
+    const moodOnly = Boolean(m) && intent.understood.length === 1;
+    if (intent.chips.length && !moodOnly) {
+      return (
+        <section className={`${tv ? "tv-chips" : "m-chips"} mood-chips`} aria-label="Panda understood">
+          {intent.chips.map((c) => <Link key={c.id} href={c.href} id={`mood-${c.id}`} className={`${chip} mood-chip`} data-hover-focus>{c.label}</Link>)}
+        </section>
+      );
+    }
     if (!m || (kids && !m.kids)) return null;
     return (
       <section className={`${tv ? "tv-chips" : "m-chips"} mood-chips`} aria-label="Mood">
