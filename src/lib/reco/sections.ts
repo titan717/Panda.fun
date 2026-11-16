@@ -21,6 +21,7 @@ export interface SectionInput extends CandidateInput {
   /** Lists for the top genres, by genre name (from /panda/discover). */
   genreLists?: { genre: string; items: readonly PandaItem[] }[];
   name?: string;
+  rerank?: (list: Scored[]) => Scored[];
 }
 
 export const MIN_ROW = 6;
@@ -35,7 +36,7 @@ export function buildSections(inp: SectionInput): { sections: RecoSection[]; ran
   const { model: m } = inp;
   const genreAll = (inp.genreLists ?? []).flatMap((g) => g.items);
   const cands = generateCandidates({ ...inp, genre: [...(inp.genre ?? []), ...genreAll] });
-  const ranked = rankCandidates(cands, m, { suppressed: inp.suppressed, allow: inp.allow, now: inp.now });
+  const ranked = rankCandidates(cands, m, { suppressed: inp.suppressed, allow: inp.allow, now: inp.now, rerank: inp.rerank });
   const okIds = new Set(ranked.map((s) => s.c.item.id));
   const keep = (list: readonly PandaItem[] | undefined) => (list ?? []).filter((i) => okIds.has(i.id));
   const used = new Set<string>();

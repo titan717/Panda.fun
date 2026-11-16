@@ -378,3 +378,19 @@ html[data-mode="tv"] .tv-ms-profile:focus .avatar { box-shadow: 0 0 0 calc(3 * v
 html[data-mode="tv"][data-contrast="high"] .tv-search-field.is-editing { border-color: #ffd84d; background: #000; box-shadow: var(--focus-glow); }
 .tv-cta--secondary { box-shadow: inset 0 0 0 calc(1.5 * var(--tu)) rgba(200, 160, 255, 0.22); }
 html[data-mode="tv"] .tv-cta--secondary:focus { background: var(--brand-gradient); }
+
+/* ---------------- v1.5.0 feed rail variety (heights are fixed per row, so focus never jumps) ---------------- */
+.tv-row-note { margin: calc(-10 * var(--tu)) 0 var(--row-head-gap); color: var(--text-2); font-size: calc(19 * var(--tu)); font-weight: var(--fw-medium); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; padding-right: var(--safe-x); }
+.tv-row--v-spotlight .tv-land { width: calc(var(--land-w) * 1.32); }
+.tv-row--v-spotlight .tv-land-media { height: calc(var(--land-h) * 1.32); }
+.tv-row--v-spotlight .tv-row-title, .tv-row--v-mood .tv-row-title { font-size: calc(var(--t-row) * 1.08); }
+.tv-row--v-mood .tv-row-title { background: var(--brand-gradient); -webkit-background-clip: text; background-clip: text; color: transparent; text-shadow: none; display: inline-block; max-width: 100%; }
+.tv-row--v-gems .tv-row-title::after { content: "Hidden gems"; margin-left: calc(14 * var(--tu)); padding: calc(4 * var(--tu)) calc(12 * var(--tu)); border-radius: 999px; border: 1px solid var(--brand-pill-border); color: var(--text-2); font-size: calc(16 * var(--tu)); font-weight: var(--fw-semibold); letter-spacing: 0.04em; text-transform: uppercase; vertical-align: middle; }
+.tv-row--v-franchise .top10-num { font-size: calc(var(--poster-h) * 0.42); }
+
+.feed-end--tv { padding: calc(40 * var(--tu)) var(--safe-x) calc(80 * var(--tu)); gap: calc(10 * var(--tu)); }
+.feed-end--tv .feed-end-title { font-size: calc(30 * var(--tu)); }
+.feed-end--tv .feed-end-sub { font-size: calc(21 * var(--tu)); max-width: 40ch; }
+.feed-end--tv .feed-end-actions { gap: calc(16 * var(--tu)); margin-top: calc(14 * var(--tu)); }
+.feed-end--tv .feed-end-btn { font-size: calc(22 * var(--tu)); padding: 0 calc(26 * var(--tu)); min-height: calc(56 * var(--tu)); }
+html[data-mode="tv"] .feed-end-btn:focus { outline: none; box-shadow: 0 0 0 calc(4 * var(--tu)) var(--text-1); transform: scale(1.05); }

@@ -7,7 +7,9 @@ import { Sheet, SheetItem } from "../components/Sheet";
 import { NewListSheet, QuickActions, type ActionContext } from "../components/QuickActions";
 import { LIST_SORTS, sortList, type ListFilter, type ListSort } from "../lib/lists";
 import { useIsTv } from "../lib/layout";
-import { useBrowse, type BrowseParams } from "../lib/useBrowse";
+import { POPULAR, useBrowse, type BrowseParams } from "../lib/useBrowse";
+import { hasSignal } from "../lib/intel/personalize";
+import { useIntel } from "../lib/intel/runtime";
 import { browseHref, browseTitle } from "../lib/format";
 import { actions, continueWatching, useHistoryMap, useList, useProfile, useWatchlist } from "../lib/store";
 import { isKidsSafe } from "../lib/rows";
@@ -34,6 +36,8 @@ function useAutoFocus(ready: boolean) {
 }
 
 const SORTS = [{ id: "", label: "Popular" }, { id: "new", label: "Newest" }, { id: "vote_average.desc", label: "Top Rated" }];
+/** With enough learning the default order is "For you" (this profile's taste blended into the catalogue order) and "Popular" stays pure. */
+const SORTS_PERSONAL = [{ id: "", label: "For you" }, { id: POPULAR, label: "Popular" }, ...SORTS.slice(1)];
 
 /** Browse grid with type + sort filters and infinite loading (spec 9.3). */
 export function BrowsePage() {
@@ -45,6 +49,9 @@ export function BrowsePage() {
   const k = (kind === "tv" || kind === "trending" ? kind : "movie") as BrowseParams["kind"];
   const params: BrowseParams = { kind: k, genre: qs.get("genre") ?? undefined, lang: qs.get("lang") ?? undefined, country: qs.get("country") ?? undefined, sort: qs.get("sort") ?? undefined };
   const b = useBrowse(params);
+  const intel = useIntel();
+  const [personal] = useState(() => hasSignal(intel));
+  const sorts = personal ? SORTS_PERSONAL : SORTS;
   const items = profile?.kids ? b.items.filter(isKidsSafe) : b.items;
   const ref = useAutoFocus(items.length > 0);
   const sentinel = useRef<HTMLDivElement>(null);
@@ -73,7 +80,7 @@ export function BrowsePage() {
           {canSwitchType && (["movie", "tv"] as const).map((t) => (
             <button key={t} id={`type-${t}`} className={`${tv ? "tv-chip" : "m-chip"} ${k === t ? "is-selected" : ""}`} aria-pressed={k === t} onClick={() => set({}, t)} data-hover-focus>{t === "movie" ? "Movies" : "Shows"}</button>
           ))}
-          {SORTS.map((s) => (
+          {sorts.map((s) => (
             <button key={s.id || "pop"} id={`sort-${s.id || "pop"}`} className={`${tv ? "tv-chip" : "m-chip"} ${(params.sort ?? "") === s.id ? "is-selected" : ""}`} aria-pressed={(params.sort ?? "") === s.id} onClick={() => set({ sort: s.id || undefined })} data-hover-focus>{s.label}</button>
           ))}
         </section>

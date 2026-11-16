@@ -1,0 +1,55 @@
+{
+  "note": "Synthetic users over a captured catalogue snapshot (src/test/fixtures/intel-catalog.json). Compares methods on identical data; NOT real-world accuracy.",
+  "k": 10,
+  "usersPerScenario": 12,
+  "coldStart": {
+    "identicalTop10": true,
+    "popularShareTop10": 0.4
+  },
+  "sparse": {
+    "genreShareTop10": {
+      "engine": 0.708,
+      "intel": 0.892
+    }
+  },
+  "repeatRate": {
+    "intel": 0
+  },
+  "changingInterests": {
+    "engine": {
+      "recentGenreShare": 0.192,
+      "oldGenreShare": 0.392,
+      "ndcgRecent": 0.068
+    },
+    "intel": {
+      "recentGenreShare": 0.592,
+      "oldGenreShare": 0.342,
+      "ndcgRecent": 0.459
+    }
+  },
+  "negativeFeedback": {
+    "dislikedGenreShareTop10": {
+      "engine": 0,
+      "intel": 0
+    }
+  },
+  "hiddenGems": {
+    "engine": {
+      "ndcg": 0.732,
+      "novelty": 0.842
+    },
+    "intel": {
+      "ndcg": 0.93,
+      "novelty": 0.95
+    }
+  },
+  "multiProfile": {
+    "isolated": true
+  },
+  "latencyMs": {
+    "note": "Node, full candidate list (~600 titles), includes engine ranking",
+    "median": 51.131,
+    "p90": 61.248,
+    "samples": 13
+  }
+}

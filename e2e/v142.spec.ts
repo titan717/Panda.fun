@@ -99,9 +99,11 @@ for (const kind of ["phone", "tv"] as const) {
     await expect(b).toHaveAttribute("data-drawn", "true", { timeout: 3_000 });
     await shot(page, `app-${kind}-reduced-motion`);
     const before = await page.evaluate(() => (window as unknown as { __rafs: number }).__rafs);
-    await page.waitForTimeout(400);
+    await page.waitForTimeout(1000);
     const after = await page.evaluate(() => (window as unknown as { __rafs: number }).__rafs);
-    expect(after - before).toBeLessThanOrEqual(2); // nothing animates (the app itself may ask for a frame or two)
+    // nothing animates: a running loop would ask for ~60 frames a second; the app loading behind the intro (Home rails,
+    // focus restore) may ask for a few one-off frames
+    expect(after - before).toBeLessThanOrEqual(5);
     await expect(page.locator("[data-intro]")).toHaveCount(0, { timeout: 3_000 });
   });
 }

@@ -1,0 +1,22 @@
+/* v1.5.0 Taste DNA + Entertainment Memory */
+.taste-page { padding-bottom: calc(48 * var(--u)); }
+.m-page.taste-page > section { margin-left: var(--m-gutter); margin-right: var(--m-gutter); }
+.taste-page.is-tv > section { max-width: calc(1100 * var(--tu)); }
+.taste-intro { display: flex; gap: calc(14 * var(--u)); align-items: center; margin: calc(8 * var(--u)) 0 calc(20 * var(--u)); padding: calc(14 * var(--u)); border-radius: calc(14 * var(--u)); background: linear-gradient(120deg, rgba(139, 44, 255, 0.18), rgba(255, 255, 255, 0.04)); }
+.taste-intro p { margin: 0; color: var(--text-2); font-size: calc(14 * var(--u)); line-height: 1.5; }
+.taste-intro img { flex: none; }
+.taste-group { margin-bottom: calc(22 * var(--u)); }
+.taste-list, .taste-memory { list-style: none; margin: 0; padding: 0; display: grid; gap: calc(6 * var(--u)); }
+.taste-item { display: flex; align-items: center; gap: calc(12 * var(--u)); padding: calc(10 * var(--u)) calc(12 * var(--u)); border-radius: calc(12 * var(--u)); background: rgba(255, 255, 255, 0.05); }
+.taste-name { flex: 1 1 auto; min-width: 0; display: flex; flex-direction: column; gap: calc(2 * var(--u)); font-weight: var(--fw-semibold); font-size: calc(15 * var(--u)); }
+.taste-via { font-weight: var(--fw-regular); color: var(--text-2); font-size: calc(12 * var(--u)); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.taste-bar { flex: 0 0 calc(120 * var(--u)); height: calc(6 * var(--u)); border-radius: 99px; background: rgba(255, 255, 255, 0.1); overflow: hidden; }
+.taste-bar > span { display: block; height: 100%; border-radius: inherit; background: linear-gradient(90deg, #8b2cff, #e4d6ff); transition: width 400ms var(--ease-out); }
+.taste-actions { display: flex; gap: calc(6 * var(--u)); flex: none; }
+.taste-btn { appearance: none; border: 1px solid rgba(255, 255, 255, 0.18); background: transparent; color: inherit; font: inherit; font-size: calc(13 * var(--u)); font-weight: var(--fw-semibold); padding: calc(6 * var(--u)) calc(12 * var(--u)); border-radius: 99px; cursor: pointer; min-height: 32px; }
+.taste-btn.is-on { background: rgba(139, 44, 255, 0.45); border-color: transparent; }
+.taste-btn:focus-visible { outline: 2px solid var(--tv-ice); outline-offset: 2px; }
+html[data-mode="tv"] .taste-btn:focus { outline: var(--focus-border); outline-offset: 0; box-shadow: var(--focus-glow); background: var(--tv-translucent); }
+.taste-reset.is-confirm .set-row-title { color: #ff8a8a; }
+.taste-group > .set-row + .set-row { margin-top: calc(6 * var(--u)); }
+@media (max-width: 480px) { html:not([data-mode="tv"]) .taste-bar { display: none; } }

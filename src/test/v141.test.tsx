@@ -7,7 +7,7 @@ import tvSearch from "../tv/TvSearch.tsx?raw";
 import tokens from "../styles/tokens.css?raw";
 
 describe("v1.4.1 release notes", () => {
-  it("keeps the 1.4.1 entry (v1.4.2 bumped the version, see v142.test.tsx)", () => {
+  it("keeps the 1.4.1 entry (later releases bumped the version, see v142.test.tsx and v150-release.test.ts)", () => {
     expect(changelog.indexOf("## 1.4.1")).toBeGreaterThan(-1);
     expect(changelog.indexOf("## 1.4.1")).toBeLessThan(changelog.indexOf("## 1.4.0"));
     expect(notes).toContain("## What's new in 1.4.1");

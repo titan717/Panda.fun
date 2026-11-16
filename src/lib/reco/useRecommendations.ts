@@ -10,6 +10,7 @@ import { healthVersion, subscribeHealth, suppressedSet } from "../playback/healt
 import { getFeedback, subscribeFeedback } from "./feedback";
 import { buildModel, type PreferenceModel } from "./model";
 import { buildSections, discoveryGenres } from "./sections";
+import { intelState, rerank, useSettledIntelVersion } from "../intel/runtime";
 import type { ListPayload, PandaItem, TitleDetails } from "../types";
 
 let fbVersion = 0;
@@ -31,6 +32,8 @@ export function useRecommendations() {
   const fbv = useSyncExternalStore(subscribeFeedback, () => fbVersion, () => fbVersion);
   const hv = useSyncExternalStore(subscribeHealth, healthVersion, healthVersion);
   const platform = useMemo(playbackPlatform, []);
+  // settled per visit: background training never reshuffles the rows (or drops TV focus) while they are shown
+  const iv = useSettledIntelVersion(profile?.id);
 
   const model = useMemo<PreferenceModel>(
     () => buildModel({ taste: kids ? null : taste, history, watchlist, lists, ratings, feedback: getFeedback(profile?.id) }),
@@ -58,11 +61,12 @@ export function useRecommendations() {
     const genreLists = [[want[0], g0], [want[1], g1]].filter((x): x is [string, PandaItem[]] => Boolean(x[0] && x[1]?.length)).map(([genre, items]) => ({ genre, items }));
     return buildSections({
       model, suppressed: suppressedSet(platform), allow, name: profile?.name,
-      similar, trending: trending.data?.results, popular: popular.data?.results, rails, recent, genreLists
+      similar, trending: trending.data?.results, popular: popular.data?.results, rails, recent, genreLists,
+      rerank: intelState() ? (l) => rerank(l) : undefined
     });
-    // hv: playback health version
+    // hv: playback health version; iv: on-device model version
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [model, s0, s1, s2, s3, g0, g1, want, home.data, trending.data, popular.data, kids, platform, profile?.name, hv]);
+  }, [model, s0, s1, s2, s3, g0, g1, want, home.data, trending.data, popular.data, kids, platform, profile?.name, hv, iv]);
 
   return {
     ...result, model,

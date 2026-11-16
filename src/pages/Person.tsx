@@ -1,3 +1,4 @@
+import { usePersonalList } from "../lib/intel/personalize";
 import "./person.css";
 import "../lib/validateLazy"; // validators for this page's payloads, loaded with the page
 import { useEffect, useMemo, useRef, useState } from "react";
@@ -47,7 +48,8 @@ function Person({ id }: { id: number }) {
   const { data: p, error, mutate } = usePerson(id);
   const [open, setOpen] = useState(false);
   const root = useRef<HTMLDivElement>(null);
-  const known = useMemo(() => (p?.knownFor ?? []).filter((k) => !profile?.kids || isKidsSafe(k)), [p, profile?.kids]);
+  const knownRaw = useMemo(() => (p?.knownFor ?? []).filter((k) => !profile?.kids || isKidsSafe(k)), [p, profile?.kids]);
+  const known = usePersonalList(knownRaw);
 
   useEffect(() => {
     if (tv && p && root.current && !root.current.contains(document.activeElement)) {

@@ -387,3 +387,14 @@ html[data-mode="mobile"] .m-more { width: 36px; height: 40px; right: -8px; botto
 .m-reco-top-card .m-reco-reason { padding-right: 36px; margin-top: 3px; font-size: 12.5px; }
 .m-reco-more { position: absolute; right: -4px; top: calc((min(78vw, 340px) * 9 / 16) + 2px); width: 36px; height: 36px; }
 .reco-diag { margin: 16px 0; font-size: 12px; color: var(--text-2); overflow-x: auto; }
+
+/* ---------------- v1.5.0 feed rail variety ---------------- */
+.m-row-note { margin: calc(-1 * var(--m-head-gap) + 2px) var(--m-gutter) var(--m-head-gap); color: var(--text-2); font-size: 13px; line-height: 1.35; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.m-row--v-spotlight .m-row-track > .m-land { width: calc((100vw - 2 * var(--m-gutter)) / 1.25); max-width: 460px; }
+.m-row--v-compact .m-row-track > .m-poster { width: calc((100vw - 2 * var(--m-gutter) - 3 * var(--m-row-gap)) / 4.3); }
+.m-row--v-mood .m-row-title { background: var(--brand-gradient); -webkit-background-clip: text; background-clip: text; color: transparent; }
+.m-row--v-gems .m-row-head .m-row-title::after { content: "GEMS"; margin-left: 8px; padding: 2px 7px; border-radius: 999px; border: 1px solid var(--brand-pill-border); color: var(--text-2); font-size: 10px; letter-spacing: 0.06em; vertical-align: middle; }
+@media (min-width: 700px) {
+  .m-row--v-spotlight .m-row-track > .m-land { width: calc((100vw - 2 * var(--m-gutter)) / 2.2); max-width: 520px; }
+  .m-row--v-compact .m-row-track > .m-poster { width: calc((100vw - 2 * var(--m-gutter)) / 8.3); }
+}

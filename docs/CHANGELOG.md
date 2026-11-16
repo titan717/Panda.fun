@@ -2,6 +2,20 @@
 
 Every stable release of Panda.fun. The same notes ship in each GitHub Release and in Settings › What's New.
 
+## 1.5.0
+
+- **Panda Intelligence, on your device**: each profile now has its own small recommendation model that learns from what you finish, binge, rate, save and skip. It is trained in the background (a separate worker, so the app never freezes while it learns) and stored only on this device, per profile; it is never uploaded, and it starts out exactly like 1.4.0 until it has something to learn from. Pausing, a quick try, an accidental exit or a title that would not play never count against a title.
+- **A Home that keeps going**: after the usual rows, Home, Movies and Shows keep adding rails as you scroll, chosen from 109 categories checked against the catalogue (genres, languages, acclaimed, new releases, moods, hidden gems, the best of world cinema) and ordered for the profile, mixed with popular rows. Personal rails appear when there is evidence for them: "Directed by…", "Starring…", a franchise you are watching (in release order), a new interest, and something different. Rails come in different shapes, never repeat a title shown higher up, and end with "You're all caught up" (or Retry if the connection fails) instead of an endless spinner. On TV, focus stays on your card while new rails load.
+- **For you, everywhere**: genre, mood, hidden-gem and language lists, Search "Best match", cast and director pages and More Like This are gently ordered for the profile once Panda has learned enough. Your filters are always respected, Popular is still one tap away, and lists never reshuffle while you are looking at them.
+- **Ask in your own words**: type something like "dark korean thriller shows", "underrated sci-fi movies" or "something different from what I usually watch" in Search and Panda turns it into a real catalogue browse. It runs on the device, needs no AI service or account, and never invents titles.
+- **Moods and Surprise me**: Search opens with "In the mood for…", with the moods that suit the time of day first. Surprise me picks a well-rated title you have not opened yet, skips titles you keep scrolling past, and does not repeat itself.
+- **Why Panda picked this**: some titles now say why ("From the director of…", "Next in…", "You've enjoyed 4 thriller titles lately"), only when there is real evidence.
+- **Taste DNA and Entertainment Memory**: Settings › Profiles & Account › Taste DNA shows the genres, languages, directors, actors, franchises and decades Panda learned, how your taste is changing, and lets you ask for More or Less, forget single titles, or reset. Deleting a profile now also deletes everything Panda learned for it.
+- **Smarter Continue Watching**: new episodes, the next episode of a show and movies past the halfway point come first; finished movies leave the row, and something you only tried weeks ago or a show left untouched for months moves down (it is never removed).
+- Includes the 1.4.1 and 1.4.2 fixes and the new intro.
+
+The model's quality was measured only on synthetic test profiles (docs/RECOMMENDATIONS.md); real-world accuracy has not been measured. Testing for this release was done with unit tests and end-to-end tests in desktop Chromium at phone (360, 390), tablet (820), TV (1280 × 720, 1920 × 1080) and desktop (1440) sizes with remote-key simulation. It was not checked on a physical Android TV or phone.
+
 ## 1.4.2
 
 - **A new launch intro on phones and TVs**: the app now opens with the approved Panda.fun bumper. A thin light rises out of the dark, becomes a glowing play triangle that beats twice, then bursts into the Panda.fun logo, all in 4 seconds. It is drawn live in the app (the same picture on every screen size), loads only when needed, and replaces the 5-second placeholder video on TVs and the mascot animation on phones. It can still be skipped after one second (OK or Back on the remote), and it never keeps you waiting longer than 4.2 seconds, even if something goes wrong.

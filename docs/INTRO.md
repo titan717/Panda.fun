@@ -56,6 +56,11 @@ Since v1.4.2 both `INTRO.tv` and `INTRO.mobile` are `{ kind: "bumper" }`: the ap
   the animation, or 4.2 s for the bumper, whatever fails.
 - Only the active platform's video is in the DOM, with `preload="auto"`; the other platform never downloads it.
 - Videos are muted (autoplay policy) and play `playsInline`.
+- **One brand moment per cold start (v1.5.0)**: the pre-movie bumper is skipped while the launch intro is on screen
+  and for `INTRO_GRACE_MS` (20 s) after it ends (`src/lib/intro/premovie.ts`, `src/lib/launch.ts › introEndedAt`),
+  so a cold start straight into the Player (a deep link, a resume notification) shows the launch intro once, not the
+  intro followed by a second bumper. The bumper itself still never delays playback: the stream loads underneath and
+  the bumper leaves as soon as the video starts or fails. Test: `src/test/v142-bumper.test.tsx` (grace).
 
 ## Files
 

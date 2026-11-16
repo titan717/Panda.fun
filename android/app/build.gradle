@@ -3,8 +3,8 @@ plugins {
     id 'org.jetbrains.kotlin.android'
 }
 
-def kinomaVersionCode = project.hasProperty("KINOMA_VERSION_CODE") ? project.getProperty("KINOMA_VERSION_CODE").toString().toInteger() : 2620
-def kinomaVersionName = project.hasProperty("KINOMA_VERSION_NAME") ? project.getProperty("KINOMA_VERSION_NAME").toString() : "1.4.2"
+def kinomaVersionCode = project.hasProperty("KINOMA_VERSION_CODE") ? project.getProperty("KINOMA_VERSION_CODE").toString().toInteger() : 2700
+def kinomaVersionName = project.hasProperty("KINOMA_VERSION_NAME") ? project.getProperty("KINOMA_VERSION_NAME").toString() : "1.5.0"
 
 android {
     namespace 'com.kinoma.tv'

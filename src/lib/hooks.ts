@@ -2,13 +2,19 @@ import useSWR, { type SWRConfiguration } from "swr";
 import { useEffect, useState } from "react";
 import { keys } from "./api";
 import { usePrefs } from "./store";
+import { noteDetails } from "./intel/runtime";
 import { createTrailerManager, useTrailerAutoplay, type TrailerStage } from "./trailerAutoplay";
 import type { AnimePayload, SourceRankingPayload, CategoriesPayload, Collection, GenresPayload, ListPayload, MediaType, PagePayload, PageKind, PersonDetails, SearchPayload, SeasonDetails, SourceHealthPayload, TitleDetails, Top10Payload, WallPayload } from "./types";
 
 const slow: SWRConfiguration = { revalidateOnFocus: false, dedupingInterval: 60_000 };
 
 export const usePage = (kind: PageKind) => useSWR<PagePayload>(keys.page(kind), slow);
-export const useTitle = (type: MediaType | null, id: number | null) => useSWR<TitleDetails>(type && id ? keys.title(type, id) : null, slow);
+export function useTitle(type: MediaType | null, id: number | null) {
+  const r = useSWR<TitleDetails>(type && id ? keys.title(type, id) : null, slow);
+  // v1.5.0: details teach the on-device model this title's director, cast and franchise (nothing leaves the device)
+  useEffect(() => { noteDetails(r.data); }, [r.data]);
+  return r;
+}
 export const useSeason = (id: number | null, season: number | null) => useSWR<SeasonDetails>(id && season !== null && season >= 0 ? keys.season(id, season) : null, slow);
 export const usePerson = (id: number | null) => useSWR<PersonDetails>(id ? keys.person(id) : null, slow);
 export const useCollection = (id: number | null) => useSWR<Collection>(id ? keys.collection(id) : null, slow);

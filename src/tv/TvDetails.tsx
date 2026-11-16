@@ -1,3 +1,4 @@
+import { usePersonalList } from "../lib/intel/personalize";
 import "./details.css";
 import { warmSourceHint } from "../lib/playback/registry";
 import { setRemoteTitle } from "../lib/remote";
@@ -23,7 +24,7 @@ import { castAndCrew, detailsMeta, languageName, voteLabel, pluralEps, runtime, 
 import { detailsCtas, episodeRow, hideSpoiler, SPOILER_NOTE } from "../lib/watch";
 import { focusEl, focusFirst, useBackHandler } from "../lib/focus";
 import { useNav } from "../lib/nav";
-import type { MediaType, TitleDetails } from "../lib/types";
+import type { MediaType, PandaItem, TitleDetails } from "../lib/types";
 import { TvPoster } from "./TvCards";
 
 type Tab = "episodes" | "more" | "collection" | "trailers" | "cast";
@@ -171,7 +172,7 @@ function TvDetailsView({ d, initialTab }: { d: TitleDetails; initialTab?: Tab })
         )}
         <section id="tab-panel" className="tv-det-panel" role="tabpanel" onFocus={() => setZone("tabs")}>
           {tab === "episodes" && <EpisodesTab d={d} />}
-          {tab === "more" && <div className="tv-grid-row" data-scroll-x>{d.moreLikeThis.map((it, i) => <TvPoster key={it.id} item={it} id={`more-${i}`} expand={false} />)}</div>}
+          {tab === "more" && <TvMoreLikeThis items={d.moreLikeThis} />}
           {tab === "trailers" && (
             <div className="tv-grid-row" data-scroll-x>
               {d.videos.map((v, i) => (
@@ -326,4 +327,10 @@ function EpisodesTab({ d }: { d: TitleDetails }) {
       </section>
     </div>
   );
+}
+
+/** "More Like This" row: similar titles ordered with this profile's taste; the order is frozen while shown. */
+function TvMoreLikeThis({ items }: { items: readonly PandaItem[] }) {
+  const ordered = usePersonalList(items);
+  return <div className="tv-grid-row" data-scroll-x>{ordered.map((it, i) => <TvPoster key={it.id} item={it} id={`more-${i}`} expand={false} />)}</div>;
 }

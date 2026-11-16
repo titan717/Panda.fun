@@ -1,3 +1,4 @@
+import { resetIntel } from "../lib/intel/runtime";
 import "./settings.css";
 import "../lib/validateLazy"; // validators for this page's payloads, loaded with the page
 import { forgetIntros, SPEEDS, speedLabel, STILL_AFTER } from "../lib/player2";
@@ -361,7 +362,8 @@ function Panel({ id }: { id: SectionId }) {
           <Row id="sp-manage" title="Manage Profiles" sub="Edit names, avatars and Kids profiles" href="/profiles/manage" />
           <Row id="sp-switch" title="Switch Profile" sub="Go back to Who's watching?" onClick={() => { actions.signOut(); go("/profiles", { replace: true }); }} />
           <Row id="sp-personalize" title="Personalize recommendations" sub="Tell Panda which genres and kinds of titles you like" href="/personalize" />
-          <Row id="sp-reset-taste" title="Reset personalization" sub="Forget this profile's taste answers and recommendation feedback" right={<span />} onClick={() => { const id = getState().activeProfileId; if (id) { clearTaste(id); clearFeedback(id); clearRecoMetrics(id); toast("Personalization reset for this profile"); } }} />
+          <Row id="sp-taste-dna" title="Taste DNA & Entertainment Memory" sub="See and steer what Panda learned on this device" href="/taste-dna" />
+          <Row id="sp-reset-taste" title="Reset personalization" sub="Forget this profile's taste answers and recommendation feedback" right={<span />} onClick={() => { const id = getState().activeProfileId; if (id) { clearTaste(id); clearFeedback(id); clearRecoMetrics(id); void resetIntel(); toast("Personalization reset for this profile"); } }} />
         </div>
       );
     case "home":

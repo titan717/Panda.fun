@@ -20,7 +20,9 @@ import { ErrorBoundary, OfflineBanner, Toasts, toast } from "./components/ui";
 import { lazyNamed, whenIdle } from "./lib/lazy";
 import { LaunchIntro } from "./components/Intro";
 import { needsOnboarding, useNeedsOnboarding } from "./lib/tasteProfile";
-import type { MediaType, PageKind } from "./lib/types";
+import type { MediaType, PageKind, TitleDetails } from "./lib/types";
+import { intelState, sources as intelSources, useIntelVersion } from "./lib/intel/runtime";
+import { cancelPrefetch, schedulePrefetch, setDetailsCache } from "./lib/intel/prefetch";
 
 const loadTv = () => import("./tv");
 const loadMobile = () => import("./mobile");
@@ -29,6 +31,7 @@ const loadSettings = () => import("./pages/Settings");
 const loadUpdates = () => import("./pages/Updates");
 const loadInfo = () => import("./pages/Info");
 const loadWhatsNew = () => import("./pages/WhatsNew");
+const loadTasteDna = () => import("./pages/TasteDna");
 const loadPerson = () => import("./pages/Person");
 const loadCollection = () => import("./pages/Collection");
 const loadAnime = () => import("./pages/Anime");
@@ -70,6 +73,7 @@ const PrivacyPage = lz(loadInfo, "PrivacyPage");
 const TermsPage = lz(loadInfo, "TermsPage");
 const WhatsNewPage = lz(loadWhatsNew, "WhatsNewPage");
 const WhatsNewSheet = lz(loadWhatsNew, "WhatsNewSheet");
+const TasteDnaPage = lz(loadTasteDna, "TasteDnaPage");
 const PersonPage = lz(loadPerson, "PersonPage");
 const CollectionPage = lz(loadCollection, "CollectionPage");
 const AnimePage = lz(loadAnime, "AnimePage");
@@ -190,6 +194,30 @@ function Shell({ mode, children }: { mode: LayoutMode; children: ReactNode }) {
   return mode === "tv" ? <TvShell>{children}</TvShell> : <MobileShell>{children}</MobileShell>;
 }
 
+/**
+ * v1.5.0: lend the SWR cache to the Panda Intelligence details prefetch (details are shared, never fetched twice)
+ * and schedule a small run a few seconds after the app settles and after each profile switch.
+ */
+function IntelDetailsPrefetch() {
+  const { mutate, cache } = useSWRConfig();
+  const pid = useStore((s) => s.activeProfileId);
+  const ver = useIntelVersion();
+  const loaded = ver > 0 && intelState()?.profileId === pid;
+  useEffect(() => {
+    setDetailsCache({
+      get: (k) => (cache.get(k) as { data?: TitleDetails } | undefined)?.data,
+      put: (k, d) => { void mutate(k, d, { revalidate: false }); }
+    });
+    return () => setDetailsCache(null);
+  }, [mutate, cache]);
+  useEffect(() => {
+    if (!pid || !loaded) return;
+    schedulePrefetch(intelSources(getState(), pid));
+    return cancelPrefetch;
+  }, [pid, loaded]);
+  return null;
+}
+
 /** When the connection returns: say so, and retry every request that failed while offline. */
 function ReconnectRecovery() {
   const online = useOnline();
@@ -287,6 +315,7 @@ function Routes({ mode }: { mode: LayoutMode }) {
             <Route path="/profiles/edit/:id"><ProfileEdit /></Route>
             <Route path="/settings/updates"><UpdatesPage /></Route>
             <Route path="/settings/whats-new"><WhatsNewPage /></Route>
+            <Route path="/taste-dna"><TasteDnaPage /></Route>
             <Route path="/settings/:section"><SettingsPage /></Route>
             <Route path="/settings"><SettingsPage /></Route>
             <Route path="/about"><AboutPage /></Route>
@@ -318,6 +347,7 @@ export function App() {
           </Router>
           <Toasts />
           <ReconnectRecovery />
+          <IntelDetailsPrefetch />
           <LaunchIntro tv={mode === "tv"} />
         </div>
       </LayoutContext.Provider>

@@ -92,7 +92,9 @@ export type Reason =
   | { kind: "genre"; text: string; genre: string }
   | { kind: "trending"; text: string }
   | { kind: "quality"; text: string }
-  | { kind: "new"; text: string };
+  | { kind: "new"; text: string }
+  /** v1.5.0: from the profile's on-device model (a shared director, cast member, franchise or language). */
+  | { kind: "personal"; text: string };
 
 const clip = (x: number, a = -1, b = 1) => Math.max(a, Math.min(b, x));
 
@@ -176,10 +178,15 @@ export function mmr(list: readonly Scored[], k: number, lambda = 0.72, pool = 80
   return out;
 }
 
-export interface RankOptions { suppressed: Set<string>; allow?: (i: PandaItem) => boolean; now?: number; keepSaved?: boolean }
+export interface RankOptions {
+  suppressed: Set<string>; allow?: (i: PandaItem) => boolean; now?: number; keepSaved?: boolean;
+  /** v1.5.0: the profile's on-device model re-ranks the scored list (src/lib/intel). Absent → v1.4.0 order. */
+  rerank?: (list: Scored[]) => Scored[];
+}
 
 /** Stages 2 + 3: filter and score every candidate, highest first. */
 export function rankCandidates(cands: Map<string, Candidate>, m: PreferenceModel, o: RankOptions): Scored[] {
   const ctx: FilterContext = { model: m, suppressed: o.suppressed, allow: o.allow, now: o.now };
-  return [...cands.values()].filter((c) => filterReason(c, ctx, { keepSaved: o.keepSaved }) === null).map((c) => scoreCandidate(c, m, o.now)).sort((a, b) => b.score - a.score || a.c.item.id.localeCompare(b.c.item.id));
+  const list = [...cands.values()].filter((c) => filterReason(c, ctx, { keepSaved: o.keepSaved }) === null).map((c) => scoreCandidate(c, m, o.now)).sort((a, b) => b.score - a.score || a.c.item.id.localeCompare(b.c.item.id));
+  return o.rerank ? o.rerank(list) : list;
 }
