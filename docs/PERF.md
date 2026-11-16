@@ -187,6 +187,37 @@ Measured on every release. Never regress.
 | Person page | One request (server cache 1 h, CDN 1 h); its code is a separate 1.5 KB (gzip) chunk, downloaded when the device is idle after start-up. |
 | First load (gzip JS) | Unchanged entry chunk; Details chunks +0.5 KB. |
 
+## v1.5.0 Panda Intelligence training (Web Worker)
+
+Training moved off the main thread. `src/lib/intel/trainer.ts` owns a module Web Worker (`src/lib/intel/worker.ts`,
+emitted by Vite as a self-contained ~6.9 KB chunk; CSP already allows `worker-src 'self' blob:`). The main thread
+builds a small job (only the interactions not applied yet, plus features the worker has not seen), the worker runs
+the same deterministic `applyInteraction` code and returns only the changed weights. Jobs carry a profile id and a
+generation number: switching or deleting a profile, Reset or Forget bumps the generation and stale results are
+dropped. If `Worker` is missing (old Android WebViews), creation throws, or the worker errors at runtime, the
+runtime falls back permanently to the previous `requestIdleCallback` slices (with a `setTimeout` fallback where idle
+callbacks do not exist), so learning still happens and the UI never blocks on it.
+
+Benchmark (`src/test/v150-bench.test.ts`, synthetic histories, Node/vitest, median of 5, `docs/eval/worker-bench.json`):
+
+| Interactions | Before: main-thread total (idle slices, longest) | After: main thread per job (build + post + merge) | Worker time | One-time init clone | Message sizes (init / job / result) |
+|---|---|---|---|---|---|
+| 50 | 18.7 ms (1 slice, 11.9 ms) | 0.35 ms | 18.9 ms | 0.6 ms | 312 KB / 2.9 KB / 4.4 KB |
+| 300 | 78.1 ms (5 slices, 14.7 ms) | 0.53 ms | 74.1 ms | 1.1 ms | 382 KB / 17 KB / 19 KB |
+| 1000 | 270.4 ms (17 slices, 15.4 ms) | 1.73 ms | 249.5 ms | 2.7 ms | 578 KB / 58 KB / 59 KB |
+
+"Before" already includes the v1.5.0 feature-cache fix (a WeakMap of vectorised features and precomputed sort
+keys in `ingest.ts`, a fast path in `rememberFeatures`): the original idle path for 1000 interactions took about
+1,222 ms of main-thread time and building one job took 50 ms; both are now as above. These are Node timings on a
+desktop CPU, not measurements on an Android TV box.
+
+## v1.5.0 idle details prefetch
+
+`src/lib/intel/prefetch.ts` fetches title details (people, franchise) for the few strongest candidates so the model
+can use them: at most 8 per run and 24 per session, 2 at a time, starting 6 s after Home settles, only through the
+normal API + SWR cache (anything already cached is never refetched), skipped on Data Saver / slow connections /
+`deviceMemory` ≤ 1 GB, and cancelled when the profile changes. Nothing is fetched before Home has rendered.
+
 ## v1.1.1
 
 | Metric | Value |

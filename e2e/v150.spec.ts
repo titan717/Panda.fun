@@ -84,3 +84,46 @@ test("Taste DNA shows what was learned on the device, and Forget / Reset work", 
   await reset.click();
   await expect(page.locator(".taste-intro")).toContainText("Nothing learned yet", { timeout: 10_000 });
 });
+
+test("Search reads a typed request on the device into a real catalogue browse", async ({ page }, info) => {
+  const tv = Boolean(info.project.metadata.tv);
+  await open(page, "/search", tv);
+  await page.locator("input[type=search]").fill("dark korean thriller shows");
+  const chip = page.locator("#mood-intent-browse");
+  await expect(chip).toHaveAttribute("href", /\/browse\/tv\?.*lang=ko/, { timeout: 15_000 });
+  await chip.click();
+  await expect(page.locator("h1, .page-title, [role=heading]").first()).toContainText("Korean Shows", { timeout: 15_000 });
+  await expect(page.locator("a[href^='/title/']").first()).toBeVisible({ timeout: 30_000 });
+});
+
+test("Home never spins forever: a catalogue outage ends in a message with Retry", async ({ page }, info) => {
+  const tv = Boolean(info.project.metadata.tv);
+  test.setTimeout(120_000);
+  for (const p of ["**/panda/discover/**", "**/panda/trending**", "**/panda/person/**", "**/panda/collection/**"]) await page.route(p, (r) => r.fulfill({ status: 503, body: "down" }));
+  await open(page, "/", tv);
+  const end = page.locator(".feed-end");
+  await expect(end).toBeVisible({ timeout: 90_000 });
+  await expect(end.getByRole("button", { name: /retry/i })).toBeVisible();
+  await expect(end.locator("img, svg").first()).toBeVisible();
+});
+
+test("Privacy: browsing sends no viewing history or taste data, only catalogue GETs", async ({ page }, info) => {
+  const tv = Boolean(info.project.metadata.tv);
+  test.setTimeout(90_000);
+  const seen: { url: string; method: string; body: string | null }[] = [];
+  // the app's own requests (main frame and its worker); an embedded YouTube trailer player's traffic is YouTube's
+  page.on("request", (r) => { let f = null; try { f = r.frame(); } catch { /* service worker / web worker */ } if (!f || f === page.mainFrame()) seen.push({ url: r.url(), method: r.method(), body: r.postData() }); });
+  await open(page, "/", tv);
+  await expect(page.locator("[data-feed-cat]").first()).toBeVisible({ timeout: 40_000 });
+  await page.waitForTimeout(8000); // past the idle details prefetch start
+  await page.goto(`/search?layout=${tv ? "tv" : "mobile"}`);
+  await page.locator("input[type=search]").fill("something like inception");
+  await page.waitForTimeout(3000);
+  const allowed = /^(https?:\/\/(127\.0\.0\.1|localhost)|https:\/\/apikinoma\.vercel\.app|https:\/\/image\.tmdb\.org|https:\/\/api\.github\.com|https:\/\/[a-z0-9.-]*(ytimg|youtube-nocookie|youtube|fonts\.g[a-z]+)\.com|data:|blob:)/;
+  const outside = seen.filter((r) => !allowed.test(r.url)).map((r) => r.url);
+  expect(outside).toEqual([]);
+  const writes = seen.filter((r) => r.method !== "GET" && r.method !== "HEAD" && r.method !== "OPTIONS");
+  expect(writes.map((w) => w.url)).toEqual([]);
+  // the request for "like inception" is answered locally: the phrase itself goes to text search only
+  for (const r of seen) { expect(r.url).not.toMatch(/taste|weights|history=|profile=/i); }
+});
