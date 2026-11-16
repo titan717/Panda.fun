@@ -343,3 +343,26 @@ export function revive(raw: unknown, profileId: string): LearnerState | null {
     forgotten: r.forgotten ?? {}, stamps: r.stamps ?? {}, shown: r.shown ?? {}
   } as LearnerState;
 }
+
+/**
+ * v1.5.0 short- vs long-term taste: for each genre, language and decade the profile has watched, its weight in the
+ * short-term taste vector (half-life of days) and in the long-term one (months), each as a share of the vector's
+ * length. `delta > 0` is an emerging interest, `delta < 0` one that is fading. Only keys the profile has positive
+ * interactions with are listed, and only once there are at least `minEvents` of them.
+ */
+export interface Drift { key: string; name: string; short: number; long: number; delta: number }
+export function tasteDrift(s: LearnerState, minEvents = 8): Drift[] {
+  const positives = s.log.filter((e) => (label(e.kind)?.y ?? 0) === 1);
+  if (positives.length < minEvents) return [];
+  const keys = new Map<string, string>();
+  for (const e of positives) {
+    const f = s.features[e.id];
+    if (!f) continue;
+    for (const [k] of featureKeys(f)) if (k.startsWith("g:") || k.startsWith("l:") || k.startsWith("e:")) if (!keys.has(k)) keys.set(k, displayName(k, f));
+  }
+  const ns = norm(s.shortT) || 1, nl = norm(s.longT) || 1;
+  return [...keys].map(([key, name]) => {
+    const st = Math.max(0, s.shortT[slot(key)]! / ns), lt = Math.max(0, s.longT[slot(key)]! / nl);
+    return { key, name, short: st, long: lt, delta: st - lt };
+  }).sort((a, b) => b.delta - a.delta || a.key.localeCompare(b.key));
+}

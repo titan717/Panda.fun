@@ -9,7 +9,8 @@ import type { PageKind, PandaItem } from "./types";
 import { useHiddenRecoIds } from "./reco/useHidden";
 
 export type HomeRow =
-  | { id: string; kind: "poster" | "landscape"; title: string; items: PandaItem[]; link: string | null; /** v1.5.0 feed category */ cat?: string }
+  | { id: string; kind: "poster" | "landscape"; title: string; items: PandaItem[]; link: string | null; /** v1.5.0 feed category */ cat?: string;
+      /** v1.5.0 feed rail look and its evidence / description line */ variant?: import("./feed/catalog").RailVariant; note?: string }
   | { id: string; kind: "top10"; title: string; items: PandaItem[]; link: null; lang: string }
   | { id: string; kind: "continue"; title: string; entries: HistoryEntry[]; link: string };
 

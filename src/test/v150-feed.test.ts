@@ -15,9 +15,9 @@ const ctx = (o: Partial<RankContext> = {}): RankContext => ({
 });
 
 describe("v1.5.0 feed category catalogue", () => {
-  it("has 89 categories with unique, stable ids", () => {
-    expect(CATEGORIES.length).toBe(89);
-    expect(new Set(CATEGORIES.map((c) => c.id)).size).toBe(89);
+  it("has 109 categories (89 + 20 audited in the second pass) with unique, stable ids", () => {
+    expect(CATEGORIES.length).toBe(109);
+    expect(new Set(CATEGORIES.map((c) => c.id)).size).toBe(109);
     expect(CATEGORY_BY_ID.get("lang-tv-ko-18")?.title).toBe("Korean Dramas");
   });
   it("builds the same API paths the rest of the app uses (shared cache entries)", () => {
@@ -31,7 +31,8 @@ describe("v1.5.0 feed category catalogue", () => {
     expect(eligible("tv", false).every((c) => c.source.type === "tv")).toBe(true);
     const kids = eligible("home", true);
     expect(kids.length).toBeGreaterThan(4);
-    expect(kids.every((c) => c.genres.length > 0 && c.genres.every((g) => g === "Animation" || g === "Family"))).toBe(true);
+    expect(kids.every((c) => c.genres.length > 0 && c.genres.some((g) => g === "Animation" || g === "Family"))).toBe(true);
+    expect(kids.every((c) => c.genres.every((g) => ["Animation", "Family", "Adventure", "Comedy", "Music"].includes(g)))).toBe(true);
   });
 });
 

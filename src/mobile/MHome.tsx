@@ -13,6 +13,7 @@ import { useSurfaceTrailer } from "../lib/useTrailer";
 import { useMostlyVisible } from "../lib/trailerAutoplay";
 import type { PageKind, PandaItem } from "../lib/types";
 import { MContinue, MLand, MPoster } from "./MCards";
+import { FeedEnd } from "../components/FeedEnd";
 import { feedOpenFrom, useCategoryFeed, useFeedImpressions, useFeedSentinel } from "../lib/feed/useFeed";
 
 const TOP10_LANGS = [{ code: "ml", name: "Malayalam" }, { code: "hi", name: "Hindi" }, { code: "ta", name: "Tamil" }, { code: "te", name: "Telugu" }, { code: "kn", name: "Kannada" }, { code: "en", name: "English" }, { code: "ko", name: "Korean" }];
@@ -113,17 +114,20 @@ function Top10Chips() {
 }
 
 function MRow({ row }: { row: HomeRow }) {
+  const variant = row.kind === "poster" || row.kind === "landscape" ? row.variant : undefined;
+  const note = row.kind === "poster" || row.kind === "landscape" ? row.note : undefined;
   return (
-    <section className={`m-row m-row--${row.kind}`} aria-label={row.title} data-feed-cat={"cat" in row ? row.cat : undefined}>
+    <section className={`m-row m-row--${row.kind} ${variant ? `m-row--v-${variant}` : ""}`} aria-label={row.title} data-feed-cat={"cat" in row ? row.cat : undefined}>
       <div className="m-row-head">
         <h2 className="m-row-title">{row.title}</h2>
         {row.link && <Link href={row.link} className="m-row-more" aria-label={`See all ${row.title}`}><Icon name="chevronRight" /></Link>}
       </div>
+      {note && <p className="m-row-note">{note}</p>}
       {row.kind === "top10" && <Top10Chips />}
       <div className="m-row-track">
         {row.kind === "continue" && row.entries.map((h) => <MContinue key={h.item.id} entry={h} />)}
         {row.kind === "landscape" && row.items.map((it) => <MLand key={it.id} item={it} />)}
-        {row.kind === "poster" && row.items.map((it) => <MPoster key={it.id} item={it} />)}
+        {row.kind === "poster" && row.items.map((it, i) => <MPoster key={it.id} item={it} rank={variant === "franchise" ? i + 1 : undefined} />)}
         {row.kind === "top10" && row.items.map((it, i) => <MPoster key={it.id} item={it} rank={i + 1} top10 />)}
       </div>
     </section>
@@ -171,6 +175,7 @@ export function MHome({ kind }: { kind: PageKind }) {
       {page.data && hero.length > 0 && <HeroCarousel items={hero} kind={kind} />}
       {rows.map((r) => <MRow key={r.id} row={r} />)}
       {page.data && feed.loading && <section className="m-row" aria-hidden="true"><Skeleton className="sk-row-title" /><div className="m-row-track">{[0, 1, 2, 3].map((j) => <Skeleton key={j} className="m-poster sk-poster-m" />)}</div></section>}
+      {page.data && feed.enabled && (feed.error || (feed.done && feed.rows.length > 0)) && <FeedEnd state={feed.error ? "error" : "end"} onRetry={feed.retry} />}
       <div ref={sentinel} className="feed-sentinel" aria-hidden="true" />
     </div>
   );

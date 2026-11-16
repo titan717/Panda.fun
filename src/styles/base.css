@@ -291,3 +291,10 @@ html[data-mode="tv"] .sheet-group { font-size: calc(18 * var(--tu)); margin: cal
 .mood-chip { text-decoration: none; }
 .mood-chip.is-suggested { background: rgba(139, 44, 255, 0.32); box-shadow: inset 0 0 0 1px rgba(228, 214, 255, 0.45); }
 html:not([data-mode="tv"]) .mood-section .mood-chips { flex-wrap: nowrap; overflow-x: auto; scrollbar-width: none; }
+
+/* v1.5.0 end of the Home feed (src/components/FeedEnd.tsx) */
+.feed-end { display: flex; flex-direction: column; align-items: center; text-align: center; gap: 8px; padding: 32px 16px 56px; color: var(--text-2); }
+.feed-end-mascot { opacity: 0.95; }
+.feed-end-title { color: var(--text-1); font-size: 18px; font-weight: var(--fw-bold); margin: 6px 0 0; }
+.feed-end-sub { margin: 0; font-size: 14px; max-width: 34ch; }
+.feed-end-actions { display: flex; flex-wrap: wrap; justify-content: center; gap: 10px; margin-top: 10px; }

@@ -13,6 +13,7 @@ import { preloadImages } from "../lib/preload";
 import { useNav } from "../lib/nav";
 import type { PageKind, PandaItem } from "../lib/types";
 import { TvContinue, TvLandscape, TvPoster } from "./TvCards";
+import { FeedEnd } from "../components/FeedEnd";
 import { feedOpenFrom, useCategoryFeed, useFeedImpressions, useFeedSentinel } from "../lib/feed/useFeed";
 
 /* ---------------- Hero (spec 5) ---------------- */
@@ -129,13 +130,16 @@ function TvRowsSkeleton() {
 function TvRow({ row, index, active, onFocusRow }: { row: HomeRow; index: number; active: number; onFocusRow: (index: number, item: PandaItem) => void }) {
   const focus = useCallback((item: PandaItem) => onFocusRow(index, item), [index, onFocusRow]);
   const state = active < 0 ? "" : index < active ? "is-above" : index === active ? "is-active" : "is-below";
+  const variant = row.kind === "poster" || row.kind === "landscape" ? row.variant : undefined;
+  const note = row.kind === "poster" || row.kind === "landscape" ? row.note : undefined;
   return (
-    <section className={`tv-row tv-row--${row.kind} ${state}`} data-row aria-labelledby={`row-${row.id}-title`} id={`row-${row.id}`} data-feed-cat={"cat" in row ? row.cat : undefined}>
+    <section className={`tv-row tv-row--${row.kind} ${variant ? `tv-row--v-${variant}` : ""} ${state}`} data-row aria-labelledby={`row-${row.id}-title`} id={`row-${row.id}`} data-feed-cat={"cat" in row ? row.cat : undefined}>
       <h2 className="tv-row-title" id={`row-${row.id}-title`}>{row.title}</h2>
+      {note && <p className="tv-row-note">{note}</p>}
       <div className="tv-row-track" data-scroll-x>
         {row.kind === "continue" && row.entries.map((h, i) => <TvContinue key={h.item.id} entry={h} id={`${row.id}-${i}`} onFocusItem={focus} />)}
         {row.kind === "landscape" && row.items.map((it, i) => <TvLandscape key={it.id} item={it} id={`${row.id}-${i}`} pos={[i + 1, row.items.length]} onFocusItem={focus} />)}
-        {row.kind === "poster" && row.items.map((it, i) => <TvPoster key={it.id} item={it} id={`${row.id}-${i}`} pos={[i + 1, row.items.length]} onFocusItem={focus} />)}
+        {row.kind === "poster" && row.items.map((it, i) => <TvPoster key={it.id} item={it} id={`${row.id}-${i}`} rank={variant === "franchise" ? i + 1 : undefined} pos={[i + 1, row.items.length]} onFocusItem={focus} />)}
         {row.kind === "top10" && row.items.map((it, i) => <TvPoster key={it.id} item={it} id={`${row.id}-${i}`} rank={i + 1} pos={[i + 1, row.items.length]} onFocusItem={focus} />)}
       </div>
     </section>
@@ -231,6 +235,7 @@ export function TvHome({ kind }: { kind: PageKind }) {
             <div className="tv-row-track">{Array.from({ length: 8 }, (_, i) => <Skeleton key={i} className="sk-poster" />)}</div>
           </section>
         )}
+        {page.data && feed.enabled && (feed.error || (feed.done && feed.rows.length > 0)) && <FeedEnd tv state={feed.error ? "error" : "end"} onRetry={feed.retry} />}
         <div ref={sentinel} className="feed-sentinel" aria-hidden="true" />
       </div>
     </div>

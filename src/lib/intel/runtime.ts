@@ -36,7 +36,7 @@ const idle = (f: () => void): number => {
   return ric ? ric(f, { timeout: 500 }) : (setTimeout(f, 30) as unknown as number);
 };
 
-function sources(s: State, pid: string): IntelSources {
+export function sources(s: State, pid: string): IntelSources {
   const d = s.data[pid];
   return { history: d?.history ?? {}, ratings: d?.ratings ?? {}, watchlist: d?.watchlist ?? [], lists: d?.lists ?? [], feedback: getFeedback(pid) };
 }
