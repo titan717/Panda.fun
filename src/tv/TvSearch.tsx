@@ -33,14 +33,16 @@ export function TvSearch() {
 
   return (
     <div ref={root} className="tv-page tv-search" data-scroll-y="item" data-scroll-offset="0.3">
-      <section className="tv-search-bar">
+      <section className={`tv-search-bar ${field.editing ? "is-editing" : ""}`}>
         {s.voiceSupported && (
           <button id="search-mic" className={`tv-mic ${s.listening ? "is-listening" : ""}`} onClick={s.startVoice} aria-label="Search by voice" data-hover-focus><Icon name="mic" /></button>
         )}
-        <label className="tv-search-field">
+        <label className={`tv-search-field ${field.editing ? "is-editing" : ""}`}>
           <Icon name="search" />
-          <input ref={input} id="search-input" type="search" value={s.query} placeholder={s.listening ? "Listening…" : "Search"} aria-label="Search movies and shows" autoComplete="off" spellCheck={false}
+          <input ref={input} id="search-input" type="search" value={s.query} placeholder={s.listening ? "Listening…" : field.editing ? "Type a title, actor or genre" : "Search movies and shows"} aria-label="Search movies and shows" autoComplete="off" spellCheck={false}
             enterKeyHint="search" onChange={(e) => s.setQuery(e.target.value)} {...field.props} />
+          {/* v1.4.1: what OK does here, shown only while the field has focus */}
+          <span className="tv-search-hint" aria-hidden="true">{field.editing ? "Press Search on the keyboard when done" : <><kbd>OK</kbd> to type</>}</span>
         </label>
         {s.query && (
           <button id="search-clear" className="tv-search-clear" onClick={() => { s.setQuery(""); focusEl(input.current); }} aria-label="Clear search" data-hover-focus>

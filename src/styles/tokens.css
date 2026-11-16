@@ -221,6 +221,14 @@ html[data-mode="tv"] {
   --square: calc(74 * var(--tu));
   --ep-w: calc(380 * var(--tu));
   --ep-h: calc(214 * var(--tu));
+  /* v1.4.1 brand focus: the TV focus ring and glows were a cool silver-blue left over from the v1.2 palette; they
+     now follow the Panda purple/magenta brand. Mobile keeps the root values; high contrast (below) still wins. */
+  --tv-ice-strong: rgba(226, 196, 255, 0.95);
+  --tv-focus-ring: #d9b8ff;
+  --tv-focus-tint: rgba(150, 64, 255, 0.5);
+  --focus-glow: 0 0 0 1px rgba(8, 4, 20, 0.6), 0 12px 30px rgba(0, 0, 0, 0.5), 0 0 26px rgba(150, 64, 255, 0.42);
+  --row-glow: 0 0 calc(20 * var(--tu)) rgba(160, 90, 255, 0.32);
+  --tv-accent-gradient: linear-gradient(135deg, #8b2cff, #d42cff);
 }
 
 @media (prefers-reduced-motion: reduce) {

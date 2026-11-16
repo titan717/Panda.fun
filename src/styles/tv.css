@@ -23,7 +23,7 @@ html[data-mode="tv"] .rate-opt:focus, html[data-mode="tv"] .sheet-item:focus, ht
 .tv-page-head { display: flex; align-items: flex-end; justify-content: space-between; gap: calc(30 * var(--tu)); margin-bottom: calc(36 * var(--tu)); }
 .tv-page-title { font-size: var(--t-page-title); font-weight: var(--fw-bold); line-height: 1.1; }
 .tv-page-sub { color: var(--tv-body); font-size: var(--t-body); margin-top: calc(8 * var(--tu)); }
-.tv-section-title { font-size: var(--t-row); font-weight: var(--fw-bold); margin: calc(30 * var(--tu)) 0 calc(18 * var(--tu)); color: var(--text-1); text-shadow: 0 0 18px rgba(150, 205, 255, 0.35); }
+.tv-section-title { font-size: var(--t-row); font-weight: var(--fw-bold); margin: calc(30 * var(--tu)) 0 calc(18 * var(--tu)); color: var(--text-1); text-shadow: 0 0 18px rgba(160, 90, 255, 0.35); }
 
 .sk-logo { width: calc(380 * var(--tu)); height: calc(120 * var(--tu)); }
 html[data-mode="tv"] .sk-line { height: calc(22 * var(--tu)); width: calc(560 * var(--tu)); }

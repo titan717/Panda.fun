@@ -27,15 +27,35 @@ if (typeof window !== "undefined" && !window.__pandaIme) {
   window.__pandaIme = (visible) => window.dispatchEvent(new CustomEvent<boolean>(IME_EVENT, { detail: Boolean(visible) }));
 }
 
-/** Ask the platform for the on-screen keyboard for the focused field. Returns how it was requested (for tests and logs). */
+/**
+ * Ask the platform for the on-screen keyboard for the focused field. Returns how it was requested (for tests and logs).
+ *
+ * v1.4.1 root cause (Gboard never opened from TV Search; the phone layout on the same TV was fine): the field was
+ * switched out of inputMode="none" by a React re-render, and the native side was asked 64 ms later to restart the
+ * input connection. On a TV box the WebView had often not received the new input mode yet, so the IME was bound to
+ * a "no keyboard" field and showSoftInput did nothing. Now the switch happens in the OK key press itself: the
+ * field's inputMode is set on the element, then it is blurred and focused again while the key press still counts as
+ * a user gesture, which is the same path that opens the keyboard on the phone layout (a focus with a user gesture).
+ * The native request follows two frames later, once the renderer has sent the new state, and retries on its own until
+ * the IME is visible (MainActivity.showSoftKeyboard).
+ */
 export function requestKeyboard(el: HTMLElement, refocus: () => void): "native" | "virtualKeyboard" | "refocus" {
-  try { if (native?.showKeyboard) { native.showKeyboard(); return "native"; } } catch { /* older app without the bridge method */ }
+  refocus();
+  const later = (fn: () => void) => (typeof requestAnimationFrame === "function" ? requestAnimationFrame(() => requestAnimationFrame(fn)) : setTimeout(fn, 32));
+  if (native?.showKeyboard) {
+    later(() => { try { if (document.activeElement === el) native?.showKeyboard?.(); } catch { /* older app without the bridge method */ } });
+    return "native";
+  }
   const vk = typeof navigator !== "undefined" ? navigator.virtualKeyboard : undefined;
   if (vk && document.activeElement === el) {
-    try { vk.show(); return "virtualKeyboard"; } catch { /* needs a user gesture; fall through */ }
+    try { vk.show(); return "virtualKeyboard"; } catch { /* needs a user gesture; the refocus above is the fallback */ }
   }
-  refocus();
   return "refocus";
+}
+
+/** Tell the Android app whether a TV remote field has focus, so OK on it arrives as Enter (MainActivity). */
+export function setOkAsEnter(on: boolean) {
+  try { native?.setOkAsEnter?.(on); } catch { /* older app without the bridge method */ }
 }
 
 export function dismissKeyboard() {
@@ -50,41 +70,36 @@ export interface RemoteFieldOptions {
 export function useRemoteField(enabled: boolean, onDone?: () => void, opts: RemoteFieldOptions = {}) {
   const ref = useRef<HTMLInputElement>(null);
   const [editing, setEditing] = useState(false);
-  // set by open(): the keyboard is requested once the field has re-rendered with its real inputMode
-  const wantKeyboard = useRef(false);
   // the browser fallback blurs and refocuses the field; that blur must not end editing
   const refocusing = useRef(false);
   // typed into without the on-screen keyboard (hardware keyboard / desktop). A ref, not state: re-rendering on the
   // first keystroke made preact re-apply the controlled value before the page saw it and the first letter was lost.
   const typed = useRef(false);
 
-  useEffect(() => {
-    if (!editing || !wantKeyboard.current) return;
-    wantKeyboard.current = false;
-    const el = ref.current;
-    if (!el) return;
-    requestKeyboard(el, () => {
-      refocusing.current = true;
-      el.blur();
-      el.focus({ preventScroll: true });
-      refocusing.current = false;
-    });
-  }, [editing]);
+  // a field that unmounts while focused must not leave OK mapped to Enter for the rest of the app
+  useEffect(() => () => { if (enabled && typeof document !== "undefined" && document.activeElement === ref.current) setOkAsEnter(false); }, [enabled]);
 
   // Android app: the IME was closed (Back on the keyboard, or it lost the field): the field is back to remote mode
   useEffect(() => {
     if (!enabled || !editing) return;
-    const onIme = (e: Event) => { if ((e as CustomEvent<boolean>).detail === false) setEditing(false); };
+    const onIme = (e: Event) => { if ((e as CustomEvent<boolean>).detail === false) { if (ref.current) ref.current.inputMode = "none"; setEditing(false); } };
     window.addEventListener(IME_EVENT, onIme);
     return () => window.removeEventListener(IME_EVENT, onIme);
   }, [enabled, editing]);
 
+  // OK on the field: switch it to a real text field and ask for the keyboard in the same key press (see requestKeyboard).
+  // Idempotent: on some TVs OK arrives as both an Enter keydown and a click.
   const open = () => {
-    if (!ref.current) return;
-    wantKeyboard.current = true;
+    const el = ref.current;
+    if (!el || el.inputMode === (opts.mode ?? "text")) return;
+    el.inputMode = opts.mode ?? "text";
     setEditing(true);
+    requestKeyboard(el, () => {
+      refocusing.current = true;
+      try { el.blur(); el.focus({ preventScroll: true }); } finally { refocusing.current = false; }
+    });
   };
-  const close = () => { typed.current = false; setEditing(false); dismissKeyboard(); };
+  const close = () => { typed.current = false; if (ref.current) ref.current.inputMode = "none"; setEditing(false); dismissKeyboard(); };
 
   if (!enabled) return { ref, editing: false, open, close, props: {} };
   return {
@@ -95,7 +110,8 @@ export function useRemoteField(enabled: boolean, onDone?: () => void, opts: Remo
     props: {
       inputMode: editing ? (opts.mode ?? "text") : ("none" as const),
       onClick: () => { if (!editing) open(); },
-      onBlur: () => { if (!refocusing.current) { typed.current = false; setEditing(false); } },
+      onFocus: () => { setOkAsEnter(true); },
+      onBlur: () => { if (!refocusing.current) { setOkAsEnter(false); typed.current = false; if (ref.current) ref.current.inputMode = "none"; setEditing(false); } },
       // typing without the on-screen keyboard (a hardware keyboard, a desktop browser): the field is being edited,
       // so Enter submits instead of asking for a keyboard nobody needs
       onInput: () => { typed.current = true; },

@@ -93,10 +93,10 @@ describe("useRemoteField in the Android app", () => {
     render(<Field hook={hook} onDone={done} />);
     q().focus();
     fireEvent.keyDown(q(), { key: "Enter" });
-    await flush();
-    expect(showKeyboard).toHaveBeenCalledTimes(1);
+    // v1.4.1: the native request follows two animation frames after the field switched
+    await vi.waitFor(() => expect(showKeyboard).toHaveBeenCalledTimes(1));
     expect(seen).toEqual(["k3y", "search"]);
-    expect(document.activeElement).toBe(q()); // no blur/refocus dance in the app
+    expect(document.activeElement).toBe(q()); // the v1.4.1 refocus inside the key press keeps focus on the field
     // the IME's Search key arrives as Enter: search runs, keyboard closes
     fireEvent.keyDown(q(), { key: "Enter" });
     expect(done).toHaveBeenCalledTimes(1);
@@ -134,5 +134,15 @@ describe("native side (source checks; no Android SDK in CI)", () => {
     expect(tvSearchSrc).toContain("useRemoteField(true");
     expect(tvSearchSrc).toContain("{...field.props}");
     expect(tvSearchSrc).not.toContain("el.blur(); el.focus()");
+  });
+
+  it("maps the remote's OK to Enter only while the TV field has focus (v1.4.1)", async () => {
+    const setOkAsEnter = vi.fn();
+    const hook = await load({ isTV: () => true, getAppVersion: () => "1", showKeyboard: () => true, hideKeyboard: () => undefined, setOkAsEnter });
+    render(<><Field hook={hook} /><button id="other">other</button></>);
+    q().focus();
+    expect(setOkAsEnter).toHaveBeenLastCalledWith("k3y", true);
+    (document.getElementById("other") as HTMLButtonElement).focus();
+    expect(setOkAsEnter).toHaveBeenLastCalledWith("k3y", false);
   });
 });
