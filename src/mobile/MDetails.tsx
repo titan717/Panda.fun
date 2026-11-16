@@ -27,6 +27,14 @@ import { detailsCtas, episodeRow, hideSpoiler, nextEpisodeOf, SPOILER_NOTE } fro
 import { useNav } from "../lib/nav";
 import type { MediaType, TitleDetails } from "../lib/types";
 import { MPoster } from "./MCards";
+import { usePersonalList } from "../lib/intel/personalize";
+import type { PandaItem } from "../lib/types";
+
+/** "More Like This": the catalogue's similar titles, ordered with this profile's taste (membership unchanged). */
+function MoreLikeThis({ items }: { items: readonly PandaItem[] }) {
+  const ordered = usePersonalList(items);
+  return <div className="m-grid">{ordered.slice(0, 12).map((it) => <MPoster key={it.id} item={it} />)}</div>;
+}
 
 export function MDetails({ type, id }: { type: MediaType; id: number }) {
   const { data, error, mutate } = useTitle(type, id);
@@ -248,7 +256,7 @@ function MDetailsView({ d }: { d: TitleDetails }) {
         {d.moreLikeThis.length > 0 && (
           <div className="m-det-section">
             <h2 className="m-row-title">More Like This</h2>
-            <div className="m-grid">{d.moreLikeThis.slice(0, 12).map((it) => <MPoster key={it.id} item={it} />)}</div>
+            <MoreLikeThis items={d.moreLikeThis} />
           </div>
         )}
         {d.collection && (

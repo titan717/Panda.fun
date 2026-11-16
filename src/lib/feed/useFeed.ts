@@ -8,7 +8,8 @@ import { useHiddenRecoIds } from "../reco/useHidden";
 import { canonicalGenres } from "../reco/genres";
 import { isKidsSafe } from "../kids";
 import { affinities, type LearnerState } from "../intel/learner";
-import { intelState, intelStatus, noteCategory, predict, useIntelVersion } from "../intel/runtime";
+import { intelState, intelStatus, noteCategory, useIntelVersion } from "../intel/runtime";
+import { personalOrder as blendOrder } from "../intel/personalize";
 import { categoryById, categoryPaths, eligible, hasRounds, railVariant, registerCategories, type CategoryDef, type RailVariant } from "./catalog";
 import { interleave, personalCategories } from "./personal";
 import { daypart, sessionMoods } from "../intel/moods";
@@ -109,14 +110,7 @@ export async function fetchBatch(key: string): Promise<BatchResult[]> {
 
 /** Order a rail's titles: the model's prediction blended with the catalogue's order (pure; exported for tests). */
 export function personalOrder(items: readonly PandaItem[], s: LearnerState | null, strength = RERANK_MAX, now = Date.now()): PandaItem[] {
-  const a = s ? strength * Math.min(1, s.n / 40) : 0;
-  if (a <= 0 || items.length < 3) return [...items];
-  const p = items.map((it) => predict(it, s, now) ?? 0);
-  const sorted = [...p].sort((x, y) => x - y);
-  const pct = (v: number) => (sorted.length > 1 ? sorted.indexOf(v) / (sorted.length - 1) : 0.5);
-  const n = items.length;
-  return items.map((it, i) => ({ it, i, z: a * pct(p[i]!) + (1 - a) * (1 - i / (n - 1)) }))
-    .sort((x, y) => y.z - x.z || x.i - y.i).map((x) => x.it);
+  return blendOrder(items, s, strength, now);
 }
 
 type Arrange = (c: CategoryDef, items: readonly PandaItem[]) => readonly PandaItem[];

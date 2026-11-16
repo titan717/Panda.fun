@@ -1,6 +1,8 @@
 import { useSyncExternalStore } from "react";
 import { getState, subscribeStore, type State } from "../store";
-import { getFeedback, subscribeFeedback } from "../reco/feedback";
+import { clearFeedback, getFeedback, subscribeFeedback } from "../reco/feedback";
+import { clearRecoMetrics } from "../reco/metrics";
+import { clearTaste } from "../tasteProfile";
 import type { Scored, ScorePart } from "../reco/engine";
 import type { PandaItem, TitleDetails } from "../types";
 import { fromDetails, fromItem, mergeFeatures, type TitleFeatures } from "./features";
@@ -208,6 +210,14 @@ async function activate(pid: string | null) {
   scheduleIngest();
 }
 
+/** Remove every piece of local learning kept for a profile (used when the profile is deleted). */
+export function forgetProfile(id: string) {
+  clearFeedback(id);
+  clearRecoMetrics(id);
+  clearTaste(id);
+  void deleteModel(id);
+}
+
 /** Start once, after the store has loaded. Safe to call more than once. */
 export function startIntel() {
   if (started) return;
@@ -220,7 +230,13 @@ export function startIntel() {
     if (s.activeProfileId !== pid) { pid = s.activeProfileId; void activate(pid); }
     else scheduleIngest();
     const ids = s.profiles.map((p) => p.id).join(",");
-    if (ids !== profiles) { profiles = ids; void pruneModels(new Set(s.profiles.map((p) => p.id))); }
+    if (ids !== profiles) {
+      const keep = new Set(s.profiles.map((p) => p.id));
+      // A deleted profile takes all of its local learning with it: model, feedback events, metrics, onboarding taste.
+      for (const old of profiles.split(",")) if (old && !keep.has(old)) forgetProfile(old);
+      profiles = ids;
+      void pruneModels(keep);
+    }
   });
   subscribeFeedback(scheduleIngest);
 }

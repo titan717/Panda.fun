@@ -9,6 +9,9 @@ import { isKidsSafe } from "./rows";
 import { listen, voiceSupported } from "./voice";
 import { toast } from "../components/ui";
 import type { PandaItem, Top10Payload } from "./types";
+import { hasSignal, personalOrderPinned, SEARCH_STRENGTH } from "./intel/personalize";
+import { intelState, useIntel } from "./intel/runtime";
+import type { LearnerState } from "./intel/learner";
 
 export type SearchFilter = "all" | "movie" | "tv";
 /** "Popular Searches in" tabs (blueprint 13.3, TV 8.x). */
@@ -53,6 +56,7 @@ export function useSearchState(defaultTab: PopularTab = "india") {
   // a new query starts with every filter cleared
   useEffect(() => { setGenre(null); setSort("relevance"); }, [debounced]);
 
+  const intelReady = hasSignal(useIntel());
   const base = useMemo(() => (search.data?.results ?? []).filter((i) => (filter === "all" || i.type === filter) && (!profile?.kids || isKidsSafe(i))), [search.data, filter, profile?.kids]);
   /** Genres present in the results, most common first (at most six). */
   const genres = useMemo(() => {
@@ -60,7 +64,12 @@ export function useSearchState(defaultTab: PopularTab = "india") {
     for (const i of base) for (const g of i.genres) n.set(g, (n.get(g) ?? 0) + 1);
     return [...n.entries()].filter(([, c]) => c >= 2).sort((a, b) => b[1] - a[1]).slice(0, 6).map(([g]) => g);
   }, [base]);
-  const results = useMemo(() => sortResults(genre ? base.filter((i) => i.genres.includes(genre)) : base, sort), [base, genre, sort]);
+  const sorted = useMemo(() => sortResults(genre ? base.filter((i) => i.genres.includes(genre)) : base, sort), [base, genre, sort]);
+  // "Best match" gets a light personal touch below the clear title matches; "Newest" / "Top rated" stay exact
+  const personalised = useMemo(() => (sort === "relevance" ? searchOrder(sorted, debounced, intelState()) : sorted),
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [sorted, sort, debounced, intelReady]);
+  const results = personalised;
 
   const popular = useMemo(() => {
     const source = popularTab === "india"
@@ -106,4 +115,13 @@ export function sortResults(list: PandaItem[], sort: SearchSort) {
   if (sort === "newest") out.sort((a, b) => (b.releaseDate ?? "").localeCompare(a.releaseDate ?? ""));
   else out.sort((a, b) => (b.rating ?? 0) - (a.rating ?? 0));
   return out;
+}
+
+const fold = (t: string) => t.toLowerCase().normalize("NFKD").replace(/[^a-z0-9]+/g, " ").trim();
+
+/** Search "Best match": the backend's top results and every title that matches the query stay first, untouched. */
+export function searchOrder(list: PandaItem[], q: string, s: LearnerState | null): PandaItem[] {
+  if (!hasSignal(s) || list.length < 4) return list;
+  const query = fold(q);
+  return personalOrderPinned(list, (it, i) => i < 3 || (query.length > 0 && fold(it.title).startsWith(query)), s, SEARCH_STRENGTH);
 }
