@@ -1,4 +1,4 @@
-import { useSyncExternalStore } from "react";
+import { useState, useSyncExternalStore } from "react";
 import { getState, subscribeStore, type State } from "../store";
 import { clearFeedback, getFeedback, subscribeFeedback } from "../reco/feedback";
 import { clearRecoMetrics } from "../reco/metrics";
@@ -255,6 +255,21 @@ export function useIntel(): LearnerState | null {
 /** The model version: changes on every update (the state object itself is mutated in place). */
 export function useIntelVersion(): number {
   return useSyncExternalStore(subscribeIntel, intelVersion, intelVersion);
+}
+
+/**
+ * The model version as of this screen's first render with a loaded model, kept until `key` (the profile) changes.
+ * Rows that re-rank from it stay put while they are on screen: training finishes in the background (the worker),
+ * and re-ordering a row under a focused TV card would move the card's element and drop the focus. The next visit
+ * uses the newer model.
+ */
+export function useSettledIntelVersion(key: unknown): number {
+  const v = useIntelVersion();
+  const loaded = cur !== null;
+  const [s, set] = useState({ key, v, loaded });
+  const fresh = s.key !== key || (!s.loaded && loaded);
+  if (fresh) set({ key, v, loaded });
+  return fresh ? v : s.v;
 }
 
 /** Details opened anywhere (Details page, a seed lookup): their people and franchise become features. */

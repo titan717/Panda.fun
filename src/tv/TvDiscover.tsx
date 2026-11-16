@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useLayoutEffect, useRef, useState } from "react";
 import { Icon } from "../components/Icon";
 import { ErrorState, Skeleton } from "../components/ui";
 import { QuickActions } from "../components/QuickActions";
@@ -53,8 +53,20 @@ export function TvDiscover({ onOpen }: { onOpen: (item: PandaItem) => void }) {
   // Up/Down between rows: each row remembers the card it was left on (Netflix-style), otherwise the card nearest
   // the current one horizontally. Up from the first row and Down from the last fall through to the page.
   const rowMemory = useRef(new Map<string, string>());
+  // A re-order (the on-device model loading after the rows) moves the focused card's element, and the browser drops
+  // focus when an element is moved. Put focus back on the same title, wherever it now is.
+  const lastFocused = useRef<string | null>(null);
+  useLayoutEffect(() => {
+    const id = lastFocused.current;
+    const a = document.activeElement;
+    if (!id || sheet || (a && a !== document.body)) return;
+    const box = rootRef.current?.querySelector<HTMLElement>(`[data-reco-id="${CSS.escape(id)}"]`);
+    const el = box?.querySelector<HTMLElement>("a, button, [tabindex]");
+    if (el) focusEl(el);
+  }, [r.sections, sheet]);
   const onFocusCapture = (e: React.FocusEvent) => {
     const t = e.target as HTMLElement;
+    lastFocused.current = t.closest<HTMLElement>("[data-reco-id]")?.dataset.recoId ?? null;
     const row = t.closest<HTMLElement>("[data-row]");
     if (row && t.id) rowMemory.current.set(row.id, t.id);
   };

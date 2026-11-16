@@ -10,7 +10,7 @@ import { healthVersion, subscribeHealth, suppressedSet } from "../playback/healt
 import { getFeedback, subscribeFeedback } from "./feedback";
 import { buildModel, type PreferenceModel } from "./model";
 import { buildSections, discoveryGenres } from "./sections";
-import { intelState, rerank, useIntelVersion } from "../intel/runtime";
+import { intelState, rerank, useSettledIntelVersion } from "../intel/runtime";
 import type { ListPayload, PandaItem, TitleDetails } from "../types";
 
 let fbVersion = 0;
@@ -32,7 +32,8 @@ export function useRecommendations() {
   const fbv = useSyncExternalStore(subscribeFeedback, () => fbVersion, () => fbVersion);
   const hv = useSyncExternalStore(subscribeHealth, healthVersion, healthVersion);
   const platform = useMemo(playbackPlatform, []);
-  const iv = useIntelVersion();
+  // settled per visit: background training never reshuffles the rows (or drops TV focus) while they are shown
+  const iv = useSettledIntelVersion(profile?.id);
 
   const model = useMemo<PreferenceModel>(
     () => buildModel({ taste: kids ? null : taste, history, watchlist, lists, ratings, feedback: getFeedback(profile?.id) }),
