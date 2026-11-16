@@ -5,12 +5,13 @@ import { getIntroPhase, setIntroPhase, type IntroPhase } from "../lib/launch";
 import { introDue, markIntroSeen, planIntro, type IntroPlan, type IntroView } from "../lib/intro";
 import { navKey } from "../lib/keys";
 import { BRAND } from "../lib/brand";
+import { IntroBumper } from "./IntroBumper";
 import "../styles/intro.css";
 
 /**
  * v1.4.0 launch intro, driven by the Intro Manager (lib/intro). One overlay plays whatever the config names for the
- * platform: the TV video, the built-in mascot animation (phones until a portrait video lands) or the branded still
- * (reduced motion, or the fallback when a video is missing, corrupt or will not start).
+ * platform: since v1.4.2 the canvas IntroBumper on phones and TVs (its final logo frame under reduced motion), or a
+ * video, the built-in mascot animation, or the branded still (the fallback when a video or the bumper cannot run).
  *
  * Skippable: after `skipAfterMs` a Skip button appears; on TV OK/Enter and Back skip too. Until then keys are held
  * back so nothing moves underneath. A hard timeout (duration + 2 s) always ends it, whatever fails.
@@ -88,7 +89,7 @@ export function IntroOverlay({ plan, tv, onDone }: { plan: IntroPlan; tv: boolea
     setIntroPhase("show");
     at(plan.skipAfterMs, () => { canSkipRef.current = true; setCanSkip(true); });
     if (plan.view === "video") at(plan.startTimeoutMs, () => { if (!started.current) fns.current.fallback(); });
-    else at(plan.durationMs, () => fns.current.leave());
+    else if (plan.view !== "bumper") at(plan.durationMs, () => fns.current.leave()); // the bumper ends itself (onDone)
     at(plan.hardMs, () => fns.current.finish());
     // OK/Enter and Back skip once allowed; every key is held back from the app while the intro is up
     const onKey = (e: KeyboardEvent) => {
@@ -138,6 +139,10 @@ export function IntroOverlay({ plan, tv, onDone }: { plan: IntroPlan; tv: boolea
           onPlaying={() => { started.current = true; }} onEnded={() => fns.current.leave()} onError={() => fns.current.fallback()} />
       )}
       {view === "animation" && <MascotAnimation />}
+      {view === "bumper" && (
+        // the moving bumper ends on a black frame, so it hands off at once; the still fades out like the other views
+        <IntroBumper still={plan.still} holdMs={plan.durationMs} onDone={() => (plan.still ? fns.current.leave() : fns.current.finish())} onError={() => fns.current.fallback()} />
+      )}
       {view === "static" && <StillFrame />}
       {canSkip && (
         <button ref={skipBtn} type="button" className="intro-skip" onClick={() => fns.current.leave()} aria-label="Skip intro" data-hover-focus>

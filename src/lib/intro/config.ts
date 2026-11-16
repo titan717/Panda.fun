@@ -3,11 +3,14 @@
  *
  * To replace an intro: drop the new file into public/intro/ (see docs/INTRO.md), point the asset's `src` here and
  * bump `version` so every device plays the new intro once. A platform with `kind: "animation"` plays the built-in
- * mascot animation (components/Intro.tsx) instead of a video; `shared` is used by any platform whose own asset is null.
+ * mascot animation (components/Intro.tsx) instead of a video; `kind: "bumper"` (v1.4.2, the default on phones and
+ * TVs) plays the 4 s canvas IntroBumper with its synthesised score; `shared` is used by any platform whose own asset
+ * is null.
  */
 export type IntroAsset =
   | { kind: "video"; src: string; width: number; height: number; fit: "cover" | "contain" }
-  | { kind: "animation" };
+  | { kind: "animation" }
+  | { kind: "bumper" };
 
 /**
  * When the intro plays (never on ?resumed=1 Android recreation, rerenders or in-app navigation in either mode):
@@ -37,6 +40,8 @@ export interface IntroConfig {
   startTimeoutMs: number;
   /** The app is never blocked longer than duration + this (ms). */
   hardPadMs: number;
+  /** v1.4.2 IntroBumper: its nominal length and the hard timeout that always ends it (ms). */
+  bumper: { durationMs: number; hardMs: number };
   /** Final fade (ms). */
   leaveMs: number;
 }
@@ -44,17 +49,23 @@ export interface IntroConfig {
 const base = (typeof import.meta !== "undefined" && import.meta.env?.BASE_URL) || "/";
 
 export const INTRO: IntroConfig = {
-  version: "2026.11-1",
+  version: "2026.11-2",
   replay: "every-cold-start",
-  tv: { kind: "video", src: `${base}intro/intro-tv.mp4`, width: 1280, height: 720, fit: "contain" },
-  // until the final portrait video lands: the built-in mascot animation. Later: { kind: "video", src: `${base}intro/intro-mobile.mp4`, width: 1080, height: 1920, fit: "cover" }
-  mobile: { kind: "animation" },
+  // v1.4.2: the canvas IntroBumper on both platforms. The v1.4.0 placeholder video stays available:
+  // { kind: "video", src: `${base}intro/intro-tv.mp4`, width: 1280, height: 720, fit: "contain" }
+  tv: { kind: "bumper" },
+  mobile: { kind: "bumper" },
   shared: null,
+  // used only by video / animation assets; the bumper has its own timings below
   durationMs: { tv: 5000, mobile: 2200 },
   skipAfterMs: 1000,
   reducedMotion: "static",
   staticMs: 1200,
   startTimeoutMs: 1500,
   hardPadMs: 2000,
+  bumper: { durationMs: 4000, hardMs: 4200 },
   leaveMs: 280
 };
+
+/** Kept so a config can point back at the v1.4.0 placeholder video in one line. */
+export const INTRO_TV_VIDEO: IntroAsset = { kind: "video", src: `${base}intro/intro-tv.mp4`, width: 1280, height: 720, fit: "contain" };

@@ -31,7 +31,7 @@ async function open(page: Page, path: string, tv: boolean, state = STATE) {
   await page.route("https://api.github.com/**", (r) => r.fulfill({ contentType: "application/json", body: JSON.stringify({ tag_name: "v0.0.1", assets: [] }) }));
   await page.route(/\/api\/v1\/panda\/anime$/, (r) => r.fulfill(ok(ANIME)));
   await page.route(/\/api\/v1\/panda\/sources\/ranking/, (r) => r.fulfill(ok(RANKING)));
-  await page.addInitScript((s) => { if (!localStorage.getItem("panda:v1:state")) localStorage.setItem("panda:v1:state", s); sessionStorage.setItem("panda:v1:intro-session", "e2e"); }, state);
+  await page.addInitScript((s) => { if (!localStorage.getItem("panda:v1:state")) localStorage.setItem("panda:v1:state", s); sessionStorage.setItem("panda:v1:intro-session", "e2e"); sessionStorage.setItem("panda:v1:bumper", "off"); }, state);
   await page.goto(`${path}${path.includes("?") ? "&" : "?"}layout=${tv ? "tv" : "mobile"}`, { waitUntil: "domcontentloaded" });
 }
 

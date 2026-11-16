@@ -25,7 +25,7 @@ async function open(page: Page, path: string, tv: boolean, sources: unknown[], s
   let loads = 0;
   await page.route(/^https:\/\/cinesrc\.st\/embed\//, (r) => { loads++; return r.fulfill({ contentType: "text/html", body: embed(loads === 1 ? stopAt : 0) }); });
   await page.route(/^https:\/\/(vidlink\.pro|www\.vidy\.st)\//, (r) => r.fulfill({ contentType: "text/html", body: "<!doctype html><body style='background:#422'></body>" }));
-  await page.addInitScript((s) => { if (!localStorage.getItem("panda:v1:state")) localStorage.setItem("panda:v1:state", s); sessionStorage.setItem("panda:v1:intro-session", "e2e"); }, STATE());
+  await page.addInitScript((s) => { if (!localStorage.getItem("panda:v1:state")) localStorage.setItem("panda:v1:state", s); sessionStorage.setItem("panda:v1:intro-session", "e2e"); sessionStorage.setItem("panda:v1:bumper", "off"); }, STATE());
   await page.goto(`${path}${path.includes("?") ? "&" : "?"}layout=${tv ? "tv" : "mobile"}`, { waitUntil: "domcontentloaded" });
   return { loads: () => loads };
 }

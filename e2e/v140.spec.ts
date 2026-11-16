@@ -24,7 +24,7 @@ async function open(page: Page, path: string, tv: boolean, extra: Record<string,
       localStorage.setItem("panda:v1:taste", t);
       for (const [k, v] of Object.entries(x)) localStorage.setItem(k, v);
     }
-    sessionStorage.setItem("panda:v1:intro-session", "e2e");
+    sessionStorage.setItem("panda:v1:intro-session", "e2e"); sessionStorage.setItem("panda:v1:bumper", "off");
   }, { s: STATE, t: TASTE, x: extra });
   const sep = path.includes("?") ? "&" : "?";
   await page.goto(`${path}${sep}layout=${tv ? "tv" : "mobile"}`, { waitUntil: "domcontentloaded" });

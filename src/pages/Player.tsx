@@ -37,6 +37,8 @@ import { COMPAT, nativeShield, recordPlay, SANDBOX, setShieldSource, shieldStats
 import { episodeRow, hideSpoiler, nextEpisodeOf, prevEpisodeOf } from "../lib/watch";
 import { airsLater, playClock, pluralEps, runtime, titlePath, watchPath } from "../lib/format";
 import { PlayerLoading } from "./PlayerLoading";
+import { PreMovieBumper } from "../components/PreMovieBumper";
+import { bumperKey, clearBumperSkip, preMovieBumperDue, skipBumperFor } from "../lib/intro/premovie";
 import { activeSkip, episodeLine, fitScale, getFit, getMutedMemory, saveMutedMemory, saveFit, seekMarkers, type FitMode, binge, shouldAskStill, getIntro, learnIntro, nextCardDue, SLEEP_GRACE_S, SLEEP_OFF, sleepDue, sleepLeft, sleepPillLabel, speedLabel, startSleep, type Intro, type SleepMode, type SleepTimer } from "../lib/player2";
 /** TV-only chrome lives in its own chunk so phones never download it (v1.1.6, D-85). TV warms it at idle. */
 export const loadTvChrome = () => import("../tv/TvPlayerChrome");
@@ -132,6 +134,10 @@ function Player({ type, id, season, episode, start }: { type: MediaType; id: num
   const [handedSub, setHandedSub] = useState<{ url: string; label: string } | null>(null);
   const [subsSheet, setSubsSheet] = useState(false);
   const [ready, setReady] = useState(false);
+  // v1.4.2 pre-movie bumper over the loading screen (the embed loads underneath; see components/PreMovieBumper.tsx)
+  const bKey = bumperKey(type, id, season, episode);
+  const [bumper, setBumper] = useState(() => preMovieBumperDue(bKey));
+  useEffect(() => { clearBumperSkip(bKey); }, [bKey]);
   // keeps the first-frames screen mounted for its 100 % fade-out (v1.2.6)
   const [loadingFade, setLoadingFade] = useState(false);
   useEffect(() => { if (!ready) { setLoadingFade(true); return; } const id = setTimeout(() => setLoadingFade(false), 500); return () => clearTimeout(id); }, [ready]);
@@ -513,6 +519,7 @@ function Player({ type, id, season, episode, start }: { type: MediaType; id: num
 
   function playEpisode(sn: number, en: number) {
     save();
+    skipBumperFor(bumperKey("tv", id, sn, en)); // one bumper per sitting, not one per episode
     setUpNext(null);
     go(watchPath("tv", id, sn, en), { replace: true });
   }
@@ -747,6 +754,17 @@ function Player({ type, id, season, episode, start }: { type: MediaType; id: num
     };
   }
 
+  /** The bumper is gone: on TV, hand focus to the Player's controls if it was left on the removed Skip button. */
+  const bumperDone = () => {
+    setBumper(false);
+    if (!tv) return;
+    requestAnimationFrame(() => {
+      const a = document.activeElement;
+      if (a && a !== document.body && a !== document.documentElement && a.isConnected) return;
+      const target = document.getElementById("tvp-track") ?? document.getElementById("pl-back") ?? root.current;
+      (target as HTMLElement | null)?.focus({ preventScroll: true });
+    });
+  };
   const title = details?.title ?? "";
   const isolated = Boolean(source) && customChrome && !COMPAT[source!.id];
   const subtitle = isTv ? episodeLine(ep.s, ep.e, epInfo?.title) : [details?.year, runtime(details?.runtime)].filter(Boolean).join(" · ");
@@ -797,6 +815,7 @@ function Player({ type, id, season, episode, start }: { type: MediaType; id: num
       {!play.error && !failed && (!ready || loadingFade) && (
         <PlayerLoading backdrop={details?.backdropLarge} title={title} line={isTv ? episodeLine(ep.s, ep.e, epInfo?.title) : null} sourceId={source?.id ?? null} ready={ready} touch={!tv} onBack={exit} />
       )}
+      {bumper && <PreMovieBumper tv={tv} end={fb.status === "playing" || fb.status === "failed" || failed || Boolean(play.error)} onDone={bumperDone} />}
       <div className="player-hotzone" onMouseEnter={poke} aria-hidden="true" />
       {customChrome ? <Suspense fallback={null}><TvPlayerChrome {...chromeProps()} touch={!tv} /></Suspense> : <>
       <div className="player-top lrud-container">

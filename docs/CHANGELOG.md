@@ -2,6 +2,14 @@
 
 Every stable release of Panda.fun. The same notes ship in each GitHub Release and in Settings › What's New.
 
+## 1.4.2
+
+- **A new launch intro on phones and TVs**: the app now opens with the approved Panda.fun bumper. A thin light rises out of the dark, becomes a glowing play triangle that beats twice, then bursts into the Panda.fun logo, all in 4 seconds. It is drawn live in the app (the same picture on every screen size), loads only when needed, and replaces the 5-second placeholder video on TVs and the mascot animation on phones. It can still be skipped after one second (OK or Back on the remote), and it never keeps you waiting longer than 4.2 seconds, even if something goes wrong.
+- **A score that matches the picture**: a thin rising tone under the light, two kicks on the triangle's beats, a bright chime chord as the logo appears and a soft air swell under it. It is made live in the app (no audio files), follows the app's sound-off setting and volume, and stays silent when the device has not allowed sound yet (in a web browser, until the first tap, click or key press).
+- **A bumper before every movie and show**: opening a title in the player now plays the same bumper while the stream loads underneath, so nothing starts later than before. It gets out of the way as soon as the video really starts or playback fails, can be skipped after one second (Back skips it and never leaves the player), and does not repeat when you move to the next episode inside the player.
+- **Reduce motion**: with Reduce motion on (system setting or Settings › Display), both the launch intro and the pre-movie bumper show the final Panda.fun logo frame briefly instead of the animation, with no sound.
+- **For developers**: the launch intro rules are unchanged (every cold start, never on an Android screen recreation, skip after one second). The intro version was bumped, the old video setup can be switched back on with one line, and the bumper can be turned off for test runs with `panda:v1:bumper` (docs/INTRO.md).
+
 ## 1.4.1
 
 - **The TV keyboard opens from Search**: pressing OK on the Search field in the TV layout now opens the Android TV keyboard (Gboard) reliably. Before, the field changed to a text field a moment after the key press and the app asked for the keyboard too early, so on many TVs nothing appeared (the phone layout on the same TV was not affected). The field now switches inside the OK press itself, the app asks again until the keyboard is really on screen, and pressing Search on the keyboard runs the search and closes it.
