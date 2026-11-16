@@ -1,5 +1,5 @@
 import { label } from "../intel/events";
-import { affinities, tasteDrift, type LearnerState } from "../intel/learner";
+import { affinities, DRIFT_DELTA, DRIFT_MIN, tasteDrift, type LearnerState } from "../intel/learner";
 import { MOVIE_GENRES, type CategoryDef } from "./catalog";
 
 /**
@@ -44,7 +44,7 @@ export function personalCategories(s: LearnerState | null, opts: { kids: boolean
   }
 
   const drift = tasteDrift(s);
-  const emerging = drift.find((d) => d.key.startsWith("g:") && d.delta > 0.12 && d.short > 0.25 && GENRE_ID.has(d.key.slice(2)));
+  const emerging = drift.find((d) => d.key.startsWith("g:") && d.delta > DRIFT_DELTA && d.short > DRIFT_MIN && GENRE_ID.has(d.key.slice(2)));
   if (emerging) {
     const g = emerging.key.slice(2), def = GENRE_ID.get(g)!;
     out.push({ ...base, id: `p-new-${def.id}`, title: `New Interest: ${def.title}`, note: "You've been watching more of these lately", genres: [g], source: { kind: "discover", type: "movie", genre: def.id, page: 2 } });

@@ -315,14 +315,32 @@ export function explainTitle(s: LearnerState, f: TitleFeatures): string | null {
   }
   best.sort((a, b) => b.v - a.v || a.k.localeCompare(b.k));
   const top = best[0];
-  if (!top) return null;
+  if (!top) return genreStreak(s, f, positive);
   const name = displayName(top.k, { names: { ...(top.via.names ?? {}), ...(f.names ?? {}) } });
-  if (top.k.startsWith("col:")) return `Next in ${name}, after ${top.via.title}`;
+  // "Next" only when this title really comes after the one watched (release years); otherwise just "also in"
+  if (top.k.startsWith("col:")) return f.year && top.via.year && f.year >= top.via.year ? `Next in ${name}, after ${top.via.title}` : `Also in ${name}, like ${top.via.title}`;
   if (top.k.startsWith("d:")) return `From ${name}, director of ${top.via.title}`;
   if (top.k.startsWith("cr:")) return `From ${name}, creator of ${top.via.title}`;
   if (top.k.startsWith("c:")) return `With ${name}, from ${top.via.title}`;
   if (top.k.startsWith("l:")) return `More ${name} picks, like ${top.via.title}`;
   return null;
+}
+
+/** Evidence threshold for the genre-streak explanation: this many positive titles of the genre in the window. */
+export const STREAK_MIN = 3;
+const STREAK_WINDOW = 45 * 24 * 3600_000;
+
+/** "You've finished 4 thrillers lately": only when the profile really did, recently, and the model agrees. */
+function genreStreak(s: LearnerState, f: TitleFeatures, positive: LearnerState["log"]): string | null {
+  const since = (positive[positive.length - 1]?.at ?? 0) - STREAK_WINDOW;
+  let best: { g: string; n: number } | null = null;
+  for (const g of f.genres) {
+    const w = s.w[slot(`g:${g}`)]! + (s.overrides[`g:${g}`] ?? 0);
+    if (w <= 0.05) continue;
+    const ids = new Set(positive.filter((e) => e.at >= since && (e.kind === "complete" || e.kind === "binge" || e.kind === "love" || e.kind === "like" || e.kind === "rewatch") && s.features[e.id]?.genres.includes(g)).map((e) => e.id));
+    if (ids.size >= STREAK_MIN && (!best || ids.size > best.n)) best = { g, n: ids.size };
+  }
+  return best ? `You've enjoyed ${best.n} ${best.g.toLowerCase()} titles lately` : null;
 }
 
 /** Validate a stored record; anything off returns null and the caller rebuilds from local history. */
@@ -365,4 +383,17 @@ export function tasteDrift(s: LearnerState, minEvents = 8): Drift[] {
     const st = Math.max(0, s.shortT[slot(key)]! / ns), lt = Math.max(0, s.longT[slot(key)]! / nl);
     return { key, name, short: st, long: lt, delta: st - lt };
   }).sort((a, b) => b.delta - a.delta || a.key.localeCompare(b.key));
+}
+
+/** Thresholds shared by the "New Interest" rail and Taste DNA's evolution section. */
+export const DRIFT_DELTA = 0.12;
+export const DRIFT_MIN = 0.25;
+
+/** Taste evolution: interests rising lately (short-term ≫ long-term) and ones fading. Empty with too little history. */
+export function tasteEvolution(s: LearnerState, max = 4): { emerging: Drift[]; fading: Drift[] } {
+  const d = tasteDrift(s);
+  return {
+    emerging: d.filter((x) => x.delta > DRIFT_DELTA && x.short > DRIFT_MIN).slice(0, max),
+    fading: [...d].reverse().filter((x) => x.delta < -DRIFT_DELTA && x.long > DRIFT_MIN).slice(0, max)
+  };
 }

@@ -6,7 +6,7 @@ import { toast } from "../components/ui";
 import { useIsTv } from "../lib/layout";
 import { focusFirst } from "../lib/focus";
 import { useProfile } from "../lib/store";
-import { affinities, type LearnerState } from "../lib/intel/learner";
+import { affinities, tasteEvolution, type LearnerState } from "../lib/intel/learner";
 import { INTERACTION_WEIGHTS, type InteractionKind } from "../lib/intel/events";
 import { forgetTitle, intelStatus, resetIntel, setOverride, useIntel } from "../lib/intel/runtime";
 import "./settings.css";
@@ -23,9 +23,10 @@ import "./taste.css";
 const GROUPS: { id: string; title: string; prefixes: string[] }[] = [
   { id: "genres", title: "Genres", prefixes: ["g:"] },
   { id: "languages", title: "Languages", prefixes: ["l:"] },
-  { id: "people", title: "Directors, creators and cast", prefixes: ["d:", "cr:", "c:"] },
+  { id: "directors", title: "Directors and creators", prefixes: ["d:", "cr:"] },
+  { id: "cast", title: "Actors", prefixes: ["c:"] },
   { id: "franchises", title: "Franchises", prefixes: ["col:"] },
-  { id: "eras", title: "Eras", prefixes: ["e:"] }
+  { id: "eras", title: "Decades", prefixes: ["e:"] }
 ];
 
 const KIND_TEXT: Record<InteractionKind, string> = {
@@ -68,6 +69,7 @@ export function TasteDnaPage() {
   const root = useRef<HTMLDivElement>(null);
   const [confirm, setConfirm] = useState(false);
   const groups = useMemo(() => (s ? tasteGroups(s) : []), [s, s?.updatedAt, s?.n, JSON.stringify(s?.overrides ?? {})]); // eslint-disable-line react-hooks/exhaustive-deps
+  const evolution = useMemo(() => (s ? tasteEvolution(s) : { emerging: [], fading: [] }), [s, s?.updatedAt, s?.n]); // eslint-disable-line react-hooks/exhaustive-deps
   const memory = useMemo(() => (s ? memoryEntries(s) : []), [s, s?.log.length, s?.updatedAt]); // eslint-disable-line react-hooks/exhaustive-deps
   // TV: start on the first learned item once it is there (the model loads from IndexedDB, then trains in idle time)
   const hasItems = groups.length > 0;
@@ -115,6 +117,21 @@ export function TasteDnaPage() {
           </ul>
         </section>
       ))}
+
+      {(evolution.emerging.length > 0 || evolution.fading.length > 0) && (
+        <section className="taste-group" aria-labelledby="taste-evolution">
+          <h2 id="taste-evolution" className="set-group-title">How your taste is changing</h2>
+          <p className="set-note">Your recent watching compared with your longer-term habits on this device.</p>
+          <ul className="taste-list">
+            {evolution.emerging.map((d) => (
+              <li key={`up-${d.key}`} className="taste-item"><span className="taste-name">{d.name}<span className="taste-via">Watching more of this lately</span></span></li>
+            ))}
+            {evolution.fading.map((d) => (
+              <li key={`down-${d.key}`} className="taste-item"><span className="taste-name">{d.name}<span className="taste-via">Less than you used to</span></span></li>
+            ))}
+          </ul>
+        </section>
+      )}
 
       <section className="taste-group" aria-labelledby="taste-memory">
         <h2 id="taste-memory" className="set-group-title">Entertainment Memory</h2>

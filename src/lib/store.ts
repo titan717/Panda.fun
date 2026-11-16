@@ -438,6 +438,8 @@ export function continueScore(h: HistoryEntry, now = Date.now()): number {
   const p = h.duration > 0 ? h.position / h.duration : 0;
   if (h.item.type === "movie" && p >= 0.5 && p < 0.97) z += 12 * HOUR;
   if (!h.upNext && p > 0 && p < 0.2 && now - h.updatedAt > 21 * 24 * HOUR) z -= 30 * 24 * HOUR;
+  // a show left on "next episode" for three months looks abandoned: it stays, below the shows being watched
+  if (h.upNext && !h.newEpisode && now - h.updatedAt > 90 * 24 * HOUR) z -= 30 * 24 * HOUR;
   return z;
 }
 /** Shows/movies the profile has watched (any progress), newest first. */
