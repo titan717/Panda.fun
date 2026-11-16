@@ -28,7 +28,7 @@ import { PreMovieBumper } from "../components/PreMovieBumper";
 import { LaunchIntro } from "../components/Intro";
 import { INTRO, planIntro, resetIntroDecision } from "../lib/intro";
 import { setIntroPhase } from "../lib/launch";
-import { BUMPER_OFF_KEY, bumperKey, clearBumperSkip, preMovieBumperDue, skipBumperFor } from "../lib/intro/premovie";
+import { BUMPER_OFF_KEY, INTRO_GRACE_MS, bumperKey, clearBumperSkip, preMovieBumperDue, skipBumperFor } from "../lib/intro/premovie";
 
 const FAKE = ["setTimeout", "clearTimeout", "setInterval", "clearInterval", "Date", "performance", "requestAnimationFrame", "cancelAnimationFrame"] as const;
 /** Let the dynamic imports and the logo promise settle, inside act. */
@@ -209,6 +209,21 @@ describe("Pre-movie bumper", () => {
     expect(preMovieBumperDue(k)).toBe(false);
     sessionStorage.clear(); localStorage.setItem(BUMPER_OFF_KEY, "off");
     expect(preMovieBumperDue(k)).toBe(false);
+  });
+
+  it("is not shown while the launch intro is up or for 20 s after it (no double intro on a cold start into the Player)", () => {
+    const k = bumperKey("movie", 603);
+    const now = vi.spyOn(performance, "now");
+    now.mockReturnValue(1_000);
+    setIntroPhase("show");
+    expect(preMovieBumperDue(k)).toBe(false);
+    now.mockReturnValue(5_000);
+    setIntroPhase("done");
+    now.mockReturnValue(5_000 + INTRO_GRACE_MS - 1);
+    expect(preMovieBumperDue(k)).toBe(false);
+    now.mockReturnValue(5_000 + INTRO_GRACE_MS + 1);
+    expect(preMovieBumperDue(k)).toBe(true);
+    now.mockRestore();
   });
 
   it("ends as soon as playback starts", async () => {

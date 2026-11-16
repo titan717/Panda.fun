@@ -114,9 +114,16 @@ function ageTaste(v: Float32Array, from: number, now: number, halfLife: number):
   return now;
 }
 
+// The record last produced from a given features object: re-remembering the same object (a replay over the same
+// history) is then a no-op instead of a rebuild.
+const mergedFrom = new WeakMap<TitleFeatures, TitleFeatures & { at: number }>();
 export function rememberFeatures(s: LearnerState, f: TitleFeatures, at: number) {
   const cur = s.features[f.id];
-  s.features[f.id] = { ...(cur ?? {}), ...f, directors: f.directors ?? cur?.directors, cast: f.cast ?? cur?.cast, creators: f.creators ?? cur?.creators, collection: f.collection !== undefined ? f.collection : cur?.collection, collectionName: f.collectionName ?? cur?.collectionName, names: { ...(cur?.names ?? {}), ...(f.names ?? {}) }, at: Math.max(at, cur?.at ?? 0) };
+  if (cur && mergedFrom.get(f) === cur && cur.at >= at) return;
+  const rec = { ...(cur ?? {}), ...f, directors: f.directors ?? cur?.directors, cast: f.cast ?? cur?.cast, creators: f.creators ?? cur?.creators, collection: f.collection !== undefined ? f.collection : cur?.collection, collectionName: f.collectionName ?? cur?.collectionName, names: { ...(cur?.names ?? {}), ...(f.names ?? {}) }, at: Math.max(at, cur?.at ?? 0) };
+  s.features[f.id] = rec;
+  mergedFrom.set(f, rec);
+  if (cur) return; // the number of titles did not change
   const ids = Object.keys(s.features);
   if (ids.length > LEARN.featuresMax) {
     const drop = ids.sort((a, b) => s.features[a]!.at - s.features[b]!.at).slice(0, ids.length - LEARN.featuresMax);

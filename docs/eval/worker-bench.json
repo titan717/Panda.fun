@@ -1,0 +1,71 @@
+{
+  "note": "synthetic histories, Node/vitest timing (median of 5); main-thread milliseconds",
+  "sizes": {
+    "50": {
+      "interactions": 50,
+      "before": {
+        "mainThreadTotalMs": 18.74,
+        "idleSlices": 1,
+        "longestSliceMs": 11.88
+      },
+      "after": {
+        "workerMs": 18.87,
+        "mainThread": {
+          "buildJobMs": 0.09,
+          "postJobMs": 0.05,
+          "mergeResultMs": 0.21,
+          "oneTimeInitCloneMs": 0.61
+        },
+        "bytes": {
+          "init": 312028,
+          "job": 2876,
+          "result": 4406
+        }
+      }
+    },
+    "300": {
+      "interactions": 300,
+      "before": {
+        "mainThreadTotalMs": 78.05,
+        "idleSlices": 5,
+        "longestSliceMs": 14.68
+      },
+      "after": {
+        "workerMs": 74.07,
+        "mainThread": {
+          "buildJobMs": 0.17,
+          "postJobMs": 0.21,
+          "mergeResultMs": 0.15,
+          "oneTimeInitCloneMs": 1.1
+        },
+        "bytes": {
+          "init": 381720,
+          "job": 17276,
+          "result": 18806
+        }
+      }
+    },
+    "1000": {
+      "interactions": 1000,
+      "before": {
+        "mainThreadTotalMs": 270.37,
+        "idleSlices": 17,
+        "longestSliceMs": 15.36
+      },
+      "after": {
+        "workerMs": 249.53,
+        "mainThread": {
+          "buildJobMs": 0.61,
+          "postJobMs": 0.69,
+          "mergeResultMs": 0.43,
+          "oneTimeInitCloneMs": 2.74
+        },
+        "bytes": {
+          "init": 578052,
+          "job": 57876,
+          "result": 59406
+        }
+      }
+    }
+  }
+}

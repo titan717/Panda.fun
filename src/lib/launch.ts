@@ -22,8 +22,12 @@ export type IntroPhase = "show" | "leave" | "done";
 let introPhase: IntroPhase = "done";
 const introSubs = new Set<() => void>();
 export function getIntroPhase() { return introPhase; }
+let introEnded = 0;
+/** When the launch intro last went away (performance clock, ms), or 0 when it has not played in this load. */
+export const introEndedAt = () => introEnded;
 export function setIntroPhase(p: IntroPhase) {
   if (p === introPhase) return;
+  if (p === "done") introEnded = typeof performance !== "undefined" ? performance.now() : Date.now();
   introPhase = p;
   for (const f of introSubs) { try { f(); } catch { /* a listener must never stop the intro from ending */ } }
 }
