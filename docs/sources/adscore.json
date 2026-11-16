@@ -1,5 +1,5 @@
 {
-  "measuredAt": "2026-11-09T04:01:51.229Z",
+  "measuredAt": "2026-11-16T11:21:11.021Z",
   "seconds": 25,
   "tiers": {
     "cinesrc": {
@@ -8,7 +8,7 @@
       "navigations": 0,
       "adRequests": 3,
       "sandbox": true,
-      "firstPlay": 3.739
+      "firstPlay": 3.583
     },
     "vidlink": {
       "tier": 3,
@@ -16,7 +16,7 @@
       "navigations": 0,
       "adRequests": 20,
       "sandbox": false,
-      "firstPlay": 1.796
+      "firstPlay": 2.224
     },
     "vidy": {
       "tier": 2,
@@ -24,7 +24,7 @@
       "navigations": 0,
       "adRequests": 1,
       "sandbox": false,
-      "firstPlay": 6.306
+      "firstPlay": 6.38
     }
   },
   "results": [
@@ -41,9 +41,9 @@
         "adexchangerapid.com"
       ],
       "requests": 69,
-      "firstEvent": 2.935,
-      "firstPlay": 3.739,
-      "events": 90,
+      "firstEvent": 3.069,
+      "firstPlay": 3.937,
+      "events": 89,
       "error": null,
       "eventTypes": [
         "cinesrc:sourceused",
@@ -65,8 +65,8 @@
         "adexchangerapid.com"
       ],
       "requests": 78,
-      "firstEvent": 3.093,
-      "firstPlay": 3.852,
+      "firstEvent": 2.784,
+      "firstPlay": 3.583,
       "events": 88,
       "error": null,
       "eventTypes": [
@@ -92,18 +92,18 @@
         "usrpubtrck.com",
         "rapidadexchange.com",
         "c.adsco.re",
-        "7aao8dgymj2b.l4.adsco.re",
-        "7aao8dgymj2b.n4.adsco.re",
-        "7aao8dgymj2b.s4.adsco.re",
+        "xhwdehiclcwx.l4.adsco.re",
+        "xhwdehiclcwx.n4.adsco.re",
+        "xhwdehiclcwx.s4.adsco.re",
         "adsco.re",
         "4.adsco.re",
         "6.adsco.re",
         "c.bing.com"
       ],
       "requests": 92,
-      "firstEvent": 1.381,
+      "firstEvent": 1.916,
       "firstPlay": null,
-      "events": 39,
+      "events": 41,
       "error": null,
       "eventTypes": [
         "",
@@ -127,25 +127,23 @@
         "static.cloudflareinsights.com",
         "www.clarity.ms",
         "c.bing.com",
-        "usrpubtrck.com",
-        "rapidadexchange.com",
         "c.adsco.re",
-        "i9qkwe27v9o6.l4.adsco.re",
-        "i9qkwe27v9o6.n4.adsco.re",
-        "i9qkwe27v9o6.s4.adsco.re",
+        "v6ggu0hnv0k5.l4.adsco.re",
+        "v6ggu0hnv0k5.n4.adsco.re",
+        "v6ggu0hnv0k5.s4.adsco.re",
         "adsco.re",
         "4.adsco.re",
-        "6.adsco.re"
+        "6.adsco.re",
+        "usrpubtrck.com",
+        "rapidadexchange.com"
       ],
-      "requests": 93,
-      "firstEvent": 1.467,
+      "requests": 89,
+      "firstEvent": 1.532,
       "firstPlay": null,
-      "events": 38,
+      "events": 13,
       "error": null,
       "eventTypes": [
-        "PLAYER_EVENT:play",
         "",
-        "PLAYER_EVENT:timeupdate",
         "MEDIA_DATA"
       ],
       "refused": true
@@ -157,7 +155,7 @@
       "popups": 0,
       "topNav": 0,
       "intent": 0,
-      "adRequests": 7,
+      "adRequests": 8,
       "adHosts": [
         "mc.yandex.ru",
         "www.googletagmanager.com",
@@ -165,8 +163,8 @@
         "www.clarity.ms",
         "c.bing.com"
       ],
-      "requests": 47,
-      "firstEvent": 1.191,
+      "requests": 48,
+      "firstEvent": 1.251,
       "firstPlay": null,
       "events": 1,
       "error": null,
@@ -187,28 +185,26 @@
         "www.googletagmanager.com",
         "static.cloudflareinsights.com",
         "www.clarity.ms",
-        "usrpubtrck.com",
         "c.adsco.re",
-        "hulhezpfj6ip.l4.adsco.re",
-        "hulhezpfj6ip.n4.adsco.re",
-        "hulhezpfj6ip.s4.adsco.re",
+        "usrpubtrck.com",
         "rapidadexchange.com",
+        "enpmjiuqbvgo.l4.adsco.re",
+        "enpmjiuqbvgo.n4.adsco.re",
+        "enpmjiuqbvgo.s4.adsco.re",
         "adsco.re",
         "4.adsco.re",
         "6.adsco.re",
         "c.bing.com"
       ],
       "requests": 91,
-      "firstEvent": 1.354,
-      "firstPlay": 1.796,
-      "events": 23,
+      "firstEvent": 1.873,
+      "firstPlay": 2.224,
+      "events": 14,
       "error": null,
       "eventTypes": [
         "",
         "PLAYER_EVENT:play",
-        "PLAYER_EVENT:timeupdate",
-        "MEDIA_DATA",
-        "PLAYER_EVENT:pause"
+        "MEDIA_DATA"
       ]
     },
     {
@@ -222,10 +218,10 @@
       "adHosts": [
         "static.cloudflareinsights.com"
       ],
-      "requests": 116,
-      "firstEvent": 1.428,
-      "firstPlay": 6.434,
-      "events": 26,
+      "requests": 120,
+      "firstEvent": 1.447,
+      "firstPlay": 7.644,
+      "events": 28,
       "error": null,
       "eventTypes": [
         "MEDIA_DATA",
@@ -244,10 +240,10 @@
       "adHosts": [
         "static.cloudflareinsights.com"
       ],
-      "requests": 119,
-      "firstEvent": 1.303,
-      "firstPlay": 6.306,
-      "events": 26,
+      "requests": 123,
+      "firstEvent": 1.297,
+      "firstPlay": 7.745,
+      "events": 28,
       "error": null,
       "eventTypes": [
         "MEDIA_DATA",
@@ -267,9 +263,9 @@
         "static.cloudflareinsights.com"
       ],
       "requests": 58,
-      "firstEvent": 1.287,
-      "firstPlay": 6.573,
-      "events": 27,
+      "firstEvent": 1.38,
+      "firstPlay": 6.38,
+      "events": 26,
       "error": null,
       "eventTypes": [
         "MEDIA_DATA",
