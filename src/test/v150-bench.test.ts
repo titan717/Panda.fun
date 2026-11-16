@@ -37,6 +37,7 @@ const time = (f: () => void, reps = 5) => {
   return +xs[Math.floor(xs.length / 2)]!.toFixed(2);
 };
 
+declare const process: { env: Record<string, string | undefined>; cwd(): string };
 const report: Record<string, unknown> = { note: "synthetic histories, Node/vitest timing (median of 5); main-thread milliseconds", sizes: {} };
 
 describe("v1.5.0 worker benchmark (synthetic)", () => {
