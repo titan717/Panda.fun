@@ -226,7 +226,7 @@ function bumpCategory(s: LearnerState, e: Interaction) {
   const f = k[e.kind];
   if (f) (c[f] as number)++;
   c.at = Math.max(c.at, e.at);
-  s.categories[e.surface] = c;
+  Object.defineProperty(s.categories, e.surface, { value: c, writable: true, enumerable: true, configurable: true });
 }
 
 /** Dense parts computable from a title's own features (the engine parts that need candidate context stay 0). */

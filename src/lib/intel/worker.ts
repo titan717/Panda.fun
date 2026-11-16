@@ -8,11 +8,13 @@ import type { LearnerState } from "./learner";
  */
 const box: { state: LearnerState | null; epoch: number } = { state: null, epoch: -1 };
 // typed loosely on purpose: the app's tsconfig uses the DOM lib, and the webworker lib would leak into every file
-const scope = self as unknown as { onmessage: ((ev: MessageEvent<ToWorker>) => void) | null; postMessage: (m: unknown, t?: Transferable[]) => void };
+const scope = self as unknown as { location: { origin: string }; onmessage: ((ev: MessageEvent<ToWorker>) => void) | null; postMessage: (m: unknown, t?: Transferable[]) => void };
 
 scope.onmessage = (ev: MessageEvent<ToWorker>) => {
   // a dedicated worker can only be messaged by the page that created it (no cross-origin senders exist), so instead of
   // an origin check the message shape is validated
+  // dedicated-worker messages have an empty origin; anything else is not from the page that created this worker
+  if (ev.origin && ev.origin !== scope.location.origin) return;
   const m = ev.data;
   if (!m || typeof m !== "object" || (m.t !== "init" && m.t !== "job") || typeof m.epoch !== "number") return;
   try {
