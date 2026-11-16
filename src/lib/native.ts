@@ -35,6 +35,8 @@ export interface NativeBridge {
    */
   showKeyboard?(): boolean;
   hideKeyboard?(): void;
+  /** v1.4.1: while true, the remote's OK reaches the page as Enter (only set while a TV remote field has focus). */
+  setOkAsEnter?(on: boolean): void;
 }
 
 declare global {

@@ -135,4 +135,14 @@ describe("native side (source checks; no Android SDK in CI)", () => {
     expect(tvSearchSrc).toContain("{...field.props}");
     expect(tvSearchSrc).not.toContain("el.blur(); el.focus()");
   });
+
+  it("maps the remote's OK to Enter only while the TV field has focus (v1.4.1)", async () => {
+    const setOkAsEnter = vi.fn();
+    const hook = await load({ isTV: () => true, getAppVersion: () => "1", showKeyboard: () => true, hideKeyboard: () => undefined, setOkAsEnter });
+    render(<><Field hook={hook} /><button id="other">other</button></>);
+    q().focus();
+    expect(setOkAsEnter).toHaveBeenLastCalledWith("k3y", true);
+    (document.getElementById("other") as HTMLButtonElement).focus();
+    expect(setOkAsEnter).toHaveBeenLastCalledWith("k3y", false);
+  });
 });

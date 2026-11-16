@@ -53,6 +53,11 @@ export function requestKeyboard(el: HTMLElement, refocus: () => void): "native" 
   return "refocus";
 }
 
+/** Tell the Android app whether a TV remote field has focus, so OK on it arrives as Enter (MainActivity). */
+export function setOkAsEnter(on: boolean) {
+  try { native?.setOkAsEnter?.(on); } catch { /* older app without the bridge method */ }
+}
+
 export function dismissKeyboard() {
   try { native?.hideKeyboard?.(); } catch { /* not available */ }
 }
@@ -70,6 +75,9 @@ export function useRemoteField(enabled: boolean, onDone?: () => void, opts: Remo
   // typed into without the on-screen keyboard (hardware keyboard / desktop). A ref, not state: re-rendering on the
   // first keystroke made preact re-apply the controlled value before the page saw it and the first letter was lost.
   const typed = useRef(false);
+
+  // a field that unmounts while focused must not leave OK mapped to Enter for the rest of the app
+  useEffect(() => () => { if (enabled && typeof document !== "undefined" && document.activeElement === ref.current) setOkAsEnter(false); }, [enabled]);
 
   // Android app: the IME was closed (Back on the keyboard, or it lost the field): the field is back to remote mode
   useEffect(() => {
@@ -102,7 +110,8 @@ export function useRemoteField(enabled: boolean, onDone?: () => void, opts: Remo
     props: {
       inputMode: editing ? (opts.mode ?? "text") : ("none" as const),
       onClick: () => { if (!editing) open(); },
-      onBlur: () => { if (!refocusing.current) { typed.current = false; if (ref.current) ref.current.inputMode = "none"; setEditing(false); } },
+      onFocus: () => { setOkAsEnter(true); },
+      onBlur: () => { if (!refocusing.current) { setOkAsEnter(false); typed.current = false; if (ref.current) ref.current.inputMode = "none"; setEditing(false); } },
       // typing without the on-screen keyboard (a hardware keyboard, a desktop browser): the field is being edited,
       // so Enter submits instead of asking for a keyboard nobody needs
       onInput: () => { typed.current = true; },
