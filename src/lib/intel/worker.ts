@@ -11,7 +11,10 @@ const box: { state: LearnerState | null; epoch: number } = { state: null, epoch:
 const scope = self as unknown as { onmessage: ((ev: MessageEvent<ToWorker>) => void) | null; postMessage: (m: unknown, t?: Transferable[]) => void };
 
 scope.onmessage = (ev: MessageEvent<ToWorker>) => {
+  // a dedicated worker can only be messaged by the page that created it (no cross-origin senders exist), so instead of
+  // an origin check the message shape is validated
   const m = ev.data;
+  if (!m || typeof m !== "object" || (m.t !== "init" && m.t !== "job") || typeof m.epoch !== "number") return;
   try {
     const r = handleMessage(box, m, () => performance.now());
     if (r) scope.postMessage(r, transferables(r));

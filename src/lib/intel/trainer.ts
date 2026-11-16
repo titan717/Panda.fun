@@ -72,14 +72,19 @@ function diff(before: Float32Array, after: Float32Array): VecDelta {
   return out;
 }
 
+/** Keys that would reach Object.prototype when used as a plain-object property name. */
+export function safeKey(k: unknown): k is string {
+  return typeof k === "string" && k !== "__proto__" && k !== "constructor" && k !== "prototype";
+}
+
 /** Worker side: apply one message to the mirror. Pure apart from the mirror it is given; exported for tests. */
 export function handleMessage(box: { state: LearnerState | null; epoch: number }, m: ToWorker, clock: () => number = () => Date.now()): FromWorker | null {
   if (m.t === "init") { box.state = m.state; box.epoch = m.epoch; return null; }
   const s = box.state;
   if (!s || m.epoch !== box.epoch) return { t: "fail", epoch: m.epoch, id: m.id, message: "stale" };
   const t0 = clock();
-  for (const id of m.drop) delete s.features[id];
-  for (const f of m.features) s.features[f.id] = f;
+  for (const id of m.drop) if (safeKey(id)) delete s.features[id];
+  for (const f of m.features) if (safeKey(f.id)) s.features[f.id] = f;
   const before = { w: s.w.slice(), g2: s.g2.slice(), shortT: s.shortT.slice(), longT: s.longT.slice() };
   const cats: Record<string, CategoryStats> = JSON.parse(JSON.stringify(s.categories));
   const was = m.events.map((e) => Boolean(s.applied[eventKey(e)]));
@@ -87,6 +92,7 @@ export function handleMessage(box: { state: LearnerState | null; epoch: number }
   const newly = m.events.filter((e, i) => !was[i] && s.applied[eventKey(e)]);
   const catDelta: Record<string, CategoryStats> = {};
   for (const [id, c] of Object.entries(s.categories)) {
+    if (!safeKey(id)) continue;
     const b = cats[id] ?? { shown: 0, opened: 0, played: 0, completed: 0, hidden: 0, at: 0 };
     if (c.opened !== b.opened || c.played !== b.played || c.completed !== b.completed || c.hidden !== b.hidden || c.at !== b.at) {
       catDelta[id] = { shown: 0, opened: c.opened - b.opened, played: c.played - b.played, completed: c.completed - b.completed, hidden: c.hidden - b.hidden, at: c.at };

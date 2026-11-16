@@ -220,7 +220,7 @@ export function applyRowOutcome(s: LearnerState, f: TitleFeatures, parts: Partia
 }
 
 function bumpCategory(s: LearnerState, e: Interaction) {
-  if (!e.surface) return;
+  if (!e.surface || e.surface === "__proto__" || e.surface === "constructor" || e.surface === "prototype") return;
   const c = s.categories[e.surface] ?? { shown: 0, opened: 0, played: 0, completed: 0, hidden: 0, at: 0 };
   const k: Partial<Record<InteractionKind, keyof CategoryStats>> = { open: "opened", play: "played", complete: "completed", hide: "hidden", "not-interested": "hidden" };
   const f = k[e.kind];

@@ -157,3 +157,11 @@ describe("v1.5.0 runtime training in a Web Worker", () => {
     expect(trainerStats.mode).not.toBe("worker");
   });
 });
+
+describe("worker message hardening", () => {
+  it("never writes prototype keys from a job", async () => {
+    const { safeKey } = await import("../lib/intel/trainer");
+    expect(safeKey("tmdb:movie:1")).toBe(true);
+    for (const k of ["__proto__", "constructor", "prototype", 5, null]) expect(safeKey(k)).toBe(false);
+  });
+});
