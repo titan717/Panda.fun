@@ -16,7 +16,7 @@ function playedThisSession() {
   try { return sessionStorage.getItem(INTRO_SESSION_KEY) !== null; } catch { return false; }
 }
 
-export type IntroView = "video" | "animation" | "static";
+export type IntroView = "video" | "animation" | "static" | "bumper";
 export interface IntroPlan {
   version: string;
   view: IntroView;
@@ -29,6 +29,8 @@ export interface IntroPlan {
   startTimeoutMs: number;
   hardMs: number;
   leaveMs: number;
+  /** v1.4.2: view "bumper" drawn as its static final logo frame (reduced motion). */
+  still: boolean;
 }
 
 function readSeen(): Record<string, number> {
@@ -66,12 +68,15 @@ export function resetIntroDecision() { due = null; }
 /** What to play on this platform, or null when nothing should play (reduced motion set to "skip", no asset). */
 export function planIntro(opts: { tv: boolean; reduce: boolean }, cfg: IntroConfig = INTRO): IntroPlan | null {
   const asset: IntroAsset | null = (opts.tv ? cfg.tv : cfg.mobile) ?? cfg.shared;
-  const common = { version: cfg.version, skipAfterMs: cfg.skipAfterMs, staticMs: cfg.staticMs, startTimeoutMs: cfg.startTimeoutMs, leaveMs: cfg.leaveMs };
+  const common = { version: cfg.version, skipAfterMs: cfg.skipAfterMs, staticMs: cfg.staticMs, startTimeoutMs: cfg.startTimeoutMs, leaveMs: cfg.leaveMs, still: false };
   if (opts.reduce) {
     if (cfg.reducedMotion === "skip") return null;
+    // v1.4.2: with the bumper, reduced motion shows its final logo frame (static, no sound) instead of the mascot still
+    if (asset?.kind === "bumper") return { ...common, view: "bumper", still: true, src: null, fit: "contain", durationMs: cfg.staticMs, hardMs: Math.min(cfg.staticMs + cfg.hardPadMs, cfg.bumper.hardMs) };
     return { ...common, view: "static", src: null, fit: "contain", durationMs: cfg.staticMs, hardMs: cfg.staticMs + cfg.hardPadMs };
   }
   if (!asset) return null;
+  if (asset.kind === "bumper") return { ...common, view: "bumper", src: null, fit: "contain", durationMs: cfg.bumper.durationMs, hardMs: cfg.bumper.hardMs };
   const durationMs = opts.tv ? cfg.durationMs.tv : cfg.durationMs.mobile;
   return {
     ...common,

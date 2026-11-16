@@ -8,7 +8,7 @@ const STATE = JSON.stringify({
 
 async function open(page: Page, path: string) {
   await page.route("https://api.github.com/**", (r) => r.fulfill({ contentType: "application/json", body: JSON.stringify({ tag_name: "v0.0.1", assets: [] }) }));
-  await page.addInitScript((s) => { localStorage.setItem("panda:v1:state", s); sessionStorage.setItem("panda:v1:intro-session", "e2e"); }, STATE);
+  await page.addInitScript((s) => { localStorage.setItem("panda:v1:state", s); sessionStorage.setItem("panda:v1:intro-session", "e2e"); sessionStorage.setItem("panda:v1:bumper", "off"); }, STATE);
   await page.goto(`${path}${path.includes("?") ? "&" : "?"}layout=tv`, { waitUntil: "domcontentloaded" });
   await page.waitForLoadState("networkidle", { timeout: 30_000 }).catch(() => undefined);
   await page.locator(".rail").waitFor();

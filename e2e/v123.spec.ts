@@ -33,7 +33,7 @@ function fakeSync() {
 async function open(page: Page, tv: boolean, state: string, sync: ReturnType<typeof fakeSync>) {
   await page.route("https://api.github.com/**", (r) => r.fulfill({ contentType: "application/json", body: JSON.stringify({ tag_name: "v0.0.1", assets: [] }) }));
   await page.route(/\/api\/v1\/panda\/sync\//, sync.handle);
-  await page.addInitScript((s) => { if (!localStorage.getItem("panda:v1:state")) localStorage.setItem("panda:v1:state", s); sessionStorage.setItem("panda:v1:intro-session", "e2e"); }, state);
+  await page.addInitScript((s) => { if (!localStorage.getItem("panda:v1:state")) localStorage.setItem("panda:v1:state", s); sessionStorage.setItem("panda:v1:intro-session", "e2e"); sessionStorage.setItem("panda:v1:bumper", "off"); }, state);
   await page.goto(`/settings/sync?layout=${tv ? "tv" : "mobile"}`, { waitUntil: "domcontentloaded" });
   // TV: the panel follows the focused section; the page focuses its first section once on mount, so focus Sync Code until it shows
   if (tv) await expect.poll(async () => { await page.locator("#set-sync").focus(); return page.locator("#sync-restore").isVisible(); }, { timeout: 30_000 }).toBe(true);

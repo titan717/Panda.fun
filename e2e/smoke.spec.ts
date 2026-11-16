@@ -21,7 +21,7 @@ async function open(page: Page, path: string, tv: boolean) {
   }));
   await page.addInitScript((s) => {
     if (!localStorage.getItem("panda:v1:state")) localStorage.setItem("panda:v1:state", s);
-    sessionStorage.setItem("panda:v1:intro-session", "e2e");
+    sessionStorage.setItem("panda:v1:intro-session", "e2e"); sessionStorage.setItem("panda:v1:bumper", "off");
   }, STATE);
   const sep = path.includes("?") ? "&" : "?";
   await page.goto(`${path}${tv ? `${sep}layout=tv` : ""}`, { waitUntil: "domcontentloaded" });

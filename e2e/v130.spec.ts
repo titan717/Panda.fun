@@ -27,9 +27,9 @@ test("cold start: the intro plays, skips after 1 s, then the saved profile's Hom
   await expect(intro(page)).toBeVisible({ timeout: 5_000 });
   const skip = page.getByRole("button", { name: "Skip intro" });
   await expect(skip).toBeVisible({ timeout: 3_000 });
-  // TV: Skip holds focus while the intro is up ("gone" = a loaded runner let the 5 s video finish first)
+  // TV: Skip holds focus while the intro is up ("gone" = a loaded runner let the 4 s bumper finish first)
   if (tv) { await expect.poll(() => page.evaluate(() => document.querySelector("[data-intro]") ? document.activeElement?.getAttribute("aria-label") : "gone")).toMatch(/^(Skip intro|gone)$/); await page.keyboard.press("Enter"); }
-  // the phone animation is only 2.2 s, so under a loaded CI runner it may finish on its own before the tap lands
+  // under a loaded CI runner the 4 s bumper may finish on its own before the tap lands
   else await skip.tap({ timeout: 2_000 }).catch(() => undefined);
   await expect(intro(page)).toHaveCount(0, { timeout: 2_000 });
   await expect(who(page)).toHaveCount(0);
@@ -45,16 +45,16 @@ test("the intro always ends on its own within the hard timeout", async ({ page }
   const tv = Boolean(info.project.metadata.tv);
   await fresh(page, tv ? "?layout=tv" : "");
   await expect(intro(page)).toBeVisible({ timeout: 5_000 });
-  // TV: 5 s video + 2 s pad; phone: 2.2 s animation + 2 s pad
-  await expect(intro(page)).toHaveCount(0, { timeout: tv ? 8_000 : 5_000 });
+  // v1.4.2: the IntroBumper on both, 4 s with a hard 4.2 s timeout (plus runner slack)
+  await expect(intro(page)).toHaveCount(0, { timeout: 5_000 });
 });
 
-test("reduced motion shows the branded still, which can be skipped", async ({ page }, info) => {
+test("reduced motion shows the bumper's static final frame, then ends", async ({ page }, info) => {
   test.skip(info.project.name !== "tv-1920", "once");
   await page.emulateMedia({ reducedMotion: "reduce" });
   await fresh(page, "?layout=tv");
-  await expect(intro(page)).toHaveAttribute("data-view", "static", { timeout: 5_000 });
-  await expect(page.locator(".intro-still")).toHaveCount(1);
+  await expect(intro(page)).toHaveAttribute("data-view", "bumper", { timeout: 5_000 });
+  await expect(page.locator("[data-intro] [data-bumper]")).toHaveAttribute("data-still", "true");
   await expect(page.locator(".intro-video")).toHaveCount(0);
   await expect(intro(page)).toHaveCount(0, { timeout: 4_000 });
 });
