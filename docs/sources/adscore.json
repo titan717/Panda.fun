@@ -1,5 +1,5 @@
 {
-  "measuredAt": "2026-11-16T11:21:11.021Z",
+  "measuredAt": "2026-11-23T12:43:14.236Z",
   "seconds": 25,
   "tiers": {
     "cinesrc": {
@@ -8,23 +8,23 @@
       "navigations": 0,
       "adRequests": 3,
       "sandbox": true,
-      "firstPlay": 3.583
+      "firstPlay": 3.625
     },
     "vidlink": {
-      "tier": 3,
-      "popups": 1,
+      "tier": 4,
+      "popups": 2,
       "navigations": 0,
-      "adRequests": 20,
+      "adRequests": 21,
       "sandbox": false,
-      "firstPlay": 2.224
+      "firstPlay": 99
     },
     "vidy": {
       "tier": 2,
       "popups": 0,
       "navigations": 0,
-      "adRequests": 1,
+      "adRequests": 0,
       "sandbox": false,
-      "firstPlay": 6.38
+      "firstPlay": 7.431
     }
   },
   "results": [
@@ -40,10 +40,10 @@
         "usrpubtrk.com",
         "adexchangerapid.com"
       ],
-      "requests": 69,
-      "firstEvent": 3.069,
-      "firstPlay": 3.937,
-      "events": 89,
+      "requests": 70,
+      "firstEvent": 3.097,
+      "firstPlay": 3.625,
+      "events": 91,
       "error": null,
       "eventTypes": [
         "cinesrc:sourceused",
@@ -64,10 +64,10 @@
         "usrpubtrk.com",
         "adexchangerapid.com"
       ],
-      "requests": 78,
-      "firstEvent": 2.784,
-      "firstPlay": 3.583,
-      "events": 88,
+      "requests": 77,
+      "firstEvent": 4.363,
+      "firstPlay": 4.979,
+      "events": 87,
       "error": null,
       "eventTypes": [
         "cinesrc:sourceused",
@@ -90,25 +90,23 @@
         "static.cloudflareinsights.com",
         "www.clarity.ms",
         "usrpubtrck.com",
-        "rapidadexchange.com",
         "c.adsco.re",
-        "xhwdehiclcwx.l4.adsco.re",
-        "xhwdehiclcwx.n4.adsco.re",
-        "xhwdehiclcwx.s4.adsco.re",
+        "rapidadexchange.com",
+        "nfsfgzu2nggy.l4.adsco.re",
+        "nfsfgzu2nggy.n4.adsco.re",
+        "nfsfgzu2nggy.s4.adsco.re",
         "adsco.re",
         "4.adsco.re",
         "6.adsco.re",
         "c.bing.com"
       ],
-      "requests": 92,
-      "firstEvent": 1.916,
+      "requests": 73,
+      "firstEvent": 1.679,
       "firstPlay": null,
-      "events": 41,
+      "events": 13,
       "error": null,
       "eventTypes": [
         "",
-        "PLAYER_EVENT:play",
-        "PLAYER_EVENT:timeupdate",
         "MEDIA_DATA"
       ],
       "refused": true
@@ -127,18 +125,18 @@
         "static.cloudflareinsights.com",
         "www.clarity.ms",
         "c.bing.com",
+        "usrpubtrck.com",
         "c.adsco.re",
-        "v6ggu0hnv0k5.l4.adsco.re",
-        "v6ggu0hnv0k5.n4.adsco.re",
-        "v6ggu0hnv0k5.s4.adsco.re",
+        "zx0zsblq1a6x.l4.adsco.re",
+        "zx0zsblq1a6x.n4.adsco.re",
+        "zx0zsblq1a6x.s4.adsco.re",
+        "rapidadexchange.com",
         "adsco.re",
         "4.adsco.re",
-        "6.adsco.re",
-        "usrpubtrck.com",
-        "rapidadexchange.com"
+        "6.adsco.re"
       ],
       "requests": 89,
-      "firstEvent": 1.532,
+      "firstEvent": 1.543,
       "firstPlay": null,
       "events": 13,
       "error": null,
@@ -155,7 +153,7 @@
       "popups": 0,
       "topNav": 0,
       "intent": 0,
-      "adRequests": 8,
+      "adRequests": 7,
       "adHosts": [
         "mc.yandex.ru",
         "www.googletagmanager.com",
@@ -163,8 +161,8 @@
         "www.clarity.ms",
         "c.bing.com"
       ],
-      "requests": 48,
-      "firstEvent": 1.251,
+      "requests": 49,
+      "firstEvent": 1.594,
       "firstPlay": null,
       "events": 1,
       "error": null,
@@ -176,10 +174,10 @@
       "id": "vidlink-open",
       "kind": "movie",
       "sandbox": "none",
-      "popups": 1,
+      "popups": 2,
       "topNav": 0,
       "intent": 0,
-      "adRequests": 20,
+      "adRequests": 21,
       "adHosts": [
         "mc.yandex.ru",
         "www.googletagmanager.com",
@@ -187,23 +185,22 @@
         "www.clarity.ms",
         "c.adsco.re",
         "usrpubtrck.com",
+        "wfhuqqzatjwk.l4.adsco.re",
+        "wfhuqqzatjwk.n4.adsco.re",
+        "wfhuqqzatjwk.s4.adsco.re",
         "rapidadexchange.com",
-        "enpmjiuqbvgo.l4.adsco.re",
-        "enpmjiuqbvgo.n4.adsco.re",
-        "enpmjiuqbvgo.s4.adsco.re",
         "adsco.re",
         "4.adsco.re",
         "6.adsco.re",
         "c.bing.com"
       ],
-      "requests": 91,
-      "firstEvent": 1.873,
-      "firstPlay": 2.224,
-      "events": 14,
+      "requests": 83,
+      "firstEvent": 1.755,
+      "firstPlay": null,
+      "events": 13,
       "error": null,
       "eventTypes": [
         "",
-        "PLAYER_EVENT:play",
         "MEDIA_DATA"
       ]
     },
@@ -214,14 +211,12 @@
       "popups": 0,
       "topNav": 0,
       "intent": 0,
-      "adRequests": 1,
-      "adHosts": [
-        "static.cloudflareinsights.com"
-      ],
-      "requests": 120,
-      "firstEvent": 1.447,
-      "firstPlay": 7.644,
-      "events": 28,
+      "adRequests": 0,
+      "adHosts": [],
+      "requests": 118,
+      "firstEvent": 2.717,
+      "firstPlay": 7.726,
+      "events": 26,
       "error": null,
       "eventTypes": [
         "MEDIA_DATA",
@@ -236,14 +231,12 @@
       "popups": 0,
       "topNav": 0,
       "intent": 0,
-      "adRequests": 1,
-      "adHosts": [
-        "static.cloudflareinsights.com"
-      ],
-      "requests": 123,
-      "firstEvent": 1.297,
-      "firstPlay": 7.745,
-      "events": 28,
+      "adRequests": 0,
+      "adHosts": [],
+      "requests": 121,
+      "firstEvent": 2.429,
+      "firstPlay": 7.431,
+      "events": 26,
       "error": null,
       "eventTypes": [
         "MEDIA_DATA",
@@ -258,14 +251,12 @@
       "popups": 0,
       "topNav": 0,
       "intent": 0,
-      "adRequests": 1,
-      "adHosts": [
-        "static.cloudflareinsights.com"
-      ],
-      "requests": 58,
-      "firstEvent": 1.38,
-      "firstPlay": 6.38,
-      "events": 26,
+      "adRequests": 0,
+      "adHosts": [],
+      "requests": 56,
+      "firstEvent": 2.571,
+      "firstPlay": 7.57,
+      "events": 27,
       "error": null,
       "eventTypes": [
         "MEDIA_DATA",
